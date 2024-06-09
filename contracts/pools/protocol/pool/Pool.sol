@@ -243,23 +243,6 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
   }
 
   /// @inheritdoc IPool
-  function setUserUseReserveAsCollateral(
-    address asset,
-    bool useAsCollateral
-  ) public virtual override {
-    SupplyLogic.executeUseReserveAsCollateral(
-      _reserves,
-      _reservesList,
-      _usersConfig[msg.sender],
-      asset,
-      useAsCollateral,
-      _reservesCount,
-      ADDRESSES_PROVIDER.getPriceOracle(),
-      _usersEModeCategory[msg.sender]
-    );
-  }
-
-  /// @inheritdoc IPool
   function liquidationCall(
     address collateralAsset,
     address debtAsset,
@@ -443,21 +426,6 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
   }
 
   /// @inheritdoc IPool
-  function FLASHLOAN_PREMIUM_TOTAL() public view virtual override returns (uint128) {
-    return _flashLoanPremiumTotal;
-  }
-
-  /// @inheritdoc IPool
-  function FLASHLOAN_PREMIUM_TO_PROTOCOL() public view virtual override returns (uint128) {
-    return _flashLoanPremiumToProtocol;
-  }
-
-  /// @inheritdoc IPool
-  function MAX_NUMBER_RESERVES() public view virtual override returns (uint16) {
-    return ReserveConfiguration.MAX_RESERVES_COUNT;
-  }
-
-  /// @inheritdoc IPool
   function finalizeTransfer(
     address asset,
     address from,
@@ -490,7 +458,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
   function setReserveInterestRateStrategyAddress(
     address asset,
     address rateStrategyAddress
-  ) external virtual override onlyTimelock {
+  ) external virtual override onlyPoolConfigurator {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
     require(_reserves[asset].id != 0 || _reservesList[0] == asset, Errors.ASSET_NOT_LISTED);
     address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
@@ -502,19 +470,10 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
   function setConfiguration(
     address asset,
     DataTypes.ReserveConfigurationMap calldata configuration
-  ) external virtual override onlyTimelock {
+  ) external virtual override onlyPoolConfigurator {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
     require(_reserves[asset].id != 0 || _reservesList[0] == asset, Errors.ASSET_NOT_LISTED);
     _reserves[asset].configuration = configuration;
-  }
-
-  /// @inheritdoc IPool
-  function updateFlashloanPremiums(
-    uint128 flashLoanPremiumTotal,
-    uint128 flashLoanPremiumToProtocol
-  ) external virtual override onlyPoolConfigurator {
-    _flashLoanPremiumTotal = flashLoanPremiumTotal;
-    _flashLoanPremiumToProtocol = flashLoanPremiumToProtocol;
   }
 
   /// @inheritdoc IAaveOracle
@@ -522,7 +481,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
     address pool,
     address[] calldata assets,
     address[] calldata sources
-  ) external override onlyTimelock {
+  ) external override onlyPoolConfigurator {
     require(assets.length == sources.length, Errors.INCONSISTENT_PARAMS_LENGTH);
     for (uint256 i = 0; i < assets.length; i++) {
       assetsSources[pool][assets[i]] = AggregatorInterface(sources[i]);
