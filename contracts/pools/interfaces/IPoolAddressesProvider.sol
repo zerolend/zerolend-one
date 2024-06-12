@@ -50,13 +50,6 @@ interface IPoolAddressesProvider {
   event ACLAdminUpdated(address indexed oldAddress, address indexed newAddress);
 
   /**
-   * @dev Emitted when the price oracle sentinel is updated.
-   * @param oldAddress The old address of the PriceOracleSentinel
-   * @param newAddress The new address of the PriceOracleSentinel
-   */
-  event PriceOracleSentinelUpdated(address indexed oldAddress, address indexed newAddress);
-
-  /**
    * @dev Emitted when the pool data provider is updated.
    * @param oldAddress The old address of the PoolDataProvider
    * @param newAddress The new address of the PoolDataProvider
@@ -200,18 +193,6 @@ interface IPoolAddressesProvider {
    * @param newAclAdmin The address of the new ACL admin
    */
   function setACLAdmin(address newAclAdmin) external;
-
-  /**
-   * @notice Returns the address of the price oracle sentinel.
-   * @return The address of the PriceOracleSentinel
-   */
-  function getPriceOracleSentinel() external view returns (address);
-
-  /**
-   * @notice Updates the address of the price oracle sentinel.
-   * @param newPriceOracleSentinel The address of the new PriceOracleSentinel
-   */
-  function setPriceOracleSentinel(address newPriceOracleSentinel) external;
 
   /**
    * @notice Returns the address of the data provider.

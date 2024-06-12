@@ -41,12 +41,7 @@ library PoolLogic {
     DataTypes.InitReserveParams memory params
   ) external returns (bool) {
     require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
-    reservesData[params.asset].init(
-      params.aTokenAddress,
-      params.stableDebtAddress,
-      params.variableDebtAddress,
-      params.interestRateStrategyAddress
-    );
+    reservesData[params.asset].init(params.interestRateStrategyAddress);
 
     bool reserveAlreadyAdded = reservesData[params.asset].id != 0 ||
       reservesList[0] == params.asset;
@@ -102,7 +97,6 @@ library PoolLogic {
    * @notice Returns the user account data across all the reserves
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
-   * @param eModeCategories The configuration of all the efficiency mode categories
    * @param params Additional params needed for the calculation
    * @return totalCollateralBase The total collateral of the user in the base currency used by the price feed
    * @return totalDebtBase The total debt of the user in the base currency used by the price feed
@@ -114,7 +108,6 @@ library PoolLogic {
   function executeGetUserAccountData(
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
-    mapping(uint8 => DataTypes.EModeCategory) storage eModeCategories,
     DataTypes.CalculateUserAccountDataParams memory params
   )
     external
@@ -135,7 +128,7 @@ library PoolLogic {
       currentLiquidationThreshold,
       healthFactor,
 
-    ) = GenericLogic.calculateUserAccountData(reservesData, reservesList, eModeCategories, params);
+    ) = GenericLogic.calculateUserAccountData(reservesData, reservesList, params);
 
     availableBorrowsBase = GenericLogic.calculateAvailableBorrows(
       totalCollateralBase,

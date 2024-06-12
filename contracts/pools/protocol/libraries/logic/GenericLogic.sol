@@ -97,10 +97,7 @@ library GenericLogic {
         vars.assetUnit = 10 ** vars.decimals;
       }
 
-      vars.assetPrice = vars.eModeAssetPrice != 0 &&
-        params.userEModeCategory == vars.eModeAssetCategory
-        ? vars.eModeAssetPrice
-        : IPriceOracleGetter(params.oracle).getAssetPrice(vars.currentReserveAddress);
+      vars.assetPrice = IPriceOracleGetter(params.oracle).getAssetPrice(vars.currentReserveAddress);
 
       if (vars.liquidationThreshold != 0 && params.userConfig.isUsingAsCollateral(vars.i)) {
         vars.userBalanceInBaseCurrency = _getUserBalanceInBaseCurrency(
@@ -208,8 +205,6 @@ library GenericLogic {
     if (userTotalDebt != 0) {
       userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
     }
-
-    userTotalDebt = userTotalDebt + IERC20(reserve.stableDebtTokenAddress).balanceOf(user);
 
     userTotalDebt = assetPrice * userTotalDebt;
 

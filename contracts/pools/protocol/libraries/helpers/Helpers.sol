@@ -21,8 +21,9 @@ library Helpers {
     DataTypes.ReserveCache memory reserveCache
   ) internal view returns (uint256, uint256) {
     return (
-      IERC20(reserveCache.stableDebtTokenAddress).balanceOf(user),
-      IERC20(reserveCache.variableDebtTokenAddress).balanceOf(user)
+      0,
+      0 // IERC20(reserveCache.stableDebtTokenAddress).balanceOf(user),
+      // IERC20(reserveCache.variableDebtTokenAddress).balanceOf(user)
     );
   }
 }

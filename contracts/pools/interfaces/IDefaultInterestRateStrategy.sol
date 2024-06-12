@@ -17,24 +17,11 @@ interface IDefaultInterestRateStrategy is IReserveInterestRateStrategy {
   function OPTIMAL_USAGE_RATIO() external view returns (uint256);
 
   /**
-   * @notice Returns the optimal stable to total debt ratio of the reserve.
-   * @return The optimal stable to total debt ratio, expressed in ray.
-   */
-  function OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO() external view returns (uint256);
-
-  /**
    * @notice Returns the excess usage ratio above the optimal.
    * @dev It's always equal to 1-optimal usage ratio (added as constant for gas optimizations)
    * @return The max excess usage ratio, expressed in ray.
    */
   function MAX_EXCESS_USAGE_RATIO() external view returns (uint256);
-
-  /**
-   * @notice Returns the excess stable debt ratio above the optimal.
-   * @dev It's always equal to 1-optimal stable to total debt ratio (added as constant for gas optimizations)
-   * @return The max excess stable to total debt ratio, expressed in ray.
-   */
-  function MAX_EXCESS_STABLE_TO_TOTAL_DEBT_RATIO() external view returns (uint256);
 
   /**
    * @notice Returns the address of the PoolAddressesProvider
@@ -55,33 +42,6 @@ interface IDefaultInterestRateStrategy is IReserveInterestRateStrategy {
    * @return The variable rate slope, expressed in ray
    */
   function getVariableRateSlope2() external view returns (uint256);
-
-  /**
-   * @notice Returns the stable rate slope below optimal usage ratio
-   * @dev It's the stable rate when usage ratio > 0 and <= OPTIMAL_USAGE_RATIO
-   * @return The stable rate slope, expressed in ray
-   */
-  function getStableRateSlope1() external view returns (uint256);
-
-  /**
-   * @notice Returns the stable rate slope above optimal usage ratio
-   * @dev It's the variable rate when usage ratio > OPTIMAL_USAGE_RATIO
-   * @return The stable rate slope, expressed in ray
-   */
-  function getStableRateSlope2() external view returns (uint256);
-
-  /**
-   * @notice Returns the stable rate excess offset
-   * @dev It's an additional premium applied to the stable when stable debt > OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO
-   * @return The stable rate excess offset, expressed in ray
-   */
-  function getStableRateExcessOffset() external view returns (uint256);
-
-  /**
-   * @notice Returns the base stable borrow rate
-   * @return The base stable borrow rate, expressed in ray
-   */
-  function getBaseStableBorrowRate() external view returns (uint256);
 
   /**
    * @notice Returns the base variable borrow rate

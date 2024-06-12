@@ -89,7 +89,7 @@ library DataTypes {
     address debtAsset;
     address user;
     bool receiveAToken;
-    address priceOracle;
+    address oracle;
   }
 
   struct ExecuteSupplyParams {
@@ -108,13 +108,11 @@ library DataTypes {
     bool releaseUnderlying;
     uint256 reservesCount;
     address oracle;
-    address priceOracleSentinel;
   }
 
   struct ExecuteRepayParams {
     address asset;
     uint256 amount;
-    InterestRateMode interestRateMode;
     address onBehalfOf;
     bool useATokens;
   }
@@ -142,7 +140,6 @@ library DataTypes {
     address receiverAddress;
     address[] assets;
     uint256[] amounts;
-    uint256[] interestRateModes;
     address onBehalfOf;
     bytes params;
     uint16 referralCode;
@@ -186,24 +183,17 @@ library DataTypes {
     address asset;
     address userAddress;
     uint256 amount;
-    InterestRateMode interestRateMode;
     uint256 reservesCount;
     address oracle;
-    address priceOracleSentinel;
-    bool isolationModeActive;
-    address isolationModeCollateralAddress;
-    uint256 isolationModeDebtCeiling;
   }
 
   struct ValidateLiquidationCallParams {
     ReserveCache debtReserveCache;
     uint256 totalDebt;
     uint256 healthFactor;
-    address priceOracleSentinel;
   }
 
   struct CalculateInterestRatesParams {
-    uint256 unbacked;
     uint256 liquidityAdded;
     uint256 liquidityTaken;
     uint256 totalVariableDebt;

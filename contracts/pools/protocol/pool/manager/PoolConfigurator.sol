@@ -20,81 +20,66 @@ import {VersionedInitializable} from '../../libraries/aave-upgradeability/Versio
  * @author Aave
  * @dev Implements the configuration methods for the Aave protocol
  */
-contract PoolConfigurator is PoolManager, VersionedInitializable, IPoolConfigurator {
+abstract contract PoolConfigurator is PoolManager, VersionedInitializable, IPoolConfigurator {
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   IPoolAddressesProvider internal _addressesProvider;
-  IPool internal _pool;
 
   uint256 public constant CONFIGURATOR_REVISION = 0x4;
 
-  /// @inheritdoc VersionedInitializable
+  // @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
     return CONFIGURATOR_REVISION;
   }
 
   function initialize(IPoolAddressesProvider provider) public initializer {
     _addressesProvider = provider;
-    _pool = IPool(_addressesProvider.getPool());
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function initReserves(
     address pool,
     ConfiguratorInputTypes.InitReserveInput[] calldata input
-  ) external override onlyPoolAdmin(pool) {
-    IPool cachedPool = _pool;
+  ) external onlyPoolAdmin(pool) {
+    IPool cachedPool = IPool(pool);
     for (uint256 i = 0; i < input.length; i++) {
       ConfiguratorLogic.executeInitReserve(cachedPool, input[i]);
     }
   }
 
-  /// @inheritdoc IPoolConfigurator
-  function updateAToken(
-    address pool,
-    ConfiguratorInputTypes.UpdateATokenInput calldata input
-  ) external override onlyPoolAdmin(pool) {
-    ConfiguratorLogic.executeUpdateAToken(_pool, input);
-  }
-
-  /// @inheritdoc IPoolConfigurator
-  function updateVariableDebtToken(
-    address pool,
-    ConfiguratorInputTypes.UpdateDebtTokenInput calldata input
-  ) external override onlyPoolAdmin(pool) {
-    ConfiguratorLogic.executeUpdateVariableDebtToken(_pool, input);
-  }
-
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setReserveBorrowing(
     address pool,
     address asset,
     bool enabled
-  ) external override onlyRiskOrPoolAdmins(pool) {
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     if (!enabled) {
       require(!currentConfig.getStableRateBorrowingEnabled(), Errors.STABLE_BORROWING_ENABLED);
     }
     currentConfig.setBorrowingEnabled(enabled);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit ReserveBorrowing(asset, enabled);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function configureReserveAsCollateral(
     address pool,
     address asset,
     uint256 ltv,
     uint256 liquidationThreshold,
     uint256 liquidationBonus
-  ) external override onlyRiskOrPoolAdmins(pool) {
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
+
     //validation of the parameters: the LTV can
     //only be lower or equal than the liquidation threshold
     //(otherwise a loan against the asset would cause instantaneous liquidation)
     require(ltv <= liquidationThreshold, Errors.INVALID_RESERVE_PARAMS);
 
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
 
     if (liquidationThreshold != 0) {
       //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
@@ -119,125 +104,129 @@ contract PoolConfigurator is PoolManager, VersionedInitializable, IPoolConfigura
     currentConfig.setLiquidationThreshold(liquidationThreshold);
     currentConfig.setLiquidationBonus(liquidationBonus);
 
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
 
     emit CollateralConfigurationChanged(asset, ltv, liquidationThreshold, liquidationBonus);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setReserveStableRateBorrowing(
     address pool,
     address asset,
     bool enabled
-  ) external override onlyRiskOrPoolAdmins(pool) {
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     if (enabled) {
       require(currentConfig.getBorrowingEnabled(), Errors.BORROWING_NOT_ENABLED);
     }
     currentConfig.setStableRateBorrowingEnabled(enabled);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit ReserveStableRateBorrowing(asset, enabled);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setReserveFlashLoaning(
     address pool,
     address asset,
     bool enabled
-  ) external override onlyRiskOrPoolAdmins(pool) {
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
-
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setFlashLoanEnabled(enabled);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit ReserveFlashLoaning(asset, enabled);
   }
 
-  /// @inheritdoc IPoolConfigurator
-  function setReserveActive(
-    address pool,
-    address asset,
-    bool active
-  ) external override onlyPoolAdmin(pool) {
+  // @inheritdoc IPoolConfigurator
+  function setReserveActive(address pool, address asset, bool active) external onlyPoolAdmin(pool) {
     if (!active) _checkNoSuppliers(asset);
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setActive(active);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit ReserveActive(asset, active);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setReserveFreeze(
     address pool,
     address asset,
     bool freeze
-  ) external override onlyRiskOrPoolAdmins(pool) {
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setFrozen(freeze);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit ReserveFrozen(asset, freeze);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setReservePause(
     address pool,
     address asset,
     bool paused
-  ) public override onlyEmergencyOrPoolAdmin(pool) {
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+  ) public onlyEmergencyOrPoolAdmin(pool) {
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setPaused(paused);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit ReservePaused(asset, paused);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setReserveFactor(
     address pool,
     address asset,
     uint256 newReserveFactor
-  ) external override onlyRiskOrPoolAdmins(pool) {
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
     require(newReserveFactor <= PercentageMath.PERCENTAGE_FACTOR, Errors.INVALID_RESERVE_FACTOR);
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     uint256 oldReserveFactor = currentConfig.getReserveFactor();
     currentConfig.setReserveFactor(newReserveFactor);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit ReserveFactorChanged(asset, oldReserveFactor, newReserveFactor);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setBorrowCap(
     address pool,
     address asset,
     uint256 newBorrowCap
-  ) external override onlyRiskOrPoolAdmins(pool) {
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     uint256 oldBorrowCap = currentConfig.getBorrowCap();
     currentConfig.setBorrowCap(newBorrowCap);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit BorrowCapChanged(asset, oldBorrowCap, newBorrowCap);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setSupplyCap(
     address pool,
     address asset,
     uint256 newSupplyCap
-  ) external override onlyRiskOrPoolAdmins {
-    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     uint256 oldSupplyCap = currentConfig.getSupplyCap();
     currentConfig.setSupplyCap(newSupplyCap);
-    _pool.setConfiguration(asset, currentConfig);
+    cachedPool.setConfiguration(asset, currentConfig);
     emit SupplyCapChanged(asset, oldSupplyCap, newSupplyCap);
   }
 
-  /// @inheritdoc IPoolConfigurator
+  // @inheritdoc IPoolConfigurator
   function setReserveInterestRateStrategyAddress(
     address pool,
     address asset,
     address newRateStrategyAddress
-  ) external override onlyRiskOrPoolAdmins(pool) {
-    DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+  ) external onlyRiskOrPoolAdmins(pool) {
+    IPool cachedPool = IPool(pool);
+    DataTypes.ReserveData memory reserve = cachedPool.getReserveData(asset);
     address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
-    _pool.setReserveInterestRateStrategyAddress(asset, newRateStrategyAddress);
+    // cachedPool.setConfiguration(asset, newRateStrategyAddress);
     emit ReserveInterestRateStrategyChanged(asset, oldRateStrategyAddress, newRateStrategyAddress);
   }
 

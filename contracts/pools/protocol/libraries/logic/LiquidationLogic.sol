@@ -111,8 +111,7 @@ library LiquidationLogic {
         userConfig: userConfig,
         reservesCount: params.reservesCount,
         user: params.user,
-        oracle: params.priceOracle,
-        userEModeCategory: params.userEModeCategory
+        oracle: params.oracle
       })
     );
 
@@ -128,8 +127,7 @@ library LiquidationLogic {
       DataTypes.ValidateLiquidationCallParams({
         debtReserveCache: vars.debtReserveCache,
         totalDebt: vars.userTotalDebt,
-        healthFactor: vars.healthFactor,
-        priceOracleSentinel: params.priceOracleSentinel
+        healthFactor: vars.healthFactor
       })
     );
 
@@ -154,7 +152,7 @@ library LiquidationLogic {
       vars.actualDebtToLiquidate,
       vars.userCollateralBalance,
       vars.liquidationBonus,
-      IPriceOracleGetter(params.priceOracle)
+      IPriceOracleGetter(params.oracle)
     );
 
     if (vars.userTotalDebt == vars.actualDebtToLiquidate) {
@@ -326,13 +324,6 @@ library LiquidationLogic {
           vars.debtReserveCache.variableDebtTokenAddress
         ).burn(params.user, vars.userVariableDebt, vars.debtReserveCache.nextVariableBorrowIndex);
       }
-      (
-        vars.debtReserveCache.nextTotalStableDebt,
-        vars.debtReserveCache.nextAvgStableBorrowRate
-      ) = IStableDebtToken(vars.debtReserveCache.stableDebtTokenAddress).burn(
-        params.user,
-        vars.actualDebtToLiquidate - vars.userVariableDebt
-      );
     }
   }
 

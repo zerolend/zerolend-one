@@ -97,7 +97,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   /// @inheritdoc IReserveInterestRateStrategy
   function calculateInterestRates(
     address user,
-    bytes extraData,
+    bytes memory extraData,
     DataTypes.CalculateInterestRatesParams memory params
   ) public view override returns (uint256, uint256) {
     CalcInterestRatesLocalVars memory vars;
@@ -115,9 +115,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
 
       vars.availableLiquidityPlusDebt = vars.availableLiquidity + vars.totalDebt;
       vars.borrowUsageRatio = vars.totalDebt.rayDiv(vars.availableLiquidityPlusDebt);
-      vars.supplyUsageRatio = vars.totalDebt.rayDiv(
-        vars.availableLiquidityPlusDebt + params.unbacked
-      );
+      vars.supplyUsageRatio = vars.totalDebt.rayDiv(vars.availableLiquidityPlusDebt);
     }
 
     if (vars.borrowUsageRatio > OPTIMAL_USAGE_RATIO) {

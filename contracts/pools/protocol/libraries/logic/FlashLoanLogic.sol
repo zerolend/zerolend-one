@@ -36,7 +36,6 @@ library FlashLoanLogic {
     address initiator,
     address indexed asset,
     uint256 amount,
-    DataTypes.InterestRateMode interestRateMode,
     uint256 premium,
     uint16 indexed referralCode
   );
@@ -145,7 +144,6 @@ library FlashLoanLogic {
       msg.sender,
       params.asset,
       params.amount,
-      DataTypes.InterestRateMode(0),
       params.totalPremium,
       params.referralCode
     );

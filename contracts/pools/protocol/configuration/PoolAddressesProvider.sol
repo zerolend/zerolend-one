@@ -132,18 +132,6 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
   }
 
   /// @inheritdoc IPoolAddressesProvider
-  function getPriceOracleSentinel() external view override returns (address) {
-    return getAddress(PRICE_ORACLE_SENTINEL);
-  }
-
-  /// @inheritdoc IPoolAddressesProvider
-  function setPriceOracleSentinel(address newPriceOracleSentinel) external override onlyOwner {
-    address oldPriceOracleSentinel = _addresses[PRICE_ORACLE_SENTINEL];
-    _addresses[PRICE_ORACLE_SENTINEL] = newPriceOracleSentinel;
-    emit PriceOracleSentinelUpdated(oldPriceOracleSentinel, newPriceOracleSentinel);
-  }
-
-  /// @inheritdoc IPoolAddressesProvider
   function getPoolDataProvider() external view override returns (address) {
     return getAddress(DATA_PROVIDER);
   }

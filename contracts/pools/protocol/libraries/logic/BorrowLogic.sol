@@ -33,7 +33,6 @@ library BorrowLogic {
     address user,
     address indexed onBehalfOf,
     uint256 amount,
-    DataTypes.InterestRateMode interestRateMode,
     uint256 borrowRate,
     uint16 indexed referralCode
   );
@@ -75,36 +74,17 @@ library BorrowLogic {
         asset: params.asset,
         userAddress: params.onBehalfOf,
         amount: params.amount,
-        interestRateMode: params.interestRateMode,
-        maxStableLoanPercent: params.maxStableRateBorrowSizePercent,
         reservesCount: params.reservesCount,
-        oracle: params.oracle,
-        userEModeCategory: params.userEModeCategory,
-        priceOracleSentinel: params.priceOracleSentinel
+        oracle: params.oracle
       })
     );
 
     uint256 currentStableRate = 0;
     bool isFirstBorrowing = false;
 
-    if (params.interestRateMode == DataTypes.InterestRateMode.STABLE) {
-      currentStableRate = reserve.currentStableBorrowRate;
-
-      (
-        isFirstBorrowing,
-        reserveCache.nextTotalStableDebt,
-        reserveCache.nextAvgStableBorrowRate
-      ) = IStableDebtToken(reserveCache.stableDebtTokenAddress).mint(
-        params.user,
-        params.onBehalfOf,
-        params.amount,
-        currentStableRate
-      );
-    } else {
-      (isFirstBorrowing, reserveCache.nextScaledVariableDebt) = IVariableDebtToken(
-        reserveCache.variableDebtTokenAddress
-      ).mint(params.user, params.onBehalfOf, params.amount, reserveCache.nextVariableBorrowIndex);
-    }
+    (isFirstBorrowing, reserveCache.nextScaledVariableDebt) = IVariableDebtToken(
+      reserveCache.variableDebtTokenAddress
+    ).mint(params.user, params.onBehalfOf, params.amount, reserveCache.nextVariableBorrowIndex);
 
     if (isFirstBorrowing) {
       userConfig.setBorrowing(reserve.id, true);
@@ -126,10 +106,7 @@ library BorrowLogic {
       params.user,
       params.onBehalfOf,
       params.amount,
-      params.interestRateMode,
-      params.interestRateMode == DataTypes.InterestRateMode.STABLE
-        ? currentStableRate
-        : reserve.currentVariableBorrowRate,
+      reserve.currentVariableBorrowRate,
       params.referralCode
     );
   }
@@ -160,18 +137,9 @@ library BorrowLogic {
       reserveCache
     );
 
-    ValidationLogic.validateRepay(
-      reserveCache,
-      params.amount,
-      params.interestRateMode,
-      params.onBehalfOf,
-      stableDebt,
-      variableDebt
-    );
+    ValidationLogic.validateRepay(reserveCache, params.amount, params.onBehalfOf, variableDebt);
 
-    uint256 paybackAmount = params.interestRateMode == DataTypes.InterestRateMode.STABLE
-      ? stableDebt
-      : variableDebt;
+    uint256 paybackAmount = variableDebt;
 
     // Allows a user to repay with aTokens without leaving dust from interest.
     if (params.useATokens && params.amount == type(uint256).max) {
@@ -182,15 +150,8 @@ library BorrowLogic {
       paybackAmount = params.amount;
     }
 
-    if (params.interestRateMode == DataTypes.InterestRateMode.STABLE) {
-      (reserveCache.nextTotalStableDebt, reserveCache.nextAvgStableBorrowRate) = IStableDebtToken(
-        reserveCache.stableDebtTokenAddress
-      ).burn(params.onBehalfOf, paybackAmount);
-    } else {
-      reserveCache.nextScaledVariableDebt = IVariableDebtToken(
-        reserveCache.variableDebtTokenAddress
-      ).burn(params.onBehalfOf, paybackAmount, reserveCache.nextVariableBorrowIndex);
-    }
+    reserveCache.nextScaledVariableDebt = IVariableDebtToken(reserveCache.variableDebtTokenAddress)
+      .burn(params.onBehalfOf, paybackAmount, reserveCache.nextVariableBorrowIndex);
 
     reserve.updateInterestRates(
       reserveCache,

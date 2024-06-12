@@ -31,8 +31,8 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
   mapping(bytes32 id => uint256) private _timestamps;
   uint256 private _minDelay;
 
-  bytes32 PROPOSER_ROLE = keccak256('PROPOSER_ROLE');
-  bytes32 CANCELLER_ROLE = keccak256('CANCELLER_ROLE');
+  bytes32 public PROPOSER_ROLE = keccak256('PROPOSER_ROLE');
+  bytes32 public CANCELLER_ROLE = keccak256('CANCELLER_ROLE');
 
   /**
    * @dev Initializes the contract with the following parameters:

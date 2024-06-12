@@ -30,7 +30,6 @@ library ReserveLogic {
   event ReserveDataUpdated(
     address indexed reserve,
     uint256 liquidityRate,
-    uint256 stableBorrowRate,
     uint256 variableBorrowRate,
     uint256 liquidityIndex,
     uint256 variableBorrowIndex
@@ -176,8 +175,9 @@ library ReserveLogic {
     (vars.nextLiquidityRate, vars.nextVariableRate) = IReserveInterestRateStrategy(
       reserve.interestRateStrategyAddress
     ).calculateInterestRates(
+        address(0),
+        '',
         DataTypes.CalculateInterestRatesParams({
-          unbacked: reserve.unbacked,
           liquidityAdded: liquidityAdded,
           liquidityTaken: liquidityTaken,
           totalVariableDebt: vars.totalVariableDebt,

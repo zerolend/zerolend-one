@@ -5,6 +5,7 @@ import {UserConfiguration} from '../libraries/configuration/UserConfiguration.so
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
+import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 
 /**
  * @title PoolStorage
@@ -40,7 +41,7 @@ contract PoolStorage {
   uint16 internal _reservesCount;
 
   // Map of asset price sources (pool => asset => priceSource)
-  mapping(address => AggregatorInterface) private assetsSources;
+  mapping(address => IAggregatorInterface) internal _assetsSources;
 
   address public configurator;
 }

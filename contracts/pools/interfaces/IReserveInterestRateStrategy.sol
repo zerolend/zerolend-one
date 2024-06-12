@@ -17,7 +17,7 @@ interface IReserveInterestRateStrategy {
    */
   function calculateInterestRates(
     address user,
-    bytes extraData,
+    bytes memory extraData,
     DataTypes.CalculateInterestRatesParams memory params
   ) external view returns (uint256, uint256);
 }

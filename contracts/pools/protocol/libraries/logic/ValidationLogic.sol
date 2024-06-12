@@ -9,7 +9,6 @@ import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IScaledBalanceToken} from '../../../interfaces/IScaledBalanceToken.sol';
 import {IPriceOracleGetter} from '../../../interfaces/IPriceOracleGetter.sol';
 import {IAToken} from '../../../interfaces/IAToken.sol';
-import {IPriceOracleSentinel} from '../../../interfaces/IPriceOracleSentinel.sol';
 import {IPoolAddressesProvider} from '../../../interfaces/IPoolAddressesProvider.sol';
 import {IAccessControl} from '../../../dependencies/openzeppelin/contracts/IAccessControl.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
@@ -21,7 +20,6 @@ import {DataTypes} from '../types/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {SafeCast} from '../../../dependencies/openzeppelin/contracts/SafeCast.sol';
-import {IncentivizedERC20} from '../../tokenization/base/IncentivizedERC20.sol';
 
 /**
  * @title ReserveLogic library
@@ -155,18 +153,6 @@ library ValidationLogic {
     require(!vars.isFrozen, Errors.RESERVE_FROZEN);
     require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);
 
-    require(
-      params.priceOracleSentinel == address(0) ||
-        IPriceOracleSentinel(params.priceOracleSentinel).isBorrowAllowed(),
-      Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
-    );
-
-    //validate interest rate mode
-    require(
-      params.interestRateMode == DataTypes.InterestRateMode.VARIABLE,
-      Errors.INVALID_INTEREST_RATE_MODE_SELECTED
-    );
-
     vars.reserveDecimals = params.reserveCache.reserveConfiguration.getDecimals();
     vars.borrowCap = params.reserveCache.reserveConfiguration.getBorrowCap();
     unchecked {
@@ -178,10 +164,7 @@ library ValidationLogic {
         params.reserveCache.nextVariableBorrowIndex
       );
 
-      vars.totalDebt =
-        params.reserveCache.currTotalStableDebt +
-        vars.totalSupplyVariableDebt +
-        params.amount;
+      vars.totalDebt = vars.totalSupplyVariableDebt + params.amount;
 
       unchecked {
         require(vars.totalDebt <= vars.borrowCap * vars.assetUnit, Errors.BORROW_CAP_EXCEEDED);
@@ -235,17 +218,13 @@ library ValidationLogic {
    * @notice Validates a repay action.
    * @param reserveCache The cached data of the reserve
    * @param amountSent The amount sent for the repayment. Can be an actual value or uint(-1)
-   * @param interestRateMode The interest rate mode of the debt being repaid
    * @param onBehalfOf The address of the user msg.sender is repaying for
-   * @param stableDebt The borrow balance of the user
    * @param variableDebt The borrow balance of the user
    */
   function validateRepay(
     DataTypes.ReserveCache memory reserveCache,
     uint256 amountSent,
-    DataTypes.InterestRateMode interestRateMode,
     address onBehalfOf,
-    uint256 stableDebt,
     uint256 variableDebt
   ) internal view {
     require(amountSent != 0, Errors.INVALID_AMOUNT);
@@ -258,10 +237,7 @@ library ValidationLogic {
     require(isActive, Errors.RESERVE_INACTIVE);
     require(!isPaused, Errors.RESERVE_PAUSED);
 
-    require(
-      (variableDebt != 0 && interestRateMode == DataTypes.InterestRateMode.VARIABLE),
-      Errors.NO_DEBT_OF_SELECTED_TYPE
-    );
+    require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
   }
 
   /**
@@ -340,13 +316,6 @@ library ValidationLogic {
 
     require(vars.collateralReserveActive && vars.principalReserveActive, Errors.RESERVE_INACTIVE);
     require(!vars.collateralReservePaused && !vars.principalReservePaused, Errors.RESERVE_PAUSED);
-
-    require(
-      params.priceOracleSentinel == address(0) ||
-        params.healthFactor < MINIMUM_HEALTH_FACTOR_LIQUIDATION_THRESHOLD ||
-        IPriceOracleSentinel(params.priceOracleSentinel).isLiquidationAllowed(),
-      Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
-    );
 
     require(
       params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,

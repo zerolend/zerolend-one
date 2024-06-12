@@ -13,10 +13,10 @@ import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IPoolAddressesProvider} from '../../interfaces/IPoolAddressesProvider.sol';
 import {IPool} from '../../interfaces/IPool.sol';
-import {PoolStorage} from './PoolStorage.sol';
+import {IAggregatorInterface, PoolStorage} from './PoolStorage.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 
-contract Pool is Initializable, PoolStorage, IPool {
+abstract contract Pool is Initializable, PoolStorage, IPool {
   using ReserveLogic for DataTypes.ReserveData;
 
   /**
@@ -34,7 +34,7 @@ contract Pool is Initializable, PoolStorage, IPool {
   ) public virtual reinitializer(1) {
     configurator = configurator;
     for (uint i = 0; i < assets.length; i++) {
-      _setReserveConfiguration(assets[i], rateStrategyAddresses[i], sources[i], configurations[i]);
+      // _setReserveConfiguration(assets[i], rateStrategyAddresses[i], sources[i], configurations[i]);
     }
   }
 
@@ -74,7 +74,7 @@ contract Pool is Initializable, PoolStorage, IPool {
           amount: amount,
           to: to,
           reservesCount: _reservesCount,
-          oracle: ADDRESSES_PROVIDER.getPriceOracle()
+          oracle: address(this)
         })
       );
   }
@@ -83,7 +83,6 @@ contract Pool is Initializable, PoolStorage, IPool {
   function borrow(
     address asset,
     uint256 amount,
-    uint256 interestRateMode,
     uint16 referralCode,
     address onBehalfOf
   ) public virtual override {
@@ -96,23 +95,21 @@ contract Pool is Initializable, PoolStorage, IPool {
         user: msg.sender,
         onBehalfOf: onBehalfOf,
         amount: amount,
-        interestRateMode: DataTypes.InterestRateMode(interestRateMode),
         referralCode: referralCode,
         releaseUnderlying: true,
         reservesCount: _reservesCount,
-        oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-        priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+        oracle: address(this)
       })
     );
   }
 
-  /// @inheritdoc IPool
+  // @inheritdoc IPool
   function repay(
     address asset,
     uint256 amount,
     address onBehalfOf,
     bool useATokens
-  ) public virtual override returns (uint256) {
+  ) public virtual returns (uint256) {
     return
       BorrowLogic.executeRepay(
         _reserves,
@@ -146,8 +143,7 @@ contract Pool is Initializable, PoolStorage, IPool {
         debtAsset: debtAsset,
         user: user,
         receiveAToken: receiveAToken,
-        priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
-        priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+        oracle: address(this)
       })
     );
   }
@@ -205,12 +201,11 @@ contract Pool is Initializable, PoolStorage, IPool {
       PoolLogic.executeGetUserAccountData(
         _reserves,
         _reservesList,
-        _eModeCategories,
         DataTypes.CalculateUserAccountDataParams({
           userConfig: _usersConfig[user],
           reservesCount: _reservesCount,
           user: user,
-          oracle: ADDRESSES_PROVIDER.getPriceOracle()
+          oracle: address(this)
         })
       );
   }
@@ -274,7 +269,7 @@ contract Pool is Initializable, PoolStorage, IPool {
     return _reservesList[id];
   }
 
-  /// @inheritdoc IPool
+  // @inheritdoc IPool
   function _setReserveConfiguration(
     address asset,
     address rateStrategyAddress,
@@ -283,27 +278,23 @@ contract Pool is Initializable, PoolStorage, IPool {
   ) internal {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
     require(_reserves[asset].id != 0 || _reservesList[0] == asset, Errors.ASSET_NOT_LISTED);
-
-    address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
-
+    address oldRateStrategyAddress = _reserves[asset].interestRateStrategyAddress;
     _reserves[asset].configuration = configuration;
     _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
-    assetsSources[asset] = AggregatorInterface(source);
+    _assetsSources[asset] = IAggregatorInterface(source);
   }
 
   function setReserveConfiguration(
     address asset,
-    address rateStrategyAddress,
-    address source,
+    // address rateStrategyAddress,
+    // address source,
     DataTypes.ReserveConfigurationMap calldata configuration
-  ) external virtual override {
+  ) external virtual {
     require(msg.sender == configurator, 'only configurator');
-    _setReserveConfiguration(asset, rateStrategyAddress, source, configuration);
+    // _setReserveConfiguration(asset, rateStrategyAddress, source, configuration);
   }
 
-  /// @inheritdoc IPriceOracleGetter
   function getAssetPrice(address asset) public view override returns (uint256) {
-    AggregatorInterface source = assetsSources[asset];
-    return uint256(source.latestAnswer());
+    return uint256(_assetsSources[asset].latestAnswer());
   }
 }
