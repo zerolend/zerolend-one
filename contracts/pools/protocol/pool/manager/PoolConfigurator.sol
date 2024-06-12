@@ -224,7 +224,7 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
   }
 
   function _checkNoSuppliers(address pool, address asset) internal view {
-    (, uint256 accruedToTreasury, uint256 totalATokens, , , , , , , , , ) = IPoolDataProvider(
+    (, uint256 accruedToTreasury, uint256 totalATokens, , , , , , ) = IPoolDataProvider(
       _addressesProvider.getPoolDataProvider()
     ).getReserveData(asset);
 

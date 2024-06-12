@@ -15,7 +15,7 @@ import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfigu
 import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
-import {IPriceOracleGetter} from '../../../interfaces/IPriceOracleGetter.sol';
+import {IPool} from '../../../interfaces/IPool.sol';
 
 /**
  * @title LiquidationLogic library
@@ -152,7 +152,7 @@ library LiquidationLogic {
       vars.actualDebtToLiquidate,
       vars.userCollateralBalance,
       vars.liquidationBonus,
-      IPriceOracleGetter(params.oracle)
+      IPool(params.oracle)
     );
 
     if (vars.userTotalDebt == vars.actualDebtToLiquidate) {
@@ -425,7 +425,7 @@ library LiquidationLogic {
     uint256 debtToCover,
     uint256 userCollateralBalance,
     uint256 liquidationBonus,
-    IPriceOracleGetter oracle
+    IPool oracle
   ) internal view returns (uint256, uint256, uint256) {
     AvailableCollateralToLiquidateLocalVars memory vars;
 

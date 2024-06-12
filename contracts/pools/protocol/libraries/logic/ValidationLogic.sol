@@ -7,7 +7,7 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IScaledBalanceToken} from '../../../interfaces/IScaledBalanceToken.sol';
-import {IPriceOracleGetter} from '../../../interfaces/IPriceOracleGetter.sol';
+import {IPool} from '../../../interfaces/IPool.sol';
 import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IPoolAddressesProvider} from '../../../interfaces/IPoolAddressesProvider.sol';
 import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
@@ -197,9 +197,7 @@ library ValidationLogic {
       Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
 
-    vars.amountInBaseCurrency =
-      IPriceOracleGetter(params.oracle).getAssetPrice(params.asset) *
-      params.amount;
+    vars.amountInBaseCurrency = IPool(params.oracle).getAssetPrice(params.asset) * params.amount;
     unchecked {
       vars.amountInBaseCurrency /= vars.assetUnit;
     }

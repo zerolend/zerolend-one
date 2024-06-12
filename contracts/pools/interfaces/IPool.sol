@@ -439,8 +439,6 @@ interface IPool {
    */
   function rescueTokens(address token, address to, uint256 amount) external;
 
-  function getAssetPrice(address asset) external view returns (uint256);
-
   /**
    * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
    * - E.g. User supplies 100 USDC and gets in return 100 aUSDC
@@ -454,4 +452,11 @@ interface IPool {
    *   0 if the action is executed directly by the user, without any middle-man
    */
   function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
+
+  /**
+   * @notice Returns the asset price in the base currency
+   * @param asset The address of the asset
+   * @return The price of the asset
+   */
+  function getAssetPrice(address asset) external view returns (uint256);
 }

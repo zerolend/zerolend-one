@@ -24,7 +24,6 @@ abstract contract AaveProtocolDataProvider is IPoolDataProvider {
 
   address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-  /// @inheritdoc IPoolDataProvider
   IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
   /**
@@ -83,7 +82,6 @@ abstract contract AaveProtocolDataProvider is IPoolDataProvider {
       uint256 reserveFactor,
       bool usageAsCollateralEnabled,
       bool borrowingEnabled,
-      bool stableBorrowRateEnabled,
       bool isActive,
       bool isFrozen
     )
@@ -94,7 +92,7 @@ abstract contract AaveProtocolDataProvider is IPoolDataProvider {
     (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration
       .getParams();
 
-    (isActive, isFrozen, borrowingEnabled, stableBorrowRateEnabled, ) = configuration.getFlags();
+    (isActive, isFrozen, borrowingEnabled, , ) = configuration.getFlags();
 
     usageAsCollateralEnabled = liquidationThreshold != 0;
   }
@@ -186,13 +184,9 @@ abstract contract AaveProtocolDataProvider is IPoolDataProvider {
     override
     returns (
       uint256 currentATokenBalance,
-      uint256 currentStableDebt,
       uint256 currentVariableDebt,
-      uint256 principalStableDebt,
       uint256 scaledVariableDebt,
-      uint256 stableBorrowRate,
       uint256 liquidityRate,
-      uint40 stableRateLastUpdated,
       bool usageAsCollateralEnabled
     )
   {
@@ -211,16 +205,16 @@ abstract contract AaveProtocolDataProvider is IPoolDataProvider {
     usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
   }
 
-  // /// @inheritdoc IPoolDataProvider
-  // function getReserveTokensAddresses(
-  //   address asset
-  // ) external view override returns (address aTokenAddress, address variableDebtTokenAddress) {
-  //   DataTypes.ReserveData memory reserve = IPool(ADDRESSES_PROVIDER.getPool()).getReserveData(
-  //     asset
-  //   );
+  /// @inheritdoc IPoolDataProvider
+  function getReserveTokensAddresses(
+    address asset
+  ) external view override returns (address aTokenAddress, address variableDebtTokenAddress) {
+    DataTypes.ReserveData memory reserve = IPool(ADDRESSES_PROVIDER.getPool()).getReserveData(
+      asset
+    );
 
-  //   return (reserve.aTokenAddress, reserve.variableDebtTokenAddress);
-  // }
+    return (reserve.aTokenAddress, reserve.variableDebtTokenAddress);
+  }
 
   /// @inheritdoc IPoolDataProvider
   function getInterestRateStrategyAddress(

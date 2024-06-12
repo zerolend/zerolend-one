@@ -4,7 +4,6 @@ pragma solidity ^0.8.10;
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
 import {IAToken} from '../../../interfaces/IAToken.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
@@ -79,7 +78,6 @@ library BorrowLogic {
       })
     );
 
-    uint256 currentStableRate = 0;
     bool isFirstBorrowing = false;
 
     (isFirstBorrowing, reserveCache.nextScaledVariableDebt) = IVariableDebtToken(
