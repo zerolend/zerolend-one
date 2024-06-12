@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.12;
+pragma solidity 0.8.19;
 
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {GPv2SafeERC20} from '../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol';
@@ -242,7 +242,6 @@ library SupplyLogic {
    * @param useAsCollateral True if the user wants to set the asset as collateral, false otherwise
    * @param reservesCount The number of initialized reserves
    * @param priceOracle The address of the price oracle
-   * @param userEModeCategory The eMode category chosen by the user
    */
   function executeUseReserveAsCollateral(
     mapping(address => DataTypes.ReserveData) storage reservesData,
@@ -252,8 +251,7 @@ library SupplyLogic {
     address asset,
     bool useAsCollateral,
     uint256 reservesCount,
-    address priceOracle,
-    uint8 userEModeCategory
+    address priceOracle
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
@@ -287,8 +285,7 @@ library SupplyLogic {
         asset,
         msg.sender,
         reservesCount,
-        priceOracle,
-        userEModeCategory
+        priceOracle
       );
 
       emit ReserveUsedAsCollateralDisabled(asset, msg.sender);

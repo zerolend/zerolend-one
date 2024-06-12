@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.12;
+pragma solidity 0.8.19;
 
 import {IERC20} from '../../../dependencies/openzeppelin/contracts//IERC20.sol';
 import {GPv2SafeERC20} from '../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol';
@@ -88,14 +88,12 @@ library LiquidationLogic {
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
-   * @param eModeCategories The configuration of all the efficiency mode categories
    * @param params The additional parameters needed to execute the liquidation function
    */
   function executeLiquidationCall(
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
-    mapping(uint8 => DataTypes.EModeCategory) storage eModeCategories,
     DataTypes.ExecuteLiquidationCallParams memory params
   ) external {
     LiquidationCallLocalVars memory vars;
@@ -109,7 +107,6 @@ library LiquidationLogic {
     (, , , , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
       reservesData,
       reservesList,
-      eModeCategories,
       DataTypes.CalculateUserAccountDataParams({
         userConfig: userConfig,
         reservesCount: params.reservesCount,
@@ -141,7 +138,7 @@ library LiquidationLogic {
       vars.collateralPriceSource,
       vars.debtPriceSource,
       vars.liquidationBonus
-    ) = _getConfigurationData(eModeCategories, collateralReserve, params);
+    ) = _getConfigurationData(collateralReserve, params);
 
     vars.userCollateralBalance = vars.collateralAToken.balanceOf(params.user);
 
@@ -377,7 +374,6 @@ library LiquidationLogic {
 
   /**
    * @notice Returns the configuration data for the debt and the collateral reserves.
-   * @param eModeCategories The configuration of all the efficiency mode categories
    * @param collateralReserve The data of the collateral reserve
    * @param params The additional parameters needed to execute the liquidation function
    * @return The collateral aToken
@@ -386,7 +382,6 @@ library LiquidationLogic {
    * @return The liquidation bonus to apply to the collateral
    */
   function _getConfigurationData(
-    mapping(uint8 => DataTypes.EModeCategory) storage eModeCategories,
     DataTypes.ReserveData storage collateralReserve,
     DataTypes.ExecuteLiquidationCallParams memory params
   ) internal view returns (IAToken, address, address, uint256) {

@@ -3,11 +3,11 @@
 
 // TODO: take inspiration from morpho's metamorpho
 
-pragma solidity ^0.8.20;
+pragma solidity 0.8.19;
 
-import {AccessControlEnumerable} from '@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol';
+import {AccessControlEnumerable} from '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 import {ERC721Holder} from '@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
-import {ERC1155Holder} from '@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol';
+import {ERC1155Receiver, ERC1155Holder} from '@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 
 import {ITimelock} from './ITimelock.sol';
@@ -30,6 +30,9 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
 
   mapping(bytes32 id => uint256) private _timestamps;
   uint256 private _minDelay;
+
+  bytes32 PROPOSER_ROLE = keccak256('PROPOSER_ROLE');
+  bytes32 CANCELLER_ROLE = keccak256('CANCELLER_ROLE');
 
   /**
    * @dev Initializes the contract with the following parameters:
@@ -77,7 +80,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    */
   function supportsInterface(
     bytes4 interfaceId
-  ) public view virtual override(AccessControlEnumerable, ERC1155Holder) returns (bool) {
+  ) public view virtual override(AccessControlEnumerable, ERC1155Receiver) returns (bool) {
     return super.supportsInterface(interfaceId);
   }
 
@@ -262,7 +265,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    */
   function _execute(address target, uint256 value, bytes calldata data) internal virtual {
     (bool success, bytes memory returndata) = target.call{value: value}(data);
-    Address.verifyCallResult(success, returndata);
+    Address.verifyCallResult(success, returndata, 'call failed');
   }
 
   /**

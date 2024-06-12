@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.19;
 
 import {GPv2SafeERC20} from '../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol';
 import {SafeCast} from '../../../dependencies/openzeppelin/contracts/SafeCast.sol';
@@ -8,15 +8,12 @@ import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 import {IFlashLoanReceiver} from '../../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import {IFlashLoanSimpleReceiver} from '../../../flashloan/interfaces/IFlashLoanSimpleReceiver.sol';
-import {IPoolAddressesProvider} from '../../../interfaces/IPoolAddressesProvider.sol';
-import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
-import {BorrowLogic} from './BorrowLogic.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 
 /**
@@ -53,121 +50,6 @@ library FlashLoanLogic {
     uint256[] totalPremiums;
     uint256 flashloanPremiumTotal;
     uint256 flashloanPremiumToProtocol;
-  }
-
-  /**
-   * @notice Implements the flashloan feature that allow users to access liquidity of the pool for one transaction
-   * as long as the amount taken plus fee is returned or debt is opened.
-   * @dev For authorized flashborrowers the fee is waived
-   * @dev At the end of the transaction the pool will pull amount borrowed + fee from the receiver,
-   * if the receiver have not approved the pool the transaction will revert.
-   * @dev Emits the `FlashLoan()` event
-   * @param reservesData The state of all the reserves
-   * @param reservesList The addresses of all the active reserves
-   * @param eModeCategories The configuration of all the efficiency mode categories
-   * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
-   * @param params The additional parameters needed to execute the flashloan function
-   */
-  function executeFlashLoan(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(uint256 => address) storage reservesList,
-    mapping(uint8 => DataTypes.EModeCategory) storage eModeCategories,
-    DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.FlashloanParams memory params
-  ) external {
-    // The usual action flow (cache -> updateState -> validation -> changeState -> updateRates)
-    // is altered to (validation -> user payload -> cache -> updateState -> changeState -> updateRates) for flashloans.
-    // This is done to protect against reentrance and rate manipulation within the user specified payload.
-
-    ValidationLogic.validateFlashloan(reservesData, params.assets, params.amounts);
-
-    FlashLoanLocalVars memory vars;
-
-    vars.totalPremiums = new uint256[](params.assets.length);
-
-    vars.receiver = IFlashLoanReceiver(params.receiverAddress);
-    (vars.flashloanPremiumTotal, vars.flashloanPremiumToProtocol) = params.isAuthorizedFlashBorrower
-      ? (0, 0)
-      : (params.flashLoanPremiumTotal, params.flashLoanPremiumToProtocol);
-
-    for (vars.i = 0; vars.i < params.assets.length; vars.i++) {
-      vars.currentAmount = params.amounts[vars.i];
-      vars.totalPremiums[vars.i] = DataTypes.InterestRateMode(params.interestRateModes[vars.i]) ==
-        DataTypes.InterestRateMode.NONE
-        ? vars.currentAmount.percentMul(vars.flashloanPremiumTotal)
-        : 0;
-      IAToken(reservesData[params.assets[vars.i]].aTokenAddress).transferUnderlyingTo(
-        params.receiverAddress,
-        vars.currentAmount
-      );
-    }
-
-    require(
-      vars.receiver.executeOperation(
-        params.assets,
-        params.amounts,
-        vars.totalPremiums,
-        msg.sender,
-        params.params
-      ),
-      Errors.INVALID_FLASHLOAN_EXECUTOR_RETURN
-    );
-
-    for (vars.i = 0; vars.i < params.assets.length; vars.i++) {
-      vars.currentAsset = params.assets[vars.i];
-      vars.currentAmount = params.amounts[vars.i];
-
-      if (
-        DataTypes.InterestRateMode(params.interestRateModes[vars.i]) ==
-        DataTypes.InterestRateMode.NONE
-      ) {
-        _handleFlashLoanRepayment(
-          reservesData[vars.currentAsset],
-          DataTypes.FlashLoanRepaymentParams({
-            asset: vars.currentAsset,
-            receiverAddress: params.receiverAddress,
-            amount: vars.currentAmount,
-            totalPremium: vars.totalPremiums[vars.i],
-            flashLoanPremiumToProtocol: vars.flashloanPremiumToProtocol,
-            referralCode: params.referralCode
-          })
-        );
-      } else {
-        // If the user chose to not return the funds, the system checks if there is enough collateral and
-        // eventually opens a debt position
-        BorrowLogic.executeBorrow(
-          reservesData,
-          reservesList,
-          eModeCategories,
-          userConfig,
-          DataTypes.ExecuteBorrowParams({
-            asset: vars.currentAsset,
-            user: msg.sender,
-            onBehalfOf: params.onBehalfOf,
-            amount: vars.currentAmount,
-            interestRateMode: DataTypes.InterestRateMode(params.interestRateModes[vars.i]),
-            referralCode: params.referralCode,
-            releaseUnderlying: false,
-            maxStableRateBorrowSizePercent: IPool(params.pool).MAX_STABLE_RATE_BORROW_SIZE_PERCENT(),
-            reservesCount: IPool(params.pool).getReservesCount(),
-            oracle: IPoolAddressesProvider(params.addressesProvider).getPriceOracle(),
-            userEModeCategory: IPool(params.pool).getUserEMode(params.onBehalfOf).toUint8(),
-            priceOracleSentinel: IPoolAddressesProvider(params.addressesProvider)
-              .getPriceOracleSentinel()
-          })
-        );
-        // no premium is paid when taking on the flashloan as debt
-        emit FlashLoan(
-          params.receiverAddress,
-          msg.sender,
-          vars.currentAsset,
-          vars.currentAmount,
-          DataTypes.InterestRateMode(params.interestRateModes[vars.i]),
-          0,
-          params.referralCode
-        );
-      }
-    }
   }
 
   /**

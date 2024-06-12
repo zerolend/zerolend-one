@@ -98,32 +98,6 @@ interface IPool {
   );
 
   /**
-   * @dev Emitted on swapBorrowRateMode()
-   * @param reserve The address of the underlying asset of the reserve
-   * @param user The address of the user swapping his rate mode
-   * @param interestRateMode The current interest rate mode of the position being swapped: 1 for Stable, 2 for Variable
-   */
-  event SwapBorrowRateMode(
-    address indexed reserve,
-    address indexed user,
-    DataTypes.InterestRateMode interestRateMode
-  );
-
-  /**
-   * @dev Emitted on borrow(), repay() and liquidationCall() when using isolated assets
-   * @param asset The address of the underlying asset of the reserve
-   * @param totalDebt The total isolation mode debt for the reserve
-   */
-  event IsolationModeTotalDebtUpdated(address indexed asset, uint256 totalDebt);
-
-  /**
-   * @dev Emitted when the user selects a certain asset category for eMode
-   * @param user The address of the user
-   * @param categoryId The category id
-   */
-  event UserEModeSet(address indexed user, uint8 categoryId);
-
-  /**
    * @dev Emitted on setUserUseReserveAsCollateral()
    * @param reserve The address of the underlying asset of the reserve
    * @param user The address of the user enabling the usage as collateral
@@ -622,91 +596,11 @@ interface IPool {
   function getReserveAddressById(uint16 id) external view returns (address);
 
   /**
-   * @notice Returns the PoolAddressesProvider connected to this contract
-   * @return The address of the PoolAddressesProvider
-   */
-  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
-
-  /**
-   * @notice Updates the protocol fee on the bridging
-   * @param bridgeProtocolFee The part of the premium sent to the protocol treasury
-   */
-  function updateBridgeProtocolFee(uint256 bridgeProtocolFee) external;
-
-  /**
-   * @notice Updates flash loan premiums. Flash loan premium consists of two parts:
-   * - A part is sent to aToken holders as extra, one time accumulated interest
-   * - A part is collected by the protocol treasury
-   * @dev The total premium is calculated on the total borrowed amount
-   * @dev The premium to protocol is calculated on the total premium, being a percentage of `flashLoanPremiumTotal`
-   * @dev Only callable by the PoolConfigurator contract
-   * @param flashLoanPremiumTotal The total premium, expressed in bps
-   * @param flashLoanPremiumToProtocol The part of the premium sent to the protocol treasury, expressed in bps
-   */
-  function updateFlashloanPremiums(
-    uint128 flashLoanPremiumTotal,
-    uint128 flashLoanPremiumToProtocol
-  ) external;
-
-  /**
-   * @notice Configures a new category for the eMode.
-   * @dev In eMode, the protocol allows very high borrowing power to borrow assets of the same category.
-   * The category 0 is reserved as it's the default for volatile assets
-   * @param id The id of the category
-   * @param config The configuration of the category
-   */
-  function configureEModeCategory(uint8 id, DataTypes.EModeCategory memory config) external;
-
-  /**
-   * @notice Returns the data of an eMode category
-   * @param id The id of the category
-   * @return The configuration data of the category
-   */
-  function getEModeCategoryData(uint8 id) external view returns (DataTypes.EModeCategory memory);
-
-  /**
-   * @notice Allows a user to use the protocol in eMode
-   * @param categoryId The id of the category
-   */
-  function setUserEMode(uint8 categoryId) external;
-
-  /**
-   * @notice Returns the eMode the user is using
-   * @param user The address of the user
-   * @return The eMode id
-   */
-  function getUserEMode(address user) external view returns (uint256);
-
-  /**
    * @notice Resets the isolation mode total debt of the given asset to zero
    * @dev It requires the given asset has zero debt ceiling
    * @param asset The address of the underlying asset to reset the isolationModeTotalDebt
    */
   function resetIsolationModeTotalDebt(address asset) external;
-
-  /**
-   * @notice Returns the percentage of available liquidity that can be borrowed at once at stable rate
-   * @return The percentage of available liquidity to borrow, expressed in bps
-   */
-  function MAX_STABLE_RATE_BORROW_SIZE_PERCENT() external view returns (uint256);
-
-  /**
-   * @notice Returns the total fee on flash loans
-   * @return The total fee on flashloans
-   */
-  function FLASHLOAN_PREMIUM_TOTAL() external view returns (uint128);
-
-  /**
-   * @notice Returns the part of the bridge fees sent to protocol
-   * @return The bridge fee sent to the protocol treasury
-   */
-  function BRIDGE_PROTOCOL_FEE() external view returns (uint256);
-
-  /**
-   * @notice Returns the part of the flashloan fees sent to protocol
-   * @return The flashloan fee sent to the protocol treasury
-   */
-  function FLASHLOAN_PREMIUM_TO_PROTOCOL() external view returns (uint128);
 
   /**
    * @notice Returns the maximum number of reserves supported to be listed in this Pool

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.12;
+pragma solidity 0.8.19;
 
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
@@ -41,6 +41,6 @@ contract PoolStorage {
 
   // Map of asset price sources (pool => asset => priceSource)
   mapping(address => AggregatorInterface) private assetsSources;
-  address public immutable override BASE_CURRENCY;
-  uint256 public immutable override BASE_CURRENCY_UNIT;
+
+  address public configurator;
 }
