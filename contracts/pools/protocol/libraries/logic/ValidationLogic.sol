@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {Address} from '../../../dependencies/openzeppelin/contracts/Address.sol';
-import {GPv2SafeERC20} from '../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {Address} from '@openzeppelin/contracts/utils/Address.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IScaledBalanceToken} from '../../../interfaces/IScaledBalanceToken.sol';
 import {IPriceOracleGetter} from '../../../interfaces/IPriceOracleGetter.sol';
 import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IPoolAddressesProvider} from '../../../interfaces/IPoolAddressesProvider.sol';
-import {IAccessControl} from '../../../dependencies/openzeppelin/contracts/IAccessControl.sol';
+import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {Errors} from '../helpers/Errors.sol';
@@ -19,7 +19,7 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {GenericLogic} from './GenericLogic.sol';
-import {SafeCast} from '../../../dependencies/openzeppelin/contracts/SafeCast.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
  * @title ReserveLogic library
@@ -31,7 +31,7 @@ library ValidationLogic {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeCast for uint256;
-  using GPv2SafeERC20 for IERC20;
+  using SafeERC20 for IERC20;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using Address for address;

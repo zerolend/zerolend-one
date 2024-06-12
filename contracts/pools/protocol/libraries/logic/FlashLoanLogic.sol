@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {GPv2SafeERC20} from '../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol';
-import {SafeCast} from '../../../dependencies/openzeppelin/contracts/SafeCast.sol';
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
-import {IFlashLoanReceiver} from '../../../flashloan/interfaces/IFlashLoanReceiver.sol';
-import {IFlashLoanSimpleReceiver} from '../../../flashloan/interfaces/IFlashLoanSimpleReceiver.sol';
+import {IFlashLoanSimpleReceiver} from '../../../interfaces/IFlashLoanSimpleReceiver.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
@@ -24,7 +23,7 @@ import {ReserveLogic} from './ReserveLogic.sol';
 library FlashLoanLogic {
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
-  using GPv2SafeERC20 for IERC20;
+  using SafeERC20 for IERC20;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -42,7 +41,7 @@ library FlashLoanLogic {
 
   // Helper struct for internal variables used in the `executeFlashLoan` function
   struct FlashLoanLocalVars {
-    IFlashLoanReceiver receiver;
+    IFlashLoanSimpleReceiver receiver;
     uint256 i;
     address currentAsset;
     uint256 currentAmount;

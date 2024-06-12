@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
+import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {IDelegationToken} from '../../interfaces/IDelegationToken.sol';
 
 /**
@@ -11,8 +11,8 @@ import {IDelegationToken} from '../../interfaces/IDelegationToken.sol';
 contract MintableDelegationERC20 is IDelegationToken, ERC20 {
   address public delegatee;
 
-  constructor(string memory name, string memory symbol, uint8 decimals) ERC20(name, symbol) {
-    _setupDecimals(decimals);
+  constructor(string memory name, string memory symbol) ERC20(name, symbol) {
+    // _setupDecimals(decimals);
   }
 
   /**

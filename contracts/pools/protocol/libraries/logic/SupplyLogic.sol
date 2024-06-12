@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {GPv2SafeERC20} from '../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IAToken} from '../../../interfaces/IAToken.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
@@ -21,7 +21,7 @@ import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 library SupplyLogic {
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
-  using GPv2SafeERC20 for IERC20;
+  using SafeERC20 for IERC20;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using WadRayMath for uint256;

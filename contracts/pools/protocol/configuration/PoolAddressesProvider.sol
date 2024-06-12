@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IPoolAddressesProvider} from '../../interfaces/IPoolAddressesProvider.sol';
-import {InitializableImmutableAdminUpgradeabilityProxy} from '../libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+
+// import {InitializableImmutableAdminUpgradeabilityProxy} from '../libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 
 /**
  * @title PoolAddressesProvider
@@ -154,18 +155,18 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
    */
   function _updateImpl(bytes32 id, address newAddress) internal {
     address proxyAddress = _addresses[id];
-    InitializableImmutableAdminUpgradeabilityProxy proxy;
-    bytes memory params = abi.encodeWithSignature('initialize(address)', address(this));
+    // InitializableImmutableAdminUpgradeabilityProxy proxy;
+    // bytes memory params = abi.encodeWithSignature('initialize(address)', address(this));
 
-    if (proxyAddress == address(0)) {
-      proxy = new InitializableImmutableAdminUpgradeabilityProxy(address(this));
-      _addresses[id] = proxyAddress = address(proxy);
-      proxy.initialize(newAddress, params);
-      emit ProxyCreated(id, proxyAddress, newAddress);
-    } else {
-      proxy = InitializableImmutableAdminUpgradeabilityProxy(payable(proxyAddress));
-      proxy.upgradeToAndCall(newAddress, params);
-    }
+    // if (proxyAddress == address(0)) {
+    //   proxy = new InitializableImmutableAdminUpgradeabilityProxy(address(this));
+    //   _addresses[id] = proxyAddress = address(proxy);
+    //   proxy.initialize(newAddress, params);
+    //   emit ProxyCreated(id, proxyAddress, newAddress);
+    // } else {
+    //   proxy = InitializableImmutableAdminUpgradeabilityProxy(payable(proxyAddress));
+    //   proxy.upgradeToAndCall(newAddress, params);
+    // }
   }
 
   /**
@@ -186,12 +187,13 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
    * @return The address of the implementation contract
    */
   function _getProxyImplementation(bytes32 id) internal returns (address) {
-    address proxyAddress = _addresses[id];
-    if (proxyAddress == address(0)) {
-      return address(0);
-    } else {
-      address payable payableProxyAddress = payable(proxyAddress);
-      return InitializableImmutableAdminUpgradeabilityProxy(payableProxyAddress).implementation();
-    }
+    // address proxyAddress = _addresses[id];
+    // if (proxyAddress == address(0)) {
+    //   return address(0);
+    // } else {
+    //   address payable payableProxyAddress = payable(proxyAddress);
+    //   return InitializableImmutableAdminUpgradeabilityProxy(payableProxyAddress).implementation();
+    // }
+    return address(0);
   }
 }

@@ -13,27 +13,20 @@ import {IPoolDataProvider} from '../../../interfaces/IPoolDataProvider.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {PoolManager} from './PoolManager.sol';
 import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
-import {VersionedInitializable} from '../../libraries/aave-upgradeability/VersionedInitializable.sol';
+import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 
 /**
  * @title PoolConfigurator
  * @author Aave
  * @dev Implements the configuration methods for the Aave protocol
  */
-abstract contract PoolConfigurator is PoolManager, VersionedInitializable, IPoolConfigurator {
+abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigurator {
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   IPoolAddressesProvider internal _addressesProvider;
 
-  uint256 public constant CONFIGURATOR_REVISION = 0x4;
-
-  // @inheritdoc VersionedInitializable
-  function getRevision() internal pure virtual override returns (uint256) {
-    return CONFIGURATOR_REVISION;
-  }
-
-  function initialize(IPoolAddressesProvider provider) public initializer {
+  function initialize(IPoolAddressesProvider provider) public reinitializer(1) {
     _addressesProvider = provider;
   }
 
@@ -97,7 +90,7 @@ abstract contract PoolConfigurator is PoolManager, VersionedInitializable, IPool
       //if the liquidation threshold is being set to 0,
       // the reserve is being disabled as collateral. To do so,
       //we need to ensure no liquidity is supplied
-      _checkNoSuppliers(asset);
+      _checkNoSuppliers(pool, asset);
     }
 
     currentConfig.setLtv(ltv);
@@ -140,7 +133,7 @@ abstract contract PoolConfigurator is PoolManager, VersionedInitializable, IPool
 
   // @inheritdoc IPoolConfigurator
   function setReserveActive(address pool, address asset, bool active) external onlyPoolAdmin(pool) {
-    if (!active) _checkNoSuppliers(asset);
+    if (!active) _checkNoSuppliers(pool, asset);
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setActive(active);
@@ -230,7 +223,7 @@ abstract contract PoolConfigurator is PoolManager, VersionedInitializable, IPool
     emit ReserveInterestRateStrategyChanged(asset, oldRateStrategyAddress, newRateStrategyAddress);
   }
 
-  function _checkNoSuppliers(address asset) internal view {
+  function _checkNoSuppliers(address pool, address asset) internal view {
     (, uint256 accruedToTreasury, uint256 totalATokens, , , , , , , , , ) = IPoolDataProvider(
       _addressesProvider.getPoolDataProvider()
     ).getReserveData(asset);
@@ -238,7 +231,7 @@ abstract contract PoolConfigurator is PoolManager, VersionedInitializable, IPool
     require(totalATokens == 0 && accruedToTreasury == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
   }
 
-  function _checkNoBorrowers(address asset) internal view {
+  function _checkNoBorrowers(address pool, address asset) internal view {
     uint256 totalDebt = IPoolDataProvider(_addressesProvider.getPoolDataProvider()).getTotalDebt(
       asset
     );

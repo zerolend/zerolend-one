@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {GPv2SafeERC20} from '../../dependencies/gnosis/contracts/GPv2SafeERC20.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IPoolAddressesProvider} from '../../interfaces/IPoolAddressesProvider.sol';
-import {FlashLoanSimpleReceiverBase} from '../../flashloan/base/FlashLoanSimpleReceiverBase.sol';
+import {FlashLoanSimpleReceiverBase} from '../../../pools/protocol/FlashLoanSimpleReceiverBase.sol';
 import {MintableERC20} from '../tokens/MintableERC20.sol';
 
 contract MockFlashLoanSimpleReceiver is FlashLoanSimpleReceiverBase {
-  using GPv2SafeERC20 for IERC20;
+  using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
   event ExecutedWithFail(address asset, uint256 amount, uint256 premium);

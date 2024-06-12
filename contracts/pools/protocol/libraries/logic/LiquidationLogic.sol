@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC20} from '../../../dependencies/openzeppelin/contracts//IERC20.sol';
-import {GPv2SafeERC20} from '../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {WadRayMath} from '../../libraries/math/WadRayMath.sol';
 import {Helpers} from '../../libraries/helpers/Helpers.sol';
@@ -29,7 +29,7 @@ library LiquidationLogic {
   using ReserveLogic for DataTypes.ReserveData;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-  using GPv2SafeERC20 for IERC20;
+  using SafeERC20 for IERC20;
 
   // See `IPool` for descriptions
   event ReserveUsedAsCollateralEnabled(address indexed reserve, address indexed user);
