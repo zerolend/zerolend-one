@@ -6,17 +6,11 @@ import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveC
 import {UserConfiguration} from '../protocol/libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
-import {IStableDebtToken} from '../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../interfaces/IVariableDebtToken.sol';
 import {IPool} from '../interfaces/IPool.sol';
 import {IPoolDataProvider} from '../interfaces/IPoolDataProvider.sol';
 
-/**
- * @title AaveProtocolDataProvider
- * @author Aave
- * @notice Peripheral contract to collect and pre-process information from the Pool.
- */
-abstract contract AaveProtocolDataProvider is IPoolDataProvider {
+abstract contract ProtocolDataProvider is IPoolDataProvider {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using WadRayMath for uint256;
