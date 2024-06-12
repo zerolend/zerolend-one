@@ -259,7 +259,6 @@ library LiquidationLogic {
   /**
    * @notice Liquidates the user aTokens by transferring them to the liquidator.
    * @dev   The function also checks the state of the liquidator and activates the aToken as collateral
-   *        as in standard transfers if the isolation mode constraints are respected.
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param usersConfig The users configuration mapping that track the supplied/borrowed assets

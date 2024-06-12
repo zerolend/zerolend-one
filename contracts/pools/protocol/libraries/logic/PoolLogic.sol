@@ -26,7 +26,6 @@ library PoolLogic {
 
   // See `IPool` for descriptions
   event MintedToTreasury(address indexed reserve, uint256 amountMinted);
-  event IsolationModeTotalDebtUpdated(address indexed asset, uint256 totalDebt);
 
   /**
    * @notice Initialize an asset reserve and add the reserve to the list of reserves

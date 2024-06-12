@@ -112,19 +112,11 @@ interface IPool {
   event ReserveUsedAsCollateralDisabled(address indexed reserve, address indexed user);
 
   /**
-   * @dev Emitted on rebalanceStableBorrowRate()
-   * @param reserve The address of the underlying asset of the reserve
-   * @param user The address of the user for which the rebalance has been executed
-   */
-  event RebalanceStableBorrowRate(address indexed reserve, address indexed user);
-
-  /**
    * @dev Emitted on flashLoan()
    * @param target The address of the flash loan receiver contract
    * @param initiator The address initiating the flash loan
    * @param asset The address of the asset being flash borrowed
    * @param amount The amount flash borrowed
-   * @param interestRateMode The flashloan mode: 0 for regular flashloan, 1 for Stable debt, 2 for Variable debt
    * @param premium The fee flash borrowed
    * @param referralCode The referral code used
    */
@@ -133,7 +125,6 @@ interface IPool {
     address initiator,
     address indexed asset,
     uint256 amount,
-    DataTypes.InterestRateMode interestRateMode,
     uint256 premium,
     uint16 indexed referralCode
   );
@@ -163,7 +154,6 @@ interface IPool {
    * @dev Emitted when the state of a reserve is updated.
    * @param reserve The address of the underlying asset of the reserve
    * @param liquidityRate The next liquidity rate
-   * @param stableBorrowRate The next stable borrow rate
    * @param variableBorrowRate The next variable borrow rate
    * @param liquidityIndex The next liquidity index
    * @param variableBorrowIndex The next variable borrow index
@@ -171,7 +161,6 @@ interface IPool {
   event ReserveDataUpdated(
     address indexed reserve,
     uint256 liquidityRate,
-    uint256 stableBorrowRate,
     uint256 variableBorrowRate,
     uint256 liquidityIndex,
     uint256 variableBorrowIndex
@@ -411,13 +400,6 @@ interface IPool {
    * @return The address of the reserve associated with id
    */
   function getReserveAddressById(uint16 id) external view returns (address);
-
-  /**
-   * @notice Resets the isolation mode total debt of the given asset to zero
-   * @dev It requires the given asset has zero debt ceiling
-   * @param asset The address of the underlying asset to reset the isolationModeTotalDebt
-   */
-  function resetIsolationModeTotalDebt(address asset) external;
 
   /**
    * @notice Returns the maximum number of reserves supported to be listed in this Pool

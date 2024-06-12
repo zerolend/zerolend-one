@@ -125,17 +125,6 @@ library DataTypes {
     address oracle;
   }
 
-  struct FinalizeTransferParams {
-    address asset;
-    address from;
-    address to;
-    uint256 amount;
-    uint256 balanceFromBefore;
-    uint256 balanceToBefore;
-    uint256 reservesCount;
-    address oracle;
-  }
-
   struct FlashloanParams {
     address receiverAddress;
     address[] assets;

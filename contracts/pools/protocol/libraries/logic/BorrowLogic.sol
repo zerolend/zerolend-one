@@ -45,8 +45,7 @@ library BorrowLogic {
 
   /**
    * @notice Implements the borrow feature. Borrowing allows users that provided collateral to draw liquidity from the
-   * Aave protocol proportionally to their collateralization power. For isolated positions, it also increases the
-   * isolated debt.
+   * Aave protocol proportionally to their collateralization power.
    * @dev  Emits the `Borrow()` event
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
@@ -111,8 +110,7 @@ library BorrowLogic {
 
   /**
    * @notice Implements the repay feature. Repaying transfers the underlying back to the aToken and clears the
-   * equivalent amount of debt for the user by burning the corresponding debt token. For isolated positions, it also
-   * reduces the isolated debt.
+   * equivalent amount of debt for the user by burning the corresponding debt token.
    * @dev  Emits the `Repay()` event
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves

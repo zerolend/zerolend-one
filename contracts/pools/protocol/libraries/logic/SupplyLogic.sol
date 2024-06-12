@@ -198,7 +198,7 @@ library SupplyLogic {
           userConfig,
           reserveCache.reserveConfiguration
         ),
-        Errors.USER_IN_ISOLATION_MODE_OR_LTV_ZERO
+        Errors.LTV_ZERO
       );
 
       userConfig.setUsingAsCollateral(reserve.id, true);

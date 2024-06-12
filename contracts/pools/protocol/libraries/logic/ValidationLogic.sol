@@ -51,12 +51,6 @@ library ValidationLogic {
   uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
   /**
-   * @dev Role identifier for the role allowed to supply isolated reserves as collateral
-   */
-  bytes32 public constant ISOLATED_COLLATERAL_SUPPLIER_ROLE =
-    keccak256('ISOLATED_COLLATERAL_SUPPLIER');
-
-  /**
    * @notice Validates a supply action.
    * @param reserveCache The cached data of the reserve
    * @param amount The amount to be supplied
@@ -121,8 +115,6 @@ library ValidationLogic {
     bool isFrozen;
     bool isPaused;
     bool borrowingEnabled;
-    bool stableRateBorrowingEnabled;
-    bool siloedBorrowingEnabled;
   }
 
   /**
@@ -140,13 +132,10 @@ library ValidationLogic {
 
     ValidateBorrowLocalVars memory vars;
 
-    (
-      vars.isActive,
-      vars.isFrozen,
-      vars.borrowingEnabled,
-      vars.stableRateBorrowingEnabled,
-      vars.isPaused
-    ) = params.reserveCache.reserveConfiguration.getFlags();
+    (vars.isActive, vars.isFrozen, vars.borrowingEnabled, , vars.isPaused) = params
+      .reserveCache
+      .reserveConfiguration
+      .getFlags();
 
     require(vars.isActive, Errors.RESERVE_INACTIVE);
     require(!vars.isPaused, Errors.RESERVE_PAUSED);
@@ -412,7 +401,7 @@ library ValidationLogic {
 
   /**
    * @notice Validates the action of activating the asset as collateral.
-   * @dev Only possible if the asset has non-zero LTV and the user is not in isolation mode
+   * @dev Only possible if the asset has non-zero LTV
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param userConfig the user configuration
@@ -432,7 +421,6 @@ library ValidationLogic {
   /**
    * @notice Validates if an asset should be automatically activated as collateral in the following actions: supply,
    * transfer, mint unbacked, and liquidate
-   * @dev This is used to ensure that isolated assets are not enabled as collateral automatically
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param userConfig the user configuration

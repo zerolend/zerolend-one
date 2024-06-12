@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IPoolAddressesProvider} from '../../../interfaces/IPoolAddressesProvider.sol';
 import {IACLManager} from '../../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {TimelockedActions} from './TimelockedActions.sol';
@@ -17,10 +16,8 @@ contract PoolManager is TimelockedActions {
   bytes32 public constant EMERGENCY_ADMIN_ROLE = keccak256('EMERGENCY_ADMIN');
   bytes32 public constant RISK_ADMIN_ROLE = keccak256('RISK_ADMIN');
 
-  constructor(IPoolAddressesProvider provider) TimelockedActions(0, msg.sender) {
-    address aclAdmin = provider.getACLAdmin();
-    require(aclAdmin != address(0), Errors.ACL_ADMIN_CANNOT_BE_ZERO);
-    _setupRole(DEFAULT_ADMIN_ROLE, aclAdmin);
+  constructor(address _governance) TimelockedActions(0, msg.sender) {
+    _setupRole(DEFAULT_ADMIN_ROLE, _governance);
   }
 
   function setRoleAdmin(bytes32 role, bytes32 adminRole) external onlyRole(DEFAULT_ADMIN_ROLE) {

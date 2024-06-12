@@ -103,22 +103,6 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
   }
 
   // @inheritdoc IPoolConfigurator
-  function setReserveStableRateBorrowing(
-    address pool,
-    address asset,
-    bool enabled
-  ) external onlyRiskOrPoolAdmins(pool) {
-    IPool cachedPool = IPool(pool);
-    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
-    if (enabled) {
-      require(currentConfig.getBorrowingEnabled(), Errors.BORROWING_NOT_ENABLED);
-    }
-    currentConfig.setStableRateBorrowingEnabled(enabled);
-    cachedPool.setConfiguration(asset, currentConfig);
-    emit ReserveStableRateBorrowing(asset, enabled);
-  }
-
-  // @inheritdoc IPoolConfigurator
   function setReserveFlashLoaning(
     address pool,
     address asset,

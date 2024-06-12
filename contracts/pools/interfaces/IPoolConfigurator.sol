@@ -13,14 +13,12 @@ interface IPoolConfigurator {
    * @dev Emitted when a reserve is initialized.
    * @param asset The address of the underlying asset of the reserve
    * @param aToken The address of the associated aToken contract
-   * @param stableDebtToken The address of the associated stable rate debt token
    * @param variableDebtToken The address of the associated variable rate debt token
    * @param interestRateStrategyAddress The address of the interest rate strategy for the reserve
    */
   event ReserveInitialized(
     address indexed asset,
     address indexed aToken,
-    address stableDebtToken,
     address variableDebtToken,
     address interestRateStrategyAddress
   );
@@ -52,13 +50,6 @@ interface IPoolConfigurator {
     uint256 liquidationThreshold,
     uint256 liquidationBonus
   );
-
-  /**
-   * @dev Emitted when stable rate borrowing is enabled or disabled on a reserve
-   * @param asset The address of the underlying asset of the reserve
-   * @param enabled True if stable rate borrowing is enabled, false otherwise
-   */
-  event ReserveStableRateBorrowing(address indexed asset, bool enabled);
 
   /**
    * @dev Emitted when a reserve is activated or deactivated
@@ -148,18 +139,6 @@ interface IPoolConfigurator {
   );
 
   /**
-   * @dev Emitted when the implementation of a stable debt token is upgraded.
-   * @param asset The address of the underlying asset of the reserve
-   * @param proxy The stable debt token proxy address
-   * @param implementation The new aToken implementation
-   */
-  event StableDebtTokenUpgraded(
-    address indexed asset,
-    address indexed proxy,
-    address indexed implementation
-  );
-
-  /**
    * @dev Emitted when the implementation of a variable debt token is upgraded.
    * @param asset The address of the underlying asset of the reserve
    * @param proxy The variable debt token proxy address
@@ -207,13 +186,6 @@ interface IPoolConfigurator {
   );
 
   /**
-   * @dev Emitted when the reserve is set as borrowable/non borrowable in isolation mode.
-   * @param asset The address of the underlying asset of the reserve
-   * @param borrowable True if the reserve is borrowable in isolation, false otherwise
-   */
-  event BorrowableInIsolationChanged(address asset, bool borrowable);
-
-  /**
    * @notice Initializes multiple reserves.
    * @param input The array of initialization parameters
    */
@@ -226,14 +198,6 @@ interface IPoolConfigurator {
   function updateAToken(ConfiguratorInputTypes.UpdateATokenInput calldata input) external;
 
   /**
-   * @notice Updates the stable debt token implementation for the reserve.
-   * @param input The stableDebtToken update parameters
-   */
-  function updateStableDebtToken(
-    ConfiguratorInputTypes.UpdateDebtTokenInput calldata input
-  ) external;
-
-  /**
    * @notice Updates the variable debt token implementation for the asset.
    * @param input The variableDebtToken update parameters
    */
@@ -243,7 +207,6 @@ interface IPoolConfigurator {
 
   /**
    * @notice Configures borrowing on a reserve.
-   * @dev Can only be disabled (set to false) if stable borrowing is disabled
    * @param asset The address of the underlying asset of the reserve
    * @param enabled True if borrowing needs to be enabled, false otherwise
    */
@@ -266,14 +229,6 @@ interface IPoolConfigurator {
   ) external;
 
   /**
-   * @notice Enable or disable stable rate borrowing on a reserve.
-   * @dev Can only be enabled (set to true) if borrowing is enabled
-   * @param asset The address of the underlying asset of the reserve
-   * @param enabled True if stable rate borrowing needs to be enabled, false otherwise
-   */
-  function setReserveStableRateBorrowing(address asset, bool enabled) external;
-
-  /**
    * @notice Enable or disable flashloans on a reserve
    * @param asset The address of the underlying asset of the reserve
    * @param enabled True if flashloans need to be enabled, false otherwise
@@ -294,17 +249,6 @@ interface IPoolConfigurator {
    * @param freeze True if the reserve needs to be frozen, false otherwise
    */
   function setReserveFreeze(address asset, bool freeze) external;
-
-  /**
-   * @notice Sets the borrowable in isolation flag for the reserve.
-   * @dev When this flag is set to true, the asset will be borrowable against isolated collaterals and the
-   * borrowed amount will be accumulated in the isolated collateral's total debt exposure
-   * @dev Only assets of the same family (e.g. USD stablecoins) should be borrowable in isolation mode to keep
-   * consistency in the debt ceiling calculations
-   * @param asset The address of the underlying asset of the reserve
-   * @param borrowable True if the asset should be borrowable in isolation, false otherwise
-   */
-  function setBorrowableInIsolation(address asset, bool borrowable) external;
 
   /**
    * @notice Pauses a reserve. A paused reserve does not allow any interaction (supply, borrow, repay,
