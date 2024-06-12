@@ -7,7 +7,6 @@ import {DataTypes} from '../../libraries/types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {IACLManager} from '../../../interfaces/IACLManager.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
-import {IPoolAddressesProvider} from '../../../interfaces/IPoolAddressesProvider.sol';
 import {IPoolConfigurator} from '../../../interfaces/IPoolConfigurator.sol';
 import {IPoolDataProvider} from '../../../interfaces/IPoolDataProvider.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
@@ -24,11 +23,9 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  IPoolAddressesProvider internal _addressesProvider;
-
-  function initialize(IPoolAddressesProvider provider) public reinitializer(1) {
-    _addressesProvider = provider;
-  }
+  // function initialize(IPoolAddressesProvider provider) public reinitializer(1) {
+  //   _addressesProvider = provider;
+  // }
 
   // @inheritdoc IPoolConfigurator
   function initReserves(
@@ -208,17 +205,16 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
   }
 
   function _checkNoSuppliers(address pool, address asset) internal view {
-    (, uint256 accruedToTreasury, uint256 totalATokens, , , , , , ) = IPoolDataProvider(
-      _addressesProvider.getPoolDataProvider()
-    ).getReserveData(asset);
-
-    require(totalATokens == 0 && accruedToTreasury == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
+    // (, uint256 accruedToTreasury, uint256 totalATokens, , , , , , ) = IPoolDataProvider(
+    //   _addressesProvider.getPoolDataProvider()
+    // ).getReserveData(asset);
+    // require(totalATokens == 0 && accruedToTreasury == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
   }
 
   function _checkNoBorrowers(address pool, address asset) internal view {
-    uint256 totalDebt = IPoolDataProvider(_addressesProvider.getPoolDataProvider()).getTotalDebt(
-      asset
-    );
-    require(totalDebt == 0, Errors.RESERVE_DEBT_NOT_ZERO);
+    // uint256 totalDebt = IPoolDataProvider(_addressesProvider.getPoolDataProvider()).getTotalDebt(
+    //   asset
+    // );
+    // require(totalDebt == 0, Errors.RESERVE_DEBT_NOT_ZERO);
   }
 }

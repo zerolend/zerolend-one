@@ -10,7 +10,6 @@ import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
 import {BorrowLogic} from '../libraries/logic/BorrowLogic.sol';
 import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {IPoolAddressesProvider} from '../../interfaces/IPoolAddressesProvider.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {IAggregatorInterface, PoolStorage} from './PoolStorage.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
@@ -31,7 +30,7 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
     address[] memory sources,
     DataTypes.ReserveConfigurationMap[] memory configurations
   ) public virtual reinitializer(1) {
-    configurator = configurator;
+    configurator = _configurator;
     for (uint i = 0; i < assets.length; i++) {
       // _setReserveConfiguration(assets[i], rateStrategyAddresses[i], sources[i], configurations[i]);
     }

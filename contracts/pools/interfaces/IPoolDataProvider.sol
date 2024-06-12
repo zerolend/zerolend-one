@@ -17,13 +17,13 @@ interface IPoolDataProvider {
    * @dev Handling MKR and ETH in a different way since they do not have standard `symbol` functions.
    * @return The list of reserves, pairs of symbols and addresses
    */
-  function getAllReservesTokens() external view returns (TokenData[] memory);
+  function getAllReservesTokens(address pool) external view returns (TokenData[] memory);
 
   /**
    * @notice Returns the list of the existing ATokens in the pool.
    * @return The list of ATokens, pairs of symbols and addresses
    */
-  function getAllATokens() external view returns (TokenData[] memory);
+  function getAllATokens(address pool) external view returns (TokenData[] memory);
 
   /**
    * @notice Returns the configuration data of the reserve
@@ -40,6 +40,7 @@ interface IPoolDataProvider {
    * @return isFrozen True if it is frozen, false otherwise
    */
   function getReserveConfigurationData(
+    address pool,
     address asset
   )
     external
@@ -61,7 +62,7 @@ interface IPoolDataProvider {
    * @param asset The address of the underlying asset of the reserve
    * @return The eMode id of the reserve
    */
-  function getReserveEModeCategory(address asset) external view returns (uint256);
+  function getReserveEModeCategory(address pool, address asset) external view returns (uint256);
 
   /**
    * @notice Returns the caps parameters of the reserve
@@ -70,6 +71,7 @@ interface IPoolDataProvider {
    * @return supplyCap The supply cap of the reserve
    */
   function getReserveCaps(
+    address pool,
     address asset
   ) external view returns (uint256 borrowCap, uint256 supplyCap);
 
@@ -78,34 +80,34 @@ interface IPoolDataProvider {
    * @param asset The address of the underlying asset of the reserve
    * @return isPaused True if the pool is paused, false otherwise
    */
-  function getPaused(address asset) external view returns (bool isPaused);
+  function getPaused(address pool, address asset) external view returns (bool isPaused);
 
   /**
    * @notice Returns the protocol fee on the liquidation bonus
    * @param asset The address of the underlying asset of the reserve
    * @return The protocol fee on liquidation
    */
-  function getLiquidationProtocolFee(address asset) external view returns (uint256);
+  function getLiquidationProtocolFee(address pool, address asset) external view returns (uint256);
 
   /**
    * @notice Returns the unbacked mint cap of the reserve
    * @param asset The address of the underlying asset of the reserve
    * @return The unbacked mint cap of the reserve
    */
-  function getUnbackedMintCap(address asset) external view returns (uint256);
+  function getUnbackedMintCap(address pool, address asset) external view returns (uint256);
 
   /**
    * @notice Returns the debt ceiling of the reserve
    * @param asset The address of the underlying asset of the reserve
    * @return The debt ceiling of the reserve
    */
-  function getDebtCeiling(address asset) external view returns (uint256);
+  function getDebtCeiling(address pool, address asset) external view returns (uint256);
 
   /**
    * @notice Returns the debt ceiling decimals
    * @return The debt ceiling decimals
    */
-  function getDebtCeilingDecimals() external pure returns (uint256);
+  function getDebtCeilingDecimals(address pool) external pure returns (uint256);
 
   /**
    * @notice Returns the reserve data
@@ -121,6 +123,7 @@ interface IPoolDataProvider {
    * @return lastUpdateTimestamp The timestamp of the last update of the reserve
    */
   function getReserveData(
+    address pool,
     address asset
   )
     external
@@ -142,14 +145,14 @@ interface IPoolDataProvider {
    * @param asset The address of the underlying asset of the reserve
    * @return The total supply of the aToken
    */
-  function getATokenTotalSupply(address asset) external view returns (uint256);
+  function getATokenTotalSupply(address pool, address asset) external view returns (uint256);
 
   /**
    * @notice Returns the total debt for a given asset
    * @param asset The address of the underlying asset of the reserve
    * @return The total debt for asset
    */
-  function getTotalDebt(address asset) external view returns (uint256);
+  function getTotalDebt(address pool, address asset) external view returns (uint256);
 
   /**
    * @notice Returns the user data in a reserve
@@ -163,6 +166,7 @@ interface IPoolDataProvider {
    *         otherwise
    */
   function getUserReserveData(
+    address pool,
     address asset,
     address user
   )
@@ -183,6 +187,7 @@ interface IPoolDataProvider {
    * @return variableDebtTokenAddress The VariableDebtToken address of the reserve
    */
   function getReserveTokensAddresses(
+    address pool,
     address asset
   ) external view returns (address aTokenAddress, address variableDebtTokenAddress);
 
@@ -192,6 +197,7 @@ interface IPoolDataProvider {
    * @return irStrategyAddress The address of the Interest Rate strategy
    */
   function getInterestRateStrategyAddress(
+    address pool,
     address asset
   ) external view returns (address irStrategyAddress);
 
@@ -200,5 +206,5 @@ interface IPoolDataProvider {
    * @param asset The address of the underlying asset of the reserve
    * @return True if FlashLoans are enabled, false otherwise
    */
-  function getFlashLoanEnabled(address asset) external view returns (bool);
+  function getFlashLoanEnabled(address pool, address asset) external view returns (bool);
 }

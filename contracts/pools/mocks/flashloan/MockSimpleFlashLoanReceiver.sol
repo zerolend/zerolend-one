@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IPoolAddressesProvider} from '../../interfaces/IPoolAddressesProvider.sol';
 import {FlashLoanSimpleReceiverBase} from '../../../pools/protocol/FlashLoanSimpleReceiverBase.sol';
 import {MintableERC20} from '../tokens/MintableERC20.sol';
 
@@ -19,7 +18,7 @@ contract MockFlashLoanSimpleReceiver is FlashLoanSimpleReceiverBase {
   uint256 internal _amountToApprove;
   bool internal _simulateEOA;
 
-  constructor(IPoolAddressesProvider provider) FlashLoanSimpleReceiverBase(provider) {}
+  // constructor(IPoolAddressesProvider provider) FlashLoanSimpleReceiverBase(provider) {}
 
   function setFailExecutionTransfer(bool fail) public {
     _failExecution = fail;

@@ -5,7 +5,6 @@ import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import {IPoolAddressesProvider} from '../../interfaces/IPoolAddressesProvider.sol';
 import {FlashLoanSimpleReceiverBase} from '../../protocol/FlashLoanSimpleReceiverBase.sol';
 import {MintableERC20} from '../tokens/MintableERC20.sol';
 import {IPool} from '../../interfaces/IPool.sol';
@@ -15,12 +14,12 @@ contract FlashloanAttacker is FlashLoanSimpleReceiverBase {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
-  IPoolAddressesProvider internal _provider;
+  // IPoolAddressesProvider internal _provider;
   IPool internal _pool;
 
-  constructor(IPoolAddressesProvider provider) FlashLoanSimpleReceiverBase(provider) {
-    _pool = IPool(provider.getPool());
-  }
+  // constructor(IPoolAddressesProvider provider) FlashLoanSimpleReceiverBase(provider) {
+  //   _pool = IPool(provider.getPool());
+  // }
 
   function supplyAsset(address asset, uint256 amount) public {
     MintableERC20 token = MintableERC20(asset);

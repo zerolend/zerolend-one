@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {IReserveInterestRateStrategy} from './IReserveInterestRateStrategy.sol';
-import {IPoolAddressesProvider} from './IPoolAddressesProvider.sol';
 
 /**
  * @title IDefaultInterestRateStrategy
@@ -22,12 +21,6 @@ interface IDefaultInterestRateStrategy is IReserveInterestRateStrategy {
    * @return The max excess usage ratio, expressed in ray.
    */
   function MAX_EXCESS_USAGE_RATIO() external view returns (uint256);
-
-  /**
-   * @notice Returns the address of the PoolAddressesProvider
-   * @return The address of the PoolAddressesProvider contract
-   */
-  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
 
   /**
    * @notice Returns the variable rate slope below optimal usage ratio

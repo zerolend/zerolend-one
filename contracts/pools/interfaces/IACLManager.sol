@@ -1,20 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {IPoolAddressesProvider} from './IPoolAddressesProvider.sol';
-
 /**
  * @title IACLManager
  * @author Aave
  * @notice Defines the basic interface for the ACL Manager
  */
 interface IACLManager {
-  /**
-   * @notice Returns the contract address of the PoolAddressesProvider
-   * @return The address of the PoolAddressesProvider
-   */
-  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
-
   /**
    * @notice Returns the identifier of the PoolAdmin role
    * @return The id of the PoolAdmin role
