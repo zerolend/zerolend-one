@@ -226,39 +226,6 @@ library ValidationLogic {
   }
 
   /**
-   * @notice Validates the action of setting an asset as collateral.
-   * @param reserveCache The cached data of the reserve
-   * @param userBalance The balance of the user
-   */
-  function validateSetUseReserveAsCollateral(
-    DataTypes.ReserveCache memory reserveCache,
-    uint256 userBalance
-  ) internal pure {
-    require(userBalance != 0, Errors.UNDERLYING_BALANCE_ZERO);
-
-    (bool isActive, , , , bool isPaused) = reserveCache.reserveConfiguration.getFlags();
-    require(isActive, Errors.RESERVE_INACTIVE);
-    require(!isPaused, Errors.RESERVE_PAUSED);
-  }
-
-  /**
-   * @notice Validates a flashloan action.
-   * @param reservesData The state of all the reserves
-   * @param assets The assets being flash-borrowed
-   * @param amounts The amounts for each asset being borrowed
-   */
-  function validateFlashloan(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    address[] memory assets,
-    uint256[] memory amounts
-  ) internal view {
-    require(assets.length == amounts.length, Errors.INCONSISTENT_FLASHLOAN_PARAMS);
-    for (uint256 i = 0; i < assets.length; i++) {
-      validateFlashloanSimple(reservesData[assets[i]]);
-    }
-  }
-
-  /**
    * @notice Validates a flashloan action.
    * @param reserve The state of the reserve
    */
@@ -387,51 +354,5 @@ library ValidationLogic {
       !hasZeroLtvCollateral || reserve.configuration.getLtv() == 0,
       Errors.LTV_VALIDATION_FAILED
     );
-  }
-
-  /**
-   * @notice Validates a transfer action.
-   * @param reserve The reserve object
-   */
-  function validateTransfer(DataTypes.ReserveData storage reserve) internal view {
-    require(!reserve.configuration.getPaused(), Errors.RESERVE_PAUSED);
-  }
-
-  /**
-   * @notice Validates the action of activating the asset as collateral.
-   * @dev Only possible if the asset has non-zero LTV
-   * @param reservesData The state of all the reserves
-   * @param reservesList The addresses of all the active reserves
-   * @param userConfig the user configuration
-   * @param reserveConfig The reserve configuration
-   * @return True if the asset can be activated as collateral, false otherwise
-   */
-  function validateUseAsCollateral(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(uint256 => address) storage reservesList,
-    DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ReserveConfigurationMap memory reserveConfig
-  ) internal view returns (bool) {
-    if (reserveConfig.getLtv() == 0) return false;
-    return !userConfig.isUsingAsCollateralAny();
-  }
-
-  /**
-   * @notice Validates if an asset should be automatically activated as collateral in the following actions: supply,
-   * transfer, mint unbacked, and liquidate
-   * @param reservesData The state of all the reserves
-   * @param reservesList The addresses of all the active reserves
-   * @param userConfig the user configuration
-   * @param reserveConfig The reserve configuration
-   * @return True if the asset can be activated as collateral, false otherwise
-   */
-  function validateAutomaticUseAsCollateral(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(uint256 => address) storage reservesList,
-    DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ReserveConfigurationMap memory reserveConfig,
-    address aTokenAddress
-  ) internal view returns (bool) {
-    return validateUseAsCollateral(reservesData, reservesList, userConfig, reserveConfig);
   }
 }

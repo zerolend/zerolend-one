@@ -9,8 +9,7 @@ import {AccessControlEnumerable} from '@openzeppelin/contracts/access/AccessCont
 import {ERC721Holder} from '@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
 import {ERC1155Receiver, ERC1155Holder} from '@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-
-import {ITimelock} from './ITimelock.sol';
+import {ITimelock} from '../../../interfaces/ITimelock.sol';
 
 /**
  * @dev Contract module which acts as a timelocked controller. When set as the

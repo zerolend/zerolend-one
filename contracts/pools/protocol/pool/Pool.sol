@@ -45,8 +45,6 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
   ) public virtual override {
     SupplyLogic.executeSupply(
       _reserves,
-      _reservesList,
-      _usersConfig[onBehalfOf],
       DataTypes.ExecuteSupplyParams({
         asset: asset,
         amount: amount,
@@ -276,7 +274,6 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
   ) internal {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
     require(_reserves[asset].id != 0 || _reservesList[0] == asset, Errors.ASSET_NOT_LISTED);
-    address oldRateStrategyAddress = _reserves[asset].interestRateStrategyAddress;
     _reserves[asset].configuration = configuration;
     _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
     _assetsSources[asset] = IAggregatorInterface(source);

@@ -13,7 +13,6 @@ import {GenericLogic} from './GenericLogic.sol';
 import {UserConfiguration} from '../../libraries/configuration/UserConfiguration.sol';
 import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
 import {IAToken} from '../../../interfaces/IAToken.sol';
-import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 
@@ -178,11 +177,7 @@ library LiquidationLogic {
       0
     );
 
-    if (params.receiveAToken) {
-      _liquidateATokens(reservesData, reservesList, usersConfig, collateralReserve, params, vars);
-    } else {
-      _burnCollateralATokens(collateralReserve, params, vars);
-    }
+    _burnCollateralATokens(collateralReserve, params, vars);
 
     // Transfer fee to treasury if it is non-zero
     if (vars.liquidationProtocolFeeAmount != 0) {
@@ -254,48 +249,6 @@ library LiquidationLogic {
       vars.actualCollateralToLiquidate,
       collateralReserveCache.nextLiquidityIndex
     );
-  }
-
-  /**
-   * @notice Liquidates the user aTokens by transferring them to the liquidator.
-   * @dev   The function also checks the state of the liquidator and activates the aToken as collateral
-   * @param reservesData The state of all the reserves
-   * @param reservesList The addresses of all the active reserves
-   * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
-   * @param collateralReserve The data of the collateral reserve
-   * @param params The additional parameters needed to execute the liquidation function
-   * @param vars The executeLiquidationCall() function local vars
-   */
-  function _liquidateATokens(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(uint256 => address) storage reservesList,
-    mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
-    DataTypes.ReserveData storage collateralReserve,
-    DataTypes.ExecuteLiquidationCallParams memory params,
-    LiquidationCallLocalVars memory vars
-  ) internal {
-    uint256 liquidatorPreviousATokenBalance = IERC20(vars.collateralAToken).balanceOf(msg.sender);
-    vars.collateralAToken.transferOnLiquidation(
-      params.user,
-      msg.sender,
-      vars.actualCollateralToLiquidate
-    );
-
-    if (liquidatorPreviousATokenBalance == 0) {
-      DataTypes.UserConfigurationMap storage liquidatorConfig = usersConfig[msg.sender];
-      if (
-        ValidationLogic.validateAutomaticUseAsCollateral(
-          reservesData,
-          reservesList,
-          liquidatorConfig,
-          collateralReserve.configuration,
-          collateralReserve.aTokenAddress
-        )
-      ) {
-        liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
-        emit ReserveUsedAsCollateralEnabled(params.collateralAsset, msg.sender);
-      }
-    }
   }
 
   /**

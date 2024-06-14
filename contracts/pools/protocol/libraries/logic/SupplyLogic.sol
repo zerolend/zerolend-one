@@ -45,14 +45,10 @@ library SupplyLogic {
    * @dev In the first supply action, `ReserveUsedAsCollateralEnabled()` is emitted, if the asset can be enabled as
    * collateral.
    * @param reservesData The state of all the reserves
-   * @param reservesList The addresses of all the active reserves
-   * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
    * @param params The additional parameters needed to execute the supply function
    */
   function executeSupply(
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(uint256 => address) storage reservesList,
-    DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteSupplyParams memory params
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -65,28 +61,6 @@ library SupplyLogic {
     reserve.updateInterestRates(reserveCache, params.asset, params.amount, 0);
 
     IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, params.amount);
-
-    bool isFirstSupply = IAToken(reserveCache.aTokenAddress).mint(
-      msg.sender,
-      params.onBehalfOf,
-      params.amount,
-      reserveCache.nextLiquidityIndex
-    );
-
-    if (isFirstSupply) {
-      if (
-        ValidationLogic.validateAutomaticUseAsCollateral(
-          reservesData,
-          reservesList,
-          userConfig,
-          reserveCache.reserveConfiguration,
-          reserveCache.aTokenAddress
-        )
-      ) {
-        userConfig.setUsingAsCollateral(reserve.id, true);
-        emit ReserveUsedAsCollateralEnabled(params.asset, params.onBehalfOf);
-      }
-    }
 
     emit Supply(params.asset, msg.sender, params.onBehalfOf, params.amount, params.referralCode);
   }
@@ -156,66 +130,5 @@ library SupplyLogic {
     emit Withdraw(params.asset, msg.sender, params.to, amountToWithdraw);
 
     return amountToWithdraw;
-  }
-
-  /**
-   * @notice Executes the 'set as collateral' feature. A user can choose to activate or deactivate an asset as
-   * collateral at any point in time. Deactivating an asset as collateral is subjected to the usual health factor
-   * checks to ensure collateralization.
-   * @dev Emits the `ReserveUsedAsCollateralEnabled()` event if the asset can be activated as collateral.
-   * @dev In case the asset is being deactivated as collateral, `ReserveUsedAsCollateralDisabled()` is emitted.
-   * @param reservesData The state of all the reserves
-   * @param reservesList The addresses of all the active reserves
-   * @param userConfig The users configuration mapping that track the supplied/borrowed assets
-   * @param asset The address of the asset being configured as collateral
-   * @param useAsCollateral True if the user wants to set the asset as collateral, false otherwise
-   * @param reservesCount The number of initialized reserves
-   * @param priceOracle The address of the price oracle
-   */
-  function executeUseReserveAsCollateral(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(uint256 => address) storage reservesList,
-    DataTypes.UserConfigurationMap storage userConfig,
-    address asset,
-    bool useAsCollateral,
-    uint256 reservesCount,
-    address priceOracle
-  ) external {
-    DataTypes.ReserveData storage reserve = reservesData[asset];
-    DataTypes.ReserveCache memory reserveCache = reserve.cache();
-
-    uint256 userBalance = IERC20(reserveCache.aTokenAddress).balanceOf(msg.sender);
-
-    ValidationLogic.validateSetUseReserveAsCollateral(reserveCache, userBalance);
-
-    if (useAsCollateral == userConfig.isUsingAsCollateral(reserve.id)) return;
-
-    if (useAsCollateral) {
-      require(
-        ValidationLogic.validateUseAsCollateral(
-          reservesData,
-          reservesList,
-          userConfig,
-          reserveCache.reserveConfiguration
-        ),
-        Errors.LTV_ZERO
-      );
-
-      userConfig.setUsingAsCollateral(reserve.id, true);
-      emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
-    } else {
-      userConfig.setUsingAsCollateral(reserve.id, false);
-      ValidationLogic.validateHFAndLtv(
-        reservesData,
-        reservesList,
-        userConfig,
-        asset,
-        msg.sender,
-        reservesCount,
-        priceOracle
-      );
-
-      emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
-    }
   }
 }

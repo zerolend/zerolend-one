@@ -17,12 +17,7 @@ library ConfiguratorLogic {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   // See `IPoolConfigurator` for descriptions
-  event ReserveInitialized(
-    address indexed asset,
-    address indexed aToken,
-    address variableDebtToken,
-    address interestRateStrategyAddress
-  );
+  event ReserveInitialized(address indexed asset, address interestRateStrategyAddress);
   event ATokenUpgraded(
     address indexed asset,
     address indexed proxy,
@@ -44,41 +39,7 @@ library ConfiguratorLogic {
     IPool pool,
     ConfiguratorInputTypes.InitReserveInput calldata input
   ) public {
-    address aTokenProxyAddress = _initTokenWithProxy(
-      input.aTokenImpl,
-      abi.encodeWithSelector(
-        IInitializableAToken.initialize.selector,
-        pool,
-        input.treasury,
-        input.underlyingAsset,
-        input.incentivesController,
-        input.underlyingAssetDecimals,
-        input.aTokenName,
-        input.aTokenSymbol,
-        input.params
-      )
-    );
-
-    address variableDebtTokenProxyAddress = _initTokenWithProxy(
-      input.variableDebtTokenImpl,
-      abi.encodeWithSelector(
-        IInitializableDebtToken.initialize.selector,
-        pool,
-        input.underlyingAsset,
-        input.incentivesController,
-        input.underlyingAssetDecimals,
-        input.variableDebtTokenName,
-        input.variableDebtTokenSymbol,
-        input.params
-      )
-    );
-
-    pool.initReserve(
-      input.underlyingAsset,
-      aTokenProxyAddress,
-      variableDebtTokenProxyAddress,
-      input.interestRateStrategyAddress
-    );
+    pool.initReserve(input.underlyingAsset, input.interestRateStrategyAddress);
 
     DataTypes.ReserveConfigurationMap memory currentConfig = DataTypes.ReserveConfigurationMap(0);
 
@@ -90,117 +51,6 @@ library ConfiguratorLogic {
 
     pool.setConfiguration(input.underlyingAsset, currentConfig);
 
-    emit ReserveInitialized(
-      input.underlyingAsset,
-      aTokenProxyAddress,
-      variableDebtTokenProxyAddress,
-      input.interestRateStrategyAddress
-    );
-  }
-
-  /**
-   * @notice Updates the aToken implementation and initializes it
-   * @dev Emits the `ATokenUpgraded` event
-   * @param cachedPool The Pool containing the reserve with the aToken
-   * @param input The parameters needed for the initialize call
-   */
-  function executeUpdateAToken(
-    IPool cachedPool,
-    ConfiguratorInputTypes.UpdateATokenInput calldata input
-  ) public {
-    DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(input.asset);
-
-    (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParams();
-
-    bytes memory encodedCall = abi.encodeWithSelector(
-      IInitializableAToken.initialize.selector,
-      cachedPool,
-      input.treasury,
-      input.asset,
-      input.incentivesController,
-      decimals,
-      input.name,
-      input.symbol,
-      input.params
-    );
-
-    _upgradeTokenImplementation(reserveData.aTokenAddress, input.implementation, encodedCall);
-
-    emit ATokenUpgraded(input.asset, reserveData.aTokenAddress, input.implementation);
-  }
-
-  /**
-   * @notice Updates the variable debt token implementation and initializes it
-   * @dev Emits the `VariableDebtTokenUpgraded` event
-   * @param cachedPool The Pool containing the reserve with the variable debt token
-   * @param input The parameters needed for the initialize call
-   */
-  function executeUpdateVariableDebtToken(
-    IPool cachedPool,
-    ConfiguratorInputTypes.UpdateDebtTokenInput calldata input
-  ) public {
-    DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(input.asset);
-
-    (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParams();
-
-    bytes memory encodedCall = abi.encodeWithSelector(
-      IInitializableDebtToken.initialize.selector,
-      cachedPool,
-      input.asset,
-      input.incentivesController,
-      decimals,
-      input.name,
-      input.symbol,
-      input.params
-    );
-
-    _upgradeTokenImplementation(
-      reserveData.variableDebtTokenAddress,
-      input.implementation,
-      encodedCall
-    );
-
-    emit VariableDebtTokenUpgraded(
-      input.asset,
-      reserveData.variableDebtTokenAddress,
-      input.implementation
-    );
-  }
-
-  /**
-   * @notice Creates a new proxy and initializes the implementation
-   * @param implementation The address of the implementation
-   * @param initParams The parameters that is passed to the implementation to initialize
-   * @return The address of initialized proxy
-   */
-  function _initTokenWithProxy(
-    address implementation,
-    bytes memory initParams
-  ) internal returns (address) {
-    // InitializableImmutableAdminUpgradeabilityProxy proxy = new InitializableImmutableAdminUpgradeabilityProxy(
-    //     address(this)
-    //   );
-
-    // proxy.initialize(implementation, initParams);
-    // return address(proxy);
-    return address(0);
-  }
-
-  /**
-   * @notice Upgrades the implementation and makes call to the proxy
-   * @dev The call is used to initialize the new implementation.
-   * @param proxyAddress The address of the proxy
-   * @param implementation The address of the new implementation
-   * @param  initParams The parameters to the call after the upgrade
-   */
-  function _upgradeTokenImplementation(
-    address proxyAddress,
-    address implementation,
-    bytes memory initParams
-  ) internal {
-    // InitializableImmutableAdminUpgradeabilityProxy proxy = InitializableImmutableAdminUpgradeabilityProxy(
-    //     payable(proxyAddress)
-    //   );
-    // proxy.upgradeToAndCall(implementation, initParams);
+    emit ReserveInitialized(input.underlyingAsset, input.interestRateStrategyAddress);
   }
 }

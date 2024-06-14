@@ -302,16 +302,9 @@ interface IPool {
    * interest rate strategy
    * @dev Only callable by the PoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
-   * @param aTokenAddress The address of the aToken that will be assigned to the reserve
-   * @param variableDebtAddress The address of the VariableDebtToken that will be assigned to the reserve
    * @param interestRateStrategyAddress The address of the interest rate strategy contract
    */
-  function initReserve(
-    address asset,
-    address aTokenAddress,
-    address variableDebtAddress,
-    address interestRateStrategyAddress
-  ) external;
+  function initReserve(address asset, address interestRateStrategyAddress) external;
 
   /**
    * @notice Drop a reserve
