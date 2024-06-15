@@ -26,12 +26,8 @@ import {ITimelock} from '../../../interfaces/ITimelock.sol';
  */
 contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, ERC1155Holder {
   uint256 internal constant _DONE_TIMESTAMP = uint256(1);
-
   mapping(bytes32 id => uint256) private _timestamps;
   uint256 private _minDelay;
-
-  bytes32 public PROPOSER_ROLE = keccak256('PROPOSER_ROLE');
-  bytes32 public CANCELLER_ROLE = keccak256('CANCELLER_ROLE');
 
   /**
    * @dev Initializes the contract with the following parameters:
@@ -46,27 +42,8 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    * administration through timelocked proposals. Previous versions of this contract would assign
    * this admin to the deployer automatically and should be renounced as well.
    */
-  constructor(uint256 minDelay, address admin) {
-    // self administration
-    _grantRole(DEFAULT_ADMIN_ROLE, address(this));
-    _grantRole(DEFAULT_ADMIN_ROLE, admin);
-    _grantRole(PROPOSER_ROLE, admin);
-    _grantRole(CANCELLER_ROLE, admin);
+  constructor(uint256 minDelay) {
     _minDelay = minDelay;
-    emit MinDelayChange(0, minDelay);
-  }
-
-  /**
-   * @dev Modifier to make a function callable only by a certain role. In
-   * addition to checking the sender's role, `address(0)` 's role is also
-   * considered. Granting a role to `address(0)` is equivalent to enabling
-   * this role for everyone.
-   */
-  modifier onlyRoleOrOpenRole(bytes32 role) {
-    if (!hasRole(role, address(0))) {
-      _checkRole(role, _msgSender());
-    }
-    _;
   }
 
   /**
@@ -126,15 +103,10 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    */
   function getOperationState(bytes32 id) public view virtual returns (OperationState) {
     uint256 timestamp = getTimestamp(id);
-    if (timestamp == 0) {
-      return OperationState.Unset;
-    } else if (timestamp == _DONE_TIMESTAMP) {
-      return OperationState.Done;
-    } else if (timestamp > block.timestamp) {
-      return OperationState.Waiting;
-    } else {
-      return OperationState.Ready;
-    }
+    if (timestamp == 0) return OperationState.Unset;
+    else if (timestamp == _DONE_TIMESTAMP) return OperationState.Done;
+    else if (timestamp > block.timestamp) return OperationState.Waiting;
+    return OperationState.Ready;
   }
 
   /**
@@ -154,24 +126,9 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
     address target,
     uint256 value,
     bytes calldata data,
-    bytes32 predecessor,
     bytes32 salt
   ) public pure virtual returns (bytes32) {
-    return keccak256(abi.encode(target, value, data, predecessor, salt));
-  }
-
-  /**
-   * @dev Returns the identifier of an operation containing a batch of
-   * transactions.
-   */
-  function hashOperationBatch(
-    address[] calldata targets,
-    uint256[] calldata values,
-    bytes[] calldata payloads,
-    bytes32 predecessor,
-    bytes32 salt
-  ) public pure virtual returns (bytes32) {
-    return keccak256(abi.encode(targets, values, payloads, predecessor, salt));
+    return keccak256(abi.encode(target, value, data, salt));
   }
 
   /**
@@ -187,16 +144,12 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
     address target,
     uint256 value,
     bytes calldata data,
-    bytes32 predecessor,
     bytes32 salt,
     uint256 delay
   ) internal virtual {
-    bytes32 id = hashOperation(target, value, data, predecessor, salt);
+    bytes32 id = hashOperation(target, value, data, salt);
     _scheduleOp(id, delay);
-    emit CallScheduled(id, 0, target, value, data, predecessor, delay);
-    if (salt != bytes32(0)) {
-      emit CallSalt(id, salt);
-    }
+    emit CallScheduled(id, 0, target, value, data, salt, delay);
   }
 
   /**
@@ -220,7 +173,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    *
    * - the caller must have the 'canceller' role.
    */
-  function cancel(bytes32 id) public virtual onlyRole(CANCELLER_ROLE) {
+  function cancel(bytes32 id) internal {
     if (!isOperationPending(id)) {
       revert TimelockUnexpectedOperationState(
         id,
@@ -248,14 +201,12 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
     address target,
     uint256 value,
     bytes calldata payload,
-    bytes32 predecessor,
     bytes32 salt
   ) public payable virtual {
-    bytes32 id = hashOperation(target, value, payload, predecessor, salt);
-
-    _beforeCall(id, predecessor);
+    bytes32 id = hashOperation(target, value, payload, salt);
+    _beforeCall(id);
     _execute(target, value, payload);
-    emit CallExecuted(id, 0, target, value, payload);
+    emit CallExecuted(id, 0, target, value, salt, payload);
     _afterCall(id);
   }
 
@@ -270,12 +221,9 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
   /**
    * @dev Checks before execution of an operation's calls.
    */
-  function _beforeCall(bytes32 id, bytes32 predecessor) private view {
+  function _beforeCall(bytes32 id) private view {
     if (!isOperationReady(id)) {
       revert TimelockUnexpectedOperationState(id, _encodeStateBitmap(OperationState.Ready));
-    }
-    if (predecessor != bytes32(0) && !isOperationDone(predecessor)) {
-      revert TimelockUnexecutedPredecessor(predecessor);
     }
   }
 
@@ -302,9 +250,5 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    */
   function _encodeStateBitmap(OperationState operationState) internal pure returns (bytes32) {
     return bytes32(1 << uint8(operationState));
-  }
-
-  function getRoleFromPool(address pool, bytes32 role) public pure returns (bytes32) {
-    return keccak256(abi.encode(pool, role));
   }
 }

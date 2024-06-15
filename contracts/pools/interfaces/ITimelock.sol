@@ -44,11 +44,6 @@ interface ITimelock {
   error TimelockUnexpectedOperationState(bytes32 operationId, bytes32 expectedStates);
 
   /**
-   * @dev The predecessor to an operation not yet done.
-   */
-  error TimelockUnexecutedPredecessor(bytes32 predecessorId);
-
-  /**
    * @dev The caller account is not authorized.
    */
   error TimelockUnauthorizedCaller(address caller);
@@ -62,7 +57,7 @@ interface ITimelock {
     address target,
     uint256 value,
     bytes data,
-    bytes32 predecessor,
+    bytes32 salt,
     uint256 delay
   );
 
@@ -74,13 +69,9 @@ interface ITimelock {
     uint256 indexed index,
     address target,
     uint256 value,
+    bytes32 salt,
     bytes data
   );
-
-  /**
-   * @dev Emitted when new proposal is scheduled with non-zero salt.
-   */
-  event CallSalt(bytes32 indexed id, bytes32 salt);
 
   /**
    * @dev Emitted when operation `id` is cancelled.

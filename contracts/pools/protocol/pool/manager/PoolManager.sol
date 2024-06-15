@@ -4,14 +4,13 @@ pragma solidity 0.8.19;
 import {IACLManager} from '../../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {TimelockedActions} from './TimelockedActions.sol';
-ipmo
 
 contract PoolManager is TimelockedActions {
   bytes32 public constant POOL_ADMIN_ROLE = keccak256('POOL_ADMIN');
   bytes32 public constant EMERGENCY_ADMIN_ROLE = keccak256('EMERGENCY_ADMIN');
   bytes32 public constant RISK_ADMIN_ROLE = keccak256('RISK_ADMIN');
 
-  constructor(address _governance) TimelockedActions(0, msg.sender) {
+  constructor(address _governance) TimelockedActions(86400 * 3) {
     _setupRole(DEFAULT_ADMIN_ROLE, _governance);
   }
 
@@ -87,5 +86,9 @@ contract PoolManager is TimelockedActions {
       'not risk or pool admin'
     );
     _;
+  }
+
+  function getRoleFromPool(address pool, bytes32 role) public pure returns (bytes32) {
+    return keccak256(abi.encode(pool, role));
   }
 }
