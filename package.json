@@ -31,9 +31,11 @@
   "scripts": {
     "build": "tsc",
     "compile": "hardhat compile",
-    "docs": "hardhat docgen"
+    "docs": "hardhat docgen",
+    "prepare": "husky"
   },
   "dependencies": {
+    "husky": "9.0.11",
     "solidity-docgen": "0.6.0-beta.36"
   }
 }
