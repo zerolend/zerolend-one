@@ -39,15 +39,15 @@ library ConfiguratorLogic {
     IPool pool,
     ConfiguratorInputTypes.InitReserveInput calldata input
   ) public {
-    pool.initReserve(input.underlyingAsset, input.interestRateStrategyAddress);
+    pool.initReserve(input.asset, input.interestRateStrategyAddress);
 
     DataTypes.ReserveConfigurationMap memory currentConfig = DataTypes.ReserveConfigurationMap(0);
 
     currentConfig.setDecimals(input.underlyingAssetDecimals);
     currentConfig.setFrozen(false);
 
-    pool.setConfiguration(input.underlyingAsset, currentConfig);
+    pool.setConfiguration(input.asset, currentConfig);
 
-    emit ReserveInitialized(input.underlyingAsset, input.interestRateStrategyAddress);
+    emit ReserveInitialized(input.asset, input.interestRateStrategyAddress);
   }
 }

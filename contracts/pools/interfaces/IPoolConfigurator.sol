@@ -189,20 +189,9 @@ interface IPoolConfigurator {
    * @notice Initializes multiple reserves.
    * @param input The array of initialization parameters
    */
-  function initReserves(ConfiguratorInputTypes.InitReserveInput[] calldata input) external;
-
-  /**
-   * @dev Updates the aToken implementation for the reserve.
-   * @param input The aToken update parameters
-   */
-  function updateAToken(ConfiguratorInputTypes.UpdateATokenInput calldata input) external;
-
-  /**
-   * @notice Updates the variable debt token implementation for the asset.
-   * @param input The variableDebtToken update parameters
-   */
-  function updateVariableDebtToken(
-    ConfiguratorInputTypes.UpdateDebtTokenInput calldata input
+  function initReserves(
+    address pool,
+    ConfiguratorInputTypes.InitReserveInput[] calldata input
   ) external;
 
   /**
@@ -210,7 +199,7 @@ interface IPoolConfigurator {
    * @param asset The address of the underlying asset of the reserve
    * @param enabled True if borrowing needs to be enabled, false otherwise
    */
-  function setReserveBorrowing(address asset, bool enabled) external;
+  function setReserveBorrowing(address pool, address asset, bool enabled) external;
 
   /**
    * @notice Configures the reserve collateralization parameters.
@@ -229,41 +218,19 @@ interface IPoolConfigurator {
   ) external;
 
   /**
-   * @notice Enable or disable flashloans on a reserve
-   * @param asset The address of the underlying asset of the reserve
-   * @param enabled True if flashloans need to be enabled, false otherwise
-   */
-  function setReserveFlashLoaning(address asset, bool enabled) external;
-
-  /**
-   * @notice Activate or deactivate a reserve
-   * @param asset The address of the underlying asset of the reserve
-   * @param active True if the reserve needs to be active, false otherwise
-   */
-  function setReserveActive(address asset, bool active) external;
-
-  /**
    * @notice Freeze or unfreeze a reserve. A frozen reserve doesn't allow any new supply, borrow
    * or rate swap but allows repayments, liquidations, rate rebalances and withdrawals.
    * @param asset The address of the underlying asset of the reserve
    * @param freeze True if the reserve needs to be frozen, false otherwise
    */
-  function setReserveFreeze(address asset, bool freeze) external;
-
-  /**
-   * @notice Pauses a reserve. A paused reserve does not allow any interaction (supply, borrow, repay,
-   * swap interest rate, liquidate, atoken transfers).
-   * @param asset The address of the underlying asset of the reserve
-   * @param paused True if pausing the reserve, false if unpausing
-   */
-  function setReservePause(address asset, bool paused) external;
+  function setReserveFreeze(address pool, address asset, bool freeze) external;
 
   /**
    * @notice Updates the reserve factor of a reserve.
    * @param asset The address of the underlying asset of the reserve
    * @param newReserveFactor The new reserve factor of the reserve
    */
-  function setReserveFactor(address asset, uint256 newReserveFactor) external;
+  function setReserveFactor(address pool, address asset, uint256 newReserveFactor) external;
 
   /**
    * @notice Sets the interest rate strategy of a reserve.
@@ -271,35 +238,28 @@ interface IPoolConfigurator {
    * @param newRateStrategyAddress The address of the new interest strategy contract
    */
   function setReserveInterestRateStrategyAddress(
+    address pool,
     address asset,
     address newRateStrategyAddress
   ) external;
 
   /**
-   * @notice Pauses or unpauses all the protocol reserves. In the paused state all the protocol interactions
-   * are suspended.
-   * @param paused True if protocol needs to be paused, false otherwise
+   * @notice Freezes the pool reserves. In the frozen state only withdraw and repay can be done
+   * @param freeze True if protocol needs to be frozen, false otherwise
    */
-  function setPoolPause(bool paused) external;
+  function setPoolFreeze(address pool, bool freeze) external;
 
   /**
    * @notice Updates the borrow cap of a reserve.
    * @param asset The address of the underlying asset of the reserve
    * @param newBorrowCap The new borrow cap of the reserve
    */
-  function setBorrowCap(address asset, uint256 newBorrowCap) external;
+  function setBorrowCap(address pool, address asset, uint256 newBorrowCap) external;
 
   /**
    * @notice Updates the supply cap of a reserve.
    * @param asset The address of the underlying asset of the reserve
    * @param newSupplyCap The new supply cap of the reserve
    */
-  function setSupplyCap(address asset, uint256 newSupplyCap) external;
-
-  /**
-   * @notice Updates the liquidation protocol fee of reserve.
-   * @param asset The address of the underlying asset of the reserve
-   * @param newFee The new liquidation protocol fee of the reserve, expressed in bps
-   */
-  function setLiquidationProtocolFee(address asset, uint256 newFee) external;
+  function setSupplyCap(address pool, address asset, uint256 newSupplyCap) external;
 }

@@ -12,7 +12,7 @@ import {ITimelock} from '../../../interfaces/ITimelock.sol';
 contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, ERC1155Holder {
   uint256 internal constant _DONE_TIMESTAMP = uint256(1);
   mapping(bytes32 id => uint256) private _timestamps;
-  uint256 private _minDelay;
+  uint256 internal _minDelay;
 
   constructor(uint256 minDelay) {
     _minDelay = minDelay;
@@ -135,12 +135,8 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
 
   /**
    * @dev Cancel an operation.
-   *
-   * Requirements:
-   *
-   * - the caller must have the 'canceller' role.
    */
-  function cancel(bytes32 id) internal {
+  function _cancel(bytes32 id) internal {
     if (!isOperationPending(id)) {
       revert TimelockUnexpectedOperationState(
         id,

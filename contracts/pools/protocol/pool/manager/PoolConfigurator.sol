@@ -5,27 +5,20 @@ import {ConfiguratorInputTypes} from '../../libraries/types/ConfiguratorInputTyp
 import {ConfiguratorLogic} from '../../libraries/logic/ConfiguratorLogic.sol';
 import {DataTypes} from '../../libraries/types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
-import {IACLManager} from '../../../interfaces/IACLManager.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 import {IPoolConfigurator} from '../../../interfaces/IPoolConfigurator.sol';
-import {IPoolDataProvider} from '../../../interfaces/IPoolDataProvider.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {PoolManager} from './PoolManager.sol';
 import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
-import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 
 /**
  * @title PoolConfigurator
  * @author Aave
  * @dev Implements the configuration methods for the Aave protocol
  */
-abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigurator {
+abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-
-  // function initialize(IPoolAddressesProvider provider) public reinitializer(1) {
-  //   _addressesProvider = provider;
-  // }
 
   // @inheritdoc IPoolConfigurator
   function initReserves(
@@ -35,10 +28,48 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
     IPool cachedPool = IPool(pool);
     for (uint256 i = 0; i < input.length; i++) {
       ConfiguratorLogic.executeInitReserve(cachedPool, input[i]);
+
+      // validation of the parameters: the LTV can
+      // only be lower or equal than the liquidation threshold
+      // (otherwise a loan against the asset would cause instantaneous liquidation)
+      require(input[i].ltv <= input[i].liquidationThreshold, Errors.INVALID_RESERVE_PARAMS);
+
+      DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(
+        input[i].asset
+      );
+
+      if (input[i].liquidationThreshold != 0) {
+        //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
+        //collateral than needed to cover the debt
+        require(
+          input[i].liquidationBonus > PercentageMath.PERCENTAGE_FACTOR,
+          Errors.INVALID_RESERVE_PARAMS
+        );
+
+        //if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
+        //a loan is taken there is enough collateral available to cover the liquidation bonus
+        require(
+          input[i].liquidationThreshold.percentMul(input[i].liquidationBonus) <=
+            PercentageMath.PERCENTAGE_FACTOR,
+          Errors.INVALID_RESERVE_PARAMS
+        );
+
+        currentConfig.setLtv(input[i].ltv);
+        currentConfig.setLiquidationThreshold(input[i].liquidationThreshold);
+        currentConfig.setLiquidationBonus(input[i].liquidationBonus);
+        cachedPool.setConfiguration(input[i].asset, currentConfig);
+
+        emit CollateralConfigurationChanged(
+          input[i].asset,
+          input[i].ltv,
+          input[i].liquidationThreshold,
+          input[i].liquidationBonus
+        );
+      }
     }
   }
 
-  // @inheritdoc IPoolConfigurator
+  /// @inheritdoc IPoolConfigurator
   function setReserveBorrowing(
     address pool,
     address asset,
@@ -51,46 +82,7 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
     emit ReserveBorrowing(asset, enabled);
   }
 
-  // @inheritdoc IPoolConfigurator
-  function configureReserveAsCollateral(
-    address pool,
-    address asset,
-    uint256 ltv,
-    uint256 liquidationThreshold,
-    uint256 liquidationBonus
-  ) external onlyRiskOrPoolAdmins(pool) {
-    IPool cachedPool = IPool(pool);
-
-    //validation of the parameters: the LTV can
-    //only be lower or equal than the liquidation threshold
-    //(otherwise a loan against the asset would cause instantaneous liquidation)
-    require(ltv <= liquidationThreshold, Errors.INVALID_RESERVE_PARAMS);
-
-    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
-
-    if (liquidationThreshold != 0) {
-      //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
-      //collateral than needed to cover the debt
-      require(liquidationBonus > PercentageMath.PERCENTAGE_FACTOR, Errors.INVALID_RESERVE_PARAMS);
-
-      //if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
-      //a loan is taken there is enough collateral available to cover the liquidation bonus
-      require(
-        liquidationThreshold.percentMul(liquidationBonus) <= PercentageMath.PERCENTAGE_FACTOR,
-        Errors.INVALID_RESERVE_PARAMS
-      );
-    }
-
-    currentConfig.setLtv(ltv);
-    currentConfig.setLiquidationThreshold(liquidationThreshold);
-    currentConfig.setLiquidationBonus(liquidationBonus);
-
-    cachedPool.setConfiguration(asset, currentConfig);
-
-    emit CollateralConfigurationChanged(asset, ltv, liquidationThreshold, liquidationBonus);
-  }
-
-  // @inheritdoc IPoolConfigurator
+  /// @inheritdoc IPoolConfigurator
   function setReserveFreeze(
     address pool,
     address asset,
@@ -103,7 +95,7 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
     emit ReserveFrozen(asset, freeze);
   }
 
-  // @inheritdoc IPoolConfigurator
+  /// @inheritdoc IPoolConfigurator
   function setReserveFactor(
     address pool,
     address asset,
@@ -151,7 +143,7 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
     address pool,
     address asset,
     address newRateStrategyAddress
-  ) external onlyRiskOrPoolAdmins(pool) {
+  ) external onlyPoolAdmin(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveData memory reserve = cachedPool.getReserveData(asset);
     address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
