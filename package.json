@@ -2,7 +2,7 @@
   "name": "zerolend-one",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT",
+  "license": "BSL-3.0",
   "devDependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0",
@@ -26,16 +26,15 @@
     "ts-node": ">=8.0.0",
     "tsc": "^2.0.4",
     "typescript": "~5.0.4",
+    "husky": "9.0.11",
+    "rimraf": "5.0.7",
+    "solidity-docgen": "0.6.0-beta.36",
     "viem": "^2.10.9"
   },
   "scripts": {
     "build": "tsc",
     "compile": "hardhat compile",
-    "docs": "hardhat docgen",
+    "docs": "rimraf docs && hardhat docgen",
     "prepare": "husky"
-  },
-  "dependencies": {
-    "husky": "9.0.11",
-    "solidity-docgen": "0.6.0-beta.36"
   }
 }
