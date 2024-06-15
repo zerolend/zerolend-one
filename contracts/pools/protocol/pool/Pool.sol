@@ -50,6 +50,8 @@ abstract contract Pool is Initializable, IPool {
   /// @dev The pool configurator contract that can make changes
   address public configurator;
 
+  uint256 public reserveFactor;
+
   /**
    * @notice Initializes the Pool.
    * @dev Function is invoked by the proxy contract when the Pool contract is added to the
@@ -65,6 +67,20 @@ abstract contract Pool is Initializable, IPool {
   ) public virtual reinitializer(1) {
     configurator = _configurator;
     for (uint i = 0; i < assets.length; i++) {
+      if (
+        PoolLogic.executeInitReserve(
+          _reserves,
+          _reservesList,
+          DataTypes.InitReserveParams({
+            asset: assets[i],
+            interestRateStrategyAddress: rateStrategyAddresses[i],
+            reservesCount: _reservesCount
+          })
+        )
+      ) {
+        _reservesCount++;
+      }
+
       _setReserveConfiguration(assets[i], rateStrategyAddresses[i], sources[i], configurations[i]);
     }
   }
@@ -103,7 +119,7 @@ abstract contract Pool is Initializable, IPool {
           amount: amount,
           position: to.getPositionId(index),
           reservesCount: _reservesCount,
-          oracle: address(this)
+          pool: address(this)
         })
       );
   }
@@ -126,7 +142,7 @@ abstract contract Pool is Initializable, IPool {
         amount: amount,
         releaseUnderlying: true,
         reservesCount: _reservesCount,
-        oracle: address(this)
+        pool: address(this)
       })
     );
   }
@@ -170,7 +186,7 @@ abstract contract Pool is Initializable, IPool {
         collateralAsset: collateralAsset,
         debtAsset: debtAsset,
         position: user.getPositionId(index),
-        oracle: address(this)
+        pool: address(this)
       })
     );
   }
@@ -231,7 +247,7 @@ abstract contract Pool is Initializable, IPool {
           userConfig: _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
           reservesCount: _reservesCount,
           position: user.getPositionId(index),
-          oracle: address(this)
+          pool: address(this)
         })
       );
   }

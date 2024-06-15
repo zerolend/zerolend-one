@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IScaledBalanceToken} from '../../../interfaces/IScaledBalanceToken.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
@@ -97,7 +96,7 @@ library GenericLogic {
         vars.assetUnit = 10 ** vars.decimals;
       }
 
-      vars.assetPrice = IPool(params.oracle).getAssetPrice(vars.currentReserveAddress);
+      vars.assetPrice = IPool(params.pool).getAssetPrice(vars.currentReserveAddress);
 
       if (vars.liquidationThreshold != 0 && params.userConfig.isUsingAsCollateral(vars.i)) {
         vars.userBalanceInBaseCurrency = _getUserBalanceInBaseCurrency(

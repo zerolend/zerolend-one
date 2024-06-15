@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IAToken} from '../../../interfaces/IAToken.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
@@ -54,7 +53,6 @@ library PoolLogic {
       }
     }
 
-    require(params.reservesCount < params.maxNumberReserves, Errors.NO_MORE_RESERVES_ALLOWED);
     reservesData[params.asset].id = params.reservesCount;
     reservesList[params.reservesCount] = params.asset;
     return true;
@@ -83,7 +81,7 @@ library PoolLogic {
         reserve.accruedToTreasury = 0;
         uint256 normalizedIncome = reserve.getNormalizedIncome();
         uint256 amountToMint = accruedToTreasury.rayMul(normalizedIncome);
-        IAToken(reserve.aTokenAddress).mintToTreasury(amountToMint, normalizedIncome);
+        // IAToken(reserve.aTokenAddress).mintToTreasury(amountToMint, normalizedIncome);
 
         emit MintedToTreasury(assetAddress, amountToMint);
       }

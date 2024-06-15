@@ -4,8 +4,6 @@ pragma solidity ^0.8.10;
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
-import {IAToken} from '../../../interfaces/IAToken.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {Helpers} from '../helpers/Helpers.sol';
@@ -71,7 +69,7 @@ library BorrowLogic {
         position: params.onBehalfOfPosition,
         amount: params.amount,
         reservesCount: params.reservesCount,
-        oracle: params.oracle
+        pool: params.pool
       })
     );
 
@@ -98,7 +96,8 @@ library BorrowLogic {
     );
 
     if (params.releaseUnderlying) {
-      IAToken(reserveCache.aTokenAddress).transferUnderlyingTo(params.user, params.amount);
+      // todo
+      // IAToken(reserveCache.aTokenAddress).transferUnderlyingTo(params.user, params.amount);
     }
 
     emit Borrow(
@@ -146,7 +145,8 @@ library BorrowLogic {
 
     // Allows a user to repay with aTokens without leaving dust from interest.
     if (params.amount == type(uint256).max) {
-      params.amount = IAToken(reserveCache.aTokenAddress).balanceOf(msg.sender);
+      // todo
+      // params.amount = IAToken(reserveCache.aTokenAddress).balanceOf(msg.sender);
     }
 
     if (params.amount < paybackAmount) {

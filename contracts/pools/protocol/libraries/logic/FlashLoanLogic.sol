@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IAToken} from '../../../interfaces/IAToken.sol';
+
 import {IPool} from '../../../interfaces/IPool.sol';
 import {IFlashLoanSimpleReceiver} from '../../../interfaces/IFlashLoanSimpleReceiver.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
@@ -71,7 +71,7 @@ library FlashLoanLogic {
 
     IFlashLoanSimpleReceiver receiver = IFlashLoanSimpleReceiver(params.receiverAddress);
     uint256 totalPremium = params.amount.percentMul(params.flashLoanPremiumTotal);
-    IAToken(reserve.aTokenAddress).transferUnderlyingTo(params.receiverAddress, params.amount);
+    // IAToken(reserve.aTokenAddress).transferUnderlyingTo(params.receiverAddress, params.amount);
 
     require(
       receiver.executeOperation(
@@ -130,11 +130,11 @@ library FlashLoanLogic {
       amountPlusPremium
     );
 
-    IAToken(reserveCache.aTokenAddress).handleRepayment(
-      params.receiverAddress,
-      params.receiverAddress,
-      amountPlusPremium
-    );
+    // IAToken(reserveCache.aTokenAddress).handleRepayment(
+    //   params.receiverAddress,
+    //   params.receiverAddress,
+    //   amountPlusPremium
+    // );
 
     emit FlashLoan(
       params.receiverAddress,

@@ -88,7 +88,7 @@ library DataTypes {
     address collateralAsset;
     address debtAsset;
     bytes32 position;
-    address oracle;
+    address pool;
   }
 
   struct ExecuteSupplyParams {
@@ -104,7 +104,7 @@ library DataTypes {
     uint256 amount;
     bool releaseUnderlying;
     uint256 reservesCount;
-    address oracle;
+    address pool;
   }
 
   struct ExecuteRepayParams {
@@ -118,7 +118,7 @@ library DataTypes {
     uint256 amount;
     bytes32 position;
     uint256 reservesCount;
-    address oracle;
+    address pool;
   }
 
   struct FlashloanSimpleParams {
@@ -142,7 +142,7 @@ library DataTypes {
     UserConfigurationMap userConfig;
     uint256 reservesCount;
     bytes32 position;
-    address oracle;
+    address pool;
   }
 
   struct ValidateBorrowParams {
@@ -152,7 +152,7 @@ library DataTypes {
     bytes32 position;
     uint256 amount;
     uint256 reservesCount;
-    address oracle;
+    address pool;
   }
 
   struct ValidateLiquidationCallParams {
@@ -172,10 +172,7 @@ library DataTypes {
 
   struct InitReserveParams {
     address asset;
-    address aTokenAddress;
-    address variableDebtAddress;
     address interestRateStrategyAddress;
     uint16 reservesCount;
-    uint16 maxNumberReserves;
   }
 }

@@ -5,9 +5,7 @@ import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
-import {IScaledBalanceToken} from '../../../interfaces/IScaledBalanceToken.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
-import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
@@ -68,13 +66,14 @@ library ValidationLogic {
     require(!isFrozen, Errors.RESERVE_FROZEN);
 
     uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
-    require(
-      supplyCap == 0 ||
-        ((IAToken(reserveCache.aTokenAddress).scaledTotalSupply() +
-          uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + amount) <=
-        supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
-      Errors.SUPPLY_CAP_EXCEEDED
-    );
+    // todo
+    // require(
+    //   supplyCap == 0 ||
+    //     ((IAToken(reserveCache.aTokenAddress).scaledTotalSupply() +
+    //       uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + amount) <=
+    //     supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
+    //   Errors.SUPPLY_CAP_EXCEEDED
+    // );
   }
 
   /**
@@ -172,7 +171,7 @@ library ValidationLogic {
         userConfig: params.userConfig,
         reservesCount: params.reservesCount,
         position: params.position,
-        oracle: params.oracle
+        pool: params.pool
       })
     );
 
@@ -184,7 +183,7 @@ library ValidationLogic {
       Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
 
-    vars.amountInBaseCurrency = IPool(params.oracle).getAssetPrice(params.asset) * params.amount;
+    vars.amountInBaseCurrency = IPool(params.pool).getAssetPrice(params.asset) * params.amount;
     unchecked {
       vars.amountInBaseCurrency /= vars.assetUnit;
     }
@@ -307,7 +306,7 @@ library ValidationLogic {
           userConfig: userConfig,
           reservesCount: reservesCount,
           position: position,
-          oracle: oracle
+          pool: oracle
         })
       );
 

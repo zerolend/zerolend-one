@@ -69,16 +69,6 @@ contract MockReserveConfiguration {
     return configuration.getBorrowingEnabled();
   }
 
-  function setReserveFactor(uint256 reserveFactor) external {
-    DataTypes.ReserveConfigurationMap memory config = configuration;
-    config.setReserveFactor(reserveFactor);
-    configuration = config;
-  }
-
-  function getReserveFactor() external view returns (uint256) {
-    return configuration.getReserveFactor();
-  }
-
   function setBorrowCap(uint256 borrowCap) external {
     DataTypes.ReserveConfigurationMap memory config = configuration;
     config.setBorrowCap(borrowCap);
@@ -105,9 +95,5 @@ contract MockReserveConfiguration {
 
   function getParams() external view returns (uint256, uint256, uint256, uint256, uint256) {
     return configuration.getParams();
-  }
-
-  function getCaps() external view returns (uint256, uint256) {
-    return configuration.getCaps();
   }
 }

@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC20Detailed} from '../interfaces/IERC20Detailed.sol';
-import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
-import {UserConfiguration} from '../protocol/libraries/configuration/UserConfiguration.sol';
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
-import {IVariableDebtToken} from '../interfaces/IVariableDebtToken.sol';
-import {IPool} from '../interfaces/IPool.sol';
-import {IPoolDataProvider} from '../interfaces/IPoolDataProvider.sol';
+import {IERC20Detailed} from '../pools/interfaces/IERC20Detailed.sol';
+import {ReserveConfiguration} from '../pools/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {UserConfiguration} from '../pools/protocol/libraries/configuration/UserConfiguration.sol';
+import {DataTypes} from '../pools/protocol/libraries/types/DataTypes.sol';
+import {WadRayMath} from '../pools/protocol/libraries/math/WadRayMath.sol';
+import {IPool} from '../pools/interfaces/IPool.sol';
+import {IPoolDataProvider} from '../pools/interfaces/IPoolDataProvider.sol';
 
 abstract contract ProtocolDataProvider is IPoolDataProvider {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -85,7 +84,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
     address pool,
     address asset
   ) external view override returns (uint256 borrowCap, uint256 supplyCap) {
-    (borrowCap, supplyCap) = IPool(pool).getConfiguration(asset).getCaps();
+    // (borrowCap, supplyCap) = IPool(pool).getConfiguration(asset).getCaps();
   }
 
   /// @inheritdoc IPoolDataProvider
@@ -166,7 +165,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
 
     currentATokenBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
     currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
-    scaledVariableDebt = IVariableDebtToken(reserve.variableDebtTokenAddress).scaledBalanceOf(user);
+    // scaledVariableDebt = IVariableDebtToken(reserve.variableDebtTokenAddress).scaledBalanceOf(user);
     liquidityRate = reserve.currentLiquidityRate;
 
     usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);

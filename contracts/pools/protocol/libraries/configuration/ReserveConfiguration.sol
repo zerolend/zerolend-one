@@ -58,11 +58,7 @@ library ReserveConfiguration {
   uint256 internal constant MAX_VALID_BORROW_CAP = 68719476735;
   uint256 internal constant MAX_VALID_SUPPLY_CAP = 68719476735;
   uint256 internal constant MAX_VALID_LIQUIDATION_PROTOCOL_FEE = 65535;
-  uint256 internal constant MAX_VALID_EMODE_CATEGORY = 255;
-  uint256 internal constant MAX_VALID_UNBACKED_MINT_CAP = 68719476735;
-  uint256 internal constant MAX_VALID_DEBT_CEILING = 1099511627775;
 
-  uint256 public constant DEBT_CEILING_DECIMALS = 2;
   uint16 public constant MAX_RESERVES_COUNT = 128;
 
   /**
@@ -209,33 +205,6 @@ library ReserveConfiguration {
   }
 
   /**
-   * @notice Sets the reserve factor of the reserve
-   * @param self The reserve configuration
-   * @param reserveFactor The reserve factor
-   */
-  function setReserveFactor(
-    DataTypes.ReserveConfigurationMap memory self,
-    uint256 reserveFactor
-  ) internal pure {
-    require(reserveFactor <= MAX_VALID_RESERVE_FACTOR, Errors.INVALID_RESERVE_FACTOR);
-
-    self.data =
-      (self.data & RESERVE_FACTOR_MASK) |
-      (reserveFactor << RESERVE_FACTOR_START_BIT_POSITION);
-  }
-
-  /**
-   * @notice Gets the reserve factor of the reserve
-   * @param self The reserve configuration
-   * @return The reserve factor
-   */
-  function getReserveFactor(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256) {
-    return (self.data & ~RESERVE_FACTOR_MASK) >> RESERVE_FACTOR_START_BIT_POSITION;
-  }
-
-  /**
    * @notice Sets the borrow cap of the reserve
    * @param self The reserve configuration
    * @param borrowCap The borrow cap
@@ -328,23 +297,6 @@ library ReserveConfiguration {
       (dataLocal & ~LIQUIDATION_BONUS_MASK) >> LIQUIDATION_BONUS_START_BIT_POSITION,
       (dataLocal & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION,
       (dataLocal & ~RESERVE_FACTOR_MASK) >> RESERVE_FACTOR_START_BIT_POSITION
-    );
-  }
-
-  /**
-   * @notice Gets the caps parameters of the reserve from storage
-   * @param self The reserve configuration
-   * @return The state param representing borrow cap
-   * @return The state param representing supply cap.
-   */
-  function getCaps(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256, uint256) {
-    uint256 dataLocal = self.data;
-
-    return (
-      (dataLocal & ~BORROW_CAP_MASK) >> BORROW_CAP_START_BIT_POSITION,
-      (dataLocal & ~SUPPLY_CAP_MASK) >> SUPPLY_CAP_START_BIT_POSITION
     );
   }
 }

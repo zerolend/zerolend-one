@@ -2,8 +2,6 @@
 pragma solidity 0.8.19;
 
 import {IPool} from '../../../interfaces/IPool.sol';
-import {IInitializableAToken} from '../../../interfaces/IInitializableAToken.sol';
-import {IInitializableDebtToken} from '../../../interfaces/IInitializableDebtToken.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 import {ConfiguratorInputTypes} from '../types/ConfiguratorInputTypes.sol';

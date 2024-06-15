@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {MathUtils} from '../math/MathUtils.sol';
@@ -296,7 +295,7 @@ library ReserveLogic {
     DataTypes.ReserveCache memory reserveCache;
 
     reserveCache.reserveConfiguration = reserve.configuration;
-    reserveCache.reserveFactor = reserveCache.reserveConfiguration.getReserveFactor();
+    // reserveCache.reserveFactor = reserveCache.reserveConfiguration.getReserveFactor();
     reserveCache.currLiquidityIndex = reserveCache.nextLiquidityIndex = reserve.liquidityIndex;
     reserveCache.currVariableBorrowIndex = reserveCache.nextVariableBorrowIndex = reserve
       .variableBorrowIndex;
@@ -308,9 +307,9 @@ library ReserveLogic {
 
     reserveCache.reserveLastUpdateTimestamp = reserve.lastUpdateTimestamp;
 
-    reserveCache.currScaledVariableDebt = reserveCache.nextScaledVariableDebt = IVariableDebtToken(
-      reserveCache.variableDebtTokenAddress
-    ).scaledTotalSupply();
+    // reserveCache.currScaledVariableDebt = reserveCache.nextScaledVariableDebt = IVariableDebtToken(
+    //   reserveCache.variableDebtTokenAddress
+    // ).scaledTotalSupply();
 
     return reserveCache;
   }

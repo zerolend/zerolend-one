@@ -13,8 +13,6 @@ import {GenericLogic} from './GenericLogic.sol';
 import {UserConfiguration} from '../../libraries/configuration/UserConfiguration.sol';
 import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
 import {TokenConfiguration} from '../../libraries/configuration/TokenConfiguration.sol';
-import {IAToken} from '../../../interfaces/IAToken.sol';
-import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 
 /**
@@ -76,7 +74,7 @@ library LiquidationLogic {
     uint256 liquidationProtocolFeeAmount;
     address collateralPriceSource;
     address debtPriceSource;
-    IAToken collateralAToken;
+    address asset;
     DataTypes.ReserveCache debtReserveCache;
   }
 
@@ -112,7 +110,7 @@ library LiquidationLogic {
         userConfig: userConfig,
         reservesCount: params.reservesCount,
         position: params.position,
-        oracle: params.oracle
+        pool: params.pool
       })
     );
 
@@ -132,29 +130,30 @@ library LiquidationLogic {
       })
     );
 
-    (
-      vars.collateralAToken,
-      vars.collateralPriceSource,
-      vars.debtPriceSource,
-      vars.liquidationBonus
-    ) = _getConfigurationData(collateralReserve, params);
+    // (
+    //   vars.collateralAToken,
+    //   vars.collateralPriceSource,
+    //   vars.debtPriceSource,
+    //   vars.liquidationBonus
+    // ) = _getConfigurationData(collateralReserve, params);
 
-    vars.userCollateralBalance = _balances[address(vars.collateralAToken)][params.position];
+    vars.userCollateralBalance = _balances[vars.asset][params.position];
 
-    (
-      vars.actualCollateralToLiquidate,
-      vars.actualDebtToLiquidate,
-      vars.liquidationProtocolFeeAmount
-    ) = _calculateAvailableCollateralToLiquidate(
-      collateralReserve,
-      vars.debtReserveCache,
-      vars.collateralPriceSource,
-      vars.debtPriceSource,
-      vars.actualDebtToLiquidate,
-      vars.userCollateralBalance,
-      vars.liquidationBonus,
-      IPool(params.oracle)
-    );
+    // (
+    //   vars.actualCollateralToLiquidate,
+    //   vars.actualDebtToLiquidate,
+    //   vars.liquidationProtocolFeeAmount
+    // ) = _calculateAvailableCollateralToLiquidate(
+    //   collateralReserve,
+    //   vars.debtReserveCache,
+    //   vars.collateralPriceSource,
+    //   vars.debtPriceSource,
+    //   vars.actualDebtToLiquidate,
+    //   vars.userCollateralBalance,
+    //   vars.liquidationBonus,
+    //   oracle.getAssetPrice(collateralAsset),
+    //   oracle.getAssetPrice(debtAsset)
+    // );
 
     if (vars.userTotalDebt == vars.actualDebtToLiquidate) {
       userConfig.setBorrowing(debtReserve.id, false);
@@ -329,18 +328,18 @@ library LiquidationLogic {
    * @return The address to use as price source for the debt
    * @return The liquidation bonus to apply to the collateral
    */
-  function _getConfigurationData(
-    DataTypes.ReserveData storage collateralReserve,
-    DataTypes.ExecuteLiquidationCallParams memory params
-  ) internal view returns (IAToken, address, address, uint256) {
-    IAToken collateralAToken = IAToken(collateralReserve.aTokenAddress);
-    uint256 liquidationBonus = collateralReserve.configuration.getLiquidationBonus();
+  // function _getConfigurationData(
+  //   DataTypes.ReserveData storage collateralReserve,
+  //   DataTypes.ExecuteLiquidationCallParams memory params
+  // ) internal view returns (IAToken, address, address, uint256) {
+  //   IAToken collateralAToken = IAToken(collateralReserve.aTokenAddress);
+  //   uint256 liquidationBonus = collateralReserve.configuration.getLiquidationBonus();
 
-    address collateralPriceSource = params.collateralAsset;
-    address debtPriceSource = params.debtAsset;
+  //   address collateralPriceSource = params.collateralAsset;
+  //   address debtPriceSource = params.debtAsset;
 
-    return (collateralAToken, collateralPriceSource, debtPriceSource, liquidationBonus);
-  }
+  //   return (collateralAToken, collateralPriceSource, debtPriceSource, liquidationBonus);
+  // }
 
   struct AvailableCollateralToLiquidateLocalVars {
     uint256 collateralPrice;
@@ -382,12 +381,13 @@ library LiquidationLogic {
     uint256 debtToCover,
     uint256 userCollateralBalance,
     uint256 liquidationBonus,
-    IPool oracle
+    uint256 collateralPrice,
+    uint256 debtAssetPrice
   ) internal view returns (uint256, uint256, uint256) {
     AvailableCollateralToLiquidateLocalVars memory vars;
 
-    vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
-    vars.debtAssetPrice = oracle.getAssetPrice(debtAsset);
+    vars.collateralPrice = collateralPrice; // oracle.getAssetPrice(collateralAsset);
+    vars.debtAssetPrice = debtAssetPrice; // racle.getAssetPrice(debtAsset);
 
     vars.collateralDecimals = collateralReserve.configuration.getDecimals();
     vars.debtAssetDecimals = debtReserveCache.reserveConfiguration.getDecimals();

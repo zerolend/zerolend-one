@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IAToken} from '../../../interfaces/IAToken.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {DataTypes} from '../types/DataTypes.sol';
@@ -81,9 +80,10 @@ library SupplyLogic {
 
     reserve.updateState(reserveCache);
 
-    uint256 userBalance = IAToken(reserveCache.aTokenAddress).scaledBalanceOf(msg.sender).rayMul(
-      reserveCache.nextLiquidityIndex
-    );
+    uint256 userBalance = 0;
+    // IAToken(reserveCache.aTokenAddress).scaledBalanceOf(msg.sender).rayMul(
+    //   reserveCache.nextLiquidityIndex
+    // );
 
     uint256 amountToWithdraw = params.amount;
 
@@ -119,7 +119,7 @@ library SupplyLogic {
         params.asset,
         params.position,
         params.reservesCount,
-        params.oracle
+        params.pool
       );
     }
 
