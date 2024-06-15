@@ -15,14 +15,12 @@ interface IPool {
    * @param user The address initiating the supply
    * @param onBehalfOf The beneficiary of the supplied assets, receiving the aTokens
    * @param amount The amount of supplied assets
-   * @param referralCode The referral code used
    */
   event MintUnbacked(
     address indexed reserve,
     address user,
     address indexed onBehalfOf,
-    uint256 amount,
-    uint16 indexed referralCode
+    uint256 amount
   );
 
   /**
@@ -40,15 +38,8 @@ interface IPool {
    * @param user The address initiating the supply
    * @param onBehalfOf The beneficiary of the supply, receiving the aTokens
    * @param amount The amount supplied
-   * @param referralCode The referral code used
    */
-  event Supply(
-    address indexed reserve,
-    address user,
-    address indexed onBehalfOf,
-    uint256 amount,
-    uint16 indexed referralCode
-  );
+  event Supply(address indexed reserve, address user, address indexed onBehalfOf, uint256 amount);
 
   /**
    * @dev Emitted on withdraw()
@@ -68,7 +59,6 @@ interface IPool {
    * @param amount The amount borrowed out
    * @param interestRateMode The rate mode: 1 for Stable, 2 for Variable
    * @param borrowRate The numeric rate at which the user has borrowed, expressed in ray
-   * @param referralCode The referral code used
    */
   event Borrow(
     address indexed reserve,
@@ -76,8 +66,7 @@ interface IPool {
     address indexed onBehalfOf,
     uint256 amount,
     DataTypes.InterestRateMode interestRateMode,
-    uint256 borrowRate,
-    uint16 indexed referralCode
+    uint256 borrowRate
   );
 
   /**
@@ -117,15 +106,13 @@ interface IPool {
    * @param asset The address of the asset being flash borrowed
    * @param amount The amount flash borrowed
    * @param premium The fee flash borrowed
-   * @param referralCode The referral code used
    */
   event FlashLoan(
     address indexed target,
     address initiator,
     address indexed asset,
     uint256 amount,
-    uint256 premium,
-    uint16 indexed referralCode
+    uint256 premium
   );
 
   /**
@@ -180,16 +167,8 @@ interface IPool {
    * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
    *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
    *   is a different wallet
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
-   *   0 if the action is executed directly by the user, without any middle-man
    */
-  function supply(
-    address asset,
-    uint256 amount,
-    address onBehalfOf,
-    uint16 referralCode,
-    uint256 index
-  ) external;
+  function supply(address asset, uint256 amount, address onBehalfOf, uint256 index) external;
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -217,19 +196,11 @@ interface IPool {
    *   and 100 stable/variable debt tokens, depending on the `interestRateMode`
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
-   * @param referralCode The code used to register the integrator originating the operation, for potential rewards.
-   *   0 if the action is executed directly by the user, without any middle-man
    * @param onBehalfOf The address of the user who will receive the debt. Should be the address of the borrower itself
    * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
    * if he has been given credit delegation allowance
    */
-  function borrow(
-    address asset,
-    uint256 amount,
-    uint16 referralCode,
-    address onBehalfOf,
-    uint256 index
-  ) external;
+  function borrow(address asset, uint256 amount, address onBehalfOf, uint256 index) external;
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -282,15 +253,12 @@ interface IPool {
    * @param asset The address of the asset being flash-borrowed
    * @param amount The amount of the asset being flash-borrowed
    * @param params Variadic packed params to pass to the receiver as extra information
-   * @param referralCode The code used to register the integrator originating the operation, for potential rewards.
-   *   0 if the action is executed directly by the user, without any middle-man
    */
   function flashLoan(
     address receiverAddress,
     address asset,
     uint256 amount,
-    bytes calldata params,
-    uint16 referralCode
+    bytes calldata params
   ) external;
 
   /**

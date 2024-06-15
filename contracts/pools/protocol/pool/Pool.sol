@@ -74,7 +74,6 @@ abstract contract Pool is Initializable, IPool {
     address asset,
     uint256 amount,
     address onBehalfOf,
-    uint16 referralCode,
     uint256 index
   ) public virtual override {
     SupplyLogic.executeSupply(
@@ -82,8 +81,7 @@ abstract contract Pool is Initializable, IPool {
       DataTypes.ExecuteSupplyParams({
         asset: asset,
         amount: amount,
-        onBehalfOfPosition: onBehalfOf.getPositionId(index),
-        referralCode: referralCode
+        onBehalfOfPosition: onBehalfOf.getPositionId(index)
       })
     );
   }
@@ -114,7 +112,6 @@ abstract contract Pool is Initializable, IPool {
   function borrow(
     address asset,
     uint256 amount,
-    uint16 referralCode,
     address onBehalfOf,
     uint256 index
   ) public virtual override {
@@ -127,7 +124,6 @@ abstract contract Pool is Initializable, IPool {
         user: msg.sender,
         onBehalfOfPosition: onBehalfOf.getPositionId(index),
         amount: amount,
-        referralCode: referralCode,
         releaseUnderlying: true,
         reservesCount: _reservesCount,
         oracle: address(this)
@@ -184,15 +180,13 @@ abstract contract Pool is Initializable, IPool {
     address receiverAddress,
     address asset,
     uint256 amount,
-    bytes calldata params,
-    uint16 referralCode
+    bytes calldata params
   ) public virtual override {
     DataTypes.FlashloanSimpleParams memory flashParams = DataTypes.FlashloanSimpleParams({
       receiverAddress: receiverAddress,
       asset: asset,
       amount: amount,
       params: params,
-      referralCode: referralCode,
       flashLoanPremiumToProtocol: 1000, //_flashLoanPremiumToProtocol,
       flashLoanPremiumTotal: _flashLoanPremiumTotal
     });

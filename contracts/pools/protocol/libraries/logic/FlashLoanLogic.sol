@@ -35,8 +35,7 @@ library FlashLoanLogic {
     address initiator,
     address indexed asset,
     uint256 amount,
-    uint256 premium,
-    uint16 indexed referralCode
+    uint256 premium
   );
 
   // Helper struct for internal variables used in the `executeFlashLoan` function
@@ -92,8 +91,7 @@ library FlashLoanLogic {
         receiverAddress: params.receiverAddress,
         amount: params.amount,
         totalPremium: totalPremium,
-        flashLoanPremiumToProtocol: params.flashLoanPremiumToProtocol,
-        referralCode: params.referralCode
+        flashLoanPremiumToProtocol: params.flashLoanPremiumToProtocol
       })
     );
   }
@@ -143,8 +141,7 @@ library FlashLoanLogic {
       msg.sender,
       params.asset,
       params.amount,
-      params.totalPremium,
-      params.referralCode
+      params.totalPremium
     );
   }
 }

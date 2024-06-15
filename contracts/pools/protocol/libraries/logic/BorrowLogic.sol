@@ -32,8 +32,7 @@ library BorrowLogic {
     address user,
     bytes32 indexed position,
     uint256 amount,
-    uint256 borrowRate,
-    uint16 indexed referralCode
+    uint256 borrowRate
   );
   event Repay(
     address indexed reserve,
@@ -107,8 +106,7 @@ library BorrowLogic {
       params.user,
       params.onBehalfOfPosition,
       params.amount,
-      reserve.currentVariableBorrowRate,
-      params.referralCode
+      reserve.currentVariableBorrowRate
     );
   }
 

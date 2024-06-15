@@ -95,7 +95,6 @@ library DataTypes {
     address asset;
     uint256 amount;
     bytes32 onBehalfOfPosition;
-    uint16 referralCode;
   }
 
   struct ExecuteBorrowParams {
@@ -103,7 +102,6 @@ library DataTypes {
     address user;
     bytes32 onBehalfOfPosition;
     uint256 amount;
-    uint16 referralCode;
     bool releaseUnderlying;
     uint256 reservesCount;
     address oracle;
@@ -128,7 +126,6 @@ library DataTypes {
     address asset;
     uint256 amount;
     bytes params;
-    uint16 referralCode;
     uint256 flashLoanPremiumToProtocol;
     uint256 flashLoanPremiumTotal;
   }
@@ -139,7 +136,6 @@ library DataTypes {
     uint256 flashLoanPremiumToProtocol;
     address asset;
     address receiverAddress;
-    uint16 referralCode;
   }
 
   struct CalculateUserAccountDataParams {

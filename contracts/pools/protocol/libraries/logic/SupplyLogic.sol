@@ -31,13 +31,7 @@ library SupplyLogic {
   event ReserveUsedAsCollateralEnabled(address indexed reserve, bytes32 indexed position);
   event ReserveUsedAsCollateralDisabled(address indexed reserve, bytes32 indexed position);
   event Withdraw(address indexed reserve, bytes32 indexed pos, address indexed to, uint256 amount);
-  event Supply(
-    address indexed reserve,
-    address user,
-    bytes32 indexed pos,
-    uint256 amount,
-    uint16 indexed referralCode
-  );
+  event Supply(address indexed reserve, address user, bytes32 indexed pos, uint256 amount);
 
   /**
    * @notice Implements the supply feature. Through `supply()`, users supply assets to the Aave protocol.
@@ -62,13 +56,7 @@ library SupplyLogic {
 
     IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, params.amount);
 
-    emit Supply(
-      params.asset,
-      msg.sender,
-      params.onBehalfOfPosition,
-      params.amount,
-      params.referralCode
-    );
+    emit Supply(params.asset, msg.sender, params.onBehalfOfPosition, params.amount);
   }
 
   /**
