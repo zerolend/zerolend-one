@@ -4,12 +4,7 @@ pragma solidity 0.8.19;
 import {IACLManager} from '../../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {TimelockedActions} from './TimelockedActions.sol';
-
-/**
- * @title ACLManager
- * @author Aave
- * @notice Access Control List Manager. Main registry of system roles and permissions.
- */
+ipmo
 
 contract PoolManager is TimelockedActions {
   bytes32 public constant POOL_ADMIN_ROLE = keccak256('POOL_ADMIN');

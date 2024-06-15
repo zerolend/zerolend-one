@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox-viem';
 import 'hardhat-dependency-compiler';
+import 'solidity-docgen';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -10,15 +11,11 @@ const config: HardhatUserConfig = {
   // dependencyCompiler: {
   //   paths: ['@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol'],
   // },
+  docgen: {
+    pages: 'files',
+  },
   networks: {
-    hardhat: {
-      accounts: [
-        {
-          privateKey: process.env.WALLET_PRIVATE_KEY || '',
-          balance: '10000000000000000000000000000000000000',
-        },
-      ],
-    },
+    hardhat: {},
   },
 };
 

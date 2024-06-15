@@ -4,10 +4,10 @@ pragma solidity 0.8.19;
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {FlashLoanSimpleReceiverBase} from '../../pools/protocol/FlashLoanSimpleReceiverBase.sol';
+// import {FlashLoanSimpleReceiverBase} from '../../pools/protocol/FlashLoanSimpleReceiverBase.sol';
 import {MintableERC20} from '../tokens/MintableERC20.sol';
 
-contract MockFlashLoanSimpleReceiver is FlashLoanSimpleReceiverBase {
+contract MockFlashLoanSimpleReceiver {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
@@ -46,7 +46,7 @@ contract MockFlashLoanSimpleReceiver is FlashLoanSimpleReceiverBase {
     uint256 premium,
     address, // initiator
     bytes memory // params
-  ) public override returns (bool) {
+  ) public returns (bool) {
     if (_failExecution) {
       emit ExecutedWithFail(asset, amount, premium);
       return !_simulateEOA;
@@ -63,7 +63,7 @@ contract MockFlashLoanSimpleReceiver is FlashLoanSimpleReceiverBase {
 
     token.mint(premium);
 
-    IERC20(asset).approve(address(POOL), amountToReturn);
+    // IERC20(asset).approve(address(POOL), amountToReturn);
 
     emit ExecutedWithSuccess(asset, amount, premium);
 

@@ -79,12 +79,6 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
         liquidationThreshold.percentMul(liquidationBonus) <= PercentageMath.PERCENTAGE_FACTOR,
         Errors.INVALID_RESERVE_PARAMS
       );
-    } else {
-      require(liquidationBonus == 0, Errors.INVALID_RESERVE_PARAMS);
-      //if the liquidation threshold is being set to 0,
-      // the reserve is being disabled as collateral. To do so,
-      //we need to ensure no liquidity is supplied
-      _checkNoSuppliers(pool, asset);
     }
 
     currentConfig.setLtv(ltv);
@@ -163,19 +157,5 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
     address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
     // cachedPool.setConfiguration(asset, newRateStrategyAddress);
     emit ReserveInterestRateStrategyChanged(asset, oldRateStrategyAddress, newRateStrategyAddress);
-  }
-
-  function _checkNoSuppliers(address pool, address asset) internal view {
-    // (, uint256 accruedToTreasury, uint256 totalATokens, , , , , , ) = IPoolDataProvider(
-    //   _addressesProvider.getPoolDataProvider()
-    // ).getReserveData(asset);
-    // require(totalATokens == 0 && accruedToTreasury == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
-  }
-
-  function _checkNoBorrowers(address pool, address asset) internal view {
-    // uint256 totalDebt = IPoolDataProvider(_addressesProvider.getPoolDataProvider()).getTotalDebt(
-    //   asset
-    // );
-    // require(totalDebt == 0, Errors.RESERVE_DEBT_NOT_ZERO);
   }
 }

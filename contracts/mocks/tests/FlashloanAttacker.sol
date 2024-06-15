@@ -5,12 +5,12 @@ import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import {FlashLoanSimpleReceiverBase} from '../../pools/protocol/FlashLoanSimpleReceiverBase.sol';
+// import {FlashLoanSimpleReceiverBase} from '../../pools/protocol/FlashLoanSimpleReceiverBase.sol';
 import {MintableERC20} from '../tokens/MintableERC20.sol';
 import {IPool} from '../../pools/interfaces/IPool.sol';
 import {DataTypes} from '../../pools/protocol/libraries/types/DataTypes.sol';
 
-contract FlashloanAttacker is FlashLoanSimpleReceiverBase {
+contract FlashloanAttacker {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
@@ -41,7 +41,7 @@ contract FlashloanAttacker is FlashLoanSimpleReceiverBase {
     uint256 premium,
     address, // initiator
     bytes memory // params
-  ) public override returns (bool) {
+  ) public returns (bool) {
     MintableERC20 token = MintableERC20(asset);
     uint256 amountToReturn = amount.add(premium);
 
@@ -49,7 +49,7 @@ contract FlashloanAttacker is FlashLoanSimpleReceiverBase {
     _innerBorrow(asset);
 
     token.mint(premium);
-    IERC20(asset).approve(address(POOL), amountToReturn);
+    // IERC20(asset).approve(address(POOL), amountToReturn);
 
     return true;
   }
