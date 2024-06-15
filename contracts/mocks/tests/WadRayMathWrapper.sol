@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {WadRayMath} from '../../protocol/libraries/math/WadRayMath.sol';
+import {WadRayMath} from '../../pools/protocol/libraries/math/WadRayMath.sol';
 
 contract WadRayMathWrapper {
   function wad() public pure returns (uint256) {

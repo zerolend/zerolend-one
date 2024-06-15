@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
-import {WadRayMath} from '../../protocol/libraries/math/WadRayMath.sol';
-import {DataTypes} from '../../protocol/libraries/types/DataTypes.sol';
+import {IDefaultInterestRateStrategy} from '../../pools/interfaces/IDefaultInterestRateStrategy.sol';
+import {WadRayMath} from '../../pools/protocol/libraries/math/WadRayMath.sol';
+import {DataTypes} from '../../pools/protocol/libraries/types/DataTypes.sol';
 
 abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   uint256 public OPTIMAL_USAGE_RATIO;

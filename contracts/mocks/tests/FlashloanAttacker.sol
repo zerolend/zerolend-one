@@ -5,10 +5,10 @@ import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import {FlashLoanSimpleReceiverBase} from '../../protocol/FlashLoanSimpleReceiverBase.sol';
+import {FlashLoanSimpleReceiverBase} from '../../pools/protocol/FlashLoanSimpleReceiverBase.sol';
 import {MintableERC20} from '../tokens/MintableERC20.sol';
-import {IPool} from '../../interfaces/IPool.sol';
-import {DataTypes} from '../../protocol/libraries/types/DataTypes.sol';
+import {IPool} from '../../pools/interfaces/IPool.sol';
+import {DataTypes} from '../../pools/protocol/libraries/types/DataTypes.sol';
 
 contract FlashloanAttacker is FlashLoanSimpleReceiverBase {
   using SafeERC20 for IERC20;
