@@ -7,13 +7,13 @@ License text copyright (c) 2017 MariaDB Corporation Ab, All Rights Reserved.
 
 Parameters
 
-Licensor: Aave
+Licensor: ZeroLend
 
-Licensed Work: Aave V3 Core. The Licensed Work is (c) 2022 Aave
+Licensed Work: ZeroLend One. The Licensed Work is (c) 2024 ZeroLend
 
 Additional Use Grant: Any uses listed and defined at this [LICENSE](./LICENSE.md)
 
-Change Date: The earlier of 27 January 2023 or a date specified at v3-license-date.aave.eth
+Change Date: The earlier of 01 January 2028 or a date specified at one-license-date.zerolend.eth
 
 Change License: MIT
 

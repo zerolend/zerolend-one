@@ -7,7 +7,7 @@ Implements the base logic for all the actions related to borrowing
 ### Borrow
 
 ```solidity
-event Borrow(address reserve, address user, bytes32 position, uint256 amount, uint256 borrowRate, uint16 referralCode)
+event Borrow(address reserve, address user, bytes32 position, uint256 amount, uint256 borrowRate)
 ```
 
 ### Repay

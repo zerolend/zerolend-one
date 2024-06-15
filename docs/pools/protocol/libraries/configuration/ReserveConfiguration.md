@@ -276,30 +276,6 @@ uint256 MAX_VALID_SUPPLY_CAP
 uint256 MAX_VALID_LIQUIDATION_PROTOCOL_FEE
 ```
 
-### MAX_VALID_EMODE_CATEGORY
-
-```solidity
-uint256 MAX_VALID_EMODE_CATEGORY
-```
-
-### MAX_VALID_UNBACKED_MINT_CAP
-
-```solidity
-uint256 MAX_VALID_UNBACKED_MINT_CAP
-```
-
-### MAX_VALID_DEBT_CEILING
-
-```solidity
-uint256 MAX_VALID_DEBT_CEILING
-```
-
-### DEBT_CEILING_DECIMALS
-
-```solidity
-uint256 DEBT_CEILING_DECIMALS
-```
-
 ### MAX_RESERVES_COUNT
 
 ```solidity
@@ -516,41 +492,6 @@ Gets the borrowing state of the reserve
 | ---- | ---- | ----------- |
 | [0] | bool | The borrowing state |
 
-### setReserveFactor
-
-```solidity
-function setReserveFactor(struct DataTypes.ReserveConfigurationMap self, uint256 reserveFactor) internal pure
-```
-
-Sets the reserve factor of the reserve
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct DataTypes.ReserveConfigurationMap | The reserve configuration |
-| reserveFactor | uint256 | The reserve factor |
-
-### getReserveFactor
-
-```solidity
-function getReserveFactor(struct DataTypes.ReserveConfigurationMap self) internal pure returns (uint256)
-```
-
-Gets the reserve factor of the reserve
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct DataTypes.ReserveConfigurationMap | The reserve configuration |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The reserve factor |
-
 ### setBorrowCap
 
 ```solidity
@@ -668,25 +609,4 @@ Gets the configuration parameters of the reserve from storage
 | [2] | uint256 | The state param representing liquidation bonus |
 | [3] | uint256 | The state param representing reserve decimals |
 | [4] | uint256 | The state param representing reserve factor |
-
-### getCaps
-
-```solidity
-function getCaps(struct DataTypes.ReserveConfigurationMap self) internal pure returns (uint256, uint256)
-```
-
-Gets the caps parameters of the reserve from storage
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct DataTypes.ReserveConfigurationMap | The reserve configuration |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The state param representing borrow cap |
-| [1] | uint256 | The state param representing supply cap. |
 

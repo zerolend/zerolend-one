@@ -80,18 +80,6 @@ function setBorrowingEnabled(bool enabled) external
 function getBorrowingEnabled() external view returns (bool)
 ```
 
-### setReserveFactor
-
-```solidity
-function setReserveFactor(uint256 reserveFactor) external
-```
-
-### getReserveFactor
-
-```solidity
-function getReserveFactor() external view returns (uint256)
-```
-
 ### setBorrowCap
 
 ```solidity
@@ -126,11 +114,5 @@ function getFlags() external view returns (bool, bool, bool, bool, bool)
 
 ```solidity
 function getParams() external view returns (uint256, uint256, uint256, uint256, uint256)
-```
-
-### getCaps
-
-```solidity
-function getCaps() external view returns (uint256, uint256)
 ```
 

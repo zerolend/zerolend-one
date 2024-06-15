@@ -8,6 +8,12 @@
 uint256 _DONE_TIMESTAMP
 ```
 
+### _minDelay
+
+```solidity
+uint256 _minDelay
+```
+
 ### constructor
 
 ```solidity
@@ -105,17 +111,13 @@ Requirements:
 
 - the caller must have the 'proposer' role._
 
-### cancel
+### _cancel
 
 ```solidity
-function cancel(bytes32 id) internal
+function _cancel(bytes32 id) internal
 ```
 
-_Cancel an operation.
-
-Requirements:
-
-- the caller must have the 'canceller' role._
+_Cancel an operation._
 
 ### execute
 

@@ -44,64 +44,70 @@ function initRoles(address pool, address admin) internal
 function _scheduleAction(address pool, bytes data) internal
 ```
 
+### cancelAction
+
+```solidity
+function cancelAction(address pool, bytes32 id) external
+```
+
 ### setRoleAdmin
 
 ```solidity
-function setRoleAdmin(bytes32 role, bytes32 adminRole) external
+function setRoleAdmin(bytes32 role, bytes32 adminRole) public
 ```
 
 ### addPoolAdmin
 
 ```solidity
-function addPoolAdmin(address pool, address admin) external
+function addPoolAdmin(address pool, address admin) public
 ```
 
 ### removePoolAdmin
 
 ```solidity
-function removePoolAdmin(address pool, address admin) external
+function removePoolAdmin(address pool, address admin) public
 ```
 
 ### isPoolAdmin
 
 ```solidity
-function isPoolAdmin(address pool, address admin) external view returns (bool)
+function isPoolAdmin(address pool, address admin) public view returns (bool)
 ```
 
 ### addEmergencyAdmin
 
 ```solidity
-function addEmergencyAdmin(address pool, address admin) external
+function addEmergencyAdmin(address pool, address admin) public
 ```
 
 ### removeEmergencyAdmin
 
 ```solidity
-function removeEmergencyAdmin(address pool, address admin) external
+function removeEmergencyAdmin(address pool, address admin) public
 ```
 
 ### isEmergencyAdmin
 
 ```solidity
-function isEmergencyAdmin(address pool, address admin) external view returns (bool)
+function isEmergencyAdmin(address pool, address admin) public view returns (bool)
 ```
 
 ### addRiskAdmin
 
 ```solidity
-function addRiskAdmin(address pool, address admin) external
+function addRiskAdmin(address pool, address admin) public
 ```
 
 ### removeRiskAdmin
 
 ```solidity
-function removeRiskAdmin(address pool, address admin) external
+function removeRiskAdmin(address pool, address admin) public
 ```
 
 ### isRiskAdmin
 
 ```solidity
-function isRiskAdmin(address pool, address admin) external view returns (bool)
+function isRiskAdmin(address pool, address admin) public view returns (bool)
 ```
 
 ### onlyPoolAdmin

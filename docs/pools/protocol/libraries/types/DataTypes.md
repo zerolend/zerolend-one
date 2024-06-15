@@ -74,7 +74,7 @@ struct ExecuteLiquidationCallParams {
   address collateralAsset;
   address debtAsset;
   bytes32 position;
-  address oracle;
+  address pool;
 }
 ```
 
@@ -85,7 +85,6 @@ struct ExecuteSupplyParams {
   address asset;
   uint256 amount;
   bytes32 onBehalfOfPosition;
-  uint16 referralCode;
 }
 ```
 
@@ -97,10 +96,9 @@ struct ExecuteBorrowParams {
   address user;
   bytes32 onBehalfOfPosition;
   uint256 amount;
-  uint16 referralCode;
   bool releaseUnderlying;
   uint256 reservesCount;
-  address oracle;
+  address pool;
 }
 ```
 
@@ -122,7 +120,7 @@ struct ExecuteWithdrawParams {
   uint256 amount;
   bytes32 position;
   uint256 reservesCount;
-  address oracle;
+  address pool;
 }
 ```
 
@@ -134,7 +132,6 @@ struct FlashloanSimpleParams {
   address asset;
   uint256 amount;
   bytes params;
-  uint16 referralCode;
   uint256 flashLoanPremiumToProtocol;
   uint256 flashLoanPremiumTotal;
 }
@@ -149,7 +146,6 @@ struct FlashLoanRepaymentParams {
   uint256 flashLoanPremiumToProtocol;
   address asset;
   address receiverAddress;
-  uint16 referralCode;
 }
 ```
 
@@ -160,7 +156,7 @@ struct CalculateUserAccountDataParams {
   struct DataTypes.UserConfigurationMap userConfig;
   uint256 reservesCount;
   bytes32 position;
-  address oracle;
+  address pool;
 }
 ```
 
@@ -174,7 +170,7 @@ struct ValidateBorrowParams {
   bytes32 position;
   uint256 amount;
   uint256 reservesCount;
-  address oracle;
+  address pool;
 }
 ```
 
@@ -206,11 +202,8 @@ struct CalculateInterestRatesParams {
 ```solidity
 struct InitReserveParams {
   address asset;
-  address aTokenAddress;
-  address variableDebtAddress;
   address interestRateStrategyAddress;
   uint16 reservesCount;
-  uint16 maxNumberReserves;
 }
 ```
 

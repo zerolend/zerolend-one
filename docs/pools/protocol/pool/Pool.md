@@ -83,6 +83,12 @@ address configurator
 
 _The pool configurator contract that can make changes_
 
+### reserveFactor
+
+```solidity
+uint256 reserveFactor
+```
+
 ### initialize
 
 ```solidity
@@ -98,7 +104,7 @@ Caching the address of the PoolAddressesProvider in order to reduce gas consumpt
 ### supply
 
 ```solidity
-function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode, uint256 index) public virtual
+function supply(address asset, uint256 amount, address onBehalfOf, uint256 index) public virtual
 ```
 
 Supplies an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
@@ -111,7 +117,6 @@ Supplies an `amount` of underlying asset into the reserve, receiving in return o
 | asset | address | The address of the underlying asset to supply |
 | amount | uint256 | The amount to be supplied |
 | onBehalfOf | address | The address that will receive the aTokens, same as msg.sender if the user   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens   is a different wallet |
-| referralCode | uint16 | Code used to register the integrator originating the operation, for potential rewards.   0 if the action is executed directly by the user, without any middle-man |
 | index | uint256 |  |
 
 ### withdraw
@@ -141,7 +146,7 @@ E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100
 ### borrow
 
 ```solidity
-function borrow(address asset, uint256 amount, uint16 referralCode, address onBehalfOf, uint256 index) public virtual
+function borrow(address asset, uint256 amount, address onBehalfOf, uint256 index) public virtual
 ```
 
 Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -156,7 +161,6 @@ corresponding debt token (StableDebtToken or VariableDebtToken)
 | ---- | ---- | ----------- |
 | asset | address | The address of the underlying asset to borrow |
 | amount | uint256 | The amount to be borrowed |
-| referralCode | uint16 | The code used to register the integrator originating the operation, for potential rewards.   0 if the action is executed directly by the user, without any middle-man |
 | onBehalfOf | address | The address of the user who will receive the debt. Should be the address of the borrower itself calling the function if he wants to borrow against his own collateral, or the address of the credit delegator if he has been given credit delegation allowance |
 | index | uint256 |  |
 
@@ -207,7 +211,7 @@ Function to liquidate a non-healthy position collateral-wise, with Health Factor
 ### flashLoan
 
 ```solidity
-function flashLoan(address receiverAddress, address asset, uint256 amount, bytes params, uint16 referralCode) public virtual
+function flashLoan(address receiverAddress, address asset, uint256 amount, bytes params) public virtual
 ```
 
 Allows smartcontracts to access the liquidity of the pool within one transaction,
@@ -224,7 +228,6 @@ into consideration. For further details please visit https://docs.aave.com/devel
 | asset | address | The address of the asset being flash-borrowed |
 | amount | uint256 | The amount of the asset being flash-borrowed |
 | params | bytes | Variadic packed params to pass to the receiver as extra information |
-| referralCode | uint16 | The code used to register the integrator originating the operation, for potential rewards.   0 if the action is executed directly by the user, without any middle-man |
 
 ### mintToTreasury
 

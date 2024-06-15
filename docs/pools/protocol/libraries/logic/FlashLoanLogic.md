@@ -7,7 +7,7 @@ Implements the logic for the flash loans
 ### FlashLoan
 
 ```solidity
-event FlashLoan(address target, address initiator, address asset, uint256 amount, uint256 premium, uint16 referralCode)
+event FlashLoan(address target, address initiator, address asset, uint256 amount, uint256 premium)
 ```
 
 ### FlashLoanLocalVars

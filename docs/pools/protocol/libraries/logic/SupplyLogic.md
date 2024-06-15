@@ -25,7 +25,7 @@ event Withdraw(address reserve, bytes32 pos, address to, uint256 amount)
 ### Supply
 
 ```solidity
-event Supply(address reserve, address user, bytes32 pos, uint256 amount, uint16 referralCode)
+event Supply(address reserve, address user, bytes32 pos, uint256 amount)
 ```
 
 ### executeSupply

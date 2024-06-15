@@ -95,21 +95,6 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     emit ReserveFrozen(asset, freeze);
   }
 
-  /// @inheritdoc IPoolConfigurator
-  function setReserveFactor(
-    address pool,
-    address asset,
-    uint256 newReserveFactor
-  ) external onlyRiskOrPoolAdmins(pool) {
-    IPool cachedPool = IPool(pool);
-    require(newReserveFactor <= PercentageMath.PERCENTAGE_FACTOR, Errors.INVALID_RESERVE_FACTOR);
-    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
-    uint256 oldReserveFactor = currentConfig.getReserveFactor();
-    currentConfig.setReserveFactor(newReserveFactor);
-    cachedPool.setConfiguration(asset, currentConfig);
-    emit ReserveFactorChanged(asset, oldReserveFactor, newReserveFactor);
-  }
-
   // @inheritdoc IPoolConfigurator
   function setBorrowCap(
     address pool,

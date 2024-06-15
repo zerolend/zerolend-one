@@ -66,7 +66,7 @@ struct LiquidationCallLocalVars {
   uint256 liquidationProtocolFeeAmount;
   address collateralPriceSource;
   address debtPriceSource;
-  contract IAToken collateralAToken;
+  address asset;
   struct DataTypes.ReserveCache debtReserveCache;
 }
 ```
@@ -155,30 +155,6 @@ _If the Health Factor is below CLOSE_FACTOR_HF_THRESHOLD, the close factor is in
 | [1] | uint256 | The total debt of the user |
 | [2] | uint256 | The actual debt to liquidate as a function of the closeFactor |
 
-### _getConfigurationData
-
-```solidity
-function _getConfigurationData(struct DataTypes.ReserveData collateralReserve, struct DataTypes.ExecuteLiquidationCallParams params) internal view returns (contract IAToken, address, address, uint256)
-```
-
-Returns the configuration data for the debt and the collateral reserves.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| collateralReserve | struct DataTypes.ReserveData | The data of the collateral reserve |
-| params | struct DataTypes.ExecuteLiquidationCallParams | The additional parameters needed to execute the liquidation function |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | contract IAToken | The collateral aToken |
-| [1] | address | The address to use as price source for the collateral |
-| [2] | address | The address to use as price source for the debt |
-| [3] | uint256 | The liquidation bonus to apply to the collateral |
-
 ### AvailableCollateralToLiquidateLocalVars
 
 ```solidity
@@ -202,7 +178,7 @@ struct AvailableCollateralToLiquidateLocalVars {
 ### _calculateAvailableCollateralToLiquidate
 
 ```solidity
-function _calculateAvailableCollateralToLiquidate(struct DataTypes.ReserveData collateralReserve, struct DataTypes.ReserveCache debtReserveCache, address collateralAsset, address debtAsset, uint256 debtToCover, uint256 userCollateralBalance, uint256 liquidationBonus, contract IPool oracle) internal view returns (uint256, uint256, uint256)
+function _calculateAvailableCollateralToLiquidate(struct DataTypes.ReserveData collateralReserve, struct DataTypes.ReserveCache debtReserveCache, address collateralAsset, address debtAsset, uint256 debtToCover, uint256 userCollateralBalance, uint256 liquidationBonus, uint256 collateralPrice, uint256 debtAssetPrice) internal view returns (uint256, uint256, uint256)
 ```
 
 Calculates how much of a specific collateral can be liquidated, given
@@ -222,7 +198,8 @@ _This function needs to be called after all the checks to validate the liquidati
 | debtToCover | uint256 | The debt amount of borrowed `asset` the liquidator wants to cover |
 | userCollateralBalance | uint256 | The collateral balance for the specific `collateralAsset` of the user being liquidated |
 | liquidationBonus | uint256 | The collateral bonus percentage to receive as result of the liquidation |
-| oracle | contract IPool |  |
+| collateralPrice | uint256 |  |
+| debtAssetPrice | uint256 |  |
 
 #### Return Values
 

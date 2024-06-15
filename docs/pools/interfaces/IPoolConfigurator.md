@@ -303,7 +303,7 @@ _Emitted when the part of the premium that goes to protocol is updated._
 ### initReserves
 
 ```solidity
-function initReserves(struct ConfiguratorInputTypes.InitReserveInput[] input) external
+function initReserves(address pool, struct ConfiguratorInputTypes.InitReserveInput[] input) external
 ```
 
 Initializes multiple reserves.
@@ -312,40 +312,13 @@ Initializes multiple reserves.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| pool | address |  |
 | input | struct ConfiguratorInputTypes.InitReserveInput[] | The array of initialization parameters |
-
-### updateAToken
-
-```solidity
-function updateAToken(struct ConfiguratorInputTypes.UpdateATokenInput input) external
-```
-
-_Updates the aToken implementation for the reserve._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| input | struct ConfiguratorInputTypes.UpdateATokenInput | The aToken update parameters |
-
-### updateVariableDebtToken
-
-```solidity
-function updateVariableDebtToken(struct ConfiguratorInputTypes.UpdateDebtTokenInput input) external
-```
-
-Updates the variable debt token implementation for the asset.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| input | struct ConfiguratorInputTypes.UpdateDebtTokenInput | The variableDebtToken update parameters |
 
 ### setReserveBorrowing
 
 ```solidity
-function setReserveBorrowing(address asset, bool enabled) external
+function setReserveBorrowing(address pool, address asset, bool enabled) external
 ```
 
 Configures borrowing on a reserve.
@@ -354,6 +327,7 @@ Configures borrowing on a reserve.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 | enabled | bool | True if borrowing needs to be enabled, false otherwise |
 
@@ -377,40 +351,10 @@ The `liquidationBonus` is always above 100%. A value of 105% means the liquidato
 | liquidationThreshold | uint256 | The threshold at which loans using this asset as collateral will be considered undercollateralized |
 | liquidationBonus | uint256 | The bonus liquidators receive to liquidate this asset |
 
-### setReserveFlashLoaning
-
-```solidity
-function setReserveFlashLoaning(address asset, bool enabled) external
-```
-
-Enable or disable flashloans on a reserve
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| asset | address | The address of the underlying asset of the reserve |
-| enabled | bool | True if flashloans need to be enabled, false otherwise |
-
-### setReserveActive
-
-```solidity
-function setReserveActive(address asset, bool active) external
-```
-
-Activate or deactivate a reserve
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| asset | address | The address of the underlying asset of the reserve |
-| active | bool | True if the reserve needs to be active, false otherwise |
-
 ### setReserveFreeze
 
 ```solidity
-function setReserveFreeze(address asset, bool freeze) external
+function setReserveFreeze(address pool, address asset, bool freeze) external
 ```
 
 Freeze or unfreeze a reserve. A frozen reserve doesn't allow any new supply, borrow
@@ -420,29 +364,14 @@ or rate swap but allows repayments, liquidations, rate rebalances and withdrawal
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 | freeze | bool | True if the reserve needs to be frozen, false otherwise |
-
-### setReservePause
-
-```solidity
-function setReservePause(address asset, bool paused) external
-```
-
-Pauses a reserve. A paused reserve does not allow any interaction (supply, borrow, repay,
-swap interest rate, liquidate, atoken transfers).
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| asset | address | The address of the underlying asset of the reserve |
-| paused | bool | True if pausing the reserve, false if unpausing |
 
 ### setReserveFactor
 
 ```solidity
-function setReserveFactor(address asset, uint256 newReserveFactor) external
+function setReserveFactor(address pool, address asset, uint256 newReserveFactor) external
 ```
 
 Updates the reserve factor of a reserve.
@@ -451,13 +380,14 @@ Updates the reserve factor of a reserve.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 | newReserveFactor | uint256 | The new reserve factor of the reserve |
 
 ### setReserveInterestRateStrategyAddress
 
 ```solidity
-function setReserveInterestRateStrategyAddress(address asset, address newRateStrategyAddress) external
+function setReserveInterestRateStrategyAddress(address pool, address asset, address newRateStrategyAddress) external
 ```
 
 Sets the interest rate strategy of a reserve.
@@ -466,28 +396,29 @@ Sets the interest rate strategy of a reserve.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 | newRateStrategyAddress | address | The address of the new interest strategy contract |
 
-### setPoolPause
+### setPoolFreeze
 
 ```solidity
-function setPoolPause(bool paused) external
+function setPoolFreeze(address pool, bool freeze) external
 ```
 
-Pauses or unpauses all the protocol reserves. In the paused state all the protocol interactions
-are suspended.
+Freezes the pool reserves. In the frozen state only withdraw and repay can be done
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| paused | bool | True if protocol needs to be paused, false otherwise |
+| pool | address |  |
+| freeze | bool | True if protocol needs to be frozen, false otherwise |
 
 ### setBorrowCap
 
 ```solidity
-function setBorrowCap(address asset, uint256 newBorrowCap) external
+function setBorrowCap(address pool, address asset, uint256 newBorrowCap) external
 ```
 
 Updates the borrow cap of a reserve.
@@ -496,13 +427,14 @@ Updates the borrow cap of a reserve.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 | newBorrowCap | uint256 | The new borrow cap of the reserve |
 
 ### setSupplyCap
 
 ```solidity
-function setSupplyCap(address asset, uint256 newSupplyCap) external
+function setSupplyCap(address pool, address asset, uint256 newSupplyCap) external
 ```
 
 Updates the supply cap of a reserve.
@@ -511,21 +443,7 @@ Updates the supply cap of a reserve.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 | newSupplyCap | uint256 | The new supply cap of the reserve |
-
-### setLiquidationProtocolFee
-
-```solidity
-function setLiquidationProtocolFee(address asset, uint256 newFee) external
-```
-
-Updates the liquidation protocol fee of reserve.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| asset | address | The address of the underlying asset of the reserve |
-| newFee | uint256 | The new liquidation protocol fee of the reserve, expressed in bps |
 
