@@ -53,14 +53,6 @@ counting from right to left.
 
 See {_encodeStateBitmap}._
 
-### TimelockUnexecutedPredecessor
-
-```solidity
-error TimelockUnexecutedPredecessor(bytes32 predecessorId)
-```
-
-_The predecessor to an operation not yet done._
-
 ### TimelockUnauthorizedCaller
 
 ```solidity
@@ -72,7 +64,7 @@ _The caller account is not authorized._
 ### CallScheduled
 
 ```solidity
-event CallScheduled(bytes32 id, uint256 index, address target, uint256 value, bytes data, bytes32 predecessor, uint256 delay)
+event CallScheduled(bytes32 id, uint256 index, address target, uint256 value, bytes data, bytes32 salt, uint256 delay)
 ```
 
 _Emitted when a call is scheduled as part of operation `id`._
@@ -80,18 +72,10 @@ _Emitted when a call is scheduled as part of operation `id`._
 ### CallExecuted
 
 ```solidity
-event CallExecuted(bytes32 id, uint256 index, address target, uint256 value, bytes data)
+event CallExecuted(bytes32 id, uint256 index, address target, uint256 value, bytes32 salt, bytes data)
 ```
 
 _Emitted when a call is performed as part of operation `id`._
-
-### CallSalt
-
-```solidity
-event CallSalt(bytes32 id, bytes32 salt)
-```
-
-_Emitted when new proposal is scheduled with non-zero salt._
 
 ### Cancelled
 

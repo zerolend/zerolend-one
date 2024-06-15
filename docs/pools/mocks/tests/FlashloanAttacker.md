@@ -2,10 +2,22 @@
 
 ## FlashloanAttacker
 
+### _provider
+
+```solidity
+contract IPoolAddressesProvider _provider
+```
+
 ### _pool
 
 ```solidity
 contract IPool _pool
+```
+
+### constructor
+
+```solidity
+constructor(contract IPoolAddressesProvider provider) public
 ```
 
 ### supplyAsset

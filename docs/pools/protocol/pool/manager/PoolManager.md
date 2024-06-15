@@ -20,10 +20,28 @@ bytes32 EMERGENCY_ADMIN_ROLE
 bytes32 RISK_ADMIN_ROLE
 ```
 
+### governance
+
+```solidity
+address governance
+```
+
 ### constructor
 
 ```solidity
 constructor(address _governance) public
+```
+
+### initRoles
+
+```solidity
+function initRoles(address pool, address admin) internal
+```
+
+### _scheduleAction
+
+```solidity
+function _scheduleAction(address pool, bytes data) internal
 ```
 
 ### setRoleAdmin
@@ -110,5 +128,11 @@ modifier onlyEmergencyOrPoolAdmin(address pool)
 
 ```solidity
 modifier onlyRiskOrPoolAdmins(address pool)
+```
+
+### getRoleFromPool
+
+```solidity
+function getRoleFromPool(address pool, bytes32 role) public pure returns (bytes32)
 ```
 

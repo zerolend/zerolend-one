@@ -15,25 +15,7 @@ mapping(address => struct DataTypes.ReserveData) _reserves
 ### _usersConfig
 
 ```solidity
-mapping(bytes32 => struct DataTypes.UserConfigurationMap) _usersConfig
-```
-
-### _balances
-
-```solidity
-mapping(address => mapping(bytes32 => uint256)) _balances
-```
-
-### _debts
-
-```solidity
-mapping(address => mapping(bytes32 => uint256)) _debts
-```
-
-### _totalSupplies
-
-```solidity
-mapping(address => uint256) _totalSupplies
+mapping(address => struct DataTypes.UserConfigurationMap) _usersConfig
 ```
 
 ### _reservesList
@@ -42,10 +24,22 @@ mapping(address => uint256) _totalSupplies
 mapping(uint256 => address) _reservesList
 ```
 
+### _bridgeProtocolFee
+
+```solidity
+uint256 _bridgeProtocolFee
+```
+
 ### _flashLoanPremiumTotal
 
 ```solidity
 uint128 _flashLoanPremiumTotal
+```
+
+### _flashLoanPremiumToProtocol
+
+```solidity
+uint128 _flashLoanPremiumToProtocol
 ```
 
 ### _reservesCount

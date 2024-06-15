@@ -30,7 +30,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "docs": "hardhat docgen"
   },
   "dependencies": {
     "solidity-docgen": "0.6.0-beta.36"

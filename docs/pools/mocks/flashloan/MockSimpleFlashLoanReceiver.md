@@ -32,6 +32,12 @@ uint256 _amountToApprove
 bool _simulateEOA
 ```
 
+### constructor
+
+```solidity
+constructor(contract IPoolAddressesProvider provider) public
+```
+
 ### setFailExecutionTransfer
 
 ```solidity

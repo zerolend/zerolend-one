@@ -2,72 +2,17 @@
 
 ## TimelockedActions
 
-_Contract module which acts as a timelocked controller. When set as the
-owner of an `Ownable` smart contract, it enforces a timelock on all
-`onlyOwner` maintenance operations. This gives time for users of the
-controlled contract to exit before a potentially dangerous maintenance
-operation is applied.
-
-By default, this contract is self administered, meaning administration tasks
-have to go through the timelock process. The proposer (resp executor) role
-is in charge of proposing (resp executing) operations. A common use case is
-to position this {TimelockController} as the owner of a smart contract, with
-a multisig or a DAO as the sole proposer._
-
 ### _DONE_TIMESTAMP
 
 ```solidity
 uint256 _DONE_TIMESTAMP
 ```
 
-### PROPOSER_ROLE
-
-```solidity
-bytes32 PROPOSER_ROLE
-```
-
-### CANCELLER_ROLE
-
-```solidity
-bytes32 CANCELLER_ROLE
-```
-
 ### constructor
 
 ```solidity
-constructor(uint256 minDelay, address admin) public
+constructor(uint256 minDelay) public
 ```
-
-_Initializes the contract with the following parameters:
-
-- `minDelay`: initial minimum delay in seconds for operations
-- `proposers`: accounts to be granted proposer and canceller roles
-- `executors`: accounts to be granted executor role
-- `admin`: optional account to be granted admin role; disable with zero address
-
-IMPORTANT: The optional admin can aid with initial configuration of roles after deployment
-without being subject to delay, but this role should be subsequently renounced in favor of
-administration through timelocked proposals. Previous versions of this contract would assign
-this admin to the deployer automatically and should be renounced as well._
-
-### onlyRoleOrOpenRole
-
-```solidity
-modifier onlyRoleOrOpenRole(bytes32 role)
-```
-
-_Modifier to make a function callable only by a certain role. In
-addition to checking the sender's role, `address(0)` 's role is also
-considered. Granting a role to `address(0)` is equivalent to enabling
-this role for everyone._
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-_Contract might receive/hold ETH as part of the maintenance process._
 
 ### supportsInterface
 
@@ -140,25 +85,16 @@ This value can be changed by executing an operation that calls `updateDelay`._
 ### hashOperation
 
 ```solidity
-function hashOperation(address target, uint256 value, bytes data, bytes32 predecessor, bytes32 salt) public pure virtual returns (bytes32)
+function hashOperation(address target, uint256 value, bytes data, bytes32 salt) public pure virtual returns (bytes32)
 ```
 
 _Returns the identifier of an operation containing a single
 transaction._
 
-### hashOperationBatch
+### _schedule
 
 ```solidity
-function hashOperationBatch(address[] targets, uint256[] values, bytes[] payloads, bytes32 predecessor, bytes32 salt) public pure virtual returns (bytes32)
-```
-
-_Returns the identifier of an operation containing a batch of
-transactions._
-
-### schedule
-
-```solidity
-function schedule(address target, uint256 value, bytes data, bytes32 predecessor, bytes32 salt, uint256 delay) internal virtual
+function _schedule(address target, uint256 value, bytes data, bytes32 salt, uint256 delay) internal virtual
 ```
 
 _Schedule an operation containing a single transaction.
@@ -172,7 +108,7 @@ Requirements:
 ### cancel
 
 ```solidity
-function cancel(bytes32 id) public virtual
+function cancel(bytes32 id) internal
 ```
 
 _Cancel an operation.
@@ -184,7 +120,7 @@ Requirements:
 ### execute
 
 ```solidity
-function execute(address target, uint256 value, bytes payload, bytes32 predecessor, bytes32 salt) public payable virtual
+function execute(address target, uint256 value, bytes payload, bytes32 salt) public payable virtual
 ```
 
 _Execute an (ready) operation containing a single transaction.
@@ -218,10 +154,4 @@ the underlying position in the `OperationState` enum. For example:
          ^--- Ready
           ^-- Waiting
            ^- Unset_
-
-### getRoleFromPool
-
-```solidity
-function getRoleFromPool(address pool, bytes32 role) public pure returns (bytes32)
-```
 

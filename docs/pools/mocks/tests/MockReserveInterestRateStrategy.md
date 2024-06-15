@@ -15,6 +15,19 @@ Returns the usage ratio at which the pool aims to obtain most competitive borrow
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 
+### ADDRESSES_PROVIDER
+
+```solidity
+contract IPoolAddressesProvider ADDRESSES_PROVIDER
+```
+
+Returns the address of the PoolAddressesProvider
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+
 ### _baseVariableBorrowRate
 
 ```solidity
@@ -93,7 +106,7 @@ uint256 _variableBorrowRate
 ### constructor
 
 ```solidity
-constructor(uint256 optimalUsageRatio, uint256 baseVariableBorrowRate, uint256 variableRateSlope1, uint256 variableRateSlope2) internal
+constructor(contract IPoolAddressesProvider provider, uint256 optimalUsageRatio, uint256 baseVariableBorrowRate, uint256 variableRateSlope1, uint256 variableRateSlope2) internal
 ```
 
 ### setLiquidityRate

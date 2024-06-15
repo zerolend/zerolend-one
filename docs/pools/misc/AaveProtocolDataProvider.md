@@ -10,10 +10,37 @@ Peripheral contract to collect and pre-process information from the Pool.
 address ETH
 ```
 
+### ADDRESSES_PROVIDER
+
+```solidity
+contract IPoolAddressesProvider ADDRESSES_PROVIDER
+```
+
+Returns the address for the PoolAddressesProvider contract.
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+
+### constructor
+
+```solidity
+constructor(contract IPoolAddressesProvider addressesProvider) internal
+```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| addressesProvider | contract IPoolAddressesProvider | The address of the PoolAddressesProvider contract |
+
 ### getAllReservesTokens
 
 ```solidity
-function getAllReservesTokens(address pool) external view returns (struct IPoolDataProvider.TokenData[])
+function getAllReservesTokens() external view returns (struct IPoolDataProvider.TokenData[])
 ```
 
 Returns the list of the existing reserves in the pool.
@@ -29,7 +56,7 @@ _Handling MKR and ETH in a different way since they do not have standard `symbol
 ### getAllATokens
 
 ```solidity
-function getAllATokens(address pool) external view returns (struct IPoolDataProvider.TokenData[])
+function getAllATokens() external view returns (struct IPoolDataProvider.TokenData[])
 ```
 
 Returns the list of the existing ATokens in the pool.
@@ -43,7 +70,7 @@ Returns the list of the existing ATokens in the pool.
 ### getReserveConfigurationData
 
 ```solidity
-function getReserveConfigurationData(address pool, address asset) external view returns (uint256 decimals, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus, uint256 reserveFactor, bool usageAsCollateralEnabled, bool borrowingEnabled, bool isActive, bool isFrozen)
+function getReserveConfigurationData(address asset) external view returns (uint256 decimals, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus, uint256 reserveFactor, bool usageAsCollateralEnabled, bool borrowingEnabled, bool stableBorrowRateEnabled, bool isActive, bool isFrozen)
 ```
 
 Returns the configuration data of the reserve
@@ -54,7 +81,6 @@ _Not returning borrow and supply caps for compatibility, nor pause flag_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 
 #### Return Values
@@ -68,13 +94,14 @@ _Not returning borrow and supply caps for compatibility, nor pause flag_
 | reserveFactor | uint256 | The reserveFactor of the reserve |
 | usageAsCollateralEnabled | bool | True if the usage as collateral is enabled, false otherwise |
 | borrowingEnabled | bool | True if borrowing is enabled, false otherwise |
+| stableBorrowRateEnabled | bool | True if stable rate borrowing is enabled, false otherwise |
 | isActive | bool | True if it is active, false otherwise |
 | isFrozen | bool | True if it is frozen, false otherwise |
 
 ### getReserveCaps
 
 ```solidity
-function getReserveCaps(address pool, address asset) external view returns (uint256 borrowCap, uint256 supplyCap)
+function getReserveCaps(address asset) external view returns (uint256 borrowCap, uint256 supplyCap)
 ```
 
 Returns the caps parameters of the reserve
@@ -83,7 +110,6 @@ Returns the caps parameters of the reserve
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 
 #### Return Values
@@ -96,7 +122,7 @@ Returns the caps parameters of the reserve
 ### getPaused
 
 ```solidity
-function getPaused(address pool, address asset) external view returns (bool isPaused)
+function getPaused(address asset) external view returns (bool isPaused)
 ```
 
 Returns if the pool is paused
@@ -105,7 +131,6 @@ Returns if the pool is paused
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 
 #### Return Values
@@ -117,7 +142,7 @@ Returns if the pool is paused
 ### getLiquidationProtocolFee
 
 ```solidity
-function getLiquidationProtocolFee(address pool, address asset) external view returns (uint256)
+function getLiquidationProtocolFee(address asset) external view returns (uint256)
 ```
 
 Returns the protocol fee on the liquidation bonus
@@ -126,7 +151,6 @@ Returns the protocol fee on the liquidation bonus
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 
 #### Return Values
@@ -135,10 +159,44 @@ Returns the protocol fee on the liquidation bonus
 | ---- | ---- | ----------- |
 | [0] | uint256 | The protocol fee on liquidation |
 
+### getDebtCeiling
+
+```solidity
+function getDebtCeiling(address asset) external view returns (uint256)
+```
+
+Returns the debt ceiling of the reserve
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| asset | address | The address of the underlying asset of the reserve |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The debt ceiling of the reserve |
+
+### getDebtCeilingDecimals
+
+```solidity
+function getDebtCeilingDecimals() external pure returns (uint256)
+```
+
+Returns the debt ceiling decimals
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The debt ceiling decimals |
+
 ### getATokenTotalSupply
 
 ```solidity
-function getATokenTotalSupply(address pool, address asset) external view returns (uint256)
+function getATokenTotalSupply(address asset) external view returns (uint256)
 ```
 
 Returns the total supply of aTokens for a given asset
@@ -147,7 +205,6 @@ Returns the total supply of aTokens for a given asset
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 
 #### Return Values
@@ -159,7 +216,7 @@ Returns the total supply of aTokens for a given asset
 ### getTotalDebt
 
 ```solidity
-function getTotalDebt(address pool, address asset) external view returns (uint256)
+function getTotalDebt(address asset) external view returns (uint256)
 ```
 
 Returns the total debt for a given asset
@@ -168,7 +225,6 @@ Returns the total debt for a given asset
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 
 #### Return Values
@@ -180,7 +236,7 @@ Returns the total debt for a given asset
 ### getUserReserveData
 
 ```solidity
-function getUserReserveData(address pool, address asset, address user) external view returns (uint256 currentATokenBalance, uint256 currentVariableDebt, uint256 scaledVariableDebt, uint256 liquidityRate, bool usageAsCollateralEnabled)
+function getUserReserveData(address asset, address user) external view returns (uint256 currentATokenBalance, uint256 currentStableDebt, uint256 currentVariableDebt, uint256 principalStableDebt, uint256 scaledVariableDebt, uint256 stableBorrowRate, uint256 liquidityRate, uint40 stableRateLastUpdated, bool usageAsCollateralEnabled)
 ```
 
 Returns the user data in a reserve
@@ -189,7 +245,6 @@ Returns the user data in a reserve
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 | user | address | The address of the user |
 
@@ -198,37 +253,19 @@ Returns the user data in a reserve
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | currentATokenBalance | uint256 | The current AToken balance of the user |
+| currentStableDebt | uint256 | The current stable debt of the user |
 | currentVariableDebt | uint256 | The current variable debt of the user |
+| principalStableDebt | uint256 | The principal stable debt of the user |
 | scaledVariableDebt | uint256 | The scaled variable debt of the user |
+| stableBorrowRate | uint256 | The stable borrow rate of the user |
 | liquidityRate | uint256 | The liquidity rate of the reserve |
+| stableRateLastUpdated | uint40 | The timestamp of the last update of the user stable rate |
 | usageAsCollateralEnabled | bool | True if the user is using the asset as collateral, false         otherwise |
-
-### getReserveTokensAddresses
-
-```solidity
-function getReserveTokensAddresses(address pool, address asset) external view returns (address aTokenAddress, address variableDebtTokenAddress)
-```
-
-Returns the token addresses of the reserve
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| pool | address |  |
-| asset | address | The address of the underlying asset of the reserve |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| aTokenAddress | address | The AToken address of the reserve |
-| variableDebtTokenAddress | address | The VariableDebtToken address of the reserve |
 
 ### getInterestRateStrategyAddress
 
 ```solidity
-function getInterestRateStrategyAddress(address pool, address asset) external view returns (address irStrategyAddress)
+function getInterestRateStrategyAddress(address asset) external view returns (address irStrategyAddress)
 ```
 
 Returns the address of the Interest Rate strategy
@@ -237,7 +274,6 @@ Returns the address of the Interest Rate strategy
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 
 #### Return Values
@@ -249,7 +285,7 @@ Returns the address of the Interest Rate strategy
 ### getFlashLoanEnabled
 
 ```solidity
-function getFlashLoanEnabled(address pool, address asset) external view returns (bool)
+function getFlashLoanEnabled(address asset) external view returns (bool)
 ```
 
 Returns whether the reserve has FlashLoans enabled or disabled
@@ -258,7 +294,6 @@ Returns whether the reserve has FlashLoans enabled or disabled
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 
 #### Return Values
