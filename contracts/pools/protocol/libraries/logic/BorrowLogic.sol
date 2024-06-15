@@ -30,17 +30,16 @@ library BorrowLogic {
   event Borrow(
     address indexed reserve,
     address user,
-    address indexed onBehalfOf,
+    bytes32 indexed position,
     uint256 amount,
     uint256 borrowRate,
     uint16 indexed referralCode
   );
   event Repay(
     address indexed reserve,
-    address indexed user,
+    bytes32 indexed position,
     address indexed repayer,
-    uint256 amount,
-    bool useATokens
+    uint256 amount
   );
 
   /**
@@ -70,7 +69,7 @@ library BorrowLogic {
         reserveCache: reserveCache,
         userConfig: userConfig,
         asset: params.asset,
-        userAddress: params.onBehalfOf,
+        position: params.onBehalfOfPosition,
         amount: params.amount,
         reservesCount: params.reservesCount,
         oracle: params.oracle
@@ -79,9 +78,14 @@ library BorrowLogic {
 
     bool isFirstBorrowing = false;
 
-    (isFirstBorrowing, reserveCache.nextScaledVariableDebt) = IVariableDebtToken(
-      reserveCache.variableDebtTokenAddress
-    ).mint(params.user, params.onBehalfOf, params.amount, reserveCache.nextVariableBorrowIndex);
+    // (isFirstBorrowing, reserveCache.nextScaledVariableDebt) = IVariableDebtToken(
+    //   reserveCache.variableDebtTokenAddress
+    // ).mint(
+    //     params.user,
+    //     params.onBehalfOfPosition,
+    //     params.amount,
+    //     reserveCache.nextVariableBorrowIndex
+    //   );
 
     if (isFirstBorrowing) {
       userConfig.setBorrowing(reserve.id, true);
@@ -101,7 +105,7 @@ library BorrowLogic {
     emit Borrow(
       params.asset,
       params.user,
-      params.onBehalfOf,
+      params.onBehalfOfPosition,
       params.amount,
       reserve.currentVariableBorrowRate,
       params.referralCode
@@ -129,16 +133,21 @@ library BorrowLogic {
     reserve.updateState(reserveCache);
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(
-      params.onBehalfOf,
+      params.onBehalfOfPosition,
       reserveCache
     );
 
-    ValidationLogic.validateRepay(reserveCache, params.amount, params.onBehalfOf, variableDebt);
+    ValidationLogic.validateRepay(
+      reserveCache,
+      params.amount,
+      params.onBehalfOfPosition,
+      variableDebt
+    );
 
     uint256 paybackAmount = variableDebt;
 
     // Allows a user to repay with aTokens without leaving dust from interest.
-    if (params.useATokens && params.amount == type(uint256).max) {
+    if (params.amount == type(uint256).max) {
       params.amount = IAToken(reserveCache.aTokenAddress).balanceOf(msg.sender);
     }
 
@@ -146,37 +155,25 @@ library BorrowLogic {
       paybackAmount = params.amount;
     }
 
-    reserveCache.nextScaledVariableDebt = IVariableDebtToken(reserveCache.variableDebtTokenAddress)
-      .burn(params.onBehalfOf, paybackAmount, reserveCache.nextVariableBorrowIndex);
+    // todo
+    // reserveCache.nextScaledVariableDebt = IVariableDebtToken(reserveCache.variableDebtTokenAddress)
+    //   .burn(params.onBehalfOfPosition, paybackAmount, reserveCache.nextVariableBorrowIndex);
 
-    reserve.updateInterestRates(
-      reserveCache,
-      params.asset,
-      params.useATokens ? 0 : paybackAmount,
-      0
-    );
+    reserve.updateInterestRates(reserveCache, params.asset, paybackAmount, 0);
 
     if (stableDebt + variableDebt - paybackAmount == 0) {
       userConfig.setBorrowing(reserve.id, false);
     }
 
-    if (params.useATokens) {
-      IAToken(reserveCache.aTokenAddress).burn(
-        msg.sender,
-        reserveCache.aTokenAddress,
-        paybackAmount,
-        reserveCache.nextLiquidityIndex
-      );
-    } else {
-      IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, paybackAmount);
-      IAToken(reserveCache.aTokenAddress).handleRepayment(
-        msg.sender,
-        params.onBehalfOf,
-        paybackAmount
-      );
-    }
+    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, paybackAmount);
+    // todo
+    // IAToken(reserveCache.aTokenAddress).handleRepayment(
+    //   msg.sender,
+    //   params.onBehalfOfPosition,
+    //   paybackAmount
+    // );
 
-    emit Repay(params.asset, params.onBehalfOf, msg.sender, paybackAmount, params.useATokens);
+    emit Repay(params.asset, params.onBehalfOfPosition, msg.sender, paybackAmount);
 
     return paybackAmount;
   }

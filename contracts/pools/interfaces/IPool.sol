@@ -183,7 +183,13 @@ interface IPool {
    * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    */
-  function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
+  function supply(
+    address asset,
+    uint256 amount,
+    address onBehalfOf,
+    uint16 referralCode,
+    uint256 index
+  ) external;
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -196,7 +202,12 @@ interface IPool {
    *   different wallet
    * @return The final amount withdrawn
    */
-  function withdraw(address asset, uint256 amount, address to) external returns (uint256);
+  function withdraw(
+    address asset,
+    uint256 amount,
+    address to,
+    uint256 index
+  ) external returns (uint256);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -212,7 +223,13 @@ interface IPool {
    * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
    * if he has been given credit delegation allowance
    */
-  function borrow(address asset, uint256 amount, uint16 referralCode, address onBehalfOf) external;
+  function borrow(
+    address asset,
+    uint256 amount,
+    uint16 referralCode,
+    address onBehalfOf,
+    uint256 index
+  ) external;
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -225,7 +242,12 @@ interface IPool {
    * other borrower whose debt should be removed
    * @return The final amount repaid
    */
-  function repay(address asset, uint256 amount, address onBehalfOf) external returns (uint256);
+  function repay(
+    address asset,
+    uint256 amount,
+    address onBehalfOf,
+    uint256 index
+  ) external returns (uint256);
 
   /**
    * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
@@ -242,15 +264,13 @@ interface IPool {
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveAToken True if the liquidators wants to receive the collateral aTokens, `false` if he wants
-   * to receive the underlying collateral asset directly
    */
   function liquidate(
     address collateralAsset,
     address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
+    uint256 index
   ) external;
 
   /**
@@ -284,7 +304,8 @@ interface IPool {
    * @return healthFactor The current health factor of the user
    */
   function getUserAccountData(
-    address user
+    address user,
+    uint256 index
   )
     external
     view
@@ -305,13 +326,6 @@ interface IPool {
    * @param interestRateStrategyAddress The address of the interest rate strategy contract
    */
   function initReserve(address asset, address interestRateStrategyAddress) external;
-
-  /**
-   * @notice Drop a reserve
-   * @dev Only callable by the PoolConfigurator contract
-   * @param asset The address of the underlying asset of the reserve
-   */
-  function dropReserve(address asset) external;
 
   /**
    * @notice Sets the configuration bitmap of the reserve as a whole
@@ -341,7 +355,8 @@ interface IPool {
    * @return The configuration of the user
    */
   function getUserConfiguration(
-    address user
+    address user,
+    uint256 index
   ) external view returns (DataTypes.UserConfigurationMap memory);
 
   /**
@@ -394,38 +409,10 @@ interface IPool {
   function getReserveAddressById(uint16 id) external view returns (address);
 
   /**
-   * @notice Returns the maximum number of reserves supported to be listed in this Pool
-   * @return The maximum number of reserves supported
-   */
-  function MAX_NUMBER_RESERVES() external view returns (uint16);
-
-  /**
    * @notice Mints the assets accrued through the reserve factor to the treasury in the form of aTokens
    * @param assets The list of reserves for which the minting needs to be executed
    */
   function mintToTreasury(address[] calldata assets) external;
-
-  /**
-   * @notice Rescue and transfer tokens locked in this contract
-   * @param token The address of the token
-   * @param to The address of the recipient
-   * @param amount The amount of token to transfer
-   */
-  function rescueTokens(address token, address to, uint256 amount) external;
-
-  /**
-   * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
-   * - E.g. User supplies 100 USDC and gets in return 100 aUSDC
-   * @dev Deprecated: Use the `supply` function instead
-   * @param asset The address of the underlying asset to supply
-   * @param amount The amount to be supplied
-   * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
-   *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
-   *   is a different wallet
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
-   *   0 if the action is executed directly by the user, without any middle-man
-   */
-  function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
 
   /**
    * @notice Returns the asset price in the base currency

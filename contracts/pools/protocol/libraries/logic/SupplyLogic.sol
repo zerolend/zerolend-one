@@ -28,13 +28,13 @@ library SupplyLogic {
   using PercentageMath for uint256;
 
   // See `IPool` for descriptions
-  event ReserveUsedAsCollateralEnabled(address indexed reserve, address indexed user);
-  event ReserveUsedAsCollateralDisabled(address indexed reserve, address indexed user);
-  event Withdraw(address indexed reserve, address indexed user, address indexed to, uint256 amount);
+  event ReserveUsedAsCollateralEnabled(address indexed reserve, bytes32 indexed position);
+  event ReserveUsedAsCollateralDisabled(address indexed reserve, bytes32 indexed position);
+  event Withdraw(address indexed reserve, bytes32 indexed pos, address indexed to, uint256 amount);
   event Supply(
     address indexed reserve,
     address user,
-    address indexed onBehalfOf,
+    bytes32 indexed pos,
     uint256 amount,
     uint16 indexed referralCode
   );
@@ -62,7 +62,13 @@ library SupplyLogic {
 
     IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, params.amount);
 
-    emit Supply(params.asset, msg.sender, params.onBehalfOf, params.amount, params.referralCode);
+    emit Supply(
+      params.asset,
+      msg.sender,
+      params.onBehalfOfPosition,
+      params.amount,
+      params.referralCode
+    );
   }
 
   /**
@@ -105,15 +111,17 @@ library SupplyLogic {
 
     if (isCollateral && amountToWithdraw == userBalance) {
       userConfig.setUsingAsCollateral(reserve.id, false);
-      emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
+      // todo
+      // emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
     }
 
-    IAToken(reserveCache.aTokenAddress).burn(
-      msg.sender,
-      params.to,
-      amountToWithdraw,
-      reserveCache.nextLiquidityIndex
-    );
+    // todo
+    // IAToken(reserveCache.aTokenAddress).burn(
+    //   msg.sender,
+    //   params.position,
+    //   amountToWithdraw,
+    //   reserveCache.nextLiquidityIndex
+    // );
 
     if (isCollateral && userConfig.isBorrowingAny()) {
       ValidationLogic.validateHFAndLtv(
@@ -121,13 +129,14 @@ library SupplyLogic {
         reservesList,
         userConfig,
         params.asset,
-        msg.sender,
+        params.position,
         params.reservesCount,
         params.oracle
       );
     }
 
-    emit Withdraw(params.asset, msg.sender, params.to, amountToWithdraw);
+    // todo
+    // emit Withdraw(params.asset, position, params.position, amountToWithdraw);
 
     return amountToWithdraw;
   }

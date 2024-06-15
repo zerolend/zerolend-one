@@ -25,14 +25,14 @@ contract FlashloanAttacker is FlashLoanSimpleReceiverBase {
     MintableERC20 token = MintableERC20(asset);
     token.mint(amount);
     token.approve(address(_pool), type(uint256).max);
-    _pool.supply(asset, amount, address(this), 0);
+    // _pool.supply(asset, amount, address(this), 0);
   }
 
   function _innerBorrow(address asset) internal {
     DataTypes.ReserveData memory config = _pool.getReserveData(asset);
     IERC20 token = IERC20(asset);
     uint256 avail = token.balanceOf(config.aTokenAddress);
-    _pool.borrow(asset, avail, 0, address(this));
+    // _pool.borrow(asset, avail, 0, address(this));
   }
 
   function executeOperation(

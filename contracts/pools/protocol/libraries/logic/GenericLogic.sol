@@ -101,7 +101,7 @@ library GenericLogic {
 
       if (vars.liquidationThreshold != 0 && params.userConfig.isUsingAsCollateral(vars.i)) {
         vars.userBalanceInBaseCurrency = _getUserBalanceInBaseCurrency(
-          params.user,
+          params.position,
           currentReserve,
           vars.assetPrice,
           vars.assetUnit
@@ -122,7 +122,7 @@ library GenericLogic {
 
       if (params.userConfig.isBorrowing(vars.i)) {
         vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(
-          params.user,
+          params.position,
           currentReserve,
           vars.assetPrice,
           vars.assetUnit
@@ -186,56 +186,59 @@ library GenericLogic {
    * @dev This fetches the `balanceOf` of the stable and variable debt tokens for the user. For gas reasons, the
    * variable debt balance is calculated by fetching `scaledBalancesOf` normalized debt, which is cheaper than
    * fetching `balanceOf`
-   * @param user The address of the user
+   * @param position The address of the user
    * @param reserve The data of the reserve for which the total debt of the user is being calculated
    * @param assetPrice The price of the asset for which the total debt of the user is being calculated
    * @param assetUnit The value representing one full unit of the asset (10^decimals)
    * @return The total debt of the user normalized to the base currency
    */
   function _getUserDebtInBaseCurrency(
-    address user,
+    bytes32 position,
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
   ) private view returns (uint256) {
-    // fetching variable debt
-    uint256 userTotalDebt = IScaledBalanceToken(reserve.variableDebtTokenAddress).scaledBalanceOf(
-      user
-    );
-    if (userTotalDebt != 0) {
-      userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
-    }
+    // todo
+    return 0;
+    // // fetching variable debt
+    // uint256 userTotalDebt = IScaledBalanceToken(reserve.variableDebtTokenAddress).scaledBalanceOf(
+    //   position
+    // );
+    // if (userTotalDebt != 0) {
+    //   userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
+    // }
 
-    userTotalDebt = assetPrice * userTotalDebt;
+    // userTotalDebt = assetPrice * userTotalDebt;
 
-    unchecked {
-      return userTotalDebt / assetUnit;
-    }
+    // unchecked {
+    //   return userTotalDebt / assetUnit;
+    // }
   }
 
   /**
    * @notice Calculates total aToken balance of the user in the based currency used by the price oracle
    * @dev For gas reasons, the aToken balance is calculated by fetching `scaledBalancesOf` normalized debt, which
    * is cheaper than fetching `balanceOf`
-   * @param user The address of the user
+   * @param position The address of the user
    * @param reserve The data of the reserve for which the total aToken balance of the user is being calculated
    * @param assetPrice The price of the asset for which the total aToken balance of the user is being calculated
    * @param assetUnit The value representing one full unit of the asset (10^decimals)
    * @return The total aToken balance of the user normalized to the base currency of the price oracle
    */
   function _getUserBalanceInBaseCurrency(
-    address user,
+    bytes32 position,
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
   ) private view returns (uint256) {
     uint256 normalizedIncome = reserve.getNormalizedIncome();
-    uint256 balance = (
-      IScaledBalanceToken(reserve.aTokenAddress).scaledBalanceOf(user).rayMul(normalizedIncome)
-    ) * assetPrice;
+    return 0;
+    // uint256 balance = (
+    //   IScaledBalanceToken(reserve.aTokenAddress).scaledBalanceOf(user).rayMul(normalizedIncome)
+    // ) * assetPrice;
 
-    unchecked {
-      return balance / assetUnit;
-    }
+    // unchecked {
+    //   return balance / assetUnit;
+    // }
   }
 }

@@ -169,7 +169,8 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   {
     DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
 
-    DataTypes.UserConfigurationMap memory userConfig = IPool(pool).getUserConfiguration(user);
+    // todo
+    DataTypes.UserConfigurationMap memory userConfig; //= IPool(pool).getUserConfiguration(user);
 
     currentATokenBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
     currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);

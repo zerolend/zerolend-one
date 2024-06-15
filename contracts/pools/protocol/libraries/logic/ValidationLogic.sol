@@ -171,7 +171,7 @@ library ValidationLogic {
       DataTypes.CalculateUserAccountDataParams({
         userConfig: params.userConfig,
         reservesCount: params.reservesCount,
-        user: params.userAddress,
+        position: params.position,
         oracle: params.oracle
       })
     );
@@ -203,20 +203,21 @@ library ValidationLogic {
    * @notice Validates a repay action.
    * @param reserveCache The cached data of the reserve
    * @param amountSent The amount sent for the repayment. Can be an actual value or uint(-1)
-   * @param onBehalfOf The address of the user msg.sender is repaying for
+   * @param onBehalfOfPosition The address of the user msg.sender is repaying for
    * @param variableDebt The borrow balance of the user
    */
   function validateRepay(
     DataTypes.ReserveCache memory reserveCache,
     uint256 amountSent,
-    address onBehalfOf,
+    bytes32 onBehalfOfPosition,
     uint256 variableDebt
   ) internal view {
     require(amountSent != 0, Errors.INVALID_AMOUNT);
-    require(
-      amountSent != type(uint256).max || msg.sender == onBehalfOf,
-      Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
-    );
+    // todo
+    // require(
+    //   amountSent != type(uint256).max || msg.sender == onBehalfOfPosition,
+    //   Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
+    // );
 
     (bool isActive, , , , bool isPaused) = reserveCache.reserveConfiguration.getFlags();
     require(isActive, Errors.RESERVE_INACTIVE);
@@ -288,7 +289,7 @@ library ValidationLogic {
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param userConfig The state of the user for the specific reserve
-   * @param user The user to validate health factor of
+   * @param position The user to validate health factor of
    * @param reservesCount The number of available reserves
    * @param oracle The price oracle
    */
@@ -296,7 +297,7 @@ library ValidationLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap memory userConfig,
-    address user,
+    bytes32 position,
     uint256 reservesCount,
     address oracle
   ) internal view returns (uint256, bool) {
@@ -307,7 +308,7 @@ library ValidationLogic {
         DataTypes.CalculateUserAccountDataParams({
           userConfig: userConfig,
           reservesCount: reservesCount,
-          user: user,
+          position: position,
           oracle: oracle
         })
       );
@@ -326,7 +327,7 @@ library ValidationLogic {
    * @param reservesList The addresses of all the active reserves
    * @param userConfig The state of the user for the specific reserve
    * @param asset The asset for which the ltv will be validated
-   * @param from The user from which the aTokens are being transferred
+   * @param fromPosition The user from which the aTokens are being transferred
    * @param reservesCount The number of available reserves
    * @param oracle The price oracle
    */
@@ -335,7 +336,7 @@ library ValidationLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap memory userConfig,
     address asset,
-    address from,
+    bytes32 fromPosition,
     uint256 reservesCount,
     address oracle
   ) internal view {
@@ -345,7 +346,7 @@ library ValidationLogic {
       reservesData,
       reservesList,
       userConfig,
-      from,
+      fromPosition,
       reservesCount,
       oracle
     );

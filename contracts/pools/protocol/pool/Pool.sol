@@ -1,21 +1,52 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {BorrowLogic} from '../libraries/logic/BorrowLogic.sol';
+import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
+import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
+import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
+import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
+import {IPool} from '../../interfaces/IPool.sol';
+import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
+import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
-import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
-import {BorrowLogic} from '../libraries/logic/BorrowLogic.sol';
-import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
-import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {IPool} from '../../interfaces/IPool.sol';
-import {IAggregatorInterface, PoolStorage} from './PoolStorage.sol';
-import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
+import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
 
-abstract contract Pool is Initializable, PoolStorage, IPool {
+abstract contract Pool is Initializable, IPool {
   using ReserveLogic for DataTypes.ReserveData;
+  using TokenConfiguration for address;
+
+  // Map of reserves and their data (underlyingAssetOfReserve => reserveData)
+  mapping(address asset => DataTypes.ReserveData data) internal _reserves;
+
+  // Map of positions and their configuration data (userAddress => userConfiguration)
+  mapping(bytes32 position => DataTypes.UserConfigurationMap config) internal _usersConfig;
+
+  // Map of position's individual balances or debt
+  mapping(address asset => mapping(bytes32 position => uint256 balance)) internal _balances;
+  mapping(address asset => mapping(bytes32 position => uint256 balance)) internal _debts;
+
+  // Map of total supply of tokens
+  mapping(address asset => uint256 totalSupply) internal _totalSupplies;
+
+  // List of reserves as a map (reserveId => reserve).
+  // It is structured as a mapping for gas savings reasons, using the reserve id as index
+  mapping(uint256 reserveId => address asset) internal _reservesList;
+
+  // Total FlashLoan Premium, expressed in bps
+  uint128 internal _flashLoanPremiumTotal;
+
+  // Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list
+  uint16 internal _reservesCount;
+
+  // Map of asset price sources (pool => asset => priceSource)
+  mapping(address asset => IAggregatorInterface oracle) internal _assetsSources;
+
+  // The pool configurator contract that can make changes
+  address public configurator;
 
   /**
    * @notice Initializes the Pool.
@@ -32,7 +63,7 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
   ) public virtual reinitializer(1) {
     configurator = _configurator;
     for (uint i = 0; i < assets.length; i++) {
-      // _setReserveConfiguration(assets[i], rateStrategyAddresses[i], sources[i], configurations[i]);
+      _setReserveConfiguration(assets[i], rateStrategyAddresses[i], sources[i], configurations[i]);
     }
   }
 
@@ -41,14 +72,15 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
     address asset,
     uint256 amount,
     address onBehalfOf,
-    uint16 referralCode
+    uint16 referralCode,
+    uint256 index
   ) public virtual override {
     SupplyLogic.executeSupply(
       _reserves,
       DataTypes.ExecuteSupplyParams({
         asset: asset,
         amount: amount,
-        onBehalfOf: onBehalfOf,
+        onBehalfOfPosition: onBehalfOf.getPositionId(index),
         referralCode: referralCode
       })
     );
@@ -58,17 +90,18 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
   function withdraw(
     address asset,
     uint256 amount,
-    address to
+    address to,
+    uint256 index
   ) public virtual override returns (uint256) {
     return
       SupplyLogic.executeWithdraw(
         _reserves,
         _reservesList,
-        _usersConfig[msg.sender],
+        _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
         DataTypes.ExecuteWithdrawParams({
           asset: asset,
           amount: amount,
-          to: to,
+          position: to.getPositionId(index),
           reservesCount: _reservesCount,
           oracle: address(this)
         })
@@ -80,16 +113,17 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
     address asset,
     uint256 amount,
     uint16 referralCode,
-    address onBehalfOf
+    address onBehalfOf,
+    uint256 index
   ) public virtual override {
     BorrowLogic.executeBorrow(
       _reserves,
       _reservesList,
-      _usersConfig[onBehalfOf],
+      _usersConfig[keccak256(abi.encodePacked(onBehalfOf, index))],
       DataTypes.ExecuteBorrowParams({
         asset: asset,
         user: msg.sender,
-        onBehalfOf: onBehalfOf,
+        onBehalfOfPosition: onBehalfOf.getPositionId(index),
         amount: amount,
         referralCode: referralCode,
         releaseUnderlying: true,
@@ -104,18 +138,17 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
     address asset,
     uint256 amount,
     address onBehalfOf,
-    bool useATokens
+    uint256 index
   ) public virtual returns (uint256) {
     return
       BorrowLogic.executeRepay(
         _reserves,
         _reservesList,
-        _usersConfig[onBehalfOf],
+        _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
         DataTypes.ExecuteRepayParams({
           asset: asset,
           amount: amount,
-          onBehalfOf: onBehalfOf,
-          useATokens: useATokens
+          onBehalfOfPosition: onBehalfOf.getPositionId(index)
         })
       );
   }
@@ -126,19 +159,19 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
     address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
+    uint256 index
   ) public virtual override {
     LiquidationLogic.executeLiquidationCall(
       _reserves,
       _reservesList,
+      _balances,
       _usersConfig,
       DataTypes.ExecuteLiquidationCallParams({
         reservesCount: _reservesCount,
         debtToCover: debtToCover,
         collateralAsset: collateralAsset,
         debtAsset: debtAsset,
-        user: user,
-        receiveAToken: receiveAToken,
+        position: user.getPositionId(index),
         oracle: address(this)
       })
     );
@@ -158,7 +191,7 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
       amount: amount,
       params: params,
       referralCode: referralCode,
-      flashLoanPremiumToProtocol: _flashLoanPremiumToProtocol,
+      flashLoanPremiumToProtocol: 1000, //_flashLoanPremiumToProtocol,
       flashLoanPremiumTotal: _flashLoanPremiumTotal
     });
     FlashLoanLogic.executeFlashLoanSimple(_reserves[asset], flashParams);
@@ -178,7 +211,8 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
 
   /// @inheritdoc IPool
   function getUserAccountData(
-    address user
+    address user,
+    uint256 index
   )
     external
     view
@@ -198,9 +232,9 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
         _reserves,
         _reservesList,
         DataTypes.CalculateUserAccountDataParams({
-          userConfig: _usersConfig[user],
+          userConfig: _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
           reservesCount: _reservesCount,
-          user: user,
+          position: user.getPositionId(index),
           oracle: address(this)
         })
       );
@@ -215,9 +249,10 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
 
   /// @inheritdoc IPool
   function getUserConfiguration(
-    address user
+    address user,
+    uint256 index
   ) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
-    return _usersConfig[user];
+    return _usersConfig[user.getPositionId(index)];
   }
 
   /// @inheritdoc IPool
@@ -270,7 +305,7 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
     address asset,
     address rateStrategyAddress,
     address source,
-    DataTypes.ReserveConfigurationMap calldata configuration
+    DataTypes.ReserveConfigurationMap memory configuration
   ) internal {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
     require(_reserves[asset].id != 0 || _reservesList[0] == asset, Errors.ASSET_NOT_LISTED);
@@ -281,12 +316,12 @@ abstract contract Pool is Initializable, PoolStorage, IPool {
 
   function setReserveConfiguration(
     address asset,
-    // address rateStrategyAddress,
-    // address source,
+    address rateStrategyAddress,
+    address source,
     DataTypes.ReserveConfigurationMap calldata configuration
   ) external virtual {
     require(msg.sender == configurator, 'only configurator');
-    // _setReserveConfiguration(asset, rateStrategyAddress, source, configuration);
+    _setReserveConfiguration(asset, rateStrategyAddress, source, configuration);
   }
 
   function getAssetPrice(address asset) public view override returns (uint256) {

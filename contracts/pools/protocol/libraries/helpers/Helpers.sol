@@ -11,13 +11,13 @@ import {DataTypes} from '../types/DataTypes.sol';
 library Helpers {
   /**
    * @notice Fetches the user current stable and variable debt balances
-   * @param user The user address
+   * @param position The user address
    * @param reserveCache The reserve cache data object
    * @return The stable debt balance
    * @return The variable debt balance
    */
   function getUserCurrentDebt(
-    address user,
+    bytes32 position,
     DataTypes.ReserveCache memory reserveCache
   ) internal view returns (uint256, uint256) {
     return (

@@ -87,22 +87,21 @@ library DataTypes {
     uint256 debtToCover;
     address collateralAsset;
     address debtAsset;
-    address user;
-    bool receiveAToken;
+    bytes32 position;
     address oracle;
   }
 
   struct ExecuteSupplyParams {
     address asset;
     uint256 amount;
-    address onBehalfOf;
+    bytes32 onBehalfOfPosition;
     uint16 referralCode;
   }
 
   struct ExecuteBorrowParams {
     address asset;
     address user;
-    address onBehalfOf;
+    bytes32 onBehalfOfPosition;
     uint256 amount;
     uint16 referralCode;
     bool releaseUnderlying;
@@ -113,31 +112,15 @@ library DataTypes {
   struct ExecuteRepayParams {
     address asset;
     uint256 amount;
-    address onBehalfOf;
-    bool useATokens;
+    bytes32 onBehalfOfPosition;
   }
 
   struct ExecuteWithdrawParams {
     address asset;
     uint256 amount;
-    address to;
+    bytes32 position;
     uint256 reservesCount;
     address oracle;
-  }
-
-  struct FlashloanParams {
-    address receiverAddress;
-    address[] assets;
-    uint256[] amounts;
-    address onBehalfOf;
-    bytes params;
-    uint16 referralCode;
-    uint256 flashLoanPremiumToProtocol;
-    uint256 flashLoanPremiumTotal;
-    uint256 reservesCount;
-    address addressesProvider;
-    address pool;
-    bool isAuthorizedFlashBorrower;
   }
 
   struct FlashloanSimpleParams {
@@ -162,7 +145,7 @@ library DataTypes {
   struct CalculateUserAccountDataParams {
     UserConfigurationMap userConfig;
     uint256 reservesCount;
-    address user;
+    bytes32 position;
     address oracle;
   }
 
@@ -170,7 +153,7 @@ library DataTypes {
     ReserveCache reserveCache;
     UserConfigurationMap userConfig;
     address asset;
-    address userAddress;
+    bytes32 position;
     uint256 amount;
     uint256 reservesCount;
     address oracle;
