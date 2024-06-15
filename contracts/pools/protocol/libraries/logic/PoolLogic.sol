@@ -75,9 +75,7 @@ library PoolLogic {
       DataTypes.ReserveData storage reserve = reservesData[assetAddress];
 
       // this cover both inactive reserves and invalid reserves since the flag will be 0 for both
-      if (!reserve.configuration.getActive()) {
-        continue;
-      }
+      if (!reserve.configuration.getFrozen()) continue;
 
       uint256 accruedToTreasury = reserve.accruedToTreasury;
 

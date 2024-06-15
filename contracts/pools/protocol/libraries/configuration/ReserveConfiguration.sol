@@ -286,37 +286,6 @@ library ReserveConfiguration {
   }
 
   /**
-   * @notice Sets the liquidation protocol fee of the reserve
-   * @param self The reserve configuration
-   * @param liquidationProtocolFee The liquidation protocol fee
-   */
-  function setLiquidationProtocolFee(
-    DataTypes.ReserveConfigurationMap memory self,
-    uint256 liquidationProtocolFee
-  ) internal pure {
-    require(
-      liquidationProtocolFee <= MAX_VALID_LIQUIDATION_PROTOCOL_FEE,
-      Errors.INVALID_LIQUIDATION_PROTOCOL_FEE
-    );
-
-    self.data =
-      (self.data & LIQUIDATION_PROTOCOL_FEE_MASK) |
-      (liquidationProtocolFee << LIQUIDATION_PROTOCOL_FEE_START_BIT_POSITION);
-  }
-
-  /**
-   * @dev Gets the liquidation protocol fee
-   * @param self The reserve configuration
-   * @return The liquidation protocol fee
-   */
-  function getLiquidationProtocolFee(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256) {
-    return
-      (self.data & ~LIQUIDATION_PROTOCOL_FEE_MASK) >> LIQUIDATION_PROTOCOL_FEE_START_BIT_POSITION;
-  }
-
-  /**
    * @notice Gets the configuration flags of the reserve
    * @param self The reserve configuration
    * @return The state flag representing active

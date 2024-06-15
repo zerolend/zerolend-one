@@ -44,9 +44,6 @@ library ConfiguratorLogic {
     DataTypes.ReserveConfigurationMap memory currentConfig = DataTypes.ReserveConfigurationMap(0);
 
     currentConfig.setDecimals(input.underlyingAssetDecimals);
-
-    currentConfig.setActive(true);
-    currentConfig.setPaused(false);
     currentConfig.setFrozen(false);
 
     pool.setConfiguration(input.underlyingAsset, currentConfig);

@@ -93,14 +93,6 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
     (, , , , isPaused) = IPool(pool).getConfiguration(asset).getFlags();
   }
 
-  /// @inheritdoc IPoolDataProvider
-  function getLiquidationProtocolFee(
-    address pool,
-    address asset
-  ) external view override returns (uint256) {
-    return IPool(pool).getConfiguration(asset).getLiquidationProtocolFee();
-  }
-
   // /// @inheritdoc IPoolDataProvider
   // function getReserveData(
   //   address asset
@@ -197,11 +189,5 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   ) external view override returns (address irStrategyAddress) {
     DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
     return (reserve.interestRateStrategyAddress);
-  }
-
-  /// @inheritdoc IPoolDataProvider
-  function getFlashLoanEnabled(address pool, address asset) external view override returns (bool) {
-    DataTypes.ReserveConfigurationMap memory configuration = IPool(pool).getConfiguration(asset);
-    return configuration.getFlashLoanEnabled();
   }
 }

@@ -232,9 +232,7 @@ library ValidationLogic {
    */
   function validateFlashloanSimple(DataTypes.ReserveData storage reserve) internal view {
     DataTypes.ReserveConfigurationMap memory configuration = reserve.configuration;
-    require(!configuration.getPaused(), Errors.RESERVE_PAUSED);
-    require(configuration.getActive(), Errors.RESERVE_INACTIVE);
-    require(configuration.getFlashLoanEnabled(), Errors.FLASHLOAN_DISABLED);
+    require(!configuration.getFrozen(), Errors.RESERVE_FROZEN);
   }
 
   struct ValidateLiquidationCallLocalVars {

@@ -69,16 +69,6 @@ contract MockReserveConfiguration {
     return configuration.getBorrowingEnabled();
   }
 
-  function setStableRateBorrowingEnabled(bool enabled) external {
-    DataTypes.ReserveConfigurationMap memory config = configuration;
-    config.setStableRateBorrowingEnabled(enabled);
-    configuration = config;
-  }
-
-  function getStableRateBorrowingEnabled() external view returns (bool) {
-    return configuration.getStableRateBorrowingEnabled();
-  }
-
   function setReserveFactor(uint256 reserveFactor) external {
     DataTypes.ReserveConfigurationMap memory config = configuration;
     config.setReserveFactor(reserveFactor);
@@ -99,16 +89,6 @@ contract MockReserveConfiguration {
     return configuration.getBorrowCap();
   }
 
-  function setFlashLoanEnabled(bool enabled) external {
-    DataTypes.ReserveConfigurationMap memory config = configuration;
-    config.setFlashLoanEnabled(enabled);
-    configuration = config;
-  }
-
-  function getFlashLoanEnabled() external view returns (bool) {
-    return configuration.getFlashLoanEnabled();
-  }
-
   function setSupplyCap(uint256 supplyCap) external {
     DataTypes.ReserveConfigurationMap memory config = configuration;
     config.setSupplyCap(supplyCap);
@@ -117,16 +97,6 @@ contract MockReserveConfiguration {
 
   function getSupplyCap() external view returns (uint256) {
     return configuration.getSupplyCap();
-  }
-
-  function setLiquidationProtocolFee(uint256 liquidationProtocolFee) external {
-    DataTypes.ReserveConfigurationMap memory config = configuration;
-    config.setLiquidationProtocolFee(liquidationProtocolFee);
-    configuration = config;
-  }
-
-  function getLiquidationProtocolFee() external view returns (uint256) {
-    return configuration.getLiquidationProtocolFee();
   }
 
   function getFlags() external view returns (bool, bool, bool, bool, bool) {

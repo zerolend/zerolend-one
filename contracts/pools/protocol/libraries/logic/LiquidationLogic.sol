@@ -397,9 +397,11 @@ library LiquidationLogic {
       vars.debtAssetUnit = 10 ** vars.debtAssetDecimals;
     }
 
-    vars.liquidationProtocolFeePercentage = collateralReserve
-      .configuration
-      .getLiquidationProtocolFee();
+    // todo check this
+    vars.liquidationProtocolFeePercentage = 1000;
+    // vars.liquidationProtocolFeePercentage = collateralReserve
+    //   .configuration
+    //   .getLiquidationProtocolFee();
 
     // This is the base collateral to liquidate based on the given debt to cover
     vars.baseCollateral =

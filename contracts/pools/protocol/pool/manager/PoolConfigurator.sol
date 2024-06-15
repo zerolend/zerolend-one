@@ -46,9 +46,6 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
   ) external onlyRiskOrPoolAdmins(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
-    if (!enabled) {
-      require(!currentConfig.getStableRateBorrowingEnabled(), Errors.STABLE_BORROWING_ENABLED);
-    }
     currentConfig.setBorrowingEnabled(enabled);
     cachedPool.setConfiguration(asset, currentConfig);
     emit ReserveBorrowing(asset, enabled);
@@ -100,29 +97,6 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
   }
 
   // @inheritdoc IPoolConfigurator
-  function setReserveFlashLoaning(
-    address pool,
-    address asset,
-    bool enabled
-  ) external onlyRiskOrPoolAdmins(pool) {
-    IPool cachedPool = IPool(pool);
-    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
-    currentConfig.setFlashLoanEnabled(enabled);
-    cachedPool.setConfiguration(asset, currentConfig);
-    emit ReserveFlashLoaning(asset, enabled);
-  }
-
-  // @inheritdoc IPoolConfigurator
-  function setReserveActive(address pool, address asset, bool active) external onlyPoolAdmin(pool) {
-    if (!active) _checkNoSuppliers(pool, asset);
-    IPool cachedPool = IPool(pool);
-    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
-    currentConfig.setActive(active);
-    cachedPool.setConfiguration(asset, currentConfig);
-    emit ReserveActive(asset, active);
-  }
-
-  // @inheritdoc IPoolConfigurator
   function setReserveFreeze(
     address pool,
     address asset,
@@ -133,19 +107,6 @@ abstract contract PoolConfigurator is PoolManager, Initializable, IPoolConfigura
     currentConfig.setFrozen(freeze);
     cachedPool.setConfiguration(asset, currentConfig);
     emit ReserveFrozen(asset, freeze);
-  }
-
-  // @inheritdoc IPoolConfigurator
-  function setReservePause(
-    address pool,
-    address asset,
-    bool paused
-  ) public onlyEmergencyOrPoolAdmin(pool) {
-    IPool cachedPool = IPool(pool);
-    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
-    currentConfig.setPaused(paused);
-    cachedPool.setConfiguration(asset, currentConfig);
-    emit ReservePaused(asset, paused);
   }
 
   // @inheritdoc IPoolConfigurator
