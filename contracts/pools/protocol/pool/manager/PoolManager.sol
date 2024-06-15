@@ -10,8 +10,33 @@ contract PoolManager is TimelockedActions {
   bytes32 public constant EMERGENCY_ADMIN_ROLE = keccak256('EMERGENCY_ADMIN');
   bytes32 public constant RISK_ADMIN_ROLE = keccak256('RISK_ADMIN');
 
+  address public governance;
+
   constructor(address _governance) TimelockedActions(86400 * 3) {
+    governance = _governance;
     _setupRole(DEFAULT_ADMIN_ROLE, _governance);
+  }
+
+  function initRoles(address pool, address admin) internal {
+    _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
+    _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), governance);
+
+    _setRoleAdmin(getRoleFromPool(pool, POOL_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
+    _setRoleAdmin(getRoleFromPool(pool, RISK_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
+    _setRoleAdmin(
+      getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE),
+      getRoleFromPool(pool, POOL_ADMIN_ROLE)
+    );
+  }
+
+  function _scheduleAction(address pool, bytes calldata data) internal {
+    _schedule(
+      pool, // address target,
+      0, // uint256 value,
+      data, // bytes calldata data,
+      keccak256(abi.encode(block.timestamp)), // bytes32 salt,
+      86400 * 3 // uint256 delay
+    );
   }
 
   function setRoleAdmin(bytes32 role, bytes32 adminRole) external onlyRole(DEFAULT_ADMIN_ROLE) {

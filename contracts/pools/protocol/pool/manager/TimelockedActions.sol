@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (governance/TimelockController.sol)
 
-// TODO: take inspiration from morpho's metamorpho
-
 pragma solidity 0.8.19;
 
 import {AccessControlEnumerable} from '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
@@ -11,45 +9,14 @@ import {ERC1155Receiver, ERC1155Holder} from '@openzeppelin/contracts/token/ERC1
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {ITimelock} from '../../../interfaces/ITimelock.sol';
 
-/**
- * @dev Contract module which acts as a timelocked controller. When set as the
- * owner of an `Ownable` smart contract, it enforces a timelock on all
- * `onlyOwner` maintenance operations. This gives time for users of the
- * controlled contract to exit before a potentially dangerous maintenance
- * operation is applied.
- *
- * By default, this contract is self administered, meaning administration tasks
- * have to go through the timelock process. The proposer (resp executor) role
- * is in charge of proposing (resp executing) operations. A common use case is
- * to position this {TimelockController} as the owner of a smart contract, with
- * a multisig or a DAO as the sole proposer.
- */
 contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, ERC1155Holder {
   uint256 internal constant _DONE_TIMESTAMP = uint256(1);
   mapping(bytes32 id => uint256) private _timestamps;
   uint256 private _minDelay;
 
-  /**
-   * @dev Initializes the contract with the following parameters:
-   *
-   * - `minDelay`: initial minimum delay in seconds for operations
-   * - `proposers`: accounts to be granted proposer and canceller roles
-   * - `executors`: accounts to be granted executor role
-   * - `admin`: optional account to be granted admin role; disable with zero address
-   *
-   * IMPORTANT: The optional admin can aid with initial configuration of roles after deployment
-   * without being subject to delay, but this role should be subsequently renounced in favor of
-   * administration through timelocked proposals. Previous versions of this contract would assign
-   * this admin to the deployer automatically and should be renounced as well.
-   */
   constructor(uint256 minDelay) {
     _minDelay = minDelay;
   }
-
-  /**
-   * @dev Contract might receive/hold ETH as part of the maintenance process.
-   */
-  receive() external payable {}
 
   /**
    * @dev See {IERC165-supportsInterface}.
@@ -140,7 +107,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    *
    * - the caller must have the 'proposer' role.
    */
-  function schedule(
+  function _schedule(
     address target,
     uint256 value,
     bytes calldata data,
