@@ -8,11 +8,15 @@
 mapping(address => struct DataTypes.ReserveData) _reserves
 ```
 
+_Map of reserves and their data (underlyingAssetOfReserve => reserveData)_
+
 ### _usersConfig
 
 ```solidity
 mapping(bytes32 => struct DataTypes.UserConfigurationMap) _usersConfig
 ```
+
+_Map of positions and their configuration data (userAddress => userConfiguration)_
 
 ### _balances
 
@@ -20,11 +24,15 @@ mapping(bytes32 => struct DataTypes.UserConfigurationMap) _usersConfig
 mapping(address => mapping(bytes32 => uint256)) _balances
 ```
 
+_Map of position's individual balances_
+
 ### _debts
 
 ```solidity
 mapping(address => mapping(bytes32 => uint256)) _debts
 ```
+
+_Map of position's individual debt positions_
 
 ### _totalSupplies
 
@@ -32,11 +40,16 @@ mapping(address => mapping(bytes32 => uint256)) _debts
 mapping(address => uint256) _totalSupplies
 ```
 
+_Map of total supply of tokens_
+
 ### _reservesList
 
 ```solidity
 mapping(uint256 => address) _reservesList
 ```
+
+_List of reserves as a map (reserveId => reserve).
+It is structured as a mapping for gas savings reasons, using the reserve id as index_
 
 ### _flashLoanPremiumTotal
 
@@ -44,11 +57,15 @@ mapping(uint256 => address) _reservesList
 uint128 _flashLoanPremiumTotal
 ```
 
+_Total FlashLoan Premium, expressed in bps_
+
 ### _reservesCount
 
 ```solidity
 uint16 _reservesCount
 ```
+
+_Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list_
 
 ### _assetsSources
 
@@ -56,11 +73,15 @@ uint16 _reservesCount
 mapping(address => contract IAggregatorInterface) _assetsSources
 ```
 
+_Map of asset price sources (pool => asset => priceSource)_
+
 ### configurator
 
 ```solidity
 address configurator
 ```
+
+_The pool configurator contract that can make changes_
 
 ### initialize
 
