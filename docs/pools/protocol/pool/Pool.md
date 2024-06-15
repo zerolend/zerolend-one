@@ -8,7 +8,7 @@
 mapping(address => struct DataTypes.ReserveData) _reserves
 ```
 
-_Map of reserves and their data (underlyingAssetOfReserve => reserveData)_
+Map of reserves and their data (underlyingAssetOfReserve => reserveData)
 
 ### _usersConfig
 
@@ -16,7 +16,7 @@ _Map of reserves and their data (underlyingAssetOfReserve => reserveData)_
 mapping(bytes32 => struct DataTypes.UserConfigurationMap) _usersConfig
 ```
 
-_Map of positions and their configuration data (userAddress => userConfiguration)_
+Map of positions and their configuration data (userAddress => userConfiguration)
 
 ### _balances
 
@@ -24,7 +24,7 @@ _Map of positions and their configuration data (userAddress => userConfiguration
 mapping(address => mapping(bytes32 => uint256)) _balances
 ```
 
-_Map of position's individual balances_
+Map of position's individual balances
 
 ### _debts
 
@@ -32,7 +32,7 @@ _Map of position's individual balances_
 mapping(address => mapping(bytes32 => uint256)) _debts
 ```
 
-_Map of position's individual debt positions_
+Map of position's individual debt positions
 
 ### _totalSupplies
 
@@ -40,7 +40,7 @@ _Map of position's individual debt positions_
 mapping(address => uint256) _totalSupplies
 ```
 
-_Map of total supply of tokens_
+Map of total supply of tokens
 
 ### _reservesList
 
@@ -48,8 +48,8 @@ _Map of total supply of tokens_
 mapping(uint256 => address) _reservesList
 ```
 
-_List of reserves as a map (reserveId => reserve).
-It is structured as a mapping for gas savings reasons, using the reserve id as index_
+List of reserves as a map (reserveId => reserve).
+It is structured as a mapping for gas savings reasons, using the reserve id as index
 
 ### _flashLoanPremiumTotal
 

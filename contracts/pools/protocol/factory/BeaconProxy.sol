@@ -63,17 +63,18 @@ contract BeaconProxy is Proxy {
   }
 
   /**
-   * @dev Stores a new beacon in the EIP1967 beacon slot.
+   * @notice Stores a new beacon in the EIP1967 beacon slot.
    */
   function _setBeacon(address newBeacon) private {
-    require(Address.isContract(newBeacon), 'ERC1967: new beacon is not a contract');
-    require(
-      Address.isContract(IBeacon(newBeacon).implementation()),
-      'ERC1967: beacon implementation is not a contract'
-    );
+    require(Address.isContract(newBeacon), '!beacon');
+    require(Address.isContract(IBeacon(newBeacon).implementation()), '!implementation');
     StorageSlot.getAddressSlot(_BEACON_SLOT).value = newBeacon;
   }
 
+  /**
+   * @notice Revokes the beacon implementation and stores the implementation
+   * forever into the storage.
+   */
   function _revokeBeacon() private {
     address impl = _implementation();
     StorageSlot.getAddressSlot(_BEACON_SLOT).value = address(0);

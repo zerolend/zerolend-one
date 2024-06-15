@@ -19,22 +19,22 @@ abstract contract Pool is Initializable, IPool {
   using ReserveLogic for DataTypes.ReserveData;
   using TokenConfiguration for address;
 
-  /// @dev Map of reserves and their data (underlyingAssetOfReserve => reserveData)
+  /// @notice Map of reserves and their data (underlyingAssetOfReserve => reserveData)
   mapping(address asset => DataTypes.ReserveData data) internal _reserves;
 
-  /// @dev Map of positions and their configuration data (userAddress => userConfiguration)
+  /// @notice Map of positions and their configuration data (userAddress => userConfiguration)
   mapping(bytes32 position => DataTypes.UserConfigurationMap config) internal _usersConfig;
 
-  /// @dev Map of position's individual balances
+  /// @notice Map of position's individual balances
   mapping(address asset => mapping(bytes32 position => uint256 balance)) internal _balances;
 
-  /// @dev Map of position's individual debt positions
+  /// @notice Map of position's individual debt positions
   mapping(address asset => mapping(bytes32 position => uint256 balance)) internal _debts;
 
-  /// @dev Map of total supply of tokens
+  /// @notice Map of total supply of tokens
   mapping(address asset => uint256 totalSupply) internal _totalSupplies;
 
-  /// @dev List of reserves as a map (reserveId => reserve).
+  /// @notice List of reserves as a map (reserveId => reserve).
   /// It is structured as a mapping for gas savings reasons, using the reserve id as index
   mapping(uint256 reserveId => address asset) internal _reservesList;
 
