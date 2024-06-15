@@ -1,12 +1,10 @@
-// SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v5.0.0) (proxy/beacon/BeaconProxy.sol)
-
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 import {Proxy} from '@openzeppelin/contracts/proxy/Proxy.sol';
 import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
-import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 
 contract BeaconProxy is Proxy {
   bytes32 internal constant _IMPLEMENTATION_SLOT = keccak256('eip1967.proxy.impl');
@@ -52,15 +50,15 @@ contract BeaconProxy is Proxy {
     return _getBeacon();
   }
 
-  function _getBeacon() internal view returns (address) {
+  function _getBeacon() private view returns (address) {
     return StorageSlot.getAddressSlot(_BEACON_SLOT).value;
   }
 
-  function _getAdmin() internal view returns (address) {
+  function _getAdmin() private view returns (address) {
     return StorageSlot.getAddressSlot(_ADMIN_SLOT).value;
   }
 
-  function _getFrozenImpl() internal view returns (address) {
+  function _getFrozenImpl() private view returns (address) {
     return StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value;
   }
 
