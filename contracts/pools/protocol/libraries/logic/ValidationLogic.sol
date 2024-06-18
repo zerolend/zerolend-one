@@ -49,14 +49,14 @@ library ValidationLogic {
   /**
    * @notice Validates a supply action.
    * @param reserveCache The cached data of the reserve
-   * @param amount The amount to be supplied
+   * @param params The amount to be supplied
    */
   function validateSupply(
     DataTypes.ReserveCache memory reserveCache,
     DataTypes.ReserveData storage reserve,
-    uint256 amount
+    DataTypes.ExecuteSupplyParams memory params
   ) internal view {
-    require(amount != 0, Errors.INVALID_AMOUNT);
+    require(params.amount != 0, Errors.INVALID_AMOUNT);
 
     (bool isActive, bool isFrozen, , , bool isPaused) = reserveCache
       .reserveConfiguration
@@ -67,13 +67,13 @@ library ValidationLogic {
 
     uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
     // todo
-    // require(
-    //   supplyCap == 0 ||
-    //     ((IAToken(reserveCache.aTokenAddress).scaledTotalSupply() +
-    //       uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + amount) <=
-    //     supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
-    //   Errors.SUPPLY_CAP_EXCEEDED
-    // );
+    require(
+      supplyCap == 0 ||
+        ((IERC20(params.asset).balanceOf(reserve.nftPositionManager) +
+          uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + params.amount) <=
+        supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
+      Errors.SUPPLY_CAP_EXCEEDED
+    );
   }
 
   /**
