@@ -17,10 +17,8 @@ library DataTypes {
     uint40 lastUpdateTimestamp;
     //the id of the reserve. Represents the position in the list of the active reserves
     uint16 id;
-    //aToken address
-    address aTokenAddress;
-    //variableDebtToken address
-    address variableDebtTokenAddress;
+    // NFT position manager address
+    address nftPositionManager;
     //address of the interest rate strategy
     address interestRateStrategyAddress;
     //the current treasury balance, scaled
@@ -77,8 +75,7 @@ library DataTypes {
     uint256 currVariableBorrowRate;
     uint256 reserveFactor;
     ReserveConfigurationMap reserveConfiguration;
-    address aTokenAddress;
-    address variableDebtTokenAddress;
+    address nftPositionManager;
     uint40 reserveLastUpdateTimestamp;
   }
 
@@ -114,6 +111,7 @@ library DataTypes {
   }
 
   struct ExecuteWithdrawParams {
+    address user;
     address asset;
     uint256 amount;
     bytes32 position;

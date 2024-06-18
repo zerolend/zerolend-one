@@ -53,7 +53,7 @@ library SupplyLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, params.amount, 0);
 
-    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, params.amount);
+    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.nftPositionManager, params.amount);
 
     emit Supply(params.asset, msg.sender, params.onBehalfOfPosition, params.amount);
   }
@@ -80,10 +80,7 @@ library SupplyLogic {
 
     reserve.updateState(reserveCache);
 
-    uint256 userBalance = 0;
-    // IAToken(reserveCache.aTokenAddress).scaledBalanceOf(msg.sender).rayMul(
-    //   reserveCache.nextLiquidityIndex
-    // );
+    uint256 userBalance = params.amount;
 
     uint256 amountToWithdraw = params.amount;
 
@@ -99,21 +96,14 @@ library SupplyLogic {
 
     if (isCollateral && amountToWithdraw == userBalance) {
       userConfig.setUsingAsCollateral(reserve.id, false);
-      // todo
-      // emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
+      emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }
 
-    // todo
-    // IAToken(reserveCache.aTokenAddress).burn(
-    //   msg.sender,
-    //   params.position,
-    //   amountToWithdraw,
-    //   reserveCache.nextLiquidityIndex
-    // );
+    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.nftPositionManager, params.amount);
 
     if (isCollateral && userConfig.isBorrowingAny()) {
       ValidationLogic.validateHFAndLtv(
-        reservesData,
+        reservesData, 
         reservesList,
         userConfig,
         params.asset,
@@ -123,8 +113,7 @@ library SupplyLogic {
       );
     }
 
-    // todo
-    // emit Withdraw(params.asset, position, params.position, amountToWithdraw);
+    emit Withdraw(params.asset, params.position, params.user, amountToWithdraw);
 
     return amountToWithdraw;
   }

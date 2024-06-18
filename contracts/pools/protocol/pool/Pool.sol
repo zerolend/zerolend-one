@@ -92,14 +92,14 @@ abstract contract Pool is Initializable, IPool {
     address onBehalfOf,
     uint256 index
   ) public virtual override {
+    bytes32 positionId = onBehalfOf.getPositionId(index);
     SupplyLogic.executeSupply(
       _reserves,
-      DataTypes.ExecuteSupplyParams({
-        asset: asset,
-        amount: amount,
-        onBehalfOfPosition: onBehalfOf.getPositionId(index)
-      })
+      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: positionId})
     );
+
+    _balances[asset][positionId] += amount;
+    _totalSupplies[asset] += amount;
   }
 
   /// @inheritdoc IPool
@@ -108,20 +108,26 @@ abstract contract Pool is Initializable, IPool {
     uint256 amount,
     address to,
     uint256 index
-  ) public virtual override returns (uint256) {
-    return
-      SupplyLogic.executeWithdraw(
-        _reserves,
-        _reservesList,
-        _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
-        DataTypes.ExecuteWithdrawParams({
-          asset: asset,
-          amount: amount,
-          position: to.getPositionId(index),
-          reservesCount: _reservesCount,
-          pool: address(this)
-        })
-      );
+  ) public virtual override returns (uint256 withdrawalAmount) {
+    bytes32 positionId = to.getPositionId(index);
+
+    require(amount <= _balances[asset][positionId], "Insufficient Balance!");
+    withdrawalAmount = SupplyLogic.executeWithdraw(
+      _reserves,
+      _reservesList,
+      _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
+      DataTypes.ExecuteWithdrawParams({
+        user: to,
+        asset: asset,
+        amount: amount,
+        position: positionId,
+        reservesCount: _reservesCount,
+        pool: address(this)
+      })
+    );
+    // Move these kind of operations to the position contract
+    _totalSupplies[asset] -= withdrawalAmount;
+    _balances[asset][positionId] -= amount;
   }
 
   /// @inheritdoc IPool
