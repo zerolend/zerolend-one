@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 interface INFTPositionManager {
   struct MintParams {
-    address token;
+    address market;
     address recipient;
     address pool;
     uint256 amount;
@@ -11,16 +11,39 @@ interface INFTPositionManager {
 
   struct Pair {
     address market;
-    uint256 amount;
+    uint256 balance;
   }
+
   struct Position {
-    Pair[] markets;
-    Pair[] debts;
+    Pair[] supplyMarkets;
+    Pair[] debtMarkets;
     address pool;
     address operator;
   }
 
-  //   struct AddLiquidityParams {
-  //     ;
-  //   }
+  struct AddLiquidityParams {
+    uint256 tokenId;
+    address market;
+    address recipient;
+    uint256 amount;
+  }
+
+  struct BorrowParams {
+    uint256 tokenId;
+    address market;
+    uint256 amount;
+  }
+
+  struct RepayParams {
+    uint256 tokenId;
+    address market;
+    uint256 amount;
+  }
+
+  struct WithdrawParams {
+    uint256 tokenId;
+    address market;
+    address recipient;
+    uint256 amount;
+  }
 }

@@ -193,9 +193,15 @@ interface IPool {
    * @param to The address that will receive the underlying, same as msg.sender if the user
    *   wants to receive it on his own wallet, or a different address if the beneficiary is a
    *   different wallet
+   * @param index NFT token Id
    * @return The final amount withdrawn
    */
-  function withdraw(address asset, uint256 amount, address to) external returns (uint256);
+  function withdraw(
+    address asset,
+    uint256 amount,
+    address to,
+    uint256 index
+  ) external returns (uint256);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -205,13 +211,12 @@ interface IPool {
    *   and 100 stable/variable debt tokens, depending on the `interestRateMode`
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
-   * @param referralCode The code used to register the integrator originating the operation, for potential rewards.
-   *   0 if the action is executed directly by the user, without any middle-man
    * @param onBehalfOf The address of the user who will receive the debt. Should be the address of the borrower itself
    * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
    * if he has been given credit delegation allowance
+   * @param index NFT token ID
    */
-  function borrow(address asset, uint256 amount, uint16 referralCode, address onBehalfOf) external;
+  function borrow(address asset, uint256 amount, address onBehalfOf, uint256 index) external;
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -222,9 +227,15 @@ interface IPool {
    * @param onBehalfOf The address of the user who will get his debt reduced/removed. Should be the address of the
    * user calling the function if he wants to reduce/remove his own debt, or the address of any other
    * other borrower whose debt should be removed
+   *  @param index NFT token ID
    * @return The final amount repaid
    */
-  function repay(address asset, uint256 amount, address onBehalfOf) external returns (uint256);
+  function repay(
+    address asset,
+    uint256 amount,
+    address onBehalfOf,
+    uint256 index
+  ) external returns (uint256);
 
   /**
    * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
@@ -295,6 +306,10 @@ interface IPool {
       uint256 ltv,
       uint256 healthFactor
     );
+
+  function balances(address market, bytes32 positionId) external view returns (uint256);
+
+  function debts(address market, bytes32 positionId) external view returns (uint256);
 
   /**
    * @notice Initializes a reserve, activating it, assigning an aToken and debt tokens and an
