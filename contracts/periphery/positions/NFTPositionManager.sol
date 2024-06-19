@@ -1,38 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.19;
 
+import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+
 import {INFTPositionManager} from './INFTPositionManager.sol';
-import {ERC721PositionManager} from './ERC721PositionManager.sol';
 import {IPool} from './../../pools/interfaces/IPoolNew.sol';
-import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 
 /**
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is Initializable, INFTPositionManager, ERC721PositionManager {
-  /// @notice Error indicating that the caller is not the owner or approved operator of the token ID.
-  error NotTokenIdOwner();
-  /// @notice Error indicating that it is an Zero Address which is not allowed
-  error ZeroAddressNotAllowed();
-  /// @notice Error indicating that value that is passed is zero which is not allowed
-  error ZeroValueNotAllowed();
-
-  /// @notice Error indicating that value that the address is invalid and not present in debt market
-  error InvalidMarketAddress();
-
-  /**
-   * @notice Emitted when an NFT is minted.
-   * @param recipient The address that received the minted NFT.
-   * @param tokenId The ID of the minted NFT.
-   */
-  event NFTMinted(address indexed recipient, uint256 indexed tokenId);
-  /**
-   * @notice Emitted when an NFT is burned.
-   * @param tokenId The ID of the burned NFT.
-   */
-  event NFTBurned(uint256 indexed tokenId);
-
+contract NFTPositionManager is ERC721EnumerableUpgradeable, INFTPositionManager {
   /// @dev The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
   uint256 private _nextId = 1;
 
@@ -50,16 +28,14 @@ contract NFTPositionManager is Initializable, INFTPositionManager, ERC721Positio
     _;
   }
 
-  /**
-   * @notice Constructor to initialize the ERC721 position manager with a name and symbol.
-   * @param _name The name of the NFT collection.
-   * @param _symbol The symbol of the NFT collection.
-   */
-  constructor(string memory _name, string memory _symbol) ERC721PositionManager(_name, _symbol) {
+  constructor() {
     _disableInitializers();
   }
 
-  function initialize() external initializer {}
+  function initialize() external reinitializer(1) {
+    __ERC721Enumerable_init();
+    __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
+  }
 
   /**
    * @notice Mints a new NFT representing a liquidity position.
@@ -104,9 +80,8 @@ contract NFTPositionManager is Initializable, INFTPositionManager, ERC721Positio
 
   /**
    * @notice Allow User to increase liquidity in the postion
-   * @param params  The parameters required for increase liquidity the position, including the, token, amount, and recipient and market.
+   * @param params  The parameters required for increase liquidity the position, including the token, amount, and recipient and market.
    */
-
   function increaseLiquidity(
     AddLiquidityParams memory params
   ) external isAuthorizedForToken(params.tokenId) {
