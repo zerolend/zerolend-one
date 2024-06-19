@@ -18,6 +18,7 @@ interface INFTPositionManager {
    * @param tokenId The ID of the minted NFT.
    */
   event NFTMinted(address indexed recipient, uint256 indexed tokenId);
+
   /**
    * @notice Emitted when an NFT is burned.
    * @param tokenId The ID of the burned NFT.
@@ -25,47 +26,47 @@ interface INFTPositionManager {
   event NFTBurned(uint256 indexed tokenId);
 
   struct MintParams {
-    address market;
+    address asset;
     address recipient;
     address pool;
     uint256 amount;
   }
 
-  struct Pair {
-    address market;
+  struct Asset {
+    address asset;
     uint256 balance;
+    uint256 debt;
   }
 
   struct Position {
-    Pair[] supplyMarkets;
-    Pair[] debtMarkets;
+    Asset[] assets;
     address pool;
     address operator;
   }
 
   struct AddLiquidityParams {
-    uint256 tokenId;
-    address market;
-    address recipient;
+    address asset;
+    address user;
     uint256 amount;
+    uint256 tokenId;
   }
 
   struct BorrowParams {
-    uint256 tokenId;
-    address market;
+    address asset;
     uint256 amount;
+    uint256 tokenId;
   }
 
   struct RepayParams {
-    uint256 tokenId;
-    address market;
+    address asset;
     uint256 amount;
+    uint256 tokenId;
   }
 
   struct WithdrawParams {
-    uint256 tokenId;
-    address market;
-    address recipient;
+    address asset;
+    address user;
     uint256 amount;
+    uint256 tokenId;
   }
 }
