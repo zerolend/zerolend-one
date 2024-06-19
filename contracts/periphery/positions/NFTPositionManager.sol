@@ -4,12 +4,13 @@ pragma solidity 0.8.19;
 import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {INFTPositionManager} from './INFTPositionManager.sol';
 import {IPool} from './../../pools/interfaces/IPoolNew.sol';
+import {Multicall} from '../multicall/Multicall.sol';
 
 /**
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is ERC721EnumerableUpgradeable, INFTPositionManager {
+contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPositionManager {
   /// @dev The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
   uint256 private _nextId = 1;
 
