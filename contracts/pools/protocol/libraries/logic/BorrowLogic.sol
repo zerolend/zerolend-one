@@ -98,14 +98,12 @@ library BorrowLogic {
    * equivalent amount of debt for the user by burning the corresponding debt token.
    * @dev  Emits the `Repay()` event
    * @param reservesData The state of all the reserves
-   * @param reservesList The addresses of all the active reserves
    * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
    * @param params The additional parameters needed to execute the repay function
    * @return The actual amount being repaid
    */
   function executeRepay(
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteRepayParams memory params
   ) external returns (uint256) {
@@ -113,7 +111,7 @@ library BorrowLogic {
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
 
-    (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(
+    uint256 variableDebt = Helpers.getUserCurrentDebt(
       params.onBehalfOfPosition,
       reserveCache
     );
@@ -121,40 +119,22 @@ library BorrowLogic {
     ValidationLogic.validateRepay(
       reserveCache,
       params.amount,
-      params.onBehalfOfPosition,
       variableDebt
     );
 
     uint256 paybackAmount = variableDebt;
 
-    // Allows a user to repay with aTokens without leaving dust from interest.
-    if (params.amount == type(uint256).max) {
-      // todo
-      // params.amount = IAToken(reserveCache.aTokenAddress).balanceOf(msg.sender);
-    }
-
     if (params.amount < paybackAmount) {
       paybackAmount = params.amount;
     }
 
-    // todo
-    // reserveCache.nextScaledVariableDebt = IVariableDebtToken(reserveCache.variableDebtTokenAddress)
-    //   .burn(params.onBehalfOfPosition, paybackAmount, reserveCache.nextVariableBorrowIndex);
-
     reserve.updateInterestRates(reserveCache, params.asset, paybackAmount, 0);
 
-    if (stableDebt + variableDebt - paybackAmount == 0) {
+    if (variableDebt - paybackAmount == 0) {
       userConfig.setBorrowing(reserve.id, false);
     }
 
     IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.nftPositionManager, paybackAmount);
-    // todo
-    // IAToken(reserveCache.aTokenAddress).handleRepayment(
-    //   msg.sender,
-    //   params.onBehalfOfPosition,
-    //   paybackAmount
-    // );
-
     emit Repay(params.asset, params.onBehalfOfPosition, msg.sender, paybackAmount);
 
     return paybackAmount;

@@ -16,6 +16,7 @@ import {DataTypes} from '../types/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {TokenConfiguration} from '../../libraries/configuration/TokenConfiguration.sol';
 
 /**
  * @title ReserveLogic library
@@ -31,6 +32,7 @@ library ValidationLogic {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using Address for address;
+  using TokenConfiguration for address;
 
   // Factor to apply to "only-variable-debt" liquidity rate to get threshold for rebalancing, expressed in bps
   // A value of 0.9e4 results in 90%
@@ -202,21 +204,18 @@ library ValidationLogic {
    * @notice Validates a repay action.
    * @param reserveCache The cached data of the reserve
    * @param amountSent The amount sent for the repayment. Can be an actual value or uint(-1)
-   * @param onBehalfOfPosition The address of the user msg.sender is repaying for
    * @param variableDebt The borrow balance of the user
    */
   function validateRepay(
     DataTypes.ReserveCache memory reserveCache,
     uint256 amountSent,
-    bytes32 onBehalfOfPosition,
     uint256 variableDebt
-  ) internal view {
+  ) internal pure {
     require(amountSent != 0, Errors.INVALID_AMOUNT);
-    // todo
-    // require(
-    //   amountSent != type(uint256).max || msg.sender == onBehalfOfPosition,
-    //   Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
-    // );
+    require(
+      amountSent != type(uint256).max,
+      Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
+    );
 
     (bool isActive, , , , bool isPaused) = reserveCache.reserveConfiguration.getFlags();
     require(isActive, Errors.RESERVE_INACTIVE);

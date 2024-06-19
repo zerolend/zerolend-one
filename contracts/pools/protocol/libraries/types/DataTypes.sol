@@ -107,6 +107,7 @@ library DataTypes {
   struct ExecuteRepayParams {
     address asset;
     uint256 amount;
+    address user;
     bytes32 onBehalfOfPosition;
   }
 

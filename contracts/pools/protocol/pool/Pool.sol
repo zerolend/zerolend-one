@@ -89,10 +89,9 @@ abstract contract Pool is Initializable, IPool {
   function supply(
     address asset,
     uint256 amount,
-    address onBehalfOf,
     uint256 index
   ) public virtual override {
-    bytes32 positionId = onBehalfOf.getPositionId(index);
+    bytes32 positionId = msg.sender.getPositionId(index);
     SupplyLogic.executeSupply(
       _reserves,
       DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: positionId})
@@ -109,13 +108,13 @@ abstract contract Pool is Initializable, IPool {
     address to,
     uint256 index
   ) public virtual override returns (uint256 withdrawalAmount) {
-    bytes32 positionId = to.getPositionId(index);
+    bytes32 positionId = msg.sender.getPositionId(index);
 
     require(amount <= _balances[asset][positionId], "Insufficient Balance!");
     withdrawalAmount = SupplyLogic.executeWithdraw(
       _reserves,
       _reservesList,
-      _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
+      _usersConfig[positionId],
       DataTypes.ExecuteWithdrawParams({
         user: to,
         asset: asset,
@@ -137,20 +136,24 @@ abstract contract Pool is Initializable, IPool {
     address onBehalfOf,
     uint256 index
   ) public virtual override {
+    bytes32 positionId = msg.sender.getPositionId(index);
     BorrowLogic.executeBorrow(
       _reserves,
       _reservesList,
-      _usersConfig[keccak256(abi.encodePacked(onBehalfOf, index))],
+      _usersConfig[positionId],
       DataTypes.ExecuteBorrowParams({
         asset: asset,
-        user: msg.sender,
-        onBehalfOfPosition: onBehalfOf.getPositionId(index),
+        user: onBehalfOf,
+        onBehalfOfPosition: positionId,
         amount: amount,
         releaseUnderlying: true,
         reservesCount: _reservesCount,
         pool: address(this)
       })
     );
+
+    _debts[asset][positionId] += amount;
+    _totalSupplies[asset] -= amount;
   }
 
   // @inheritdoc IPool
@@ -159,18 +162,20 @@ abstract contract Pool is Initializable, IPool {
     uint256 amount,
     address onBehalfOf,
     uint256 index
-  ) public virtual returns (uint256) {
-    return
-      BorrowLogic.executeRepay(
+  ) public virtual returns (uint256 paybackAmount) {
+    bytes32 positionId = msg.sender.getPositionId(index);
+    paybackAmount = BorrowLogic.executeRepay(
         _reserves,
-        _reservesList,
-        _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
+        _usersConfig[positionId],
         DataTypes.ExecuteRepayParams({
           asset: asset,
           amount: amount,
-          onBehalfOfPosition: onBehalfOf.getPositionId(index)
+          user: onBehalfOf,
+          onBehalfOfPosition: positionId
         })
       );
+    _debts[asset][positionId] -= paybackAmount;
+    _totalSupplies[asset] += paybackAmount;
   }
 
   /// @inheritdoc IPool

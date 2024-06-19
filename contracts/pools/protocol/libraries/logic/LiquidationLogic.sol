@@ -65,8 +65,7 @@ library LiquidationLogic {
 
   struct LiquidationCallLocalVars {
     uint256 userCollateralBalance;
-    uint256 userVariableDebt;
-    uint256 userTotalDebt;
+    uint256 userDebt;
     uint256 actualDebtToLiquidate;
     uint256 actualCollateralToLiquidate;
     uint256 liquidationBonus;
@@ -114,7 +113,7 @@ library LiquidationLogic {
       })
     );
 
-    (vars.userVariableDebt, vars.userTotalDebt, vars.actualDebtToLiquidate) = _calculateDebt(
+    (vars.userDebt, vars.actualDebtToLiquidate) = _calculateDebt(
       vars.debtReserveCache,
       params,
       vars.healthFactor
@@ -125,7 +124,7 @@ library LiquidationLogic {
       collateralReserve,
       DataTypes.ValidateLiquidationCallParams({
         debtReserveCache: vars.debtReserveCache,
-        totalDebt: vars.userTotalDebt,
+        totalDebt: vars.userDebt,
         healthFactor: vars.healthFactor
       })
     );
@@ -155,7 +154,7 @@ library LiquidationLogic {
     //   oracle.getAssetPrice(debtAsset)
     // );
 
-    if (vars.userTotalDebt == vars.actualDebtToLiquidate) {
+    if (vars.userDebt == vars.actualDebtToLiquidate) {
       userConfig.setBorrowing(debtReserve.id, false);
     }
 
@@ -290,33 +289,30 @@ library LiquidationLogic {
    * @param debtReserveCache The reserve cache data object of the debt reserve
    * @param params The additional parameters needed to execute the liquidation function
    * @param healthFactor The health factor of the position
-   * @return The variable debt of the user
-   * @return The total debt of the user
+   * @return The debt of the user
    * @return The actual debt to liquidate as a function of the closeFactor
    */
   function _calculateDebt(
     DataTypes.ReserveCache memory debtReserveCache,
     DataTypes.ExecuteLiquidationCallParams memory params,
     uint256 healthFactor
-  ) internal view returns (uint256, uint256, uint256) {
-    (uint256 userStableDebt, uint256 userVariableDebt) = Helpers.getUserCurrentDebt(
+  ) internal view returns (uint256, uint256) {
+    uint256 userDebt = Helpers.getUserCurrentDebt(
       params.position,
       debtReserveCache
     );
-
-    uint256 userTotalDebt = userStableDebt + userVariableDebt;
 
     uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD
       ? DEFAULT_LIQUIDATION_CLOSE_FACTOR
       : MAX_LIQUIDATION_CLOSE_FACTOR;
 
-    uint256 maxLiquidatableDebt = userTotalDebt.percentMul(closeFactor);
+    uint256 maxLiquidatableDebt = userDebt.percentMul(closeFactor);
 
     uint256 actualDebtToLiquidate = params.debtToCover > maxLiquidatableDebt
       ? maxLiquidatableDebt
       : params.debtToCover;
 
-    return (userVariableDebt, userTotalDebt, actualDebtToLiquidate);
+    return (userDebt, actualDebtToLiquidate);
   }
 
   /**
