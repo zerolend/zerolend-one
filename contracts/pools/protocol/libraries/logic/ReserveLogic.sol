@@ -135,7 +135,7 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     address interestRateStrategyAddress
   ) internal {
-    require(reserve.aTokenAddress == address(0), Errors.RESERVE_ALREADY_INITIALIZED);
+    require(reserve.nftPositionManager == address(0), Errors.RESERVE_ALREADY_INITIALIZED);
 
     reserve.liquidityIndex = uint128(WadRayMath.RAY);
     reserve.variableBorrowIndex = uint128(WadRayMath.RAY);
@@ -182,7 +182,7 @@ library ReserveLogic {
           totalVariableDebt: vars.totalVariableDebt,
           reserveFactor: reserveCache.reserveFactor,
           reserve: reserveAddress,
-          aToken: reserveCache.aTokenAddress
+          nftPositionManager: reserveCache.nftPositionManager
         })
       );
 
@@ -302,8 +302,7 @@ library ReserveLogic {
     reserveCache.currLiquidityRate = reserve.currentLiquidityRate;
     reserveCache.currVariableBorrowRate = reserve.currentVariableBorrowRate;
 
-    reserveCache.aTokenAddress = reserve.aTokenAddress;
-    reserveCache.variableDebtTokenAddress = reserve.variableDebtTokenAddress;
+    reserveCache.nftPositionManager = reserve.nftPositionManager;
 
     reserveCache.reserveLastUpdateTimestamp = reserve.lastUpdateTimestamp;
 

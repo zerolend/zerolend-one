@@ -113,7 +113,7 @@ library FlashLoanLogic {
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
     reserveCache.nextLiquidityIndex = reserve.cumulateToLiquidityIndex(
-      IERC20(reserveCache.aTokenAddress).totalSupply() +
+      IERC20(reserveCache.nftPositionManager).totalSupply() +
         uint256(reserve.accruedToTreasury).rayMul(reserveCache.nextLiquidityIndex),
       premiumToLP
     );
@@ -126,7 +126,7 @@ library FlashLoanLogic {
 
     IERC20(params.asset).safeTransferFrom(
       params.receiverAddress,
-      reserveCache.aTokenAddress,
+      reserveCache.nftPositionManager,
       amountPlusPremium
     );
 

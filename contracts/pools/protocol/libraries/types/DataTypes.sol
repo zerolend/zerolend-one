@@ -165,7 +165,7 @@ library DataTypes {
     uint256 totalVariableDebt;
     uint256 reserveFactor;
     address reserve;
-    address aToken;
+    address nftPositionManager;
   }
 
   struct InitReserveParams {

@@ -73,21 +73,6 @@ library BorrowLogic {
       })
     );
 
-    bool isFirstBorrowing = false;
-
-    // (isFirstBorrowing, reserveCache.nextScaledVariableDebt) = IVariableDebtToken(
-    //   reserveCache.variableDebtTokenAddress
-    // ).mint(
-    //     params.user,
-    //     params.onBehalfOfPosition,
-    //     params.amount,
-    //     reserveCache.nextVariableBorrowIndex
-    //   );
-
-    if (isFirstBorrowing) {
-      userConfig.setBorrowing(reserve.id, true);
-    }
-
     reserve.updateInterestRates(
       reserveCache,
       params.asset,
@@ -96,8 +81,7 @@ library BorrowLogic {
     );
 
     if (params.releaseUnderlying) {
-      // todo
-      // IAToken(reserveCache.aTokenAddress).transferUnderlyingTo(params.user, params.amount);
+      IERC20(params.asset).safeTransferFrom(reserveCache.nftPositionManager, params.user, params.amount);
     }
 
     emit Borrow(
@@ -163,7 +147,7 @@ library BorrowLogic {
       userConfig.setBorrowing(reserve.id, false);
     }
 
-    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, paybackAmount);
+    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.nftPositionManager, paybackAmount);
     // todo
     // IAToken(reserveCache.aTokenAddress).handleRepayment(
     //   msg.sender,

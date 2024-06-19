@@ -104,7 +104,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
 
     if (vars.totalDebt != 0) {
       vars.availableLiquidity =
-        IERC20(params.reserve).balanceOf(params.aToken) +
+        IERC20(params.reserve).balanceOf(params.nftPositionManager) +
         params.liquidityAdded -
         params.liquidityTaken;
 

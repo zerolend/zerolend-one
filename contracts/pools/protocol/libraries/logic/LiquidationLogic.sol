@@ -202,7 +202,7 @@ library LiquidationLogic {
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
     IERC20(params.debtAsset).safeTransferFrom(
       msg.sender,
-      vars.debtReserveCache.aTokenAddress,
+      vars.debtReserveCache.nftPositionManager,
       vars.actualDebtToLiquidate
     );
 

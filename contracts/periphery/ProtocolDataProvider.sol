@@ -35,19 +35,19 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   }
 
   /// @inheritdoc IPoolDataProvider
-  function getAllATokens(address pool) external view override returns (TokenData[] memory) {
-    IPool cachedPool = IPool(pool);
-    address[] memory reserves = cachedPool.getReservesList();
-    TokenData[] memory aTokens = new TokenData[](reserves.length);
-    for (uint256 i = 0; i < reserves.length; i++) {
-      DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(reserves[i]);
-      aTokens[i] = TokenData({
-        symbol: IERC20Detailed(reserveData.aTokenAddress).symbol(),
-        tokenAddress: reserveData.aTokenAddress
-      });
-    }
-    return aTokens;
-  }
+  // function getAllATokens(address pool) external view override returns (TokenData[] memory) {
+  //   IPool cachedPool = IPool(pool);
+  //   address[] memory reserves = cachedPool.getReservesList();
+  //   TokenData[] memory aTokens = new TokenData[](reserves.length);
+  //   for (uint256 i = 0; i < reserves.length; i++) {
+  //     DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(reserves[i]);
+  //     aTokens[i] = TokenData({
+  //       symbol: IERC20Detailed(reserveData).symbol(),
+  //       tokenAddress: reserveData.aTokenAddress
+  //     });
+  //   }
+  //   return aTokens;
+  // }
 
   /// @inheritdoc IPoolDataProvider
   function getReserveConfigurationData(
@@ -126,60 +126,60 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   //   );
   // }
 
-  /// @inheritdoc IPoolDataProvider
-  function getATokenTotalSupply(
-    address pool,
-    address asset
-  ) external view override returns (uint256) {
-    DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
-    return IERC20Detailed(reserve.aTokenAddress).totalSupply();
-  }
+  // /// @inheritdoc IPoolDataProvider
+  // function getATokenTotalSupply(
+  //   address pool,
+  //   address asset
+  // ) external view override returns (uint256) {
+  //   DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
+  //   return IERC20Detailed(reserve.aTokenAddress).totalSupply();
+  // }
 
   /// @inheritdoc IPoolDataProvider
-  function getTotalDebt(address pool, address asset) external view override returns (uint256) {
-    DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
-    return IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply();
-  }
+  // function getTotalDebt(address pool, address asset) external view override returns (uint256) {
+  //   DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
+  //   return IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply();
+  // }
 
   /// @inheritdoc IPoolDataProvider
-  function getUserReserveData(
-    address pool,
-    address asset,
-    address user
-  )
-    external
-    view
-    override
-    returns (
-      uint256 currentATokenBalance,
-      uint256 currentVariableDebt,
-      uint256 scaledVariableDebt,
-      uint256 liquidityRate,
-      bool usageAsCollateralEnabled
-    )
-  {
-    DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
+  // function getUserReserveData(
+  //   address pool,
+  //   address asset,
+  //   address user
+  // )
+  //   external
+  //   view
+  //   override
+  //   returns (
+  //     uint256 currentATokenBalance,
+  //     uint256 currentVariableDebt,
+  //     uint256 scaledVariableDebt,
+  //     uint256 liquidityRate,
+  //     bool usageAsCollateralEnabled
+  //   )
+  // {
+  //   DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
 
-    // todo
-    DataTypes.UserConfigurationMap memory userConfig; //= IPool(pool).getUserConfiguration(user);
+  //   // todo
+  //   DataTypes.UserConfigurationMap memory userConfig; //= IPool(pool).getUserConfiguration(user);
 
-    currentATokenBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
-    currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
-    // scaledVariableDebt = IVariableDebtToken(reserve.variableDebtTokenAddress).scaledBalanceOf(user);
-    liquidityRate = reserve.currentLiquidityRate;
+  //   currentATokenBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
+  //   currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
+  //   // scaledVariableDebt = IVariableDebtToken(reserve.variableDebtTokenAddress).scaledBalanceOf(user);
+  //   liquidityRate = reserve.currentLiquidityRate;
 
-    usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
-  }
+  //   usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
+  // }
 
   /// @inheritdoc IPoolDataProvider
-  function getReserveTokensAddresses(
-    address pool,
-    address asset
-  ) external view override returns (address aTokenAddress, address variableDebtTokenAddress) {
-    DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
+  // function getReserveTokensAddresses(
+  //   address pool,
+  //   address asset
+  // ) external view override returns (address aTokenAddress, address variableDebtTokenAddress) {
+  //   DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
 
-    return (reserve.aTokenAddress, reserve.variableDebtTokenAddress);
-  }
+  //   return (reserve.aTokenAddress, reserve.variableDebtTokenAddress);
+  // }
 
   /// @inheritdoc IPoolDataProvider
   function getInterestRateStrategyAddress(
