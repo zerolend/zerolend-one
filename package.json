@@ -10,6 +10,7 @@
     "@nomicfoundation/hardhat-viem": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@openzeppelin/contracts": "^4.9.2",
+    "@openzeppelin/contracts-upgradeable": "^4.9.2",
     "@tsconfig/recommended": "^1.0.2",
     "@types/chai": "^4.2.0",
     "@types/chai-as-promised": "^7.1.6",
@@ -25,9 +26,6 @@
     "ts-node": ">=8.0.0",
     "tsc": "^2.0.4",
     "typescript": "~5.0.4",
-    "husky": "9.0.11",
-    "rimraf": "5.0.7",
-    "solidity-docgen": "0.6.0-beta.36",
     "viem": "^2.10.9"
   },
   "scripts": {
