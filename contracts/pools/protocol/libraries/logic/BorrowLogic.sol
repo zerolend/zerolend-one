@@ -52,7 +52,9 @@ library BorrowLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ExecuteBorrowParams memory params
+    DataTypes.ExecuteBorrowParams memory params,
+    mapping(address asset => mapping(bytes32 position => uint256 balance)) storage _debts,
+    mapping(address asset => uint256 totalSupply) storage _totalSupplies
   ) public {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
@@ -77,12 +79,13 @@ library BorrowLogic {
       reserveCache,
       params.asset,
       0,
-      params.releaseUnderlying ? params.amount : 0
+      params.amount
     );
 
-    if (params.releaseUnderlying) {
-      IERC20(params.asset).safeTransferFrom(address(this), params.user, params.amount);
-    }
+    _debts[params.asset][params.onBehalfOfPosition] += params.amount;
+    _totalSupplies[params.asset] -= params.amount;
+
+    IERC20(params.asset).safeTransfer(params.user, params.amount);
 
     emit Borrow(
       params.asset,
@@ -111,16 +114,9 @@ library BorrowLogic {
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
 
-    uint256 variableDebt = Helpers.getUserCurrentDebt(
-      params.onBehalfOfPosition,
-      reserveCache
-    );
+    uint256 variableDebt = Helpers.getUserCurrentDebt(params.onBehalfOfPosition, reserveCache);
 
-    ValidationLogic.validateRepay(
-      reserveCache,
-      params.amount,
-      variableDebt
-    );
+    ValidationLogic.validateRepay(reserveCache, params.amount, variableDebt);
 
     uint256 paybackAmount = variableDebt;
 

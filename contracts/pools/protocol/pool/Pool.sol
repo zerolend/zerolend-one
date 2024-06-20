@@ -143,17 +143,15 @@ abstract contract Pool is Initializable, IPool {
       _usersConfig[positionId],
       DataTypes.ExecuteBorrowParams({
         asset: asset,
-        user: onBehalfOf,
+        user: msg.sender,
         onBehalfOfPosition: positionId,
         amount: amount,
-        releaseUnderlying: true,
         reservesCount: _reservesCount,
         pool: address(this)
-      })
+      }),
+      _debts,
+      _totalSupplies
     );
-
-    _debts[asset][positionId] += amount;
-    _totalSupplies[asset] -= amount;
   }
 
   // @inheritdoc IPool

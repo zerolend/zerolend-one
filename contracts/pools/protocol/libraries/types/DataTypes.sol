@@ -99,7 +99,6 @@ library DataTypes {
     address user;
     bytes32 onBehalfOfPosition;
     uint256 amount;
-    bool releaseUnderlying;
     uint256 reservesCount;
     address pool;
   }
