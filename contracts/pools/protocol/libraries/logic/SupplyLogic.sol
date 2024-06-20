@@ -43,7 +43,9 @@ library SupplyLogic {
   function executeSupply(
     address onBehalfOf,
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    DataTypes.ExecuteSupplyParams memory params
+    DataTypes.ExecuteSupplyParams memory params,
+    mapping(address asset => mapping(bytes32 positionId => uint256 balance)) storage _balances,
+    mapping(address asset => uint256 totalSupply) storage _totalSupplies
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
@@ -54,7 +56,10 @@ library SupplyLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, params.amount, 0);
 
-    IERC20(params.asset).safeTransferFrom(onBehalfOf, address(this), params.amount);
+    _balances[params.asset][params.onBehalfOfPosition] += params.amount;
+    _totalSupplies[params.asset] += params.amount;
+
+    IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
 
     emit Supply(params.asset, onBehalfOf, params.onBehalfOfPosition, params.amount);
   }
@@ -74,14 +79,16 @@ library SupplyLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ExecuteWithdrawParams memory params
+    DataTypes.ExecuteWithdrawParams memory params,
+    mapping(address asset => mapping(bytes32 position => uint256 balance)) storage _balances,
+    mapping(address asset => uint256 totalSupply) storage _totalSupplies
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
     reserve.updateState(reserveCache);
 
-    uint256 userBalance = params.amount;
+    uint256 userBalance = _balances[params.asset][params.position];
 
     uint256 amountToWithdraw = params.amount;
 
@@ -100,11 +107,14 @@ library SupplyLogic {
       emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }
 
-    IERC20(params.asset).safeTransferFrom(address(this), params.user, params.amount);
+    _totalSupplies[params.asset] -= params.amount;
+    _balances[params.asset][params.position] -= params.amount;
+
+    IERC20(params.asset).safeTransfer(params.user, params.amount);
 
     if (isCollateral && userConfig.isBorrowingAny()) {
       ValidationLogic.validateHFAndLtv(
-        reservesData, 
+        reservesData,
         reservesList,
         userConfig,
         params.asset,

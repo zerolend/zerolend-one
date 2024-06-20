@@ -164,8 +164,9 @@ interface IPool {
    * - E.g. User supplies 100 USDC and gets in return 100 aUSDC
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
+   * @param onBehalfOf The address of the user who is supplying
    */
-  function supply(address asset, uint256 amount, uint256 index) external;
+  function supply(address asset, uint256 amount,address  onBehalfOf, uint256 index) external;
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned

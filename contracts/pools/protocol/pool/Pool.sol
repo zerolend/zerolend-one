@@ -88,19 +88,18 @@ abstract contract Pool is Initializable, IPool {
   /// @inheritdoc IPool
   function supply(
     address asset,
-    uint256 amount,
+    uint256 amount, 
     address onBehalfOf,
     uint256 index
   ) public virtual override {
-    bytes32 positionId = msg.sender.getPositionId(index);
+    bytes32 positionId = onBehalfOf.getPositionId(index);
     SupplyLogic.executeSupply(
       onBehalfOf,
       _reserves,
-      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: positionId})
+      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: positionId}),
+      _balances,
+      _totalSupplies
     );
-
-    _balances[asset][positionId] += amount;
-    _totalSupplies[asset] += amount;
   }
 
   /// @inheritdoc IPool
@@ -124,11 +123,10 @@ abstract contract Pool is Initializable, IPool {
         position: positionId,
         reservesCount: _reservesCount,
         pool: address(this)
-      })
+      }),
+      _balances,
+      _totalSupplies
     );
-    // Move these kind of operations to the position contract
-    _totalSupplies[asset] -= withdrawalAmount;
-    _balances[asset][positionId] -= amount;
   }
 
   /// @inheritdoc IPool
@@ -138,7 +136,7 @@ abstract contract Pool is Initializable, IPool {
     address onBehalfOf,
     uint256 index
   ) public virtual override {
-    bytes32 positionId = msg.sender.getPositionId(index);
+    bytes32 positionId = onBehalfOf.getPositionId(index);
     BorrowLogic.executeBorrow(
       _reserves,
       _reservesList,
