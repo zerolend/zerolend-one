@@ -89,10 +89,12 @@ abstract contract Pool is Initializable, IPool {
   function supply(
     address asset,
     uint256 amount,
+    address onBehalfOf,
     uint256 index
   ) public virtual override {
     bytes32 positionId = msg.sender.getPositionId(index);
     SupplyLogic.executeSupply(
+      onBehalfOf,
       _reserves,
       DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: positionId})
     );

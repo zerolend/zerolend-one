@@ -41,6 +41,7 @@ library SupplyLogic {
    * @param params The additional parameters needed to execute the supply function
    */
   function executeSupply(
+    address onBehalfOf,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.ExecuteSupplyParams memory params
   ) external {
@@ -53,9 +54,9 @@ library SupplyLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, params.amount, 0);
 
-    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.nftPositionManager, params.amount);
+    IERC20(params.asset).safeTransferFrom(onBehalfOf, address(this), params.amount);
 
-    emit Supply(params.asset, msg.sender, params.onBehalfOfPosition, params.amount);
+    emit Supply(params.asset, onBehalfOf, params.onBehalfOfPosition, params.amount);
   }
 
   /**
@@ -99,7 +100,7 @@ library SupplyLogic {
       emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }
 
-    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.nftPositionManager, params.amount);
+    IERC20(params.asset).safeTransferFrom(address(this), params.user, params.amount);
 
     if (isCollateral && userConfig.isBorrowingAny()) {
       ValidationLogic.validateHFAndLtv(
