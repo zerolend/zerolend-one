@@ -164,16 +164,15 @@ abstract contract Pool is Initializable, IPool {
     bytes32 positionId = msg.sender.getPositionId(index);
     paybackAmount = BorrowLogic.executeRepay(
         _reserves,
-        _usersConfig[positionId],
         DataTypes.ExecuteRepayParams({
           asset: asset,
           amount: amount,
           user: onBehalfOf,
           onBehalfOfPosition: positionId
-        })
+        }),
+        _debts,
+        _totalSupplies
       );
-    _debts[asset][positionId] -= paybackAmount;
-    _totalSupplies[asset] += paybackAmount;
   }
 
   /// @inheritdoc IPool

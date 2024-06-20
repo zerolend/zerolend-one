@@ -101,14 +101,14 @@ library BorrowLogic {
    * equivalent amount of debt for the user by burning the corresponding debt token.
    * @dev  Emits the `Repay()` event
    * @param reservesData The state of all the reserves
-   * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
    * @param params The additional parameters needed to execute the repay function
    * @return The actual amount being repaid
    */
   function executeRepay(
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ExecuteRepayParams memory params
+    DataTypes.ExecuteRepayParams memory params,
+    mapping(address asset => mapping(bytes32 position => uint256 balance)) storage _debts,
+    mapping(address asset => uint256 totalSupply) storage _totalSupplies
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
@@ -126,9 +126,8 @@ library BorrowLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, paybackAmount, 0);
 
-    if (variableDebt - paybackAmount == 0) {
-      userConfig.setBorrowing(reserve.id, false);
-    }
+    _debts[params.asset][params.onBehalfOfPosition] -= paybackAmount;
+    _totalSupplies[params.asset] += paybackAmount;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
     emit Repay(params.asset, params.onBehalfOfPosition, msg.sender, paybackAmount);
