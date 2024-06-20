@@ -81,7 +81,7 @@ library BorrowLogic {
     );
 
     if (params.releaseUnderlying) {
-      IERC20(params.asset).safeTransferFrom(reserveCache.nftPositionManager, params.user, params.amount);
+      IERC20(params.asset).safeTransferFrom(address(this), params.user, params.amount);
     }
 
     emit Borrow(
@@ -134,7 +134,7 @@ library BorrowLogic {
       userConfig.setBorrowing(reserve.id, false);
     }
 
-    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.nftPositionManager, paybackAmount);
+    IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
     emit Repay(params.asset, params.onBehalfOfPosition, msg.sender, paybackAmount);
 
     return paybackAmount;
