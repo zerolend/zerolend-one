@@ -17,8 +17,6 @@ library DataTypes {
     uint40 lastUpdateTimestamp;
     //the id of the reserve. Represents the position in the list of the active reserves
     uint16 id;
-    // The address of the underlying asset
-    address asset;
     //address of the interest rate strategy
     address interestRateStrategyAddress;
     //the current treasury balance, scaled
