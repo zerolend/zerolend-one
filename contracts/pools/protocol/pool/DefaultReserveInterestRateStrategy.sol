@@ -11,7 +11,6 @@ import {IReserveInterestRateStrategy} from '../../interfaces/IReserveInterestRat
 
 /**
  * @title DefaultReserveInterestRateStrategy contract
-
  * @notice Implements the calculation of the interest rates depending on the reserve state
  * @dev The model of interest rate is based on 2 slopes, one before the `OPTIMAL_USAGE_RATIO`
  * point of usage and another from that one to 100%.
