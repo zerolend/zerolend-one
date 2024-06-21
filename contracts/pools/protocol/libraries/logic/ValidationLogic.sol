@@ -78,15 +78,10 @@ library ValidationLogic {
 
   /**
    * @notice Validates a withdraw action.
-   * @param reserveCache The cached data of the reserve
    * @param amount The amount to be withdrawn
    * @param userBalance The balance of the user
    */
-  function validateWithdraw(
-    DataTypes.ReserveCache memory reserveCache,
-    uint256 amount,
-    uint256 userBalance
-  ) internal pure {
+  function validateWithdraw(uint256 amount, uint256 userBalance) internal pure {
     require(amount != 0, Errors.INVALID_AMOUNT);
     require(amount <= userBalance, Errors.NOT_ENOUGH_AVAILABLE_USER_BALANCE);
   }
@@ -191,18 +186,12 @@ library ValidationLogic {
 
   /**
    * @notice Validates a repay action.
-   * @param reserveCache The cached data of the reserve
    * @param amountSent The amount sent for the repayment. Can be an actual value or uint(-1)
    * @param variableDebt The borrow balance of the user
    */
-  function validateRepay(
-    DataTypes.ReserveCache memory reserveCache,
-    uint256 amountSent,
-    uint256 variableDebt
-  ) internal pure {
+  function validateRepay(uint256 amountSent, uint256 variableDebt) internal pure {
     require(amountSent != 0, Errors.INVALID_AMOUNT);
     require(amountSent != type(uint256).max, Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF);
-
     require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
   }
 
@@ -324,14 +313,12 @@ library ValidationLogic {
   /**
    * @notice Validates the action of activating the asset as collateral.
    * @dev Only possible if the asset has non-zero LTV and the user is not in isolation mode
-   * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param userConfig the user configuration
    * @param reserveConfig The reserve configuration
    * @return True if the asset can be activated as collateral, false otherwise
    */
   function validateUseAsCollateral(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ReserveConfigurationMap memory reserveConfig

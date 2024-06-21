@@ -3,6 +3,7 @@ pragma solidity ^0.8.10;
 
 import {DataTypes} from '../types/DataTypes.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {IPool} from '../../../interfaces/IPool.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
@@ -88,7 +89,13 @@ library BorrowLogic {
     // todo; update reserveCache.nextScaledVariableDebt
     _totalSupplies[params.asset].debt -= params.amount;
 
-    reserve.updateInterestRates(reserveCache, params.asset, 0, params.amount);
+    reserve.updateInterestRates(
+      reserveCache,
+      params.asset,
+      IPool(params.pool).getReserveFactor(),
+      0,
+      params.amount
+    );
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
@@ -113,6 +120,7 @@ library BorrowLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
+    IPool pool,
     DataTypes.ExecuteRepayParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -122,11 +130,17 @@ library BorrowLogic {
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
 
     uint256 paybackAmount = b.scaledDebtBalance;
-    ValidationLogic.validateRepay(reserveCache, params.amount, paybackAmount);
+    ValidationLogic.validateRepay(params.amount, paybackAmount);
 
     if (params.amount < paybackAmount) paybackAmount = params.amount;
 
-    reserve.updateInterestRates(reserveCache, params.asset, paybackAmount, 0);
+    reserve.updateInterestRates(
+      reserveCache,
+      params.asset,
+      pool.getReserveFactor(),
+      paybackAmount,
+      0
+    );
 
     uint256 burnt = b.burnDebt(paybackAmount, reserveCache.nextVariableBorrowIndex);
     // todo; update reserveCache.nextScaledVariableDebt

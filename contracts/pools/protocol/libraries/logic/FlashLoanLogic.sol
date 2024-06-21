@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-
 import {IPool} from '../../../interfaces/IPool.sol';
 import {IFlashLoanSimpleReceiver} from '../../../interfaces/IFlashLoanSimpleReceiver.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
@@ -123,7 +122,8 @@ library FlashLoanLogic {
       .rayDiv(reserveCache.nextLiquidityIndex)
       .toUint128();
 
-    reserve.updateInterestRates(reserveCache, params.asset, amountPlusPremium, 0);
+    // todo
+    // reserve.updateInterestRates(reserveCache, params.asset, amountPlusPremium, 0);
 
     // todo
     // IERC20(params.asset).safeTransferFrom(

@@ -280,6 +280,8 @@ interface IPool {
    */
   function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt);
 
+  function getReserveFactor() external view returns (uint256 reseveFactor);
+
   /**
    * @notice Returns the user account data across all the reserves
    * @param user The address of the user

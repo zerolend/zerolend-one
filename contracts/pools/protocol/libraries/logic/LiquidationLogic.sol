@@ -19,14 +19,14 @@ import {IPool} from '../../../interfaces/IPool.sol';
  * @notice Implements actions involving management of collateral in the protocol, the main one being the liquidations
  */
 library LiquidationLogic {
-  using WadRayMath for uint256;
-  using TokenConfiguration for address;
   using PercentageMath for uint256;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
-  using UserConfiguration for DataTypes.UserConfigurationMap;
-  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using SafeERC20 for IERC20;
+  using TokenConfiguration for address;
+  using UserConfiguration for DataTypes.UserConfigurationMap;
+  using WadRayMath for uint256;
 
   // See `IPool` for descriptions
   event ReserveUsedAsCollateralEnabled(address indexed reserve, bytes32 indexed position);
@@ -129,30 +129,29 @@ library LiquidationLogic {
       })
     );
 
-    // (
-    //   vars.collateralAToken,
-    //   vars.collateralPriceSource,
-    //   vars.debtPriceSource,
-    //   vars.liquidationBonus
-    // ) = _getConfigurationData(collateralReserve, params);
+    (
+      vars.collateralPriceSource,
+      vars.debtPriceSource,
+      vars.liquidationBonus
+    ) = _getConfigurationData(collateralReserve, params);
 
     vars.userCollateralBalance = _balances[vars.asset][params.position].scaledSupplyBalance;
 
-    // (
-    //   vars.actualCollateralToLiquidate,
-    //   vars.actualDebtToLiquidate,
-    //   vars.liquidationProtocolFeeAmount
-    // ) = _calculateAvailableCollateralToLiquidate(
-    //   collateralReserve,
-    //   vars.debtReserveCache,
-    //   vars.collateralPriceSource,
-    //   vars.debtPriceSource,
-    //   vars.actualDebtToLiquidate,
-    //   vars.userCollateralBalance,
-    //   vars.liquidationBonus,
-    //   oracle.getAssetPrice(collateralAsset),
-    //   oracle.getAssetPrice(debtAsset)
-    // );
+    (
+      vars.actualCollateralToLiquidate,
+      vars.actualDebtToLiquidate,
+      vars.liquidationProtocolFeeAmount
+    ) = _calculateAvailableCollateralToLiquidate(
+      collateralReserve,
+      vars.debtReserveCache,
+      vars.collateralPriceSource,
+      vars.debtPriceSource,
+      vars.actualDebtToLiquidate,
+      vars.userCollateralBalance,
+      vars.liquidationBonus,
+      IPool(params.pool).getAssetPrice(params.collateralAsset),
+      IPool(params.pool).getAssetPrice(params.debtAsset)
+    );
 
     if (vars.userDebt == vars.actualDebtToLiquidate) {
       userConfig.setBorrowing(debtReserve.id, false);
@@ -173,11 +172,12 @@ library LiquidationLogic {
     debtReserve.updateInterestRates(
       vars.debtReserveCache,
       params.debtAsset,
+      IPool(params.pool).getReserveFactor(),
       vars.actualDebtToLiquidate,
       0
     );
 
-    _burnCollateralATokens(collateralReserve, params, vars);
+    // _burnCollateralATokens(collateralReserve, params, vars);
 
     // Transfer fee to treasury if it is non-zero
     if (vars.liquidationProtocolFeeAmount != 0) {
@@ -223,36 +223,35 @@ library LiquidationLogic {
     );
   }
 
-  /**
-   * @notice Burns the collateral aTokens and transfers the underlying to the liquidator.
-   * @dev   The function also updates the state and the interest rate of the collateral reserve.
-   * @param collateralReserve The data of the collateral reserve
-   * @param params The additional parameters needed to execute the liquidation function
-   * @param vars The executeLiquidationCall() function local vars
-   */
-  function _burnCollateralATokens(
-    DataTypes.ReserveData storage collateralReserve,
-    DataTypes.ExecuteLiquidationCallParams memory params,
-    LiquidationCallLocalVars memory vars
-  ) internal {
-    DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache();
-    collateralReserve.updateState(collateralReserveCache);
-    collateralReserve.updateInterestRates(
-      collateralReserveCache,
-      params.collateralAsset,
-      0,
-      vars.actualCollateralToLiquidate
-    );
-
-    // todo
-    // // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-    // vars.collateralAToken.burn(
-    //   params.position,
-    //   msg.sender,
-    //   vars.actualCollateralToLiquidate,
-    //   collateralReserveCache.nextLiquidityIndex
-    // );
-  }
+  // /**
+  //  * @notice Burns the collateral aTokens and transfers the underlying to the liquidator.
+  //  * @dev   The function also updates the state and the interest rate of the collateral reserve.
+  //  * @param collateralReserve The data of the collateral reserve
+  //  * @param params The additional parameters needed to execute the liquidation function
+  //  * @param vars The executeLiquidationCall() function local vars
+  //  */
+  // function _burnCollateralATokens(
+  //   DataTypes.ReserveData storage collateralReserve,
+  //   DataTypes.ExecuteLiquidationCallParams memory params,
+  //   LiquidationCallLocalVars memory vars
+  // ) internal {
+  //   DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache();
+  //   collateralReserve.updateState(collateralReserveCache);
+  //   collateralReserve.updateInterestRates(
+  //     collateralReserveCache,
+  //     params.collateralAsset,
+  //     0,
+  //     vars.actualCollateralToLiquidate
+  //   );
+  //   // todo
+  //   // // Burn the equivalent amount of aToken, sending the underlying to the liquidator
+  //   // vars.collateralAToken.burn(
+  //   //   params.position,
+  //   //   msg.sender,
+  //   //   vars.actualCollateralToLiquidate,
+  //   //   collateralReserveCache.nextLiquidityIndex
+  //   // );
+  // }
 
   /**
    * @notice Burns the debt tokens of the user up to the amount being repaid by the liquidator.
@@ -299,7 +298,7 @@ library LiquidationLogic {
     uint256 healthFactor,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances
   ) internal view returns (uint256, uint256) {
-    uint256 userDebt = 0; // _debts[debtReserveCache.asset][params.position];
+    uint256 userDebt = _balances[params.debtAsset][params.position].scaledDebtBalance;
 
     uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD
       ? DEFAULT_LIQUIDATION_CLOSE_FACTOR
@@ -318,23 +317,21 @@ library LiquidationLogic {
    * @notice Returns the configuration data for the debt and the collateral reserves.
    * @param collateralReserve The data of the collateral reserve
    * @param params The additional parameters needed to execute the liquidation function
-   * @return The collateral aToken
    * @return The address to use as price source for the collateral
    * @return The address to use as price source for the debt
    * @return The liquidation bonus to apply to the collateral
    */
-  // function _getConfigurationData(
-  //   DataTypes.ReserveData storage collateralReserve,
-  //   DataTypes.ExecuteLiquidationCallParams memory params
-  // ) internal view returns (IAToken, address, address, uint256) {
-  //   IAToken collateralAToken = IAToken(collateralReserve.aTokenAddress);
-  //   uint256 liquidationBonus = collateralReserve.configuration.getLiquidationBonus();
+  function _getConfigurationData(
+    DataTypes.ReserveData storage collateralReserve,
+    DataTypes.ExecuteLiquidationCallParams memory params
+  ) internal view returns (address, address, uint256) {
+    uint256 liquidationBonus = collateralReserve.configuration.getLiquidationBonus();
 
-  //   address collateralPriceSource = params.collateralAsset;
-  //   address debtPriceSource = params.debtAsset;
+    address collateralPriceSource = params.collateralAsset;
+    address debtPriceSource = params.debtAsset;
 
-  //   return (collateralAToken, collateralPriceSource, debtPriceSource, liquidationBonus);
-  // }
+    return (collateralPriceSource, debtPriceSource, liquidationBonus);
+  }
 
   struct AvailableCollateralToLiquidateLocalVars {
     uint256 collateralPrice;
@@ -382,7 +379,7 @@ library LiquidationLogic {
     AvailableCollateralToLiquidateLocalVars memory vars;
 
     vars.collateralPrice = collateralPrice; // oracle.getAssetPrice(collateralAsset);
-    vars.debtAssetPrice = debtAssetPrice; // racle.getAssetPrice(debtAsset);
+    vars.debtAssetPrice = debtAssetPrice; // oracle.getAssetPrice(debtAsset);
 
     vars.collateralDecimals = collateralReserve.configuration.getDecimals();
     vars.debtAssetDecimals = debtReserveCache.reserveConfiguration.getDecimals();

@@ -73,7 +73,7 @@ library DataTypes {
     uint256 nextVariableBorrowIndex;
     uint256 currLiquidityRate;
     uint256 currVariableBorrowRate;
-    uint256 reserveFactor;
+    // address asset;
     ReserveConfigurationMap reserveConfiguration;
     uint40 reserveLastUpdateTimestamp;
   }
