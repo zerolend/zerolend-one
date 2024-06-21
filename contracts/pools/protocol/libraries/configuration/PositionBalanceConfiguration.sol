@@ -67,4 +67,22 @@ library PositionBalanceConfiguration {
     self.scaledDebtBalance -= amountScaled.toUint128();
     return amountScaled.toUint128();
   }
+
+  function getSupply(
+    DataTypes.PositionBalance storage self,
+    uint256 index
+  ) internal returns (uint256 supply) {
+    uint256 increase = self.scaledSupplyBalance.rayMul(index) -
+      self.scaledSupplyBalance.rayMul(self.lastSupplyLiquidtyIndex);
+    return self.scaledSupplyBalance + increase;
+  }
+
+  function getDebt(
+    DataTypes.PositionBalance storage self,
+    uint256 index
+  ) internal returns (uint256 debt) {
+    uint256 increase = self.scaledDebtBalance.rayMul(index) -
+      self.scaledDebtBalance.rayMul(self.lastDebtLiquidtyIndex);
+    return self.scaledDebtBalance + increase;
+  }
 }
