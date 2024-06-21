@@ -239,15 +239,15 @@ abstract contract Pool is Initializable, PoolGetters {
     require(config.getLtv() <= config.getLiquidationThreshold(), Errors.INVALID_RESERVE_PARAMS);
 
     if (config.getLiquidationThreshold() != 0) {
-      //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
-      //collateral than needed to cover the debt
+      // liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
+      // collateral than needed to cover the debt
       require(
         config.getLiquidationBonus() > PercentageMath.PERCENTAGE_FACTOR,
         Errors.INVALID_RESERVE_PARAMS
       );
 
-      //if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
-      //a loan is taken there is enough collateral available to cover the liquidation bonus
+      // if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
+      // a loan is taken there is enough collateral available to cover the liquidation bonus
       require(
         config.getLiquidationThreshold().percentMul(config.getLiquidationBonus()) <=
           PercentageMath.PERCENTAGE_FACTOR,
