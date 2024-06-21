@@ -88,7 +88,7 @@ abstract contract Pool is Initializable, IPool {
   /// @inheritdoc IPool
   function supply(
     address asset,
-    uint256 amount, 
+    uint256 amount,
     address onBehalfOf,
     uint256 index
   ) public virtual override {
@@ -111,7 +111,7 @@ abstract contract Pool is Initializable, IPool {
   ) public virtual override returns (uint256 withdrawalAmount) {
     bytes32 positionId = msg.sender.getPositionId(index);
 
-    require(amount <= _balances[asset][positionId], "Insufficient Balance!");
+    require(amount <= _balances[asset][positionId], 'Insufficient Balance!');
     withdrawalAmount = SupplyLogic.executeWithdraw(
       _reserves,
       _reservesList,
@@ -163,16 +163,16 @@ abstract contract Pool is Initializable, IPool {
   ) public virtual returns (uint256 paybackAmount) {
     bytes32 positionId = msg.sender.getPositionId(index);
     paybackAmount = BorrowLogic.executeRepay(
-        _reserves,
-        DataTypes.ExecuteRepayParams({
-          asset: asset,
-          amount: amount,
-          user: onBehalfOf,
-          onBehalfOfPosition: positionId
-        }),
-        _debts,
-        _totalSupplies
-      );
+      _reserves,
+      DataTypes.ExecuteRepayParams({
+        asset: asset,
+        amount: amount,
+        user: onBehalfOf,
+        onBehalfOfPosition: positionId
+      }),
+      _debts,
+      _totalSupplies
+    );
   }
 
   /// @inheritdoc IPool
@@ -227,6 +227,16 @@ abstract contract Pool is Initializable, IPool {
     address asset
   ) external view virtual override returns (DataTypes.ReserveData memory) {
     return _reserves[asset];
+  }
+
+  /// @inheritdoc IPool
+  function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance) {
+    return _balances[asset][positionId];
+  }
+
+  /// @inheritdoc IPool
+  function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt) {
+    return _debts[asset][positionId];
   }
 
   /// @inheritdoc IPool
