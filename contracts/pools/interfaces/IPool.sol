@@ -136,6 +136,20 @@ interface IPool {
   event MintedToTreasury(address indexed reserve, uint256 amountMinted);
 
   /**
+   * @dev Emitted when the collateralization risk parameters for the specified asset are updated.
+   * @param asset The address of the underlying asset of the reserve
+   * @param ltv The loan to value of the asset when used as collateral
+   * @param liquidationThreshold The threshold at which loans using this asset as collateral will be considered undercollateralized
+   * @param liquidationBonus The bonus liquidators receive to liquidate this asset
+   */
+  event CollateralConfigurationChanged(
+    address indexed asset,
+    uint256 ltv,
+    uint256 liquidationThreshold,
+    uint256 liquidationBonus
+  );
+
+  /**
    * @dev Emitted when a reserve is initialized.
    * @param asset The address of the underlying asset of the reserve
    * @param oracle The address of the oracle

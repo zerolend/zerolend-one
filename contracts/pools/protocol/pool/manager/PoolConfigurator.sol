@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {ConfiguratorInputTypes} from '../../libraries/types/ConfiguratorInputTypes.sol';
 import {DataTypes} from '../../libraries/types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 import {IPoolConfigurator} from '../../../interfaces/IPoolConfigurator.sol';
-import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {PoolManager} from './PoolManager.sol';
 import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
 
@@ -15,7 +13,6 @@ import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfigu
  * @dev Implements the configuration methods for the lending pools
  */
 abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
-  using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   address public factory;

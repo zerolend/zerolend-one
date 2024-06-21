@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.19;
 
-import {ConfiguratorInputTypes} from '../protocol/libraries/types/ConfiguratorInputTypes.sol';
-
 /**
  * @title IPoolConfigurator
  * @author Aave
@@ -22,20 +20,6 @@ interface IPoolConfigurator {
    * @param enabled True if flashloans are enabled, false otherwise
    */
   event ReserveFlashLoaning(address indexed asset, bool enabled);
-
-  /**
-   * @dev Emitted when the collateralization risk parameters for the specified asset are updated.
-   * @param asset The address of the underlying asset of the reserve
-   * @param ltv The loan to value of the asset when used as collateral
-   * @param liquidationThreshold The threshold at which loans using this asset as collateral will be considered undercollateralized
-   * @param liquidationBonus The bonus liquidators receive to liquidate this asset
-   */
-  event CollateralConfigurationChanged(
-    address indexed asset,
-    uint256 ltv,
-    uint256 liquidationThreshold,
-    uint256 liquidationBonus
-  );
 
   /**
    * @dev Emitted when a reserve is activated or deactivated
@@ -170,15 +154,6 @@ interface IPoolConfigurator {
     uint128 oldFlashloanPremiumToProtocol,
     uint128 newFlashloanPremiumToProtocol
   );
-
-  /**
-   * @notice Initializes multiple reserves.
-   * @param input The array of initialization parameters
-   */
-  function initReserves(
-    address pool,
-    ConfiguratorInputTypes.InitReserveInput[] calldata input
-  ) external;
 
   /**
    * @notice Configures borrowing on a reserve.
