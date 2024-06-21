@@ -94,7 +94,7 @@ library ReserveLogic {
     if (reserve.lastUpdateTimestamp == uint40(block.timestamp)) return;
 
     _updateIndexes(reserve, reserveCache);
-    _accrueToTreasury(reserve, reserveCache);
+    _accrueToTreasury(0, reserve, reserveCache);
 
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
   }
@@ -130,12 +130,8 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     address interestRateStrategyAddress
   ) internal {
-    // require(reserve.nftPositionManager == address(0), Errors.RESERVE_ALREADY_INITIALIZED);
-
     reserve.liquidityIndex = uint128(WadRayMath.RAY);
     reserve.variableBorrowIndex = uint128(WadRayMath.RAY);
-    // reserve.aTokenAddress = aTokenAddress;
-    // reserve.variableDebtTokenAddress = variableDebtTokenAddress;
     reserve.interestRateStrategyAddress = interestRateStrategyAddress;
   }
 
@@ -157,6 +153,7 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     DataTypes.ReserveCache memory reserveCache,
     address reserveAddress,
+    uint256 reserveFactor,
     uint256 liquidityAdded,
     uint256 liquidityTaken
   ) internal {
@@ -175,7 +172,7 @@ library ReserveLogic {
           liquidityAdded: liquidityAdded,
           liquidityTaken: liquidityTaken,
           totalVariableDebt: vars.totalVariableDebt,
-          reserveFactor: reserveCache.reserveFactor,
+          reserveFactor: reserveFactor,
           reserve: reserveAddress
         })
       );
@@ -206,14 +203,12 @@ library ReserveLogic {
    * @param reserveCache The caching layer for the reserve data
    */
   function _accrueToTreasury(
+    uint256 reserveFactor,
     DataTypes.ReserveData storage reserve,
     DataTypes.ReserveCache memory reserveCache
   ) internal {
+    if (reserveFactor == 0) return;
     AccrueToTreasuryLocalVars memory vars;
-
-    if (reserveCache.reserveFactor == 0) {
-      return;
-    }
 
     // calculate the total variable debt at moment of the last interaction
     vars.prevTotalVariableDebt = reserveCache.currScaledVariableDebt.rayMul(
@@ -228,7 +223,7 @@ library ReserveLogic {
     // debt accrued is the sum of the current debt minus the sum of the debt at the last update
     vars.totalDebtAccrued = vars.currTotalVariableDebt - vars.prevTotalVariableDebt;
 
-    vars.amountToMint = vars.totalDebtAccrued.percentMul(reserveCache.reserveFactor);
+    vars.amountToMint = vars.totalDebtAccrued.percentMul(reserveFactor);
 
     if (vars.amountToMint != 0) {
       reserve.accruedToTreasury += vars
@@ -289,14 +284,12 @@ library ReserveLogic {
     DataTypes.ReserveCache memory reserveCache;
 
     reserveCache.reserveConfiguration = reserve.configuration;
-    // reserveCache.reserveFactor = reserveCache.reserveConfiguration.getReserveFactor();
+
     reserveCache.currLiquidityIndex = reserveCache.nextLiquidityIndex = reserve.liquidityIndex;
     reserveCache.currVariableBorrowIndex = reserveCache.nextVariableBorrowIndex = reserve
       .variableBorrowIndex;
     reserveCache.currLiquidityRate = reserve.currentLiquidityRate;
     reserveCache.currVariableBorrowRate = reserve.currentVariableBorrowRate;
-
-    // reserveCache.nftPositionManager = reserve.nftPositionManager;
 
     reserveCache.reserveLastUpdateTimestamp = reserve.lastUpdateTimestamp;
 

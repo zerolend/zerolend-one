@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {DataTypes} from '../types/DataTypes.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {IPool} from '../../../interfaces/IPool.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
@@ -45,17 +46,23 @@ library SupplyLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ExecuteSupplyParams memory params,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
-    address pool
+    IPool pool,
+    DataTypes.ExecuteSupplyParams memory params
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
     reserve.updateState(reserveCache);
     ValidationLogic.validateSupply(reserveCache, reserve, params, address(pool));
-    reserve.updateInterestRates(reserveCache, params.asset, params.amount, 0);
+    reserve.updateInterestRates(
+      reserveCache,
+      params.asset,
+      pool.getReserveFactor(),
+      params.amount,
+      0
+    );
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
 
@@ -66,7 +73,6 @@ library SupplyLogic {
     if (isFirst) {
       if (
         ValidationLogic.validateUseAsCollateral(
-          reservesData,
           reservesList,
           userConfig,
           reserveCache.reserveConfiguration
@@ -97,6 +103,7 @@ library SupplyLogic {
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
     mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
+    IPool pool,
     DataTypes.ExecuteWithdrawParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -110,8 +117,14 @@ library SupplyLogic {
 
     if (params.amount == type(uint256).max) params.amount = userBalance;
 
-    ValidationLogic.validateWithdraw(reserveCache, params.amount, userBalance);
-    reserve.updateInterestRates(reserveCache, params.asset, 0, params.amount);
+    ValidationLogic.validateWithdraw(params.amount, userBalance);
+    reserve.updateInterestRates(
+      reserveCache,
+      params.asset,
+      pool.getReserveFactor(),
+      0,
+      params.amount
+    );
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
 

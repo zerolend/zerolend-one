@@ -107,10 +107,10 @@ abstract contract Pool is Initializable, IPool {
       _reserves,
       _reservesList,
       _usersConfig[pos],
-      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, position: pos}),
       _balances,
       _totalSupplies,
-      address(this)
+      IPool(this),
+      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, position: pos})
     );
 
     if (address(hook) != address(0))
@@ -134,6 +134,7 @@ abstract contract Pool is Initializable, IPool {
       _usersConfig[positionId],
       _balances,
       _totalSupplies,
+      IPool(this),
       DataTypes.ExecuteWithdrawParams({
         destination: destination,
         asset: asset,
@@ -184,6 +185,7 @@ abstract contract Pool is Initializable, IPool {
       _reserves,
       _balances,
       _totalSupplies,
+      IPool(this),
       DataTypes.ExecuteRepayParams({
         asset: asset,
         amount: amount,
