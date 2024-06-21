@@ -28,23 +28,23 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
 
   address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-  /// @inheritdoc IPoolDataProvider
-  function getAllReservesTokens(address pool) external view override returns (TokenData[] memory) {
-    IPool cachedPool = IPool(pool);
-    address[] memory reserves = cachedPool.getReservesList();
-    TokenData[] memory reservesTokens = new TokenData[](reserves.length);
-    for (uint256 i = 0; i < reserves.length; i++) {
-      if (reserves[i] == ETH) {
-        reservesTokens[i] = TokenData({symbol: 'ETH', tokenAddress: reserves[i]});
-        continue;
-      }
-      reservesTokens[i] = TokenData({
-        symbol: IERC20Detailed(reserves[i]).symbol(),
-        tokenAddress: reserves[i]
-      });
-    }
-    return reservesTokens;
-  }
+  // /// @inheritdoc IPoolDataProvider
+  // function getAllReservesTokens(address pool) external view override returns (TokenData[] memory) {
+  //   IPool cachedPool = IPool(pool);
+  //   address[] memory reserves = cachedPool.getReservesList();
+  //   TokenData[] memory reservesTokens = new TokenData[](reserves.length);
+  //   for (uint256 i = 0; i < reserves.length; i++) {
+  //     if (reserves[i] == ETH) {
+  //       reservesTokens[i] = TokenData({symbol: 'ETH', tokenAddress: reserves[i]});
+  //       continue;
+  //     }
+  //     reservesTokens[i] = TokenData({
+  //       symbol: IERC20Detailed(reserves[i]).symbol(),
+  //       tokenAddress: reserves[i]
+  //     });
+  //   }
+  //   return reservesTokens;
+  // }
 
   /// @inheritdoc IPoolDataProvider
   // function getAllATokens(address pool) external view override returns (TokenData[] memory) {
