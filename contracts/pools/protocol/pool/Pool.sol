@@ -4,19 +4,19 @@ pragma solidity 0.8.19;
 import {BorrowLogic} from '../libraries/logic/BorrowLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
+import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
+import {IFactory} from '../../interfaces/IFactory.sol';
+import {IHook} from '../../interfaces/IHook.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IPool} from '../../interfaces/IPool.sol';
-import {PoolGetters} from './PoolGetters.sol';
-import {IHook} from '../../interfaces/IHook.sol';
-import {IFactory} from '../../interfaces/IFactory.sol';
 import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
+import {PercentageMath} from '../libraries/math/PercentageMath.sol';
+import {PoolGetters} from './PoolGetters.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
-import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 
 abstract contract Pool is Initializable, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
