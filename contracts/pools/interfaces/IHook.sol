@@ -22,6 +22,8 @@ interface IHook {
     bytes calldata hookData
   ) external;
 
+  // TODO withdraw, repay, borrow
+
   function beforeLiquidate(
     address liquidator,
     address user,

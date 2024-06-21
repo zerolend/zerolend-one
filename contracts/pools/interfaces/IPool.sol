@@ -379,12 +379,6 @@ interface IPool {
   function getReserveAddressById(uint16 id) external view returns (address);
 
   /**
-   * @notice Mints the assets accrued through the reserve factor to the treasury in the form of aTokens
-   * @param assets The list of reserves for which the minting needs to be executed
-   */
-  function mintToTreasury(address[] calldata assets) external;
-
-  /**
    * @notice Returns the asset price in the base currency
    * @param asset The address of the asset
    * @return The price of the asset
