@@ -18,7 +18,7 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
 
-abstract contract Pool is Initializable, PoolGetters {
+contract Pool is Initializable, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using PercentageMath for uint256;
   using TokenConfiguration for address;
@@ -72,8 +72,12 @@ abstract contract Pool is Initializable, PoolGetters {
       _usersConfig[pos],
       _balances,
       _totalSupplies,
-      IPool(this),
-      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, position: pos})
+      DataTypes.ExecuteSupplyParams({
+        asset: asset,
+        amount: amount,
+        position: pos,
+        pool: address(this)
+      })
     );
 
     if (address(hook) != address(0))
@@ -84,7 +88,6 @@ abstract contract Pool is Initializable, PoolGetters {
   function withdraw(
     address asset,
     uint256 amount,
-    address destination,
     uint256 index,
     bytes calldata hookData
   ) public virtual override returns (uint256 withdrawalAmount) {
@@ -100,9 +103,8 @@ abstract contract Pool is Initializable, PoolGetters {
       _usersConfig[pos],
       _balances,
       _totalSupplies,
-      IPool(this),
       DataTypes.ExecuteWithdrawParams({
-        destination: destination,
+        destination: msg.sender,
         asset: asset,
         amount: amount,
         position: pos,

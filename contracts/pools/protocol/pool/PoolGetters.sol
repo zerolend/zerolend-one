@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IPool} from '../../interfaces/IPool.sol';
+import {IFactory} from '../../interfaces/IFactory.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {PoolStorage} from './PoolStorage.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
@@ -35,29 +36,17 @@ abstract contract PoolGetters is PoolStorage, IPool {
   function getUserAccountData(
     address user,
     uint256 index
-  )
-    external
-    view
-    virtual
-    override
-    returns (
-      uint256 totalCollateralBase,
-      uint256 totalDebtBase,
-      uint256 availableBorrowsBase,
-      uint256 currentLiquidationThreshold,
-      uint256 ltv,
-      uint256 healthFactor
-    )
-  {
+  ) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
+    bytes32 positionId = user.getPositionId(index);
     return
       PoolLogic.executeGetUserAccountData(
         _balances,
         _reserves,
         _reservesList,
         DataTypes.CalculateUserAccountDataParams({
-          userConfig: _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
+          userConfig: _usersConfig[positionId],
           reservesCount: _reservesCount,
-          position: user.getPositionId(index),
+          position: positionId,
           pool: address(this)
         })
       );
@@ -111,5 +100,13 @@ abstract contract PoolGetters is PoolStorage, IPool {
 
   function getAssetPrice(address asset) public view override returns (uint256) {
     return uint256(_assetsSources[asset].latestAnswer());
+  }
+
+  function factory() external view returns (IFactory) {
+    return _factory;
+  }
+
+  function getReserveFactor() external view returns (uint256 reseveFactor) {
+    return _factory.reserveFactor();
   }
 }

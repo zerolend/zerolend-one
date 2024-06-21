@@ -17,7 +17,7 @@ interface IFactory is IBeacon {
     address owner
   );
 
-  function configurator() external returns (IPoolConfigurator);
+  function configurator() external view returns (IPoolConfigurator);
 
   function createPool(IPool.InitParams memory params) external returns (IPool pool);
 
@@ -25,13 +25,13 @@ interface IFactory is IBeacon {
 
   function liquidationProtocolFeePercentage() external view returns (uint256);
 
-  function pools(uint256 index) external returns (IPool);
+  function pools(uint256 index) external view returns (IPool);
 
   function poolsLength() external view returns (uint256);
 
-  function reserveFactor() external returns (uint256);
+  function reserveFactor() external view returns (uint256);
 
-  function rewardsController() external returns (address);
+  function rewardsController() external view returns (address);
 
   function setFlashloanPremium(uint256 updated) external;
 
@@ -43,5 +43,5 @@ interface IFactory is IBeacon {
 
   function setTreasury(address updated) external;
 
-  function treasury() external returns (address);
+  function treasury() external view returns (address);
 }
