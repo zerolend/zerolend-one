@@ -135,6 +135,18 @@ interface IPool {
    */
   event MintedToTreasury(address indexed reserve, uint256 amountMinted);
 
+  /**
+   * @dev Emitted when a reserve is initialized.
+   * @param asset The address of the underlying asset of the reserve
+   * @param oracle The address of the oracle
+   * @param interestRateStrategyAddress The address of the interest rate strategy for the reserve
+   */
+  event ReserveInitialized(
+    address indexed asset,
+    address oracle,
+    address interestRateStrategyAddress
+  );
+
   struct InitParams {
     address configurator;
     address[] assets;
