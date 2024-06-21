@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC20Detailed} from '../pools/interfaces/IERC20Detailed.sol';
-import {ReserveConfiguration} from '../pools/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {UserConfiguration} from '../pools/protocol/libraries/configuration/UserConfiguration.sol';
-import {DataTypes} from '../pools/protocol/libraries/types/DataTypes.sol';
-import {WadRayMath} from '../pools/protocol/libraries/math/WadRayMath.sol';
-import {IPool} from '../pools/interfaces/IPool.sol';
-import {IPoolDataProvider} from '../pools/interfaces/IPoolDataProvider.sol';
+import {IERC20Detailed} from '../core/interfaces/IERC20Detailed.sol';
+import {ReserveConfiguration} from '../core/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {UserConfiguration} from '../core/protocol/libraries/configuration/UserConfiguration.sol';
+import {DataTypes} from '../core/protocol/libraries/types/DataTypes.sol';
+import {WadRayMath} from '../core/protocol/libraries/math/WadRayMath.sol';
+import {IPool} from '../core/interfaces/IPool.sol';
+import {IPoolDataProvider} from '../core/interfaces/IPoolDataProvider.sol';
 
 abstract contract ProtocolDataProvider is IPoolDataProvider {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
