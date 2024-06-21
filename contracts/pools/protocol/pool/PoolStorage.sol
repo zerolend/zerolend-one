@@ -34,7 +34,7 @@ contract PoolStorage {
   address public configurator;
 
   /// @notice The original factory contract with protocol-level control variables
-  IFactory public factory;
+  IFactory internal _factory;
 
   /// @notice The assigned hook for this pool
   IHook public hook;

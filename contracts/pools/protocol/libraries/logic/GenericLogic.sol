@@ -123,7 +123,6 @@ library GenericLogic {
 
       if (params.userConfig.isBorrowing(vars.i)) {
         vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(
-          params.position,
           _balances[vars.currentReserveAddress][params.position],
           currentReserve,
           vars.assetPrice,
@@ -188,14 +187,12 @@ library GenericLogic {
    * @dev This fetches the `balanceOf` of the stable and variable debt tokens for the user. For gas reasons, the
    * variable debt balance is calculated by fetching `scaledBalancesOf` normalized debt, which is cheaper than
    * fetching `balanceOf`
-   * @param position The address of the user
    * @param reserve The data of the reserve for which the total debt of the user is being calculated
    * @param assetPrice The price of the asset for which the total debt of the user is being calculated
    * @param assetUnit The value representing one full unit of the asset (10^decimals)
    * @return The total debt of the user normalized to the base currency
    */
   function _getUserDebtInBaseCurrency(
-    bytes32 position,
     DataTypes.PositionBalance storage balance,
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,

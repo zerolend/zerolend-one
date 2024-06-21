@@ -22,7 +22,59 @@ interface IHook {
     bytes calldata hookData
   ) external;
 
-  // TODO withdraw, repay, borrow
+  function beforeWithdraw(
+    address sender,
+    bytes32 position,
+    address asset,
+    address pool,
+    uint256 amount,
+    bytes calldata hookData
+  ) external;
+
+  function afterWithdraw(
+    address sender,
+    bytes32 position,
+    address asset,
+    address pool,
+    uint256 amount,
+    bytes calldata hookData
+  ) external;
+
+  function beforeRepay(
+    address sender,
+    bytes32 position,
+    address asset,
+    address pool,
+    uint256 amount,
+    bytes calldata hookData
+  ) external;
+
+  function afterRepay(
+    address sender,
+    bytes32 position,
+    address asset,
+    address pool,
+    uint256 amount,
+    bytes calldata hookData
+  ) external;
+
+  function beforeBorrow(
+    address sender,
+    bytes32 position,
+    address asset,
+    address pool,
+    uint256 amount,
+    bytes calldata hookData
+  ) external;
+
+  function afterBorrow(
+    address sender,
+    bytes32 position,
+    address asset,
+    address pool,
+    uint256 amount,
+    bytes calldata hookData
+  ) external;
 
   function beforeLiquidate(
     address liquidator,

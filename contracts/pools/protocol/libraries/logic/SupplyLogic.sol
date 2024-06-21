@@ -44,7 +44,6 @@ library SupplyLogic {
    */
   function executeSupply(
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
@@ -71,13 +70,7 @@ library SupplyLogic {
     _totalSupplies[params.asset].collateral += minted;
 
     if (isFirst) {
-      if (
-        ValidationLogic.validateUseAsCollateral(
-          reservesList,
-          userConfig,
-          reserveCache.reserveConfiguration
-        )
-      ) {
+      if (ValidationLogic.validateUseAsCollateral(userConfig, reserveCache.reserveConfiguration)) {
         userConfig.setUsingAsCollateral(reserve.id, true);
         emit ReserveUsedAsCollateralEnabled(params.asset, params.position);
       }

@@ -19,8 +19,6 @@ library PositionBalanceConfiguration {
     require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
 
     uint256 scaledBalance = self.scaledSupplyBalance;
-    uint256 balanceIncrease = scaledBalance.rayMul(index) -
-      scaledBalance.rayMul(self.lastSupplyLiquidtyIndex);
 
     self.lastSupplyLiquidtyIndex = index.toUint128();
     self.scaledSupplyBalance += amountScaled.toUint128();
@@ -37,8 +35,6 @@ library PositionBalanceConfiguration {
     require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
 
     uint256 scaledBalance = self.scaledDebtBalance;
-    uint256 balanceIncrease = scaledBalance.rayMul(index) -
-      scaledBalance.rayMul(self.lastDebtLiquidtyIndex);
 
     self.lastDebtLiquidtyIndex = index.toUint128();
     self.scaledDebtBalance += amountScaled.toUint128();
@@ -54,10 +50,6 @@ library PositionBalanceConfiguration {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
 
-    uint256 scaledBalance = self.scaledSupplyBalance;
-    uint256 balanceIncrease = scaledBalance.rayMul(index) -
-      scaledBalance.rayMul(self.lastSupplyLiquidtyIndex);
-
     self.lastSupplyLiquidtyIndex = index.toUint128();
     self.scaledSupplyBalance -= amountScaled.toUint128();
     return amountScaled.toUint128();
@@ -70,10 +62,6 @@ library PositionBalanceConfiguration {
   ) internal returns (uint256 supplyBurnt) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
-
-    uint256 scaledBalance = self.scaledDebtBalance;
-    uint256 balanceIncrease = scaledBalance.rayMul(index) -
-      scaledBalance.rayMul(self.lastDebtLiquidtyIndex);
 
     self.lastDebtLiquidtyIndex = index.toUint128();
     self.scaledDebtBalance -= amountScaled.toUint128();

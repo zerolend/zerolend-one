@@ -28,7 +28,7 @@ abstract contract Pool is Initializable, PoolGetters {
    * @dev This function is invoked by the factory contract when the Pool is created
    */
   function initialize(IPool.InitParams memory params) public virtual reinitializer(1) {
-    factory = IFactory(factory);
+    _factory = IFactory(msg.sender);
     configurator = params.configurator;
     hook = IHook(params.hook);
 
@@ -69,7 +69,6 @@ abstract contract Pool is Initializable, PoolGetters {
 
     SupplyLogic.executeSupply(
       _reserves,
-      _reservesList,
       _usersConfig[pos],
       _balances,
       _totalSupplies,
@@ -89,13 +88,16 @@ abstract contract Pool is Initializable, PoolGetters {
     uint256 index,
     bytes calldata hookData
   ) public virtual override returns (uint256 withdrawalAmount) {
-    bytes32 positionId = msg.sender.getPositionId(index);
+    bytes32 pos = msg.sender.getPositionId(index);
+    require(amount <= _balances[asset][pos].scaledSupplyBalance, 'Insufficient Balance!');
 
-    require(amount <= _balances[asset][positionId].scaledSupplyBalance, 'Insufficient Balance!');
+    if (address(hook) != address(0))
+      hook.beforeWithdraw(msg.sender, pos, asset, address(this), amount, hookData);
+
     withdrawalAmount = SupplyLogic.executeWithdraw(
       _reserves,
       _reservesList,
-      _usersConfig[positionId],
+      _usersConfig[pos],
       _balances,
       _totalSupplies,
       IPool(this),
@@ -103,13 +105,16 @@ abstract contract Pool is Initializable, PoolGetters {
         destination: destination,
         asset: asset,
         amount: amount,
-        position: positionId,
+        position: pos,
         reservesCount: _reservesCount,
         pool: address(this)
       })
     );
 
     PoolLogic.executeMintToTreasury(_reserves, asset);
+
+    if (address(hook) != address(0))
+      hook.afterWithdraw(msg.sender, pos, asset, address(this), amount, hookData);
   }
 
   /// @inheritdoc IPool
@@ -119,22 +124,28 @@ abstract contract Pool is Initializable, PoolGetters {
     uint256 index,
     bytes calldata hookData
   ) public virtual override {
-    bytes32 positionId = msg.sender.getPositionId(index);
+    bytes32 pos = msg.sender.getPositionId(index);
+    if (address(hook) != address(0))
+      hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, hookData);
+
     BorrowLogic.executeBorrow(
       _reserves,
       _reservesList,
-      _usersConfig[positionId],
+      _usersConfig[pos],
       _balances,
       _totalSupplies,
       DataTypes.ExecuteBorrowParams({
         asset: asset,
         user: msg.sender,
-        position: positionId,
+        position: pos,
         amount: amount,
         reservesCount: _reservesCount,
         pool: address(this)
       })
     );
+
+    if (address(hook) != address(0))
+      hook.afterBorrow(msg.sender, pos, asset, address(this), amount, hookData);
   }
 
   /// @inheritdoc IPool
@@ -144,19 +155,20 @@ abstract contract Pool is Initializable, PoolGetters {
     uint256 index,
     bytes calldata hookData
   ) public virtual returns (uint256 paybackAmount) {
-    bytes32 position = msg.sender.getPositionId(index);
+    bytes32 pos = msg.sender.getPositionId(index);
+    if (address(hook) != address(0))
+      hook.beforeRepay(msg.sender, pos, asset, address(this), amount, hookData);
+
     paybackAmount = BorrowLogic.executeRepay(
       _reserves,
       _balances,
       _totalSupplies,
       IPool(this),
-      DataTypes.ExecuteRepayParams({
-        asset: asset,
-        amount: amount,
-        user: msg.sender,
-        position: position
-      })
+      DataTypes.ExecuteRepayParams({asset: asset, amount: amount, user: msg.sender, position: pos})
     );
+
+    if (address(hook) != address(0))
+      hook.afterRepay(msg.sender, pos, asset, address(this), amount, hookData);
   }
 
   /// @inheritdoc IPool
@@ -203,7 +215,7 @@ abstract contract Pool is Initializable, PoolGetters {
       asset: asset,
       amount: amount,
       params: params,
-      flashLoanPremiumTotal: factory.flashLoanPremiumToProtocol()
+      flashLoanPremiumTotal: _factory.flashLoanPremiumToProtocol()
     });
     FlashLoanLogic.executeFlashLoanSimple(address(this), _reserves[asset], flashParams);
   }
@@ -257,7 +269,7 @@ abstract contract Pool is Initializable, PoolGetters {
     address source,
     DataTypes.ReserveConfigurationMap calldata configuration
   ) external virtual {
-    require(msg.sender == address(factory.configurator()), 'only configurator');
+    require(msg.sender == address(_factory.configurator()), 'only configurator');
     _setReserveConfiguration(asset, rateStrategyAddress, source, configuration);
   }
 }
