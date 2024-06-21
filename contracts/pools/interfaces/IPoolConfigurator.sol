@@ -232,6 +232,8 @@ interface IPoolConfigurator {
    */
   function setReserveFactor(address pool, address asset, uint256 newReserveFactor) external;
 
+  function initRoles(address pool, address admin) external;
+
   /**
    * @notice Sets the interest rate strategy of a reserve.
    * @param asset The address of the underlying asset of the reserve

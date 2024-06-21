@@ -1,35 +1,69 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
+import {IFactory, IBeacon, IPoolConfigurator, IPool} from '../../interfaces/IFactory.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {BeaconProxy} from './BeaconProxy.sol';
 
-contract Factory is IBeacon, Ownable {
-  mapping(address => mapping(address => address)) public getPool;
-  address[] public allPools;
+contract Factory is IFactory, Ownable {
+  /// @inheritdoc IBeacon
   address public implementation;
 
-  event PoolCreated(address indexed pool, uint256 indexed index, address creator);
-  event ImplementationUpdated(address indexed oldImpl, address indexed newImpl, address owner);
+  /// @inheritdoc IFactory
+  address public treasury;
 
-  constructor(address impl) {
-    setImplementation(impl);
+  /// @inheritdoc IFactory
+  IPool[] public pools;
+
+  /// @inheritdoc IFactory
+  IPoolConfigurator public configurator;
+
+  /// @inheritdoc IFactory
+  uint256 public reserveFactor;
+
+  constructor(address _implementation, address _configurator) {
+    setImplementation(_implementation);
+    configurator = IPoolConfigurator(_configurator);
+    treasury = msg.sender;
   }
 
-  function poolsLength() external view returns (uint) {
-    return allPools.length;
+  /// @inheritdoc IFactory
+  function poolsLength() external view returns (uint256) {
+    return pools.length;
   }
 
-  function createPool(bytes memory _data) external returns (address pool) {
-    pool = address(new BeaconProxy(implementation, msg.sender, _data));
-    allPools.push(pool);
-    emit PoolCreated(pool, allPools.length, msg.sender);
+  /// @inheritdoc IFactory
+  function createPool(IPool.InitParams memory params) external returns (IPool pool) {
+    // create the pool
+    pool = IPool(address(new BeaconProxy(address(this), msg.sender)));
+    pool.initialize(params);
+
+    // give roles to the user
+    configurator.initRoles(address(pool), msg.sender);
+
+    // track the pool
+    pools.push(pool);
+    emit PoolCreated(pool, pools.length, msg.sender);
   }
 
+  /// @inheritdoc IFactory
   function setImplementation(address impl) public onlyOwner {
     address old = implementation;
     implementation = impl;
     emit ImplementationUpdated(old, impl, msg.sender);
+  }
+
+  /// @inheritdoc IFactory
+  function setTreasury(address _treasury) public onlyOwner {
+    address old = treasury;
+    treasury = _treasury;
+    emit TreasuryUpdated(old, _treasury, msg.sender);
+  }
+
+  /// @inheritdoc IFactory
+  function setReserveFactor(uint256 _reserveFactor) external onlyOwner {
+    uint256 old = reserveFactor;
+    reserveFactor = _reserveFactor;
+    emit ReserveFactorUpdated(old, _reserveFactor, msg.sender);
   }
 }
