@@ -44,7 +44,7 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setBorrowingEnabled(enabled);
-    cachedPool.setConfiguration(asset, currentConfig);
+    cachedPool.setReserveConfiguration(asset, address(0), address(0), currentConfig);
     emit ReserveBorrowing(asset, enabled);
   }
 
@@ -57,7 +57,7 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setFrozen(freeze);
-    cachedPool.setConfiguration(asset, currentConfig);
+    cachedPool.setReserveConfiguration(asset, address(0), address(0), currentConfig);
     emit ReserveFrozen(asset, freeze);
   }
 
@@ -71,7 +71,7 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     uint256 oldBorrowCap = currentConfig.getBorrowCap();
     currentConfig.setBorrowCap(newBorrowCap);
-    cachedPool.setConfiguration(asset, currentConfig);
+    cachedPool.setReserveConfiguration(asset, address(0), address(0), currentConfig);
     emit BorrowCapChanged(asset, oldBorrowCap, newBorrowCap);
   }
 
@@ -85,7 +85,7 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     uint256 oldSupplyCap = currentConfig.getSupplyCap();
     currentConfig.setSupplyCap(newSupplyCap);
-    cachedPool.setConfiguration(asset, currentConfig);
+    cachedPool.setReserveConfiguration(asset, address(0), address(0), currentConfig);
     emit SupplyCapChanged(asset, oldSupplyCap, newSupplyCap);
   }
 
@@ -97,8 +97,9 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
   ) external onlyPoolAdmin(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveData memory reserve = cachedPool.getReserveData(asset);
+    DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
-    // cachedPool.setConfiguration(asset, newRateStrategyAddress);
+    cachedPool.setReserveConfiguration(asset, address(0), address(0), currentConfig);
     emit ReserveInterestRateStrategyChanged(asset, oldRateStrategyAddress, newRateStrategyAddress);
   }
 }

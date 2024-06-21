@@ -192,7 +192,6 @@ interface IPool {
   function withdraw(
     address asset,
     uint256 amount,
-    address destination,
     uint256 index,
     bytes calldata hookData
   ) external returns (uint256);
@@ -223,12 +222,12 @@ interface IPool {
     bytes calldata hookData
   ) external returns (uint256);
 
-  /**
-   * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
-   * @param asset The address of the underlying asset supplied
-   * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
-   */
-  function setUserUseReserveAsCollateral(address asset, bool useAsCollateral) external;
+  // /**
+  //  * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
+  //  * @param asset The address of the underlying asset supplied
+  //  * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
+  //  */
+  // function setUserUseReserveAsCollateral(address asset, bool useAsCollateral) external;
 
   /**
    * @notice Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
@@ -311,24 +310,15 @@ interface IPool {
     );
 
   /**
-   * @notice Initializes a reserve, activating it, assigning an aToken and debt tokens and an
-   * interest rate strategy
-   * @dev Only callable by the PoolConfigurator contract
-   * @param asset The address of the underlying asset of the reserve
-   * @param interestRateStrategyAddress The address of the interest rate strategy contract
-   */
-  function initReserve(address asset, address interestRateStrategyAddress) external;
-
-  /**
    * @notice Sets the configuration bitmap of the reserve as a whole
    * @dev Only callable by the PoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
    * @param configuration The new configuration bitmap
    */
-  function setConfiguration(
+  function setReserveConfiguration(
     address asset,
-    // address rateStrategyAddress,
-    // address source,
+    address rateStrategyAddress,
+    address source,
     DataTypes.ReserveConfigurationMap calldata configuration
   ) external;
 

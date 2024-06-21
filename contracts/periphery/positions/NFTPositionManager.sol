@@ -166,7 +166,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     bytes32 positionId = _getPositionId(params.tokenId);
 
     uint256 previousSupplyBalance = pool.getBalance(params.asset, positionId);
-    pool.withdraw(params.asset, params.amount, params.user, params.tokenId, '');
+    pool.withdraw(params.asset, params.amount, params.tokenId, '');
     uint256 currentSupplyBalance = pool.getBalance(params.asset, positionId);
 
     if (previousSupplyBalance - currentSupplyBalance != params.amount) revert BalanceMisMatch();

@@ -103,6 +103,7 @@ library DataTypes {
     address asset;
     uint256 amount;
     bytes32 position;
+    address pool;
   }
 
   struct ExecuteBorrowParams {

@@ -47,18 +47,17 @@ library SupplyLogic {
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
-    IPool pool,
     DataTypes.ExecuteSupplyParams memory params
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
     reserve.updateState(reserveCache);
-    ValidationLogic.validateSupply(reserveCache, reserve, params, address(pool));
+    ValidationLogic.validateSupply(reserveCache, reserve, params, params.pool);
     reserve.updateInterestRates(
       reserveCache,
       params.asset,
-      pool.getReserveFactor(),
+      IPool(params.pool).getReserveFactor(),
       params.amount,
       0
     );
@@ -96,7 +95,6 @@ library SupplyLogic {
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
     mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
-    IPool pool,
     DataTypes.ExecuteWithdrawParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -114,7 +112,7 @@ library SupplyLogic {
     reserve.updateInterestRates(
       reserveCache,
       params.asset,
-      pool.getReserveFactor(),
+      IPool(params.pool).getReserveFactor(),
       0,
       params.amount
     );
