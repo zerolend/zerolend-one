@@ -117,7 +117,7 @@ function setVariableBorrowRate(uint256 variableBorrowRate) public
 ### calculateInterestRates
 
 ```solidity
-function calculateInterestRates(address user, bytes extraData, struct DataTypes.CalculateInterestRatesParams) external view returns (uint256 liquidityRate, uint256 variableBorrowRate)
+function calculateInterestRates(address, bytes, struct DataTypes.CalculateInterestRatesParams) external view returns (uint256 liquidityRate, uint256 variableBorrowRate)
 ```
 
 ### getVariableRateSlope1
