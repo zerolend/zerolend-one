@@ -41,12 +41,17 @@ rule transferSpec(address recipient, uint amount) {
     mathint balance_sender_after = balanceOf(e.msg.sender);
     mathint balance_recip_after = balanceOf(recipient);
 
-    // Operations on mathints can never overflow nor underflow
-    assert balance_sender_after == balance_sender_before - amount,
+    address sender = e.msg.sender;  // A convenient alias
+
+    // Operations on mathints can never overflow or underflow.
+    assert recipient != sender => balance_sender_after == balance_sender_before - amount,
         "transfer must decrease sender's balance by amount";
 
-    assert balance_recip_after == balance_recip_before + amount,
+    assert recipient != sender => balance_recip_after == balance_recip_before + amount,
         "transfer must increase recipient's balance by amount";
+
+    assert recipient == sender => balance_sender_after == balance_sender_before,
+        "transfer must not change sender's balancer when transferring to self";
 }
 
 
