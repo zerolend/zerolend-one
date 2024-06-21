@@ -44,6 +44,9 @@ contract Factory is IFactory, Ownable {
     // track the pool
     pools.push(pool);
     emit PoolCreated(pool, pools.length, msg.sender);
+
+    // TODO: once pool is created ask users to deposit some funds to
+    // set the liquidity index properly
   }
 
   /// @inheritdoc IFactory

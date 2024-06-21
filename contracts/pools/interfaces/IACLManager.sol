@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 /**
  * @title IACLManager
- * @author Aave
  * @notice Defines the basic interface for the ACL Manager
  */
 interface IACLManager {
