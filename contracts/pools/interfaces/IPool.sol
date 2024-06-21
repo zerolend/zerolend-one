@@ -264,6 +264,23 @@ interface IPool {
   ) external;
 
   /**
+ * @notice Get the balance of a specific asset in a specific position.
+ * @param asset The address of the asset.
+ * @param positionId The ID of the position.
+ * @return balance The balance of the specified asset in the specified position.
+ */
+function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance);
+
+/**
+ * @notice Get the debt of a specific asset in a specific position.
+ * @param asset The address of the asset.
+ * @param positionId The ID of the position.
+ * @return debt The debt of the specified asset in the specified position.
+ */
+function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt);
+
+
+  /**
    * @notice Returns the user account data across all the reserves
    * @param user The address of the user
    * @return totalCollateralBase The total collateral of the user in the base currency used by the price feed
