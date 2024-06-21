@@ -10,6 +10,7 @@ interface IFactory is IBeacon {
   event ImplementationUpdated(address indexed old, address indexed updated, address owner);
   event TreasuryUpdated(address indexed old, address indexed updated, address owner);
   event ReserveFactorUpdated(uint256 indexed old, uint256 indexed updated, address owner);
+  event RewardsControllerUpdated(address indexed old, address indexed updated, address owner);
   event FlashLoanPremiumToProtocolUpdated(
     uint256 indexed old,
     uint256 indexed updated,
@@ -28,6 +29,8 @@ interface IFactory is IBeacon {
 
   function reserveFactor() external returns (uint256);
 
+  function rewardsController() external returns (address);
+
   function setFlashloanPremium(uint256 updated) external;
 
   function setImplementation(address updated) external;
@@ -35,6 +38,8 @@ interface IFactory is IBeacon {
   function setReserveFactor(uint256 updated) external;
 
   function setTreasury(address updated) external;
+
+  function setRewardsController(address _controller) external;
 
   function treasury() external returns (address);
 }
