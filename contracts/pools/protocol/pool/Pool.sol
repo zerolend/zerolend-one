@@ -15,8 +15,11 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
+import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 
 abstract contract Pool is Initializable, IPool {
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using PercentageMath for uint256;
   using ReserveLogic for DataTypes.ReserveData;
   using TokenConfiguration for address;
 
@@ -289,51 +292,42 @@ abstract contract Pool is Initializable, IPool {
     address asset,
     address rateStrategyAddress,
     address source,
-    DataTypes.ReserveConfigurationMap memory configuration
+    DataTypes.ReserveConfigurationMap memory config
   ) internal {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
     require(_reserves[asset].id != 0 || _reservesList[0] == asset, Errors.ASSET_NOT_LISTED);
-    _reserves[asset].configuration = configuration;
+    _reserves[asset].configuration = config;
     _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
     _assetsSources[asset] = IAggregatorInterface(source);
 
-    // // validation of the parameters: the LTV can
-    // // only be lower or equal than the liquidation threshold
-    // // (otherwise a loan against the asset would cause instantaneous liquidation)
-    // require(input[i].ltv <= input[i].liquidationThreshold, Errors.INVALID_RESERVE_PARAMS);
+    // validation of the parameters: the LTV can
+    // only be lower or equal than the liquidation threshold
+    // (otherwise a loan against the asset would cause instantaneous liquidation)
+    require(config.getLtv() <= config.getLiquidationThreshold(), Errors.INVALID_RESERVE_PARAMS);
 
-    // DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(
-    //   input[i].asset
-    // );
+    if (config.getLiquidationThreshold() != 0) {
+      //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
+      //collateral than needed to cover the debt
+      require(
+        config.getLiquidationBonus() > PercentageMath.PERCENTAGE_FACTOR,
+        Errors.INVALID_RESERVE_PARAMS
+      );
 
-    // if (input[i].liquidationThreshold != 0) {
-    //   //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
-    //   //collateral than needed to cover the debt
-    //   require(
-    //     input[i].liquidationBonus > PercentageMath.PERCENTAGE_FACTOR,
-    //     Errors.INVALID_RESERVE_PARAMS
-    //   );
+      //if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
+      //a loan is taken there is enough collateral available to cover the liquidation bonus
+      require(
+        config.getLiquidationThreshold().percentMul(config.getLiquidationBonus()) <=
+          PercentageMath.PERCENTAGE_FACTOR,
+        Errors.INVALID_RESERVE_PARAMS
+      );
 
-    //   //if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
-    //   //a loan is taken there is enough collateral available to cover the liquidation bonus
-    //   require(
-    //     input[i].liquidationThreshold.percentMul(input[i].liquidationBonus) <=
-    //       PercentageMath.PERCENTAGE_FACTOR,
-    //     Errors.INVALID_RESERVE_PARAMS
-    //   );
-
-    //   currentConfig.setLtv(input[i].ltv);
-    //   currentConfig.setLiquidationThreshold(input[i].liquidationThreshold);
-    //   currentConfig.setLiquidationBonus(input[i].liquidationBonus);
-    //   cachedPool.setConfiguration(input[i].asset, currentConfig);
-
-    //   emit CollateralConfigurationChanged(
-    //     input[i].asset,
-    //     input[i].ltv,
-    //     input[i].liquidationThreshold,
-    //     input[i].liquidationBonus
-    //   );
-    // }
+      emit CollateralConfigurationChanged(
+        asset,
+        config.getLtv(),
+        config.getLiquidationThreshold(),
+        config.getLiquidationThreshold()
+      );
+    }
   }
 
   function setReserveConfiguration(
