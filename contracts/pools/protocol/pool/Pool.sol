@@ -7,10 +7,10 @@ import {IHook} from '../../interfaces/IHook.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {PoolGetters} from './PoolGetters.sol';
-import {PoolSetters} from './PoolSetters.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
+import {PoolSetters} from './PoolSetters.sol';
 
-abstract contract Pool is Initializable, PoolSetters {
+contract Pool is Initializable, PoolSetters {
   /**
    * @notice Initializes the Pool.
    * @dev This function is invoked by the factory contract when the Pool is created

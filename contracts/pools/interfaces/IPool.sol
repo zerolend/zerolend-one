@@ -394,14 +394,12 @@ interface IPool {
 
   /**
    * @notice Returns the list of the underlying assets of all the initialized reserves
-   * @dev It does not include dropped reserves
    * @return The addresses of the underlying assets of the initialized reserves
    */
   function getReservesList() external view returns (address[] memory);
 
   /**
    * @notice Returns the number of initialized reserves
-   * @dev It includes dropped reserves
    * @return The count
    */
   function getReservesCount() external view returns (uint256);

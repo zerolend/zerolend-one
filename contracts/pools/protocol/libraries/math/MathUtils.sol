@@ -5,7 +5,6 @@ import {WadRayMath} from './WadRayMath.sol';
 
 /**
  * @title MathUtils library
-
  * @notice Provides functions to perform linear and compounded interest calculations
  */
 library MathUtils {
