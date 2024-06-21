@@ -8,6 +8,7 @@ import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IPool} from '../../interfaces/IPool.sol';
+import {IHook} from '../../interfaces/IHook.sol';
 import {IFactory} from '../../interfaces/IFactory.sol';
 import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
@@ -57,6 +58,8 @@ abstract contract Pool is Initializable, IPool {
   /// @notice The original factory contract with protocol-level control variables
   IFactory public factory;
 
+  IHook public hook;
+
   /**
    * @notice Initializes the Pool.
    * @dev This function is invoked by the factory contract when the Pool is created
@@ -64,6 +67,7 @@ abstract contract Pool is Initializable, IPool {
   function initialize(IPool.InitParams memory params) public virtual reinitializer(1) {
     factory = IFactory(factory);
     configurator = params.configurator;
+    hook = IHook(params.hook);
 
     for (uint i = 0; i < params.assets.length; i++) {
       _setReserveConfiguration(
@@ -72,14 +76,34 @@ abstract contract Pool is Initializable, IPool {
         params.sources[i],
         params.configurations[i]
       );
+
+      PoolLogic.executeInitReserve(
+        _reserves,
+        _reservesList,
+        DataTypes.InitReserveParams({
+          asset: params.assets[i],
+          interestRateStrategyAddress: params.rateStrategyAddresses[i],
+          reservesCount: _reservesCount
+        })
+      );
+
       _reservesCount++;
+
       emit ReserveInitialized(params.assets[i], params.rateStrategyAddresses[i], params.sources[i]);
     }
   }
 
   /// @inheritdoc IPool
-  function supply(address asset, uint256 amount, uint256 index) public virtual override {
+  function supply(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    bytes calldata hookData
+  ) public virtual override {
     bytes32 positionId = msg.sender.getPositionId(index);
+    if (address(hook) != address(0))
+      hook.beforeSupply(msg.sender, positionId, asset, address(this), amount, hookData);
+
     SupplyLogic.executeSupply(
       msg.sender,
       _reserves,
@@ -87,13 +111,17 @@ abstract contract Pool is Initializable, IPool {
       _balances,
       _totalSupplies
     );
+
+    if (address(hook) != address(0))
+      hook.afterSupply(msg.sender, positionId, asset, address(this), amount, hookData);
   }
 
   /// @inheritdoc IPool
   function withdraw(
     address asset,
     uint256 amount,
-    uint256 index
+    uint256 index,
+    bytes calldata hookData
   ) public virtual override returns (uint256 withdrawalAmount) {
     bytes32 positionId = msg.sender.getPositionId(index);
 
@@ -116,7 +144,12 @@ abstract contract Pool is Initializable, IPool {
   }
 
   /// @inheritdoc IPool
-  function borrow(address asset, uint256 amount, uint256 index) public virtual override {
+  function borrow(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    bytes calldata hookData
+  ) public virtual override {
     bytes32 positionId = msg.sender.getPositionId(index);
     BorrowLogic.executeBorrow(
       _reserves,
@@ -139,7 +172,8 @@ abstract contract Pool is Initializable, IPool {
   function repay(
     address asset,
     uint256 amount,
-    uint256 index
+    uint256 index,
+    bytes calldata hookData
   ) public virtual returns (uint256 paybackAmount) {
     bytes32 positionId = msg.sender.getPositionId(index);
     paybackAmount = BorrowLogic.executeRepay(
@@ -161,8 +195,22 @@ abstract contract Pool is Initializable, IPool {
     address debtAsset,
     address user,
     uint256 debtToCover,
-    uint256 index
+    uint256 index,
+    bytes calldata hookData
   ) public virtual override {
+    bytes32 positionId = user.getPositionId(index);
+    if (address(hook) != address(0))
+      hook.beforeLiquidate(
+        msg.sender,
+        user,
+        positionId,
+        collateralAsset,
+        debtAsset,
+        debtToCover,
+        address(this),
+        hookData
+      );
+
     LiquidationLogic.executeLiquidationCall(
       _reserves,
       _reservesList,
@@ -174,10 +222,22 @@ abstract contract Pool is Initializable, IPool {
         debtToCover: debtToCover,
         collateralAsset: collateralAsset,
         debtAsset: debtAsset,
-        position: user.getPositionId(index),
+        position: positionId,
         pool: address(this)
       })
     );
+
+    if (address(hook) != address(0))
+      hook.afterLiquidate(
+        msg.sender,
+        user,
+        positionId,
+        collateralAsset,
+        debtAsset,
+        debtToCover,
+        address(this),
+        hookData
+      );
   }
 
   /// @inheritdoc IPool

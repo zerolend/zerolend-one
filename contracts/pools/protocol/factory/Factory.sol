@@ -13,6 +13,9 @@ contract Factory is IFactory, Ownable {
   address public treasury;
 
   /// @inheritdoc IFactory
+  address public rewardsController;
+
+  /// @inheritdoc IFactory
   IPool[] public pools;
 
   /// @inheritdoc IFactory
@@ -25,7 +28,7 @@ contract Factory is IFactory, Ownable {
   uint256 public flashLoanPremiumToProtocol;
 
   constructor(address _implementation, address _configurator) {
-    setImplementation(_implementation);
+    implementation = _implementation;
     configurator = IPoolConfigurator(_configurator);
     treasury = msg.sender;
 
@@ -56,14 +59,14 @@ contract Factory is IFactory, Ownable {
   }
 
   /// @inheritdoc IFactory
-  function setImplementation(address impl) public onlyOwner {
+  function setImplementation(address impl) external onlyOwner {
     address old = implementation;
     implementation = impl;
     emit ImplementationUpdated(old, impl, msg.sender);
   }
 
   /// @inheritdoc IFactory
-  function setTreasury(address _treasury) public onlyOwner {
+  function setTreasury(address _treasury) external onlyOwner {
     address old = treasury;
     treasury = _treasury;
     emit TreasuryUpdated(old, _treasury, msg.sender);
@@ -74,6 +77,13 @@ contract Factory is IFactory, Ownable {
     uint256 old = reserveFactor;
     reserveFactor = updated;
     emit ReserveFactorUpdated(old, updated, msg.sender);
+  }
+
+  /// @inheritdoc IFactory
+  function setRewardsController(address _controller) external onlyOwner {
+    address old = rewardsController;
+    rewardsController = _controller;
+    emit RewardsControllerUpdated(old, _controller, msg.sender);
   }
 
   /// @inheritdoc IFactory

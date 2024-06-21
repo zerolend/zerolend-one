@@ -163,6 +163,7 @@ interface IPool {
 
   struct InitParams {
     address configurator;
+    address hook;
     address[] assets;
     address[] rateStrategyAddresses;
     address[] sources;
@@ -177,7 +178,7 @@ interface IPool {
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
    */
-  function supply(address asset, uint256 amount, uint256 index) external;
+  function supply(address asset, uint256 amount, uint256 index, bytes calldata hookData) external;
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -187,7 +188,12 @@ interface IPool {
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
    * @return The final amount withdrawn
    */
-  function withdraw(address asset, uint256 amount, uint256 index) external returns (uint256);
+  function withdraw(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    bytes calldata hookData
+  ) external returns (uint256);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -198,7 +204,7 @@ interface IPool {
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
    */
-  function borrow(address asset, uint256 amount, uint256 index) external;
+  function borrow(address asset, uint256 amount, uint256 index, bytes calldata hookData) external;
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -208,7 +214,12 @@ interface IPool {
    * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
    * @return The final amount repaid
    */
-  function repay(address asset, uint256 amount, uint256 index) external returns (uint256);
+  function repay(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    bytes calldata hookData
+  ) external returns (uint256);
 
   /**
    * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
@@ -231,7 +242,8 @@ interface IPool {
     address debtAsset,
     address user,
     uint256 debtToCover,
-    uint256 index
+    uint256 index,
+    bytes calldata hookData
   ) external;
 
   /**
