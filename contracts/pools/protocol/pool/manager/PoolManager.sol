@@ -17,18 +17,6 @@ contract PoolManager is TimelockedActions {
     _setupRole(DEFAULT_ADMIN_ROLE, _governance);
   }
 
-  function initRoles(address pool, address admin) internal {
-    _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
-    _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), governance);
-
-    _setRoleAdmin(getRoleFromPool(pool, POOL_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
-    _setRoleAdmin(getRoleFromPool(pool, RISK_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
-    _setRoleAdmin(
-      getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE),
-      getRoleFromPool(pool, POOL_ADMIN_ROLE)
-    );
-  }
-
   function _scheduleAction(address pool, bytes calldata data) internal {
     _schedule(
       pool, // address target,

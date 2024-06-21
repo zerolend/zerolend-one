@@ -11,10 +11,9 @@ contract BeaconProxy is Proxy {
   bytes32 internal constant _BEACON_SLOT = keccak256('eip1967.proxy.beacon');
   bytes32 internal constant _ADMIN_SLOT = keccak256('eip1967.proxy.admin');
 
-  constructor(address _beacon, address _admin, bytes memory _data) payable {
+  constructor(address _beacon, address _admin) payable {
     StorageSlot.getAddressSlot(_BEACON_SLOT).value = _beacon;
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = _admin;
-    if (_data.length > 0) Address.functionDelegateCall(IBeacon(_beacon).implementation(), _data);
   }
 
   /**

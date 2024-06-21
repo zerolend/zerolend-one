@@ -20,6 +20,26 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
+  address public factory;
+
+  constructor(address _factory, address _governance) PoolManager(_governance) {
+    factory = _factory;
+  }
+
+  function initRoles(address pool, address admin) external override {
+    require(msg.sender == factory, '!factory');
+
+    _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
+    _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), governance);
+
+    _setRoleAdmin(getRoleFromPool(pool, POOL_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
+    _setRoleAdmin(getRoleFromPool(pool, RISK_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
+    _setRoleAdmin(
+      getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE),
+      getRoleFromPool(pool, POOL_ADMIN_ROLE)
+    );
+  }
+
   // @inheritdoc IPoolConfigurator
   function initReserves(
     address pool,

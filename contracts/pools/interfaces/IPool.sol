@@ -5,33 +5,9 @@ import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 
 /**
  * @title IPool
- * @author Aave
- * @notice Defines the basic interface for an Aave Pool.
+ * @notice Defines the basic interface for a ZeroLend Pool.
  */
 interface IPool {
-  /**
-   * @dev Emitted on mintUnbacked()
-   * @param reserve The address of the underlying asset of the reserve
-   * @param user The address initiating the supply
-   * @param onBehalfOf The beneficiary of the supplied assets, receiving the aTokens
-   * @param amount The amount of supplied assets
-   */
-  event MintUnbacked(
-    address indexed reserve,
-    address user,
-    address indexed onBehalfOf,
-    uint256 amount
-  );
-
-  /**
-   * @dev Emitted on backUnbacked()
-   * @param reserve The address of the underlying asset of the reserve
-   * @param backer The address paying for the backing
-   * @param amount The amount added as backing
-   * @param fee The amount paid in fees
-   */
-  event BackUnbacked(address indexed reserve, address indexed backer, uint256 amount, uint256 fee);
-
   /**
    * @dev Emitted on supply()
    * @param reserve The address of the underlying asset of the reserve
@@ -159,14 +135,23 @@ interface IPool {
    */
   event MintedToTreasury(address indexed reserve, uint256 amountMinted);
 
+  struct InitParams {
+    address configurator;
+    address[] assets;
+    address[] rateStrategyAddresses;
+    address[] sources;
+    DataTypes.ReserveConfigurationMap[] configurations;
+  }
+
+  function initialize(InitParams memory params) external;
+
   /**
    * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
    * - E.g. User supplies 100 USDC and gets in return 100 aUSDC
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
-   * @param onBehalfOf The address of the user who is supplying
    */
-  function supply(address asset, uint256 amount,address  onBehalfOf, uint256 index) external;
+  function supply(address asset, uint256 amount, uint256 index) external;
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -174,17 +159,9 @@ interface IPool {
    * @param asset The address of the underlying asset to withdraw
    * @param amount The underlying amount to be withdrawn
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
-   * @param to The address that will receive the underlying, same as msg.sender if the user
-   *   wants to receive it on his own wallet, or a different address if the beneficiary is a
-   *   different wallet
    * @return The final amount withdrawn
    */
-  function withdraw(
-    address asset,
-    uint256 amount,
-    address to,
-    uint256 index
-  ) external returns (uint256);
+  function withdraw(address asset, uint256 amount, uint256 index) external returns (uint256);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -194,11 +171,8 @@ interface IPool {
    *   and 100 stable/variable debt tokens, depending on the `interestRateMode`
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
-   * @param onBehalfOf The address of the user who will receive the debt. Should be the address of the borrower itself
-   * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
-   * if he has been given credit delegation allowance
    */
-  function borrow(address asset, uint256 amount, address onBehalfOf, uint256 index) external;
+  function borrow(address asset, uint256 amount, uint256 index) external;
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -206,17 +180,9 @@ interface IPool {
    * @param asset The address of the borrowed underlying asset previously borrowed
    * @param amount The amount to repay
    * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
-   * @param onBehalfOf The address of the user who will get his debt reduced/removed. Should be the address of the
-   * user calling the function if he wants to reduce/remove his own debt, or the address of any other
-   * other borrower whose debt should be removed
    * @return The final amount repaid
    */
-  function repay(
-    address asset,
-    uint256 amount,
-    address onBehalfOf,
-    uint256 index
-  ) external returns (uint256);
+  function repay(address asset, uint256 amount, uint256 index) external returns (uint256);
 
   /**
    * @notice Allows suppliers to enable/disable a specific supplied asset as collateral

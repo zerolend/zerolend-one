@@ -8,6 +8,7 @@ import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IPool} from '../../interfaces/IPool.sol';
+import {IFactory} from '../../interfaces/IFactory.sol';
 import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
@@ -38,63 +39,55 @@ abstract contract Pool is Initializable, IPool {
   /// It is structured as a mapping for gas savings reasons, using the reserve id as index
   mapping(uint256 reserveId => address asset) internal _reservesList;
 
-  /// @dev Total FlashLoan Premium, expressed in bps
+  /// @notice Total FlashLoan Premium, expressed in bps
   uint128 internal _flashLoanPremiumTotal;
 
-  /// @dev Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list
+  /// @notice Number of active reserves in the pool
   uint16 internal _reservesCount;
 
-  /// @dev Map of asset price sources (pool => asset => priceSource)
+  /// @notice Map of asset price sources (asset => priceSource)
   mapping(address asset => IAggregatorInterface oracle) internal _assetsSources;
 
-  /// @dev The pool configurator contract that can make changes
+  /// @notice The pool configurator contract that can make changes
   address public configurator;
 
-  uint256 public reserveFactor;
+  /// @notice The original factory contract with protocol-level control variables
+  IFactory public factory;
 
   /**
    * @notice Initializes the Pool.
-   * @dev Function is invoked by the proxy contract when the Pool contract is added to the
-   * PoolAddressesProvider of the market.
-   * @dev Caching the address of the PoolAddressesProvider in order to reduce gas consumption on subsequent operations
+   * @dev This function is invoked by the factory contract when the Pool is created
    */
-  function initialize(
-    address _configurator,
-    address[] memory assets,
-    address[] memory rateStrategyAddresses,
-    address[] memory sources,
-    DataTypes.ReserveConfigurationMap[] memory configurations
-  ) public virtual reinitializer(1) {
-    configurator = _configurator;
-    for (uint i = 0; i < assets.length; i++) {
-      if (
-        PoolLogic.executeInitReserve(
-          _reserves,
-          _reservesList,
-          DataTypes.InitReserveParams({
-            asset: assets[i],
-            interestRateStrategyAddress: rateStrategyAddresses[i],
-            reservesCount: _reservesCount
-          })
-        )
-      ) {
-        _reservesCount++;
-      }
+  function initialize(IPool.InitParams memory params) public virtual reinitializer(1) {
+    factory = IFactory(factory);
 
-      _setReserveConfiguration(assets[i], rateStrategyAddresses[i], sources[i], configurations[i]);
+    configurator = params.configurator;
+    for (uint i = 0; i < params.assets.length; i++) {
+      PoolLogic.executeInitReserve(
+        _reserves,
+        _reservesList,
+        DataTypes.InitReserveParams({
+          asset: params.assets[i],
+          interestRateStrategyAddress: params.rateStrategyAddresses[i],
+          reservesCount: _reservesCount
+        })
+      );
+      _reservesCount++;
+
+      _setReserveConfiguration(
+        params.assets[i],
+        params.rateStrategyAddresses[i],
+        params.sources[i],
+        params.configurations[i]
+      );
     }
   }
 
   /// @inheritdoc IPool
-  function supply(
-    address asset,
-    uint256 amount, 
-    address onBehalfOf,
-    uint256 index
-  ) public virtual override {
-    bytes32 positionId = onBehalfOf.getPositionId(index);
+  function supply(address asset, uint256 amount, uint256 index) public virtual override {
+    bytes32 positionId = msg.sender.getPositionId(index);
     SupplyLogic.executeSupply(
-      onBehalfOf,
+      msg.sender,
       _reserves,
       DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: positionId}),
       _balances,
@@ -106,18 +99,17 @@ abstract contract Pool is Initializable, IPool {
   function withdraw(
     address asset,
     uint256 amount,
-    address to,
     uint256 index
   ) public virtual override returns (uint256 withdrawalAmount) {
     bytes32 positionId = msg.sender.getPositionId(index);
 
-    require(amount <= _balances[asset][positionId], "Insufficient Balance!");
+    require(amount <= _balances[asset][positionId], 'Insufficient Balance!');
     withdrawalAmount = SupplyLogic.executeWithdraw(
       _reserves,
       _reservesList,
       _usersConfig[positionId],
       DataTypes.ExecuteWithdrawParams({
-        user: to,
+        user: msg.sender,
         asset: asset,
         amount: amount,
         position: positionId,
@@ -130,13 +122,8 @@ abstract contract Pool is Initializable, IPool {
   }
 
   /// @inheritdoc IPool
-  function borrow(
-    address asset,
-    uint256 amount,
-    address onBehalfOf,
-    uint256 index
-  ) public virtual override {
-    bytes32 positionId = onBehalfOf.getPositionId(index);
+  function borrow(address asset, uint256 amount, uint256 index) public virtual override {
+    bytes32 positionId = msg.sender.getPositionId(index);
     BorrowLogic.executeBorrow(
       _reserves,
       _reservesList,
@@ -158,21 +145,20 @@ abstract contract Pool is Initializable, IPool {
   function repay(
     address asset,
     uint256 amount,
-    address onBehalfOf,
     uint256 index
   ) public virtual returns (uint256 paybackAmount) {
     bytes32 positionId = msg.sender.getPositionId(index);
     paybackAmount = BorrowLogic.executeRepay(
-        _reserves,
-        DataTypes.ExecuteRepayParams({
-          asset: asset,
-          amount: amount,
-          user: onBehalfOf,
-          onBehalfOfPosition: positionId
-        }),
-        _debts,
-        _totalSupplies
-      );
+      _reserves,
+      DataTypes.ExecuteRepayParams({
+        asset: asset,
+        amount: amount,
+        user: msg.sender,
+        onBehalfOfPosition: positionId
+      }),
+      _debts,
+      _totalSupplies
+    );
   }
 
   /// @inheritdoc IPool
@@ -187,6 +173,7 @@ abstract contract Pool is Initializable, IPool {
       _reserves,
       _reservesList,
       _balances,
+      _debts,
       _usersConfig,
       DataTypes.ExecuteLiquidationCallParams({
         reservesCount: _reservesCount,
@@ -291,22 +278,8 @@ abstract contract Pool is Initializable, IPool {
 
   /// @inheritdoc IPool
   function getReservesList() external view virtual override returns (address[] memory) {
-    uint256 reservesListCount = _reservesCount;
-    uint256 droppedReservesCount = 0;
-    address[] memory reservesList = new address[](reservesListCount);
-
-    for (uint256 i = 0; i < reservesListCount; i++) {
-      if (_reservesList[i] != address(0)) {
-        reservesList[i - droppedReservesCount] = _reservesList[i];
-      } else {
-        droppedReservesCount++;
-      }
-    }
-
-    // Reduces the length of the reserves array by `droppedReservesCount`
-    assembly {
-      mstore(reservesList, sub(reservesListCount, droppedReservesCount))
-    }
+    address[] memory reservesList = new address[](_reservesCount);
+    for (uint256 i = 0; i < _reservesCount; i++) reservesList[i] = _reservesList[i];
     return reservesList;
   }
 
@@ -340,7 +313,7 @@ abstract contract Pool is Initializable, IPool {
     address source,
     DataTypes.ReserveConfigurationMap calldata configuration
   ) external virtual {
-    require(msg.sender == configurator, 'only configurator');
+    require(msg.sender == address(factory.configurator()), 'only configurator');
     _setReserveConfiguration(asset, rateStrategyAddress, source, configuration);
   }
 
