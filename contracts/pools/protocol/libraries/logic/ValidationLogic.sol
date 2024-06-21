@@ -294,31 +294,25 @@ library ValidationLogic {
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param userConfig The state of the user for the specific reserve
-   * @param asset The asset for which the ltv will be validated
-   * @param fromPosition The user from which the aTokens are being transferred
-   * @param reservesCount The number of available reserves
-   * @param oracle The price oracle
+   * @param params The params to calculate HF and Ltv for
    */
   function validateHFAndLtv(
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap memory userConfig,
-    address asset,
-    bytes32 fromPosition,
-    uint256 reservesCount,
-    address oracle
+    DataTypes.ExecuteWithdrawParams memory params
   ) internal view {
-    DataTypes.ReserveData memory reserve = reservesData[asset];
+    DataTypes.ReserveData memory reserve = reservesData[params.asset];
 
     (, bool hasZeroLtvCollateral) = validateHealthFactor(
       _balances,
       reservesData,
       reservesList,
       userConfig,
-      fromPosition,
-      reservesCount,
-      oracle
+      params.position,
+      params.reservesCount,
+      params.pool
     );
 
     require(

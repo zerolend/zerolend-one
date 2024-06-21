@@ -95,55 +95,44 @@ library SupplyLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ExecuteWithdrawParams memory params,
-    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
+    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
+    DataTypes.ExecuteWithdrawParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
     reserve.updateState(reserveCache);
 
-    DataTypes.PositionBalance storage bal = _balances[params.asset][params.position];
-    uint256 userBalance = bal.scaledSupplyBalance.rayMul(reserveCache.nextLiquidityIndex);
+    uint256 userBalance = balances[params.asset][params.position].scaledSupplyBalance.rayMul(
+      reserveCache.nextLiquidityIndex
+    );
 
-    uint256 amountToWithdraw = params.amount;
+    if (params.amount == type(uint256).max) params.amount = userBalance;
 
-    if (params.amount == type(uint256).max) amountToWithdraw = userBalance;
-
-    ValidationLogic.validateWithdraw(reserveCache, amountToWithdraw, userBalance);
-    reserve.updateInterestRates(reserveCache, params.asset, 0, amountToWithdraw);
+    ValidationLogic.validateWithdraw(reserveCache, params.amount, userBalance);
+    reserve.updateInterestRates(reserveCache, params.asset, 0, params.amount);
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
 
-    if (isCollateral && amountToWithdraw == userBalance) {
+    if (isCollateral && params.amount == userBalance) {
       userConfig.setUsingAsCollateral(reserve.id, false);
       emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }
 
     // Burn debt. Which is burn supply, update total supply and send tokens to the user
-    uint256 burnt = _balances[params.asset][params.position].burnSupply(
+    uint256 burnt = balances[params.asset][params.position].burnSupply(
       params.amount,
       reserveCache.nextLiquidityIndex
     );
-    _totalSupplies[params.asset].collateral -= burnt;
-    IERC20(params.asset).safeTransfer(params.user, params.amount);
+    totalSupplies[params.asset].collateral -= burnt;
+    IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
-    if (isCollateral && userConfig.isBorrowingAny()) {
-      ValidationLogic.validateHFAndLtv(
-        _balances,
-        reservesData,
-        reservesList,
-        userConfig,
-        params.asset,
-        params.position,
-        params.reservesCount,
-        params.pool
-      );
-    }
+    if (isCollateral && userConfig.isBorrowingAny())
+      ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);
 
-    emit Withdraw(params.asset, params.position, params.user, amountToWithdraw);
+    emit Withdraw(params.asset, params.position, params.destination, params.amount);
 
-    return amountToWithdraw;
+    return params.amount;
   }
 }

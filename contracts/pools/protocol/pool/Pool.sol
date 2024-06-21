@@ -98,8 +98,6 @@ abstract contract Pool is Initializable, IPool {
     uint256 amount,
     uint256 index,
     bytes calldata hookData
-    address onBehalfOf,
-    uint256 index
   ) public virtual override {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(hook) != address(0))
@@ -123,26 +121,27 @@ abstract contract Pool is Initializable, IPool {
   function withdraw(
     address asset,
     uint256 amount,
+    address destination,
     uint256 index,
     bytes calldata hookData
   ) public virtual override returns (uint256 withdrawalAmount) {
     bytes32 positionId = msg.sender.getPositionId(index);
 
-    require(amount <= _balances[asset][positionId], 'Insufficient Balance!');
+    require(amount <= _balances[asset][positionId].scaledSupplyBalance, 'Insufficient Balance!');
     withdrawalAmount = SupplyLogic.executeWithdraw(
       _reserves,
       _reservesList,
       _usersConfig[positionId],
+      _balances,
+      _totalSupplies,
       DataTypes.ExecuteWithdrawParams({
-        user: msg.sender,
+        destination: destination,
         asset: asset,
         amount: amount,
         position: positionId,
         reservesCount: _reservesCount,
         pool: address(this)
-      }),
-      _balances,
-      _totalSupplies
+      })
     );
 
     PoolLogic.executeMintToTreasury(_reserves, asset);
@@ -183,14 +182,14 @@ abstract contract Pool is Initializable, IPool {
     bytes32 position = msg.sender.getPositionId(index);
     paybackAmount = BorrowLogic.executeRepay(
       _reserves,
+      _balances,
+      _totalSupplies,
       DataTypes.ExecuteRepayParams({
         asset: asset,
         amount: amount,
-        user: onBehalfOf,
-        onBehalfOfPosition: positionId
-      }),
-      _debts,
-      _totalSupplies
+        user: msg.sender,
+        position: position
+      })
     );
   }
 
@@ -253,12 +252,12 @@ abstract contract Pool is Initializable, IPool {
 
   /// @inheritdoc IPool
   function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance) {
-    return _balances[asset][positionId];
+    return _balances[asset][positionId].scaledSupplyBalance;
   }
 
   /// @inheritdoc IPool
   function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt) {
-    return _debts[asset][positionId];
+    return _balances[asset][positionId].scaledDebtBalance;
   }
 
   /// @inheritdoc IPool

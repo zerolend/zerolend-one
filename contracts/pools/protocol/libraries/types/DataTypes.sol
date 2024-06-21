@@ -122,8 +122,8 @@ library DataTypes {
   }
 
   struct ExecuteWithdrawParams {
-    address user;
     address asset;
+    address destination;
     uint256 amount;
     bytes32 position;
     uint256 reservesCount;
