@@ -42,12 +42,11 @@ library SupplyLogic {
    * @param params The additional parameters needed to execute the supply function
    */
   function executeSupply(
-    address onBehalfOf,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteSupplyParams memory params,
-    mapping(address asset => mapping(bytes32 positionId => uint256 balance)) storage _balances,
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address asset => uint256 totalSupply) storage _totalSupplies,
     address pool
   ) external {
@@ -99,8 +98,7 @@ library SupplyLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteWithdrawParams memory params,
-    mapping(address asset => mapping(bytes32 position => DataTypes.PositionBalance balance))
-      storage _balances,
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address asset => uint256 totalSupply) storage _totalSupplies
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -114,8 +112,7 @@ library SupplyLogic {
 
     if (params.amount == type(uint256).max) amountToWithdraw = balance.scaledSupplyBalance;
 
-    ValidationLogic.validateWithdraw(reserveCache, amountToWithdraw, balance);
-
+    ValidationLogic.validateWithdraw(reserveCache, amountToWithdraw, balance.scaledSupplyBalance);
     reserve.updateInterestRates(reserveCache, params.asset, 0, amountToWithdraw);
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
@@ -125,13 +122,18 @@ library SupplyLogic {
       emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }
 
-    _totalSupplies[params.asset] -= params.amount;
-    _balances[params.asset][params.position] -= params.amount;
+    // todos
+    // _totalSupplies[params.asset] -= params.amount;
+    _balances[params.asset][params.position].mintSupply(
+      params.amount,
+      reserveCache.nextLiquidityIndex
+    );
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
     if (isCollateral && userConfig.isBorrowingAny()) {
       ValidationLogic.validateHFAndLtv(
+        _balances,
         reservesData,
         reservesList,
         userConfig,

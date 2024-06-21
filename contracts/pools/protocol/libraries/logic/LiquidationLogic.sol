@@ -88,8 +88,7 @@ library LiquidationLogic {
   function executeLiquidationCall(
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
-    mapping(address asset => mapping(bytes32 position => uint256)) storage _balances,
-    mapping(address asset => mapping(bytes32 position => uint256)) storage _debts,
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(bytes32 => DataTypes.UserConfigurationMap) storage usersConfig,
     DataTypes.ExecuteLiquidationCallParams memory params
   ) external {
@@ -102,6 +101,7 @@ library LiquidationLogic {
     debtReserve.updateState(vars.debtReserveCache);
 
     (, , , , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
+      _balances,
       reservesData,
       reservesList,
       DataTypes.CalculateUserAccountDataParams({
@@ -116,7 +116,7 @@ library LiquidationLogic {
       vars.debtReserveCache,
       params,
       vars.healthFactor,
-      _debts
+      _balances
     );
 
     ValidationLogic.validateLiquidationCall(
@@ -136,7 +136,7 @@ library LiquidationLogic {
     //   vars.liquidationBonus
     // ) = _getConfigurationData(collateralReserve, params);
 
-    vars.userCollateralBalance = _balances[vars.asset][params.position];
+    vars.userCollateralBalance = _balances[vars.asset][params.position].scaledSupplyBalance;
 
     // (
     //   vars.actualCollateralToLiquidate,
@@ -297,7 +297,7 @@ library LiquidationLogic {
     DataTypes.ReserveCache memory debtReserveCache,
     DataTypes.ExecuteLiquidationCallParams memory params,
     uint256 healthFactor,
-    mapping(address asset => mapping(bytes32 position => uint256 balance)) storage _debts
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances
   ) internal view returns (uint256, uint256) {
     uint256 userDebt = 0; // _debts[debtReserveCache.asset][params.position];
 

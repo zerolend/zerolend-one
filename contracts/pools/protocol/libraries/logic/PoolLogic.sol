@@ -95,6 +95,7 @@ library PoolLogic {
    * @return healthFactor The current health factor of the user
    */
   function executeGetUserAccountData(
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.CalculateUserAccountDataParams memory params
@@ -117,7 +118,7 @@ library PoolLogic {
       currentLiquidationThreshold,
       healthFactor,
 
-    ) = GenericLogic.calculateUserAccountData(reservesData, reservesList, params);
+    ) = GenericLogic.calculateUserAccountData(_balances, reservesData, reservesList, params);
 
     availableBorrowsBase = GenericLogic.calculateAvailableBorrows(
       totalCollateralBase,

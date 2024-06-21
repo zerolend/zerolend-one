@@ -104,9 +104,10 @@ abstract contract Pool is Initializable, IPool {
       hook.beforeSupply(msg.sender, pos, asset, address(this), amount, hookData);
 
     SupplyLogic.executeSupply(
-      msg.sender,
       _reserves,
-      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: pos}),
+      _reservesList,
+      _usersConfig[pos],
+      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, position: pos}),
       _balances,
       _totalSupplies,
       address(this)
@@ -125,7 +126,7 @@ abstract contract Pool is Initializable, IPool {
   ) public virtual override returns (uint256 withdrawalAmount) {
     bytes32 positionId = msg.sender.getPositionId(index);
 
-    require(amount <= _balances[asset][positionId], 'Insufficient Balance!');
+    require(amount <= _balances[asset][positionId].scaledSupplyBalance, 'Insufficient Balance!');
     withdrawalAmount = SupplyLogic.executeWithdraw(
       _reserves,
       _reservesList,
@@ -160,7 +161,7 @@ abstract contract Pool is Initializable, IPool {
       DataTypes.ExecuteBorrowParams({
         asset: asset,
         user: msg.sender,
-        onBehalfOfPosition: positionId,
+        position: positionId,
         amount: amount,
         reservesCount: _reservesCount,
         pool: address(this)
@@ -268,6 +269,7 @@ abstract contract Pool is Initializable, IPool {
   {
     return
       PoolLogic.executeGetUserAccountData(
+        _balances,
         _reserves,
         _reservesList,
         DataTypes.CalculateUserAccountDataParams({

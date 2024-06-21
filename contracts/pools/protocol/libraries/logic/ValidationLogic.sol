@@ -115,6 +115,7 @@ library ValidationLogic {
    * @param params Additional params needed for the validation
    */
   function validateBorrow(
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.ValidateBorrowParams memory params
@@ -154,6 +155,7 @@ library ValidationLogic {
       vars.healthFactor,
 
     ) = GenericLogic.calculateUserAccountData(
+      _balances,
       reservesData,
       reservesList,
       DataTypes.CalculateUserAccountDataParams({
@@ -258,6 +260,7 @@ library ValidationLogic {
    * @param oracle The price oracle
    */
   function validateHealthFactor(
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap memory userConfig,
@@ -267,6 +270,7 @@ library ValidationLogic {
   ) internal view returns (uint256, bool) {
     (, , , , uint256 healthFactor, bool hasZeroLtvCollateral) = GenericLogic
       .calculateUserAccountData(
+        _balances,
         reservesData,
         reservesList,
         DataTypes.CalculateUserAccountDataParams({
@@ -296,6 +300,7 @@ library ValidationLogic {
    * @param oracle The price oracle
    */
   function validateHFAndLtv(
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap memory userConfig,
@@ -307,6 +312,7 @@ library ValidationLogic {
     DataTypes.ReserveData memory reserve = reservesData[asset];
 
     (, bool hasZeroLtvCollateral) = validateHealthFactor(
+      _balances,
       reservesData,
       reservesList,
       userConfig,

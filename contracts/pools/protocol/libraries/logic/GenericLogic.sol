@@ -60,6 +60,7 @@ library GenericLogic {
    * @return True if the ltv is zero, false otherwise
    */
   function calculateUserAccountData(
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.CalculateUserAccountDataParams memory params
@@ -101,7 +102,7 @@ library GenericLogic {
 
       if (vars.liquidationThreshold != 0 && params.userConfig.isUsingAsCollateral(vars.i)) {
         vars.PositionBalanceInBaseCurrency = _getPositionBalanceInBaseCurrency(
-          params.position,
+          _balances[vars.currentReserveAddress][params.position],
           currentReserve,
           vars.assetPrice,
           vars.assetUnit
@@ -123,6 +124,7 @@ library GenericLogic {
       if (params.userConfig.isBorrowing(vars.i)) {
         vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(
           params.position,
+          _balances[vars.currentReserveAddress][params.position],
           currentReserve,
           vars.assetPrice,
           vars.assetUnit
@@ -213,14 +215,12 @@ library GenericLogic {
    * @notice Calculates total aToken balance of the user in the based currency used by the price oracle
    * @dev For gas reasons, the aToken balance is calculated by fetching `scaledBalancesOf` normalized debt, which
    * is cheaper than fetching `balanceOf`
-   * @param position The address of the user
    * @param reserve The data of the reserve for which the total aToken balance of the user is being calculated
    * @param assetPrice The price of the asset for which the total aToken balance of the user is being calculated
    * @param assetUnit The value representing one full unit of the asset (10^decimals)
    * @return The total aToken balance of the user normalized to the base currency of the price oracle
    */
   function _getPositionBalanceInBaseCurrency(
-    bytes32 position,
     DataTypes.PositionBalance storage balance,
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
