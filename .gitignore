@@ -30,3 +30,4 @@ resource_errors.json
 
 artifacts-zk
 cache-zk
+venv
