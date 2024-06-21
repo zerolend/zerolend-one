@@ -62,6 +62,7 @@ library BorrowLogic {
     reserve.updateState(reserveCache);
 
     ValidationLogic.validateBorrow(
+      _balances,
       reservesData,
       reservesList,
       DataTypes.ValidateBorrowParams({
