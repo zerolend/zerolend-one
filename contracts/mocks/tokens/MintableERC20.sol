@@ -41,8 +41,4 @@ contract MintableERC20 is ERC20, ERC20Permit {
     _mint(account, value);
     return true;
   }
-
-  function nonces(address owner) public view virtual returns (uint256) {
-    return _nonces[owner];
-  }
 }
