@@ -17,7 +17,6 @@ import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 
 /**
  * @title IReserveInterestRateStrategy
-
  * @notice Interface for the calculation of the interest rates
  */
 interface IReserveInterestRateStrategy {

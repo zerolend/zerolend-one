@@ -14,12 +14,11 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 /**
- * @title IAaveIncentivesController
-
- * @notice Defines the basic interface for an Aave Incentives Controller.
+ * @title IIncentivesController
+ * @notice Defines the basic interface for an Incentives Controller.
  * @dev It only contains one single function, needed as a hook on aToken and debtToken transfers.
  */
-interface IAaveIncentivesController {
+interface IIncentivesController {
   /**
    * @dev Called by the corresponding asset on transfer hook in order to update the rewards distribution.
    * @dev The units of `totalSupply` and `userBalance` should be the same.
