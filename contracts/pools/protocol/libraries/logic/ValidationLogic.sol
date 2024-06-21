@@ -320,4 +320,24 @@ library ValidationLogic {
       Errors.LTV_VALIDATION_FAILED
     );
   }
+
+  /**
+   * @notice Validates the action of activating the asset as collateral.
+   * @dev Only possible if the asset has non-zero LTV and the user is not in isolation mode
+   * @param reservesData The state of all the reserves
+   * @param reservesList The addresses of all the active reserves
+   * @param userConfig the user configuration
+   * @param reserveConfig The reserve configuration
+   * @return True if the asset can be activated as collateral, false otherwise
+   */
+  function validateUseAsCollateral(
+    mapping(address => DataTypes.ReserveData) storage reservesData,
+    mapping(uint256 => address) storage reservesList,
+    DataTypes.UserConfigurationMap storage userConfig,
+    DataTypes.ReserveConfigurationMap memory reserveConfig
+  ) internal view returns (bool) {
+    if (reserveConfig.getLtv() == 0) return false;
+    if (!userConfig.isUsingAsCollateralAny()) return true;
+    return false;
+  }
 }

@@ -1,29 +1,31 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {Errors} from '../helpers/Errors.sol';
-import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {DataTypes} from '../types/DataTypes.sol';
-import {WadRayMath} from '../math/WadRayMath.sol';
+import {Errors} from '../helpers/Errors.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
-import {ValidationLogic} from './ValidationLogic.sol';
-import {ReserveLogic} from './ReserveLogic.sol';
+import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
+import {ReserveLogic} from './ReserveLogic.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {UserConfiguration} from '../configuration/UserConfiguration.sol';
+import {ValidationLogic} from './ValidationLogic.sol';
+import {WadRayMath} from '../math/WadRayMath.sol';
 
 /**
  * @title SupplyLogic library
  * @notice Implements the base logic for supply/withdraw
  */
 library SupplyLogic {
+  using PercentageMath for uint256;
+  using PositionBalanceConfiguration for DataTypes.PositionBalance;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
   using SafeERC20 for IERC20;
   using UserConfiguration for DataTypes.UserConfigurationMap;
-  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using WadRayMath for uint256;
-  using PercentageMath for uint256;
 
   // See `IPool` for descriptions
   event ReserveUsedAsCollateralEnabled(address indexed reserve, bytes32 indexed position);
@@ -42,6 +44,8 @@ library SupplyLogic {
   function executeSupply(
     address onBehalfOf,
     mapping(address => DataTypes.ReserveData) storage reservesData,
+    mapping(uint256 => address) storage reservesList,
+    DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteSupplyParams memory params,
     mapping(address asset => mapping(bytes32 positionId => uint256 balance)) storage _balances,
     mapping(address asset => uint256 totalSupply) storage _totalSupplies,
@@ -51,17 +55,32 @@ library SupplyLogic {
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
     reserve.updateState(reserveCache);
-
     ValidationLogic.validateSupply(reserveCache, reserve, params, address(pool));
-
     reserve.updateInterestRates(reserveCache, params.asset, params.amount, 0);
-
-    _balances[params.asset][params.onBehalfOfPosition] += params.amount;
-    _totalSupplies[params.asset] += params.amount;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
 
-    emit Supply(params.asset, onBehalfOf, params.onBehalfOfPosition, params.amount);
+    DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
+    bool isFirstSupply = b.mintSupply(params.amount, reserveCache.nextLiquidityIndex);
+
+    // todo
+    // _totalSupplies[params.asset] += params.amount;
+
+    if (isFirstSupply) {
+      if (
+        ValidationLogic.validateUseAsCollateral(
+          reservesData,
+          reservesList,
+          userConfig,
+          reserveCache.reserveConfiguration
+        )
+      ) {
+        userConfig.setUsingAsCollateral(reserve.id, true);
+        emit ReserveUsedAsCollateralEnabled(params.asset, params.position);
+      }
+    }
+
+    // emit Supply(params.asset, onBehalfOf, params.position, params.amount);
   }
 
   /**
@@ -80,7 +99,8 @@ library SupplyLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteWithdrawParams memory params,
-    mapping(address asset => mapping(bytes32 position => uint256 balance)) storage _balances,
+    mapping(address asset => mapping(bytes32 position => DataTypes.PositionBalance balance))
+      storage _balances,
     mapping(address asset => uint256 totalSupply) storage _totalSupplies
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -88,21 +108,19 @@ library SupplyLogic {
 
     reserve.updateState(reserveCache);
 
-    uint256 userBalance = _balances[params.asset][params.position];
+    DataTypes.PositionBalance storage balance = _balances[params.asset][params.position];
 
     uint256 amountToWithdraw = params.amount;
 
-    if (params.amount == type(uint256).max) {
-      amountToWithdraw = userBalance;
-    }
+    if (params.amount == type(uint256).max) amountToWithdraw = balance.scaledSupplyBalance;
 
-    ValidationLogic.validateWithdraw(reserveCache, amountToWithdraw, userBalance);
+    ValidationLogic.validateWithdraw(reserveCache, amountToWithdraw, balance);
 
     reserve.updateInterestRates(reserveCache, params.asset, 0, amountToWithdraw);
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
 
-    if (isCollateral && amountToWithdraw == userBalance) {
+    if (isCollateral && amountToWithdraw == balance.scaledSupplyBalance) {
       userConfig.setUsingAsCollateral(reserve.id, false);
       emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }

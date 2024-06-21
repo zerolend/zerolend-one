@@ -176,8 +176,7 @@ library ReserveLogic {
           liquidityTaken: liquidityTaken,
           totalVariableDebt: vars.totalVariableDebt,
           reserveFactor: reserveCache.reserveFactor,
-          reserve: reserveAddress,
-          nftPositionManager: reserveCache.nftPositionManager
+          reserve: reserveAddress
         })
       );
 
