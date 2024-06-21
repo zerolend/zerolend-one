@@ -144,8 +144,6 @@ library LiquidationLogic {
     ) = _calculateAvailableCollateralToLiquidate(
       collateralReserve,
       vars.debtReserveCache,
-      // vars.collateralPriceSource,
-      // vars.debtPriceSource,
       vars.actualDebtToLiquidate,
       vars.userCollateralBalance,
       vars.liquidationBonus,
