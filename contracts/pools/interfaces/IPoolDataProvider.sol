@@ -36,7 +36,6 @@ interface IPoolDataProvider {
    * @return reserveFactor The reserveFactor of the reserve
    * @return usageAsCollateralEnabled True if the usage as collateral is enabled, false otherwise
    * @return borrowingEnabled True if borrowing is enabled, false otherwise
-   * @return isActive True if it is active, false otherwise
    * @return isFrozen True if it is frozen, false otherwise
    */
   function getReserveConfigurationData(
@@ -53,7 +52,6 @@ interface IPoolDataProvider {
       uint256 reserveFactor,
       bool usageAsCollateralEnabled,
       bool borrowingEnabled,
-      bool isActive,
       bool isFrozen
     );
 
@@ -74,13 +72,6 @@ interface IPoolDataProvider {
     address pool,
     address asset
   ) external view returns (uint256 borrowCap, uint256 supplyCap);
-
-  /**
-   * @notice Returns if the pool is paused
-   * @param asset The address of the underlying asset of the reserve
-   * @return isPaused True if the pool is paused, false otherwise
-   */
-  function getPaused(address pool, address asset) external view returns (bool isPaused);
 
   /**
    * @notice Returns the protocol fee on the liquidation bonus

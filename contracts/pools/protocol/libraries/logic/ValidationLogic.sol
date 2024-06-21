@@ -56,26 +56,24 @@ library ValidationLogic {
   function validateSupply(
     DataTypes.ReserveCache memory reserveCache,
     DataTypes.ReserveData storage reserve,
-    DataTypes.ExecuteSupplyParams memory params
+    DataTypes.ExecuteSupplyParams memory params,
+    address pool
   ) internal view {
     require(params.amount != 0, Errors.INVALID_AMOUNT);
 
-    (bool isActive, bool isFrozen, , , bool isPaused) = reserveCache
-      .reserveConfiguration
-      .getFlags();
-    require(isActive, Errors.RESERVE_INACTIVE);
-    require(!isPaused, Errors.RESERVE_PAUSED);
+    (bool isFrozen, , ) = reserveCache.reserveConfiguration.getFlags();
     require(!isFrozen, Errors.RESERVE_FROZEN);
 
     uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
     // todo
-    // require(
-    //   supplyCap == 0 ||
-    //     ((IERC20(params.asset).balanceOf(reserve.nftPositionManager) +
-    //       uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + params.amount) <=
-    //     supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
-    //   Errors.SUPPLY_CAP_EXCEEDED
-    // );
+    require(
+      supplyCap == 0 ||
+        ((IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasury)).rayMul(
+          reserveCache.nextLiquidityIndex
+        ) + params.amount) <=
+        supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
+      Errors.SUPPLY_CAP_EXCEEDED
+    );
   }
 
   /**
@@ -91,10 +89,6 @@ library ValidationLogic {
   ) internal pure {
     require(amount != 0, Errors.INVALID_AMOUNT);
     require(amount <= userBalance, Errors.NOT_ENOUGH_AVAILABLE_USER_BALANCE);
-
-    (bool isActive, , , , bool isPaused) = reserveCache.reserveConfiguration.getFlags();
-    require(isActive, Errors.RESERVE_INACTIVE);
-    require(!isPaused, Errors.RESERVE_PAUSED);
   }
 
   struct ValidateBorrowLocalVars {
@@ -110,9 +104,7 @@ library ValidationLogic {
     uint256 borrowCap;
     uint256 amountInBaseCurrency;
     uint256 assetUnit;
-    bool isActive;
     bool isFrozen;
-    bool isPaused;
     bool borrowingEnabled;
   }
 
@@ -131,13 +123,8 @@ library ValidationLogic {
 
     ValidateBorrowLocalVars memory vars;
 
-    (vars.isActive, vars.isFrozen, vars.borrowingEnabled, , vars.isPaused) = params
-      .reserveCache
-      .reserveConfiguration
-      .getFlags();
+    (vars.isFrozen, vars.borrowingEnabled, ) = params.reserveCache.reserveConfiguration.getFlags();
 
-    require(vars.isActive, Errors.RESERVE_INACTIVE);
-    require(!vars.isPaused, Errors.RESERVE_PAUSED);
     require(!vars.isFrozen, Errors.RESERVE_FROZEN);
     require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);
 
@@ -214,10 +201,6 @@ library ValidationLogic {
     require(amountSent != 0, Errors.INVALID_AMOUNT);
     require(amountSent != type(uint256).max, Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF);
 
-    (bool isActive, , , , bool isPaused) = reserveCache.reserveConfiguration.getFlags();
-    require(isActive, Errors.RESERVE_INACTIVE);
-    require(!isPaused, Errors.RESERVE_PAUSED);
-
     require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
   }
 
@@ -250,18 +233,6 @@ library ValidationLogic {
     DataTypes.ValidateLiquidationCallParams memory params
   ) internal view {
     ValidateLiquidationCallLocalVars memory vars;
-
-    (vars.collateralReserveActive, , , , vars.collateralReservePaused) = collateralReserve
-      .configuration
-      .getFlags();
-
-    (vars.principalReserveActive, , , , vars.principalReservePaused) = params
-      .debtReserveCache
-      .reserveConfiguration
-      .getFlags();
-
-    require(vars.collateralReserveActive && vars.principalReserveActive, Errors.RESERVE_INACTIVE);
-    require(!vars.collateralReservePaused && !vars.principalReservePaused, Errors.RESERVE_PAUSED);
 
     require(
       params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,

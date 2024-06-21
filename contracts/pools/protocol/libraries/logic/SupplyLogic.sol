@@ -14,7 +14,6 @@ import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 
 /**
  * @title SupplyLogic library
-
  * @notice Implements the base logic for supply/withdraw
  */
 library SupplyLogic {
@@ -45,14 +44,15 @@ library SupplyLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.ExecuteSupplyParams memory params,
     mapping(address asset => mapping(bytes32 positionId => uint256 balance)) storage _balances,
-    mapping(address asset => uint256 totalSupply) storage _totalSupplies
+    mapping(address asset => uint256 totalSupply) storage _totalSupplies,
+    address pool
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
     reserve.updateState(reserveCache);
 
-    ValidationLogic.validateSupply(reserveCache, reserve, params);
+    ValidationLogic.validateSupply(reserveCache, reserve, params, address(pool));
 
     reserve.updateInterestRates(reserveCache, params.asset, params.amount, 0);
 

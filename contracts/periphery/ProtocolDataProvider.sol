@@ -65,7 +65,6 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
       uint256 reserveFactor,
       bool usageAsCollateralEnabled,
       bool borrowingEnabled,
-      bool isActive,
       bool isFrozen
     )
   {
@@ -74,7 +73,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
     (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration
       .getParams();
 
-    (isActive, isFrozen, borrowingEnabled, , ) = configuration.getFlags();
+    (isFrozen, borrowingEnabled, ) = configuration.getFlags();
 
     usageAsCollateralEnabled = liquidationThreshold != 0;
   }
@@ -85,11 +84,6 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
     address asset
   ) external view override returns (uint256 borrowCap, uint256 supplyCap) {
     // (borrowCap, supplyCap) = IPool(pool).getConfiguration(asset).getCaps();
-  }
-
-  /// @inheritdoc IPoolDataProvider
-  function getPaused(address pool, address asset) external view override returns (bool isPaused) {
-    (, , , , isPaused) = IPool(pool).getConfiguration(asset).getFlags();
   }
 
   // /// @inheritdoc IPoolDataProvider

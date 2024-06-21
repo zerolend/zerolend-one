@@ -257,23 +257,19 @@ library ReserveConfiguration {
   /**
    * @notice Gets the configuration flags of the reserve
    * @param self The reserve configuration
-   * @return The state flag representing active
    * @return The state flag representing frozen
    * @return The state flag representing borrowing enabled
    * @return The state flag representing stableRateBorrowing enabled
-   * @return The state flag representing paused
    */
   function getFlags(
     DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (bool, bool, bool, bool, bool) {
+  ) internal pure returns (bool, bool, bool) {
     uint256 dataLocal = self.data;
 
     return (
-      (dataLocal & ~ACTIVE_MASK) != 0,
       (dataLocal & ~FROZEN_MASK) != 0,
       (dataLocal & ~BORROWING_MASK) != 0,
-      (dataLocal & ~STABLE_BORROWING_MASK) != 0,
-      (dataLocal & ~PAUSED_MASK) != 0
+      (dataLocal & ~STABLE_BORROWING_MASK) != 0
     );
   }
 

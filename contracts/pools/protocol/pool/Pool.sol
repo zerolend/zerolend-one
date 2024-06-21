@@ -110,7 +110,8 @@ abstract contract Pool is Initializable, IPool {
       _reserves,
       DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: pos}),
       _balances,
-      _totalSupplies
+      _totalSupplies,
+      address(this)
     );
 
     if (address(hook) != address(0))

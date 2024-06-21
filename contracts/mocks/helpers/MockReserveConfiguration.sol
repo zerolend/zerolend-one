@@ -89,7 +89,7 @@ contract MockReserveConfiguration {
     return configuration.getSupplyCap();
   }
 
-  function getFlags() external view returns (bool, bool, bool, bool, bool) {
+  function getFlags() external view returns (bool, bool, bool) {
     return configuration.getFlags();
   }
 
