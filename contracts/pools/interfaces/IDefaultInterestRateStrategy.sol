@@ -5,7 +5,7 @@ import {IReserveInterestRateStrategy} from './IReserveInterestRateStrategy.sol';
 
 /**
  * @title IDefaultInterestRateStrategy
- * @author Aave
+
  * @notice Defines the basic interface of the DefaultReserveInterestRateStrategy
  */
 interface IDefaultInterestRateStrategy is IReserveInterestRateStrategy {

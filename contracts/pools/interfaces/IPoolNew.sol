@@ -5,7 +5,7 @@ import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 
 /**
  * @title IPool
- * @author Aave
+
  * @notice Defines the basic interface for an Aave Pool.
  */
 interface IPool {

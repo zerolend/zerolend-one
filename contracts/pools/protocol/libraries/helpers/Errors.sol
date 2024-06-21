@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title Errors library
- * @author Aave
+
  * @notice Defines the error messages emitted by the different contracts of the Aave protocol
  */
 library Errors {

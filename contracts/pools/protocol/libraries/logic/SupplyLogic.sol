@@ -14,7 +14,7 @@ import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 
 /**
  * @title SupplyLogic library
- * @author Aave
+
  * @notice Implements the base logic for supply/withdraw
  */
 library SupplyLogic {

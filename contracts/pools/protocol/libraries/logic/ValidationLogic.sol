@@ -20,7 +20,7 @@ import {TokenConfiguration} from '../../libraries/configuration/TokenConfigurati
 
 /**
  * @title ReserveLogic library
- * @author Aave
+
  * @notice Implements functions to validate the different actions of the protocol
  */
 library ValidationLogic {
@@ -69,13 +69,13 @@ library ValidationLogic {
 
     uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
     // todo
-    require(
-      supplyCap == 0 ||
-        ((IERC20(params.asset).balanceOf(reserve.nftPositionManager) +
-          uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + params.amount) <=
-        supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
-      Errors.SUPPLY_CAP_EXCEEDED
-    );
+    // require(
+    //   supplyCap == 0 ||
+    //     ((IERC20(params.asset).balanceOf(reserve.nftPositionManager) +
+    //       uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + params.amount) <=
+    //     supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
+    //   Errors.SUPPLY_CAP_EXCEEDED
+    // );
   }
 
   /**
@@ -212,10 +212,7 @@ library ValidationLogic {
     uint256 variableDebt
   ) internal pure {
     require(amountSent != 0, Errors.INVALID_AMOUNT);
-    require(
-      amountSent != type(uint256).max,
-      Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
-    );
+    require(amountSent != type(uint256).max, Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF);
 
     (bool isActive, , , , bool isPaused) = reserveCache.reserveConfiguration.getFlags();
     require(isActive, Errors.RESERVE_INACTIVE);

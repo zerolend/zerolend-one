@@ -14,7 +14,7 @@ import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
  * @title ReserveLogic library
- * @author Aave
+
  * @notice Implements the logic to update the reserves state
  */
 library ReserveLogic {
@@ -92,15 +92,11 @@ library ReserveLogic {
     DataTypes.ReserveCache memory reserveCache
   ) internal {
     // If time didn't pass since last stored timestamp, skip state update
-    //solium-disable-next-line
-    if (reserve.lastUpdateTimestamp == uint40(block.timestamp)) {
-      return;
-    }
+    if (reserve.lastUpdateTimestamp == uint40(block.timestamp)) return;
 
     _updateIndexes(reserve, reserveCache);
     _accrueToTreasury(reserve, reserveCache);
 
-    //solium-disable-next-line
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
   }
 
@@ -117,8 +113,8 @@ library ReserveLogic {
     uint256 totalLiquidity,
     uint256 amount
   ) internal returns (uint256) {
-    //next liquidity index is calculated this way: `((amount / totalLiquidity) + 1) * liquidityIndex`
-    //division `amount / totalLiquidity` done in ray for precision
+    // next liquidity index is calculated this way: `((amount / totalLiquidity) + 1) * liquidityIndex`
+    // division `amount / totalLiquidity` done in ray for precision
     uint256 result = (amount.wadToRay().rayDiv(totalLiquidity.wadToRay()) + WadRayMath.RAY).rayMul(
       reserve.liquidityIndex
     );
@@ -135,7 +131,7 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     address interestRateStrategyAddress
   ) internal {
-    require(reserve.nftPositionManager == address(0), Errors.RESERVE_ALREADY_INITIALIZED);
+    // require(reserve.nftPositionManager == address(0), Errors.RESERVE_ALREADY_INITIALIZED);
 
     reserve.liquidityIndex = uint128(WadRayMath.RAY);
     reserve.variableBorrowIndex = uint128(WadRayMath.RAY);
@@ -221,17 +217,17 @@ library ReserveLogic {
       return;
     }
 
-    //calculate the total variable debt at moment of the last interaction
+    // calculate the total variable debt at moment of the last interaction
     vars.prevTotalVariableDebt = reserveCache.currScaledVariableDebt.rayMul(
       reserveCache.currVariableBorrowIndex
     );
 
-    //calculate the new total variable debt after accumulation of the interest on the index
+    // calculate the new total variable debt after accumulation of the interest on the index
     vars.currTotalVariableDebt = reserveCache.currScaledVariableDebt.rayMul(
       reserveCache.nextVariableBorrowIndex
     );
 
-    //debt accrued is the sum of the current debt minus the sum of the debt at the last update
+    // debt accrued is the sum of the current debt minus the sum of the debt at the last update
     vars.totalDebtAccrued = vars.currTotalVariableDebt - vars.prevTotalVariableDebt;
 
     vars.amountToMint = vars.totalDebtAccrued.percentMul(reserveCache.reserveFactor);
@@ -302,7 +298,7 @@ library ReserveLogic {
     reserveCache.currLiquidityRate = reserve.currentLiquidityRate;
     reserveCache.currVariableBorrowRate = reserve.currentVariableBorrowRate;
 
-    reserveCache.nftPositionManager = reserve.nftPositionManager;
+    // reserveCache.nftPositionManager = reserve.nftPositionManager;
 
     reserveCache.reserveLastUpdateTimestamp = reserve.lastUpdateTimestamp;
 
