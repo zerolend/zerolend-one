@@ -198,12 +198,13 @@ library LiquidationLogic {
       // );
     }
 
-    // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
-    IERC20(params.debtAsset).safeTransferFrom(
-      msg.sender,
-      vars.debtReserveCache.nftPositionManager,
-      vars.actualDebtToLiquidate
-    );
+    // todo
+    // // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
+    // IERC20(params.debtAsset).safeTransferFrom(
+    //   msg.sender,
+    //   vars.debtReserveCache.nftPositionManager,
+    //   vars.actualDebtToLiquidate
+    // );
 
     // todo
     // IAToken(vars.debtReserveCache.aTokenAddress).handleRepayment(

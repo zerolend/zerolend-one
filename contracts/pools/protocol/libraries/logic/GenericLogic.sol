@@ -5,6 +5,7 @@ import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
+import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {DataTypes} from '../types/DataTypes.sol';
@@ -15,16 +16,17 @@ import {ReserveLogic} from './ReserveLogic.sol';
  * @notice Implements protocol-level logic to calculate and validate the state of a user
  */
 library GenericLogic {
-  using ReserveLogic for DataTypes.ReserveData;
-  using WadRayMath for uint256;
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using ReserveLogic for DataTypes.ReserveData;
+  using PositionBalanceConfiguration for DataTypes.PositionBalance;
   using UserConfiguration for DataTypes.UserConfigurationMap;
+  using WadRayMath for uint256;
 
   struct CalculateUserAccountDataVars {
     uint256 assetPrice;
     uint256 assetUnit;
-    uint256 userBalanceInBaseCurrency;
+    uint256 PositionBalanceInBaseCurrency;
     uint256 decimals;
     uint256 ltv;
     uint256 liquidationThreshold;
@@ -98,23 +100,23 @@ library GenericLogic {
       vars.assetPrice = IPool(params.pool).getAssetPrice(vars.currentReserveAddress);
 
       if (vars.liquidationThreshold != 0 && params.userConfig.isUsingAsCollateral(vars.i)) {
-        vars.userBalanceInBaseCurrency = _getUserBalanceInBaseCurrency(
+        vars.PositionBalanceInBaseCurrency = _getPositionBalanceInBaseCurrency(
           params.position,
           currentReserve,
           vars.assetPrice,
           vars.assetUnit
         );
 
-        vars.totalCollateralInBaseCurrency += vars.userBalanceInBaseCurrency;
+        vars.totalCollateralInBaseCurrency += vars.PositionBalanceInBaseCurrency;
 
         if (vars.ltv != 0) {
-          vars.avgLtv += vars.userBalanceInBaseCurrency * (vars.ltv);
+          vars.avgLtv += vars.PositionBalanceInBaseCurrency * (vars.ltv);
         } else {
           vars.hasZeroLtvCollateral = true;
         }
 
         vars.avgLiquidationThreshold +=
-          vars.userBalanceInBaseCurrency *
+          vars.PositionBalanceInBaseCurrency *
           (vars.isInEModeCategory ? vars.eModeLiqThreshold : vars.liquidationThreshold);
       }
 
@@ -192,25 +194,19 @@ library GenericLogic {
    */
   function _getUserDebtInBaseCurrency(
     bytes32 position,
+    DataTypes.PositionBalance storage balance,
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
   ) private view returns (uint256) {
-    // todo
-    return 0;
-    // // fetching variable debt
-    // uint256 userTotalDebt = IScaledBalanceToken(reserve.variableDebtTokenAddress).scaledBalanceOf(
-    //   position
-    // );
-    // if (userTotalDebt != 0) {
-    //   userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
-    // }
+    // fetching variable debt
+    uint256 userTotalDebt = balance.scaledDebtBalance;
+    if (userTotalDebt != 0) userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
+    userTotalDebt = assetPrice * userTotalDebt;
 
-    // userTotalDebt = assetPrice * userTotalDebt;
-
-    // unchecked {
-    //   return userTotalDebt / assetUnit;
-    // }
+    unchecked {
+      return userTotalDebt / assetUnit;
+    }
   }
 
   /**
@@ -223,20 +219,18 @@ library GenericLogic {
    * @param assetUnit The value representing one full unit of the asset (10^decimals)
    * @return The total aToken balance of the user normalized to the base currency of the price oracle
    */
-  function _getUserBalanceInBaseCurrency(
+  function _getPositionBalanceInBaseCurrency(
     bytes32 position,
+    DataTypes.PositionBalance storage balance,
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
   ) private view returns (uint256) {
     uint256 normalizedIncome = reserve.getNormalizedIncome();
-    return 0;
-    // uint256 balance = (
-    //   IScaledBalanceToken(reserve.aTokenAddress).scaledBalanceOf(user).rayMul(normalizedIncome)
-    // ) * assetPrice;
+    uint256 balance = (balance.scaledSupplyBalance.rayMul(normalizedIncome)) * assetPrice;
 
-    // unchecked {
-    //   return balance / assetUnit;
-    // }
+    unchecked {
+      return balance / assetUnit;
+    }
   }
 }

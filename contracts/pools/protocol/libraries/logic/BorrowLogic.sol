@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {UserConfiguration} from '../configuration/UserConfiguration.sol';
-import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {DataTypes} from '../types/DataTypes.sol';
-import {ValidationLogic} from './ValidationLogic.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
+import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {UserConfiguration} from '../configuration/UserConfiguration.sol';
+import {ValidationLogic} from './ValidationLogic.sol';
 
 /**
  * @title BorrowLogic library
@@ -20,6 +21,7 @@ library BorrowLogic {
   using SafeERC20 for IERC20;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using PositionBalanceConfiguration for DataTypes.PositionBalance;
   using SafeCast for uint256;
 
   // See `IPool` for descriptions
@@ -39,7 +41,7 @@ library BorrowLogic {
 
   /**
    * @notice Implements the borrow feature. Borrowing allows users that provided collateral to draw liquidity from the
-   * Aave protocol proportionally to their collateralization power.
+   * protocol proportionally to their collateralization power.
    * @dev  Emits the `Borrow()` event
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
@@ -51,8 +53,8 @@ library BorrowLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteBorrowParams memory params,
-    mapping(address asset => mapping(bytes32 position => uint256 balance)) storage _debts,
-    mapping(address asset => uint256 totalSupply) storage _totalSupplies
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
+    mapping(address => uint256) storage _totalSupplies
   ) public {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
@@ -66,24 +68,29 @@ library BorrowLogic {
         reserveCache: reserveCache,
         userConfig: userConfig,
         asset: params.asset,
-        position: params.onBehalfOfPosition,
+        position: params.position,
         amount: params.amount,
         reservesCount: params.reservesCount,
         pool: params.pool
       })
     );
 
-    reserve.updateInterestRates(reserveCache, params.asset, 0, params.amount);
+    // mint debt tokens
+    DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
+    bool isFirstBorrowing = b.mintDebt(params.amount, reserveCache.nextVariableBorrowIndex);
+    if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
-    _debts[params.asset][params.onBehalfOfPosition] += params.amount;
+    // todo; update reserveCache.nextScaledVariableDebt
     _totalSupplies[params.asset] -= params.amount;
+
+    reserve.updateInterestRates(reserveCache, params.asset, 0, params.amount);
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
     emit Borrow(
       params.asset,
       params.user,
-      params.onBehalfOfPosition,
+      params.position,
       params.amount,
       reserve.currentVariableBorrowRate
     );
@@ -100,30 +107,31 @@ library BorrowLogic {
   function executeRepay(
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.ExecuteRepayParams memory params,
-    mapping(address asset => mapping(bytes32 position => uint256 balance)) storage _debts,
-    mapping(address asset => uint256 totalSupply) storage _totalSupplies
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
+    mapping(address => uint256) storage _totalSupplies
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
 
-    uint256 variableDebt = _debts[params.asset][params.onBehalfOfPosition];
+    DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
 
-    ValidationLogic.validateRepay(reserveCache, params.amount, variableDebt);
+    uint256 paybackAmount = b.scaledDebtBalance;
+    ValidationLogic.validateRepay(reserveCache, params.amount, paybackAmount);
 
-    uint256 paybackAmount = variableDebt;
-
-    if (params.amount < paybackAmount) {
-      paybackAmount = params.amount;
-    }
+    if (params.amount < paybackAmount) paybackAmount = params.amount;
 
     reserve.updateInterestRates(reserveCache, params.asset, paybackAmount, 0);
 
-    _debts[params.asset][params.onBehalfOfPosition] -= paybackAmount;
-    _totalSupplies[params.asset] += paybackAmount;
+    uint256 burnt = b.burnDebt(paybackAmount, reserveCache.nextVariableBorrowIndex);
+    // todo; update reserveCache.nextScaledVariableDebt
+    reserveCache.nextScaledVariableDebt = b.lastDebtLiquidtyIndex;
+
+    // todo
+    // _totalSupplies[params.asset].totalDebts -= burnt;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
-    emit Repay(params.asset, params.onBehalfOfPosition, msg.sender, paybackAmount);
+    emit Repay(params.asset, params.position, msg.sender, paybackAmount);
 
     return paybackAmount;
   }

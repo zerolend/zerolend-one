@@ -31,10 +31,8 @@ abstract contract Pool is Initializable, IPool {
   mapping(bytes32 position => DataTypes.UserConfigurationMap config) internal _usersConfig;
 
   /// @notice Map of position's individual balances
-  mapping(address asset => mapping(bytes32 position => uint256 balance)) internal _balances;
-
-  /// @notice Map of position's individual debt positions
-  mapping(address asset => mapping(bytes32 position => uint256 balance)) internal _debts;
+  mapping(address asset => mapping(bytes32 position => DataTypes.PositionBalance balance))
+    internal _balances;
 
   /// @notice Map of total supply of tokens
   mapping(address asset => uint256 totalSupply) internal _totalSupplies;
@@ -167,7 +165,7 @@ abstract contract Pool is Initializable, IPool {
         reservesCount: _reservesCount,
         pool: address(this)
       }),
-      _debts,
+      _balances,
       _totalSupplies
     );
   }
@@ -179,16 +177,16 @@ abstract contract Pool is Initializable, IPool {
     uint256 index,
     bytes calldata hookData
   ) public virtual returns (uint256 paybackAmount) {
-    bytes32 positionId = msg.sender.getPositionId(index);
+    bytes32 position = msg.sender.getPositionId(index);
     paybackAmount = BorrowLogic.executeRepay(
       _reserves,
       DataTypes.ExecuteRepayParams({
         asset: asset,
         amount: amount,
         user: msg.sender,
-        onBehalfOfPosition: positionId
+        position: position
       }),
-      _debts,
+      _balances,
       _totalSupplies
     );
   }
@@ -210,7 +208,6 @@ abstract contract Pool is Initializable, IPool {
       _reserves,
       _reservesList,
       _balances,
-      _debts,
       _usersConfig,
       DataTypes.ExecuteLiquidationCallParams({
         reservesCount: _reservesCount,
