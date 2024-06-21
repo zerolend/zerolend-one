@@ -36,10 +36,16 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     _;
   }
 
+  /**
+   * @dev Constructor to disable initializers.
+   */
   constructor() {
     _disableInitializers();
   }
 
+  /**
+   * @notice Initializes the NFTPositionManager contract.
+   */
   function initialize() external initializer {
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
@@ -49,6 +55,9 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
    * @notice Mints a new NFT representing a liquidity position.
    * @param params The parameters required for minting the position, including the pool, token, amount, and recipient.
    * @return tokenId The ID of the newly minted token.
+   * @custom:error ZeroAddressNotAllowed error thrown if recipient or asset address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   * @custom:event NFTMinted is emitted for each new asset.
    */
   function mint(MintParams calldata params) external returns (uint256 tokenId) {
     // TODO: verify that pool is a part of protocol deployed via PoolFactory.
@@ -75,7 +84,10 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
 
   /**
    * @notice Allow User to increase liquidity in the postion
-   * @param params  The parameters required for increase liquidity the position, including the token, amount, and recipient and market.
+   * @param params  The parameters required for increase liquidity the position, including the token, amount, and recipient and asset.
+   * @custom:error ZeroAddressNotAllowed error thrown if recipient or asset address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   * @custom:event LiquidityIncreased emitted whenever user supply asset
    */
   function increaseLiquidity(
     AddLiquidityParams memory params
@@ -99,6 +111,9 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
   /**
    * @notice Allow user to borrow the underlying assets
    * @param params The params required for borrow the position which includes tokenId, market and amount
+   * @custom:error ZeroAddressNotAllowed error thrown asset address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   * @custom:error BalanceMisMatch error thrown if difference of currentDebtBalance and previousDebtBalance is not equal to amount
    */
   function borrow(BorrowParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
@@ -128,26 +143,24 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     asset.safeTransfer(msg.sender, params.amount);
   }
 
+  /**
+   * @notice Allow user to withdraw their underlying assets.
+   * @param params The parameters required for withdrawing from the position, including tokenId, asset, and amount.
+   * @custom:error ZeroAddressNotAllowed error thrown if asset or user address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   * @custom:error InvalidAssetAddress error thrown if asset address is not found in the position asset array list
+   * @custom:error BalanceMisMatch error thrown if difference of previousSupplyBalance currentSupplyBalance and  is not equal to amount
+   */
+
   function withdraw(WithdrawParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0) || params.user == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
 
     Position storage userPosition = positions[params.tokenId];
     Asset[] storage assets = userPosition.assets;
+
     uint256 length = assets.length;
-    int256 index = -1;
-
-    for (uint256 i; i < length; ) {
-      if (params.asset == assets[i].asset) {
-        index = int256(i);
-        break;
-      }
-      unchecked {
-        ++i;
-      }
-    }
-
-    if (index == -1) revert InvalidMarketAddress();
+    int256 index = _validateAsset(assets, params.asset, length);
 
     IPool pool = IPool(userPosition.pool);
     bytes32 positionId = _getPositionId(params.tokenId);
@@ -161,6 +174,12 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     assets[uint256(index)].balance -= params.amount;
   }
 
+  /**
+   * @notice Burns a token, removing it from existence.
+   * @param tokenId The ID of the token to burn.
+   * @custom:error PositionNotCleared thrown if user postion is not cleared in the position map
+   * @custom:event NFTBurned emitted when user want to burn their NFT
+   */
   function burn(uint256 tokenId) external isAuthorizedForToken(tokenId) {
     Asset[] memory assets = positions[tokenId].assets;
     uint256 length = assets.length;
@@ -174,11 +193,16 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
       }
     }
     _burn(tokenId);
+    emit NFTBurned(tokenId);
   }
 
   /**
-   * @notice Allow user to repay thier debt
-   * @param params The params required for repaying the position which includes tokenId, market and amount
+   * @notice Allow user to repay thier debt.
+   * @param params The params required for repaying the position which includes tokenId, asset and amount.
+   * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   * @custom:error InvalidAssetAddress error thrown if asset address is not found in the position asset array list
+   * @custom:error BalanceMisMatch error thrown if difference of previousDebtBalance currentDebtBalance and is not equal to amount
    */
   function repay(RepayParams memory params) external {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
@@ -186,20 +210,9 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
 
     Position storage userPosition = positions[params.tokenId];
     Asset[] storage assets = userPosition.assets;
+
     uint256 length = assets.length;
-
-    int256 index = -1;
-    for (uint256 i; i < length; ) {
-      if (params.asset == assets[i].asset) {
-        index = int256(i);
-        break;
-      }
-      unchecked {
-        ++i;
-      }
-    }
-
-    if (index == -1) revert InvalidMarketAddress();
+    int256 index = _validateAsset(assets, params.asset, length);
 
     IPool pool = IPool(userPosition.pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
@@ -306,6 +319,36 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     } else {
       assets.push(Asset({asset: asset, debt: amount, balance: 0}));
     }
+  }
+
+  /**
+   * @notice Validates if a given asset exists in the array of assets.
+   * @dev This function iterates over the provided assets array to check if the specified asset address exists.
+   * If the asset is found, its index in the array is returned. If not, the function reverts with an error.
+   * @param assets The storage array of `Asset` structs to search within.
+   * @param asset The address of the asset to validate.
+   * @param len The length of the `assets` array.
+   * @return index The index of the asset in the array if found, otherwise reverts.
+   * @custom:error InvalidAssetAddress if the asset is not found in the array.
+   */
+  function _validateAsset(
+    Asset[] storage assets,
+    address asset,
+    uint256 len
+  ) private view returns (int256 index) {
+    index = -1;
+    Asset[] memory assetsCache = assets;
+    for (uint256 i = 0; i < len; ) {
+      if (asset == assetsCache[i].asset) {
+        index = int256(i);
+        break;
+      }
+      unchecked {
+        ++i;
+      }
+    }
+
+    if (index == -1) revert InvalidAssetAddress();
   }
 
   /**

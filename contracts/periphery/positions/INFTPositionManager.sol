@@ -2,18 +2,34 @@
 pragma solidity 0.8.19;
 
 interface INFTPositionManager {
-  /// @notice Error indicating that the caller is not the owner or approved operator of the token ID.
+  /**
+   * @notice Error indicating that the caller is not the owner or approved operator of the token ID.
+   */
   error NotTokenIdOwner();
-  /// @notice Error indicating that it is an Zero Address which is not allowed
+
+  /**
+   * @notice Error indicating that a zero address was provided, which is not allowed.
+   */
   error ZeroAddressNotAllowed();
-  /// @notice Error indicating that value that is passed is zero which is not allowed
+
+  /**
+   * @notice Error indicating that a zero value was provided, which is not allowed.
+   */
   error ZeroValueNotAllowed();
 
-  /// @notice Error indicating that value that the address is invalid and not present in debt market
-  error InvalidMarketAddress();
+  /**
+   * @notice Error indicating that the provided address is invalid and not present in the debt market.
+   */
+  error InvalidAssetAddress();
 
+  /**
+   * @notice Error indicating a mismatch in balance.
+   */
   error BalanceMisMatch();
 
+  /**
+   * @notice Error indicating that the position is not cleared.
+   */
   error PositionNotCleared();
 
   /**
