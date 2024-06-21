@@ -6,7 +6,6 @@ import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {Helpers} from '../helpers/Helpers.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
@@ -75,12 +74,7 @@ library BorrowLogic {
       })
     );
 
-    reserve.updateInterestRates(
-      reserveCache,
-      params.asset,
-      0,
-      params.amount
-    );
+    reserve.updateInterestRates(reserveCache, params.asset, 0, params.amount);
 
     _debts[params.asset][params.onBehalfOfPosition] += params.amount;
     _totalSupplies[params.asset] -= params.amount;
@@ -114,7 +108,7 @@ library BorrowLogic {
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
 
-    uint256 variableDebt = Helpers.getUserCurrentDebt(params.onBehalfOfPosition, reserveCache);
+    uint256 variableDebt = _debts[params.asset][params.onBehalfOfPosition];
 
     ValidationLogic.validateRepay(reserveCache, params.amount, variableDebt);
 

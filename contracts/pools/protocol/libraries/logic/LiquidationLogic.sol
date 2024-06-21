@@ -5,7 +5,6 @@ import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {WadRayMath} from '../../libraries/math/WadRayMath.sol';
-import {Helpers} from '../../libraries/helpers/Helpers.sol';
 import {DataTypes} from '../../libraries/types/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
@@ -91,6 +90,7 @@ library LiquidationLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     mapping(address asset => mapping(bytes32 position => uint256)) storage _balances,
+    mapping(address asset => mapping(bytes32 position => uint256)) storage _debts,
     mapping(bytes32 => DataTypes.UserConfigurationMap) storage usersConfig,
     DataTypes.ExecuteLiquidationCallParams memory params
   ) external {
@@ -116,7 +116,8 @@ library LiquidationLogic {
     (vars.userDebt, vars.actualDebtToLiquidate) = _calculateDebt(
       vars.debtReserveCache,
       params,
-      vars.healthFactor
+      vars.healthFactor,
+      _debts
     );
 
     ValidationLogic.validateLiquidationCall(
@@ -295,12 +296,10 @@ library LiquidationLogic {
   function _calculateDebt(
     DataTypes.ReserveCache memory debtReserveCache,
     DataTypes.ExecuteLiquidationCallParams memory params,
-    uint256 healthFactor
+    uint256 healthFactor,
+    mapping(address asset => mapping(bytes32 position => uint256 balance)) storage _debts
   ) internal view returns (uint256, uint256) {
-    uint256 userDebt = Helpers.getUserCurrentDebt(
-      params.position,
-      debtReserveCache
-    );
+    uint256 userDebt = 0; // _debts[debtReserveCache.asset][params.position];
 
     uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD
       ? DEFAULT_LIQUIDATION_CLOSE_FACTOR
