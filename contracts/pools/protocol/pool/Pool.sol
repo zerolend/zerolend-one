@@ -31,15 +31,15 @@ abstract contract Pool is Initializable, IPool {
   mapping(bytes32 position => DataTypes.UserConfigurationMap config) internal _usersConfig;
 
   /// @notice Map of position's individual balances
-  mapping(address asset => mapping(bytes32 position => DataTypes.PositionBalance balance))
+  mapping(address reserve => mapping(bytes32 position => DataTypes.PositionBalance balance))
     internal _balances;
 
   /// @notice Map of total supply of tokens
-  mapping(address asset => uint256 totalSupply) internal _totalSupplies;
+  mapping(address reserve => DataTypes.ReserveSupplies totalSupply) internal _totalSupplies;
 
   /// @notice List of reserves as a map (reserveId => reserve).
   /// It is structured as a mapping for gas savings reasons, using the reserve id as index
-  mapping(uint256 reserveId => address asset) internal _reservesList;
+  mapping(uint256 reserveId => address reserve) internal _reservesList;
 
   /// @notice Total FlashLoan Premium, expressed in bps
   uint128 internal _flashLoanPremiumTotal;
@@ -48,7 +48,7 @@ abstract contract Pool is Initializable, IPool {
   uint16 internal _reservesCount;
 
   /// @notice Map of asset price sources (asset => priceSource)
-  mapping(address asset => IAggregatorInterface oracle) internal _assetsSources;
+  mapping(address reserve => IAggregatorInterface oracle) internal _assetsSources;
 
   /// @notice The pool configurator contract that can make changes
   address public configurator;
@@ -158,6 +158,8 @@ abstract contract Pool is Initializable, IPool {
       _reserves,
       _reservesList,
       _usersConfig[positionId],
+      _balances,
+      _totalSupplies,
       DataTypes.ExecuteBorrowParams({
         asset: asset,
         user: msg.sender,
@@ -165,9 +167,7 @@ abstract contract Pool is Initializable, IPool {
         amount: amount,
         reservesCount: _reservesCount,
         pool: address(this)
-      }),
-      _balances,
-      _totalSupplies
+      })
     );
   }
 
@@ -181,14 +181,14 @@ abstract contract Pool is Initializable, IPool {
     bytes32 position = msg.sender.getPositionId(index);
     paybackAmount = BorrowLogic.executeRepay(
       _reserves,
+      _balances,
+      _totalSupplies,
       DataTypes.ExecuteRepayParams({
         asset: asset,
         amount: amount,
         user: msg.sender,
         position: position
-      }),
-      _balances,
-      _totalSupplies
+      })
     );
   }
 

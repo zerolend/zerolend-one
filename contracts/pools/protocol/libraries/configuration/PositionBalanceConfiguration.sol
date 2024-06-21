@@ -14,7 +14,7 @@ library PositionBalanceConfiguration {
     DataTypes.PositionBalance storage self,
     uint256 amount,
     uint256 index
-  ) internal returns (bool) {
+  ) internal returns (bool isFirst, uint256 supplyMinted) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
 
@@ -25,14 +25,14 @@ library PositionBalanceConfiguration {
     self.lastSupplyLiquidtyIndex = index.toUint128();
     self.scaledSupplyBalance += amountScaled.toUint128();
 
-    return (scaledBalance == 0);
+    return (scaledBalance == 0, amountScaled.toUint128());
   }
 
   function mintDebt(
     DataTypes.PositionBalance storage self,
     uint256 amount,
     uint256 index
-  ) internal returns (bool) {
+  ) internal returns (bool isFirst, uint256 supplyMinted) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
 
@@ -43,14 +43,14 @@ library PositionBalanceConfiguration {
     self.lastDebtLiquidtyIndex = index.toUint128();
     self.scaledDebtBalance += amountScaled.toUint128();
 
-    return (scaledBalance == 0);
+    return (scaledBalance == 0, amountScaled.toUint128());
   }
 
   function burnSupply(
     DataTypes.PositionBalance storage self,
     uint256 amount,
     uint256 index
-  ) internal returns (uint256) {
+  ) internal returns (uint256 supplyBurnt) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
 
@@ -67,7 +67,7 @@ library PositionBalanceConfiguration {
     DataTypes.PositionBalance storage self,
     uint256 amount,
     uint256 index
-  ) internal returns (uint256) {
+  ) internal returns (uint256 supplyBurnt) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
 

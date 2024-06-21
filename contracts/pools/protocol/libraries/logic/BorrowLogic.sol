@@ -52,9 +52,9 @@ library BorrowLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ExecuteBorrowParams memory params,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address => uint256) storage _totalSupplies
+    mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
+    DataTypes.ExecuteBorrowParams memory params
   ) public {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
@@ -78,11 +78,15 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    bool isFirstBorrowing = b.mintDebt(params.amount, reserveCache.nextVariableBorrowIndex);
+    (bool isFirstBorrowing, uint256 minted) = b.mintDebt(
+      params.amount,
+      reserveCache.nextVariableBorrowIndex
+    );
+    _totalSupplies[params.asset].debt += minted;
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
     // todo; update reserveCache.nextScaledVariableDebt
-    _totalSupplies[params.asset] -= params.amount;
+    _totalSupplies[params.asset].debt -= params.amount;
 
     reserve.updateInterestRates(reserveCache, params.asset, 0, params.amount);
 
@@ -107,9 +111,9 @@ library BorrowLogic {
    */
   function executeRepay(
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    DataTypes.ExecuteRepayParams memory params,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address => uint256) storage _totalSupplies
+    mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
+    DataTypes.ExecuteRepayParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
