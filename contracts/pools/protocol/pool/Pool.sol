@@ -8,56 +8,20 @@ import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IPool} from '../../interfaces/IPool.sol';
+import {PoolGetters} from './PoolGetters.sol';
 import {IHook} from '../../interfaces/IHook.sol';
 import {IFactory} from '../../interfaces/IFactory.sol';
 import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
-import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 
-abstract contract Pool is Initializable, IPool {
+abstract contract Pool is Initializable, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using PercentageMath for uint256;
-  using ReserveLogic for DataTypes.ReserveData;
   using TokenConfiguration for address;
-
-  /// @notice Map of reserves and their data (underlyingAssetOfReserve => reserveData)
-  mapping(address asset => DataTypes.ReserveData data) internal _reserves;
-
-  /// @notice Map of positions and their configuration data (userAddress => userConfiguration)
-  mapping(bytes32 position => DataTypes.UserConfigurationMap config) internal _usersConfig;
-
-  /// @notice Map of position's individual balances
-  mapping(address reserve => mapping(bytes32 position => DataTypes.PositionBalance balance))
-    internal _balances;
-
-  /// @notice Map of total supply of tokens
-  mapping(address reserve => DataTypes.ReserveSupplies totalSupply) internal _totalSupplies;
-
-  /// @notice List of reserves as a map (reserveId => reserve).
-  /// It is structured as a mapping for gas savings reasons, using the reserve id as index
-  mapping(uint256 reserveId => address reserve) internal _reservesList;
-
-  /// @notice Total FlashLoan Premium, expressed in bps
-  uint128 internal _flashLoanPremiumTotal;
-
-  /// @notice Number of active reserves in the pool
-  uint16 internal _reservesCount;
-
-  /// @notice Map of asset price sources (asset => priceSource)
-  mapping(address reserve => IAggregatorInterface oracle) internal _assetsSources;
-
-  /// @notice The pool configurator contract that can make changes
-  address public configurator;
-
-  /// @notice The original factory contract with protocol-level control variables
-  IFactory public factory;
-
-  /// @notice The assigned hook for this pool
-  IHook public hook;
 
   /**
    * @notice Initializes the Pool.
@@ -239,105 +203,9 @@ abstract contract Pool is Initializable, IPool {
       asset: asset,
       amount: amount,
       params: params,
-      flashLoanPremiumToProtocol: factory.flashLoanPremiumToProtocol(),
-      flashLoanPremiumTotal: _flashLoanPremiumTotal
+      flashLoanPremiumTotal: factory.flashLoanPremiumToProtocol()
     });
-    FlashLoanLogic.executeFlashLoanSimple(_reserves[asset], flashParams);
-  }
-
-  /// @inheritdoc IPool
-  function getReserveData(
-    address asset
-  ) external view virtual override returns (DataTypes.ReserveData memory) {
-    return _reserves[asset];
-  }
-
-  /// @inheritdoc IPool
-  function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance) {
-    return _balances[asset][positionId].scaledSupplyBalance;
-  }
-
-  /// @inheritdoc IPool
-  function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt) {
-    return _balances[asset][positionId].scaledDebtBalance;
-  }
-
-  /// @inheritdoc IPool
-  function getUserAccountData(
-    address user,
-    uint256 index
-  )
-    external
-    view
-    virtual
-    override
-    returns (
-      uint256 totalCollateralBase,
-      uint256 totalDebtBase,
-      uint256 availableBorrowsBase,
-      uint256 currentLiquidationThreshold,
-      uint256 ltv,
-      uint256 healthFactor
-    )
-  {
-    return
-      PoolLogic.executeGetUserAccountData(
-        _balances,
-        _reserves,
-        _reservesList,
-        DataTypes.CalculateUserAccountDataParams({
-          userConfig: _usersConfig[keccak256(abi.encodePacked(msg.sender, index))],
-          reservesCount: _reservesCount,
-          position: user.getPositionId(index),
-          pool: address(this)
-        })
-      );
-  }
-
-  /// @inheritdoc IPool
-  function getConfiguration(
-    address asset
-  ) external view virtual override returns (DataTypes.ReserveConfigurationMap memory) {
-    return _reserves[asset].configuration;
-  }
-
-  /// @inheritdoc IPool
-  function getUserConfiguration(
-    address user,
-    uint256 index
-  ) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
-    return _usersConfig[user.getPositionId(index)];
-  }
-
-  /// @inheritdoc IPool
-  function getReserveNormalizedIncome(
-    address asset
-  ) external view virtual override returns (uint256) {
-    return _reserves[asset].getNormalizedIncome();
-  }
-
-  /// @inheritdoc IPool
-  function getReserveNormalizedVariableDebt(
-    address asset
-  ) external view virtual override returns (uint256) {
-    return _reserves[asset].getNormalizedDebt();
-  }
-
-  /// @inheritdoc IPool
-  function getReservesList() external view virtual override returns (address[] memory) {
-    address[] memory reservesList = new address[](_reservesCount);
-    for (uint256 i = 0; i < _reservesCount; i++) reservesList[i] = _reservesList[i];
-    return reservesList;
-  }
-
-  /// @inheritdoc IPool
-  function getReservesCount() external view virtual override returns (uint256) {
-    return _reservesCount;
-  }
-
-  /// @inheritdoc IPool
-  function getReserveAddressById(uint16 id) external view returns (address) {
-    return _reservesList[id];
+    FlashLoanLogic.executeFlashLoanSimple(address(this), _reserves[asset], flashParams);
   }
 
   // @inheritdoc IPool
@@ -391,9 +259,5 @@ abstract contract Pool is Initializable, IPool {
   ) external virtual {
     require(msg.sender == address(factory.configurator()), 'only configurator');
     _setReserveConfiguration(asset, rateStrategyAddress, source, configuration);
-  }
-
-  function getAssetPrice(address asset) public view override returns (uint256) {
-    return uint256(_assetsSources[asset].latestAnswer());
   }
 }

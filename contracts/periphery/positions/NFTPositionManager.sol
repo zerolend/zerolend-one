@@ -330,7 +330,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     Asset[] storage assets,
     address asset,
     uint256 len
-  ) private view returns (int256 index) {
+  ) private pure returns (int256 index) {
     index = -1;
     Asset[] memory assetsCache = assets;
     for (uint256 i = 0; i < len; ) {

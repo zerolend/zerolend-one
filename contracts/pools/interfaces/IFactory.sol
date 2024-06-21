@@ -21,7 +21,7 @@ interface IFactory is IBeacon {
 
   function createPool(IPool.InitParams memory params) external returns (IPool pool);
 
-  function flashLoanPremiumToProtocol() external returns (uint256);
+  function flashLoanPremiumToProtocol() external view returns (uint256);
 
   function pools(uint256 index) external returns (IPool);
 
@@ -37,9 +37,9 @@ interface IFactory is IBeacon {
 
   function setReserveFactor(uint256 updated) external;
 
-  function setTreasury(address updated) external;
-
   function setRewardsController(address _controller) external;
+
+  function setTreasury(address updated) external;
 
   function treasury() external returns (address);
 }

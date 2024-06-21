@@ -44,7 +44,6 @@ library FlashLoanLogic {
     uint256 currentAmount;
     uint256[] totalPremiums;
     uint256 flashloanPremiumTotal;
-    uint256 flashloanPremiumToProtocol;
   }
 
   /**
@@ -58,6 +57,7 @@ library FlashLoanLogic {
    * @param params The additional parameters needed to execute the simple flashloan function
    */
   function executeFlashLoanSimple(
+    address pool,
     DataTypes.ReserveData storage reserve,
     DataTypes.FlashloanSimpleParams memory params
   ) external {
@@ -69,7 +69,7 @@ library FlashLoanLogic {
 
     IFlashLoanSimpleReceiver receiver = IFlashLoanSimpleReceiver(params.receiverAddress);
     uint256 totalPremium = params.amount.percentMul(params.flashLoanPremiumTotal);
-    // IAToken(reserve.aTokenAddress).transferUnderlyingTo(params.receiverAddress, params.amount);
+    IERC20(params.asset).transfer(params.receiverAddress, params.amount);
 
     require(
       receiver.executeOperation(
@@ -85,11 +85,11 @@ library FlashLoanLogic {
     _handleFlashLoanRepayment(
       reserve,
       DataTypes.FlashLoanRepaymentParams({
+        pool: pool,
         asset: params.asset,
         receiverAddress: params.receiverAddress,
         amount: params.amount,
-        totalPremium: totalPremium,
-        flashLoanPremiumToProtocol: params.flashLoanPremiumToProtocol
+        totalPremium: totalPremium
       })
     );
   }
@@ -104,34 +104,31 @@ library FlashLoanLogic {
     DataTypes.ReserveData storage reserve,
     DataTypes.FlashLoanRepaymentParams memory params
   ) internal {
-    uint256 premiumToProtocol = params.totalPremium.percentMul(params.flashLoanPremiumToProtocol);
-    uint256 premiumToLP = params.totalPremium - premiumToProtocol;
     uint256 amountPlusPremium = params.amount + params.totalPremium;
 
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
 
-    // todo
-    // reserveCache.nextLiquidityIndex = reserve.cumulateToLiquidityIndex(
-    //   IERC20(reserveCache.nftPositionManager).totalSupply() +
-    //     uint256(reserve.accruedToTreasury).rayMul(reserveCache.nextLiquidityIndex),
-    //   premiumToLP
-    // );
-
-    reserve.accruedToTreasury += premiumToProtocol
+    reserve.accruedToTreasury += params
+      .totalPremium
       .rayDiv(reserveCache.nextLiquidityIndex)
       .toUint128();
 
-    // todo
-    // reserve.updateInterestRates(reserveCache, params.asset, amountPlusPremium, 0);
+    reserve.updateInterestRates(
+      reserveCache,
+      params.asset,
+      IPool(params.pool).getReserveFactor(),
+      amountPlusPremium,
+      0
+    );
+
+    IERC20(params.asset).safeTransferFrom(
+      params.receiverAddress,
+      address(params.pool),
+      amountPlusPremium
+    );
 
     // todo
-    // IERC20(params.asset).safeTransferFrom(
-    //   params.receiverAddress,
-    //   reserveCache.nftPositionManager,
-    //   amountPlusPremium
-    // );
-
     // IAToken(reserveCache.aTokenAddress).handleRepayment(
     //   params.receiverAddress,
     //   params.receiverAddress,

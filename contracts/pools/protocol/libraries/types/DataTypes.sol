@@ -135,16 +135,15 @@ library DataTypes {
     address asset;
     uint256 amount;
     bytes params;
-    uint256 flashLoanPremiumToProtocol;
     uint256 flashLoanPremiumTotal;
   }
 
   struct FlashLoanRepaymentParams {
     uint256 amount;
     uint256 totalPremium;
-    uint256 flashLoanPremiumToProtocol;
     address asset;
     address receiverAddress;
+    address pool;
   }
 
   struct CalculateUserAccountDataParams {
