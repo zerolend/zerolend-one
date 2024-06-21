@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "BSL-3.0",
   "devDependencies": {
+    "forge-std": "github:foundry-rs/forge-std#v1.8.1",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.0",
@@ -33,7 +34,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "compile": "hardhat compile",
+    "test:forge": "forge test",
+    "compile:forge": "forge build",
+    "compile:hardhat": "hardhat compile",
+    "compile": "npx compile:hardhat && npx compile:forge",
     "docs": "rimraf docs && hardhat docgen",
     "prepare": "husky"
   }

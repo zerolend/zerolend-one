@@ -10,7 +10,7 @@
     "declaration": true,
     "declarationDir": "./types"
   },
-  "include": ["./scripts", "./test-suites", "./tasks", "./helpers"],
+  "include": ["./scripts", "./tests", "./tasks", "./helpers"],
   "files": [
     "./hardhat.config.ts",
     "node_modules/@nomiclabs/hardhat-etherscan/src/type-extensions.ts",
