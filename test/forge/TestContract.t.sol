@@ -1,4 +1,4 @@
-import 'forge-std/Test.sol';
+import 'forge-std/src/Test.sol';
 
 contract TestContract is Test {
   using stdStorage for StdStorage;
