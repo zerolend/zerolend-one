@@ -91,35 +91,41 @@ library DataTypes {
   }
 
   struct ExecuteLiquidationCallParams {
-    uint256 reservesCount;
-    uint256 debtToCover;
     address collateralAsset;
     address debtAsset;
-    bytes32 position;
     address pool;
+    bytes32 position;
+    uint256 debtToCover;
+    uint256 reservesCount;
   }
 
   struct ExecuteSupplyParams {
     address asset;
-    uint256 amount;
-    bytes32 position;
     address pool;
+    bytes32 position;
+    uint256 amount;
+  }
+
+  struct ExtraData {
+    bytes interestRateData;
+    bytes hookData;
   }
 
   struct ExecuteBorrowParams {
     address asset;
+    address pool;
     address user;
     bytes32 position;
     uint256 amount;
     uint256 reservesCount;
-    address pool;
   }
 
   struct ExecuteRepayParams {
     address asset;
-    uint256 amount;
+    address pool;
     address user;
     bytes32 position;
+    uint256 amount;
   }
 
   struct ExecuteWithdrawParams {

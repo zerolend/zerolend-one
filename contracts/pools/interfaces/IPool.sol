@@ -179,7 +179,14 @@ interface IPool {
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
    */
-  function supply(address asset, uint256 amount, uint256 index, bytes calldata hookData) external;
+  function supply(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) external;
+
+  function supply(address asset, uint256 amount, uint256 index) external;
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -193,8 +200,10 @@ interface IPool {
     address asset,
     uint256 amount,
     uint256 index,
-    bytes calldata hookData
+    DataTypes.ExtraData memory data
   ) external returns (uint256);
+
+  function withdraw(address asset, uint256 amount, uint256 index) external returns (uint256);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -205,7 +214,14 @@ interface IPool {
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
    */
-  function borrow(address asset, uint256 amount, uint256 index, bytes calldata hookData) external;
+  function borrow(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) external;
+
+  function borrow(address asset, uint256 amount, uint256 index) external;
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -219,8 +235,10 @@ interface IPool {
     address asset,
     uint256 amount,
     uint256 index,
-    bytes calldata hookData
+    DataTypes.ExtraData memory data
   ) external returns (uint256);
+
+  function repay(address asset, uint256 amount, uint256 index) external returns (uint256);
 
   // /**
   //  * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
@@ -235,16 +253,21 @@ interface IPool {
    *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk
    * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
-   * @param user The address of the borrower getting liquidated
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
    */
   function liquidate(
     address collateralAsset,
     address debtAsset,
-    address user,
+    bytes32 position,
     uint256 debtToCover,
-    uint256 index,
-    bytes calldata hookData
+    DataTypes.ExtraData memory data
+  ) external;
+
+  function liquidate(
+    address collateralAsset,
+    address debtAsset,
+    bytes32 position,
+    uint256 debtToCover
   ) external;
 
   /**

@@ -40,7 +40,7 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     address pool,
     address asset,
     bool enabled
-  ) external onlyRiskOrPoolAdmins(pool) {
+  ) external onlyPoolAdmin(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setBorrowingEnabled(enabled);
@@ -61,7 +61,22 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     emit ReserveFrozen(asset, freeze);
   }
 
-  // @inheritdoc IPoolConfigurator
+  /// @inheritdoc IPoolConfigurator
+  function setPoolFreeze(address pool, bool freeze) external onlyEmergencyAdmin(pool) {
+    IPool cachedPool = IPool(pool);
+    address[] memory reserves = cachedPool.getReservesList();
+
+    for (uint256 i = 0; i < reserves.length; i++) {
+      DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(
+        reserves[i]
+      );
+      currentConfig.setFrozen(freeze);
+      cachedPool.setReserveConfiguration(reserves[i], address(0), address(0), currentConfig);
+      emit ReserveFrozen(reserves[i], freeze);
+    }
+  }
+
+  /// @inheritdoc IPoolConfigurator
   function setBorrowCap(
     address pool,
     address asset,
@@ -75,7 +90,7 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     emit BorrowCapChanged(asset, oldBorrowCap, newBorrowCap);
   }
 
-  // @inheritdoc IPoolConfigurator
+  /// @inheritdoc IPoolConfigurator
   function setSupplyCap(
     address pool,
     address asset,
@@ -99,7 +114,7 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
     DataTypes.ReserveData memory reserve = cachedPool.getReserveData(asset);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
-    cachedPool.setReserveConfiguration(asset, address(0), address(0), currentConfig);
+    cachedPool.setReserveConfiguration(asset, newRateStrategyAddress, address(0), currentConfig);
     emit ReserveInterestRateStrategyChanged(asset, oldRateStrategyAddress, newRateStrategyAddress);
   }
 }

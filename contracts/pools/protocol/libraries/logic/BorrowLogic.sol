@@ -122,7 +122,6 @@ library BorrowLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
-    IPool pool,
     DataTypes.ExecuteRepayParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -139,7 +138,7 @@ library BorrowLogic {
     reserve.updateInterestRates(
       reserveCache,
       params.asset,
-      pool.getReserveFactor(),
+      IPool(params.pool).getReserveFactor(),
       paybackAmount,
       0
     );

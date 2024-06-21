@@ -78,7 +78,6 @@ interface IHook {
 
   function beforeLiquidate(
     address liquidator,
-    address user,
     bytes32 position,
     address collateralAsset,
     address debtAsset,
@@ -89,7 +88,6 @@ interface IHook {
 
   function afterLiquidate(
     address liquidator,
-    address user,
     bytes32 position,
     address collateralAsset,
     address debtAsset,
