@@ -31,7 +31,7 @@ library SupplyLogic {
   event ReserveUsedAsCollateralEnabled(address indexed reserve, bytes32 indexed position);
   event ReserveUsedAsCollateralDisabled(address indexed reserve, bytes32 indexed position);
   event Withdraw(address indexed reserve, bytes32 indexed pos, address indexed to, uint256 amount);
-  event Supply(address indexed reserve, address user, bytes32 indexed pos, uint256 amount);
+  event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
 
   /**
    * @notice Implements the supply feature. Through `supply()`, users supply assets to the Aave protocol.
@@ -47,7 +47,7 @@ library SupplyLogic {
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteSupplyParams memory params,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address asset => uint256 totalSupply) storage _totalSupplies,
+    mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
     address pool
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -59,13 +59,11 @@ library SupplyLogic {
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
 
-    DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    bool isFirstSupply = b.mintSupply(params.amount, reserveCache.nextLiquidityIndex);
+    DataTypes.PositionBalance storage bal = _balances[params.asset][params.position];
+    (bool isFirst, uint256 minted) = bal.mintSupply(params.amount, reserveCache.nextLiquidityIndex);
+    _totalSupplies[params.asset].collateral += minted;
 
-    // todo
-    // _totalSupplies[params.asset] += params.amount;
-
-    if (isFirstSupply) {
+    if (isFirst) {
       if (
         ValidationLogic.validateUseAsCollateral(
           reservesData,
@@ -79,7 +77,7 @@ library SupplyLogic {
       }
     }
 
-    // emit Supply(params.asset, onBehalfOf, params.position, params.amount);
+    emit Supply(params.asset, params.position, minted);
   }
 
   /**
@@ -99,36 +97,36 @@ library SupplyLogic {
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteWithdrawParams memory params,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address asset => uint256 totalSupply) storage _totalSupplies
+    mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
     reserve.updateState(reserveCache);
 
-    DataTypes.PositionBalance storage balance = _balances[params.asset][params.position];
+    DataTypes.PositionBalance storage bal = _balances[params.asset][params.position];
+    uint256 userBalance = bal.scaledSupplyBalance.rayMul(reserveCache.nextLiquidityIndex);
 
     uint256 amountToWithdraw = params.amount;
 
-    if (params.amount == type(uint256).max) amountToWithdraw = balance.scaledSupplyBalance;
+    if (params.amount == type(uint256).max) amountToWithdraw = userBalance;
 
-    ValidationLogic.validateWithdraw(reserveCache, amountToWithdraw, balance.scaledSupplyBalance);
+    ValidationLogic.validateWithdraw(reserveCache, amountToWithdraw, userBalance);
     reserve.updateInterestRates(reserveCache, params.asset, 0, amountToWithdraw);
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
 
-    if (isCollateral && amountToWithdraw == balance.scaledSupplyBalance) {
+    if (isCollateral && amountToWithdraw == userBalance) {
       userConfig.setUsingAsCollateral(reserve.id, false);
       emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }
 
-    // todos
-    // _totalSupplies[params.asset] -= params.amount;
-    _balances[params.asset][params.position].mintSupply(
+    // Burn debt. Which is burn supply, update total supply and send tokens to the user
+    uint256 burnt = _balances[params.asset][params.position].burnSupply(
       params.amount,
       reserveCache.nextLiquidityIndex
     );
-
+    _totalSupplies[params.asset].collateral -= burnt;
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
     if (isCollateral && userConfig.isBorrowingAny()) {

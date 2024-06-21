@@ -85,6 +85,11 @@ library DataTypes {
     uint256 lastDebtLiquidtyIndex;
   }
 
+  struct ReserveSupplies {
+    uint256 collateral;
+    uint256 debt;
+  }
+
   struct ExecuteLiquidationCallParams {
     uint256 reservesCount;
     uint256 debtToCover;
