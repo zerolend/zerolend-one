@@ -29,50 +29,48 @@ contract PoolManager is TimelockedActions {
 
   function cancelAction(address pool, bytes32 id) external {
     require(
-      isPoolAdmin(pool, msg.sender) || isRiskAdmin(pool, msg.sender),
+      isPoolAdmin(pool, msg.sender) ||
+        isRiskAdmin(pool, msg.sender) ||
+        isRiskAdmin(address(0), msg.sender),
       'not pool or risk admin'
     );
     _cancel(id);
-  }
-
-  function setRoleAdmin(bytes32 role, bytes32 adminRole) public onlyRole(DEFAULT_ADMIN_ROLE) {
-    _setRoleAdmin(role, adminRole);
   }
 
   function addPoolAdmin(address pool, address admin) public {
     grantRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
   }
 
-  function removePoolAdmin(address pool, address admin) public {
-    revokeRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
-  }
-
-  function isPoolAdmin(address pool, address admin) public view returns (bool) {
-    return hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
-  }
-
   function addEmergencyAdmin(address pool, address admin) public {
     grantRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
-  }
-
-  function removeEmergencyAdmin(address pool, address admin) public {
-    revokeRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
-  }
-
-  function isEmergencyAdmin(address pool, address admin) public view returns (bool) {
-    return hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
   }
 
   function addRiskAdmin(address pool, address admin) public {
     grantRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
   }
 
-  function removeRiskAdmin(address pool, address admin) public {
-    revokeRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
+  function isPoolAdmin(address pool, address admin) public view returns (bool) {
+    return hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
+  }
+
+  function isEmergencyAdmin(address pool, address admin) public view returns (bool) {
+    return hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
   }
 
   function isRiskAdmin(address pool, address admin) public view returns (bool) {
     return hasRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
+  }
+
+  function removeEmergencyAdmin(address pool, address admin) public {
+    revokeRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
+  }
+
+  function removeRiskAdmin(address pool, address admin) public {
+    revokeRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
+  }
+
+  function removePoolAdmin(address pool, address admin) public {
+    revokeRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
   }
 
   /**
@@ -85,7 +83,8 @@ contract PoolManager is TimelockedActions {
 
   modifier onlyEmergencyAdmin(address pool) {
     require(
-      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender),
+      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender) ||
+        hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender),
       'not risk or pool admin'
     );
     _;
@@ -94,6 +93,7 @@ contract PoolManager is TimelockedActions {
   modifier onlyEmergencyOrPoolAdmin(address pool) {
     require(
       hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender) ||
+        hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender) ||
         hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
       'not emergency or pool admin'
     );

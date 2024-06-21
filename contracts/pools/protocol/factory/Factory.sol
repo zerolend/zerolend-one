@@ -28,6 +28,9 @@ contract Factory is IFactory, Ownable {
     setImplementation(_implementation);
     configurator = IPoolConfigurator(_configurator);
     treasury = msg.sender;
+
+    // give some of the master roles (pool = address(0x0)) to the msg.sender
+    configurator.initRoles(address(0), msg.sender);
   }
 
   /// @inheritdoc IFactory
