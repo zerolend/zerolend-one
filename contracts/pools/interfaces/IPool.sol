@@ -191,6 +191,7 @@ interface IPool {
   function withdraw(
     address asset,
     uint256 amount,
+    address destination,
     uint256 index,
     bytes calldata hookData
   ) external returns (uint256);
@@ -264,21 +265,20 @@ interface IPool {
   ) external;
 
   /**
- * @notice Get the balance of a specific asset in a specific position.
- * @param asset The address of the asset.
- * @param positionId The ID of the position.
- * @return balance The balance of the specified asset in the specified position.
- */
-function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance);
+   * @notice Get the balance of a specific asset in a specific position.
+   * @param asset The address of the asset.
+   * @param positionId The ID of the position.
+   * @return balance The balance of the specified asset in the specified position.
+   */
+  function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance);
 
-/**
- * @notice Get the debt of a specific asset in a specific position.
- * @param asset The address of the asset.
- * @param positionId The ID of the position.
- * @return debt The debt of the specified asset in the specified position.
- */
-function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt);
-
+  /**
+   * @notice Get the debt of a specific asset in a specific position.
+   * @param asset The address of the asset.
+   * @param positionId The ID of the position.
+   * @return debt The debt of the specified asset in the specified position.
+   */
+  function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt);
 
   /**
    * @notice Returns the user account data across all the reserves

@@ -127,8 +127,8 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
 
     uint256 previousContractBalance = asset.balanceOf(address(this));
     uint256 previousDebtBalance = pool.getDebt(params.asset, positionId);
-    pool.borrow(params.asset, params.amount, address(this), params.tokenId);
     uint256 currentDebtBalance = pool.getDebt(params.asset, positionId);
+    pool.borrow(params.asset, params.amount, params.tokenId, '');
     uint256 currentContractBalance = asset.balanceOf(address(this));
 
     if (
@@ -166,7 +166,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     bytes32 positionId = _getPositionId(params.tokenId);
 
     uint256 previousSupplyBalance = pool.getBalance(params.asset, positionId);
-    pool.withdraw(params.asset, params.amount, params.user, params.tokenId);
+    pool.withdraw(params.asset, params.amount, params.user, params.tokenId, '');
     uint256 currentSupplyBalance = pool.getBalance(params.asset, positionId);
 
     if (previousSupplyBalance - currentSupplyBalance != params.amount) revert BalanceMisMatch();
@@ -224,12 +224,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
 
     uint256 previousContractBalance = asset.balanceOf(address(this));
     uint256 previousDebtBalance = pool.getDebt(params.asset, positionId);
-    uint256 finalRepayAmout = pool.repay(
-      params.asset,
-      params.amount,
-      address(this),
-      params.tokenId
-    );
+    uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId, '');
     uint256 currentDebtBalance = pool.getDebt(params.asset, positionId);
     uint256 currentContractBalance = asset.balanceOf(address(this));
 
@@ -258,7 +253,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
 
     IPool pool = IPool(params.pool);
     uint256 previousSupplyBalance = pool.getBalance(params.asset, positionId);
-    pool.supply(params.asset, params.amount, params.user, params.tokenId);
+    pool.supply(params.asset, params.amount, params.tokenId, '');
     uint256 currentSupplyBalance = pool.getBalance(params.asset, positionId);
 
     balanceDiff = currentSupplyBalance - previousSupplyBalance;

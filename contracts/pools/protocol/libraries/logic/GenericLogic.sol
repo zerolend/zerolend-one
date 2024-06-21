@@ -221,13 +221,13 @@ library GenericLogic {
    * @return The total aToken balance of the user normalized to the base currency of the price oracle
    */
   function _getPositionBalanceInBaseCurrency(
-    DataTypes.PositionBalance storage balance,
+    DataTypes.PositionBalance storage _balance,
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
   ) private view returns (uint256) {
     uint256 normalizedIncome = reserve.getNormalizedIncome();
-    uint256 balance = (balance.scaledSupplyBalance.rayMul(normalizedIncome)) * assetPrice;
+    uint256 balance = (_balance.scaledSupplyBalance.rayMul(normalizedIncome)) * assetPrice;
 
     unchecked {
       return balance / assetUnit;
