@@ -31,7 +31,7 @@ contract FlashloanAttacker {
   function _innerBorrow(address asset) internal {
     DataTypes.ReserveData memory config = _pool.getReserveData(asset);
     IERC20 token = IERC20(asset);
-    uint256 avail = token.balanceOf(config.nftPositionManager);
+    // uint256 avail = token.balanceOf(config.nftPositionManager);
     // _pool.borrow(asset, avail, 0, address(this));
   }
 

@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title IPoolConfigurator
- * @author Aave
+
  * @notice Defines the basic interface for a Pool configurator.
  */
 interface IPoolConfigurator {

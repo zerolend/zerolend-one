@@ -12,7 +12,7 @@ import {ReserveLogic} from './ReserveLogic.sol';
 
 /**
  * @title GenericLogic library
- * @author Aave
+
  * @notice Implements protocol-level logic to calculate and validate the state of a user
  */
 library GenericLogic {

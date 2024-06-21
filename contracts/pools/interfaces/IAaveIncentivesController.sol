@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title IAaveIncentivesController
- * @author Aave
+
  * @notice Defines the basic interface for an Aave Incentives Controller.
  * @dev It only contains one single function, needed as a hook on aToken and debtToken transfers.
  */

@@ -5,7 +5,7 @@ import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 
 /**
  * @title IERC20WithPermit
- * @author Aave
+
  * @notice Interface for the permit function (EIP-2612)
  */
 interface IERC20WithPermit is IERC20 {

@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title IPoolDataProvider
- * @author Aave
+
  * @notice Defines the basic interface of a PoolDataProvider
  */
 interface IPoolDataProvider {

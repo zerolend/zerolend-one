@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title PercentageMath library
- * @author Aave
+
  * @notice Provides functions to perform percentage calculations
  * @dev Percentages are defined by default with 2 decimals of precision (100.00). The precision is indicated by PERCENTAGE_FACTOR
  * @dev Operations are rounded. If a value is >=.5, will be rounded up, otherwise rounded down.
