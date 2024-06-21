@@ -27,6 +27,9 @@ contract Factory is IFactory, Ownable {
   /// @inheritdoc IFactory
   uint256 public flashLoanPremiumToProtocol;
 
+  /// @inheritdoc IFactory
+  uint256 public liquidationProtocolFeePercentage;
+
   constructor(address _implementation, address _configurator) {
     implementation = _implementation;
     configurator = IPoolConfigurator(_configurator);

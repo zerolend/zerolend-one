@@ -23,6 +23,8 @@ interface IFactory is IBeacon {
 
   function flashLoanPremiumToProtocol() external view returns (uint256);
 
+  function liquidationProtocolFeePercentage() external view returns (uint256);
+
   function pools(uint256 index) external returns (IPool);
 
   function poolsLength() external view returns (uint256);

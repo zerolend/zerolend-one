@@ -313,13 +313,11 @@ library ValidationLogic {
   /**
    * @notice Validates the action of activating the asset as collateral.
    * @dev Only possible if the asset has non-zero LTV and the user is not in isolation mode
-   * @param reservesList The addresses of all the active reserves
    * @param userConfig the user configuration
    * @param reserveConfig The reserve configuration
    * @return True if the asset can be activated as collateral, false otherwise
    */
   function validateUseAsCollateral(
-    mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ReserveConfigurationMap memory reserveConfig
   ) internal view returns (bool) {

@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
+import {IFactory} from './IFactory.sol';
 
 /**
  * @title IPool
@@ -281,6 +282,8 @@ interface IPool {
   function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt);
 
   function getReserveFactor() external view returns (uint256 reseveFactor);
+
+  function factory() external view returns (IFactory f);
 
   /**
    * @notice Returns the user account data across all the reserves

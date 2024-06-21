@@ -113,7 +113,7 @@ library LiquidationLogic {
     );
 
     (vars.userDebt, vars.actualDebtToLiquidate) = _calculateDebt(
-      vars.debtReserveCache,
+      // vars.debtReserveCache,
       params,
       vars.healthFactor,
       _balances
@@ -144,13 +144,14 @@ library LiquidationLogic {
     ) = _calculateAvailableCollateralToLiquidate(
       collateralReserve,
       vars.debtReserveCache,
-      vars.collateralPriceSource,
-      vars.debtPriceSource,
+      // vars.collateralPriceSource,
+      // vars.debtPriceSource,
       vars.actualDebtToLiquidate,
       vars.userCollateralBalance,
       vars.liquidationBonus,
       IPool(params.pool).getAssetPrice(params.collateralAsset),
-      IPool(params.pool).getAssetPrice(params.debtAsset)
+      IPool(params.pool).getAssetPrice(params.debtAsset),
+      IPool(params.pool).factory().liquidationProtocolFeePercentage()
     );
 
     if (vars.userDebt == vars.actualDebtToLiquidate) {
@@ -286,14 +287,12 @@ library LiquidationLogic {
    * @notice Calculates the total debt of the user and the actual amount to liquidate depending on the health factor
    * and corresponding close factor.
    * @dev If the Health Factor is below CLOSE_FACTOR_HF_THRESHOLD, the close factor is increased to MAX_LIQUIDATION_CLOSE_FACTOR
-   * @param debtReserveCache The reserve cache data object of the debt reserve
    * @param params The additional parameters needed to execute the liquidation function
    * @param healthFactor The health factor of the position
    * @return The debt of the user
    * @return The actual debt to liquidate as a function of the closeFactor
    */
   function _calculateDebt(
-    DataTypes.ReserveCache memory debtReserveCache,
     DataTypes.ExecuteLiquidationCallParams memory params,
     uint256 healthFactor,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances
@@ -356,8 +355,6 @@ library LiquidationLogic {
    *   otherwise it might fail.
    * @param collateralReserve The data of the collateral reserve
    * @param debtReserveCache The cached data of the debt reserve
-   * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-   * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
    * @param userCollateralBalance The collateral balance for the specific `collateralAsset` of the user being liquidated
    * @param liquidationBonus The collateral bonus percentage to receive as result of the liquidation
@@ -368,13 +365,12 @@ library LiquidationLogic {
   function _calculateAvailableCollateralToLiquidate(
     DataTypes.ReserveData storage collateralReserve,
     DataTypes.ReserveCache memory debtReserveCache,
-    address collateralAsset,
-    address debtAsset,
     uint256 debtToCover,
     uint256 userCollateralBalance,
     uint256 liquidationBonus,
     uint256 collateralPrice,
-    uint256 debtAssetPrice
+    uint256 debtAssetPrice,
+    uint256 liquidationProtocolFeePercentage
   ) internal view returns (uint256, uint256, uint256) {
     AvailableCollateralToLiquidateLocalVars memory vars;
 
@@ -390,7 +386,7 @@ library LiquidationLogic {
     }
 
     // todo check this
-    vars.liquidationProtocolFeePercentage = 1000;
+    vars.liquidationProtocolFeePercentage = liquidationProtocolFeePercentage;
     // vars.liquidationProtocolFeePercentage = collateralReserve
     //   .configuration
     //   .getLiquidationProtocolFee();
