@@ -58,6 +58,7 @@ abstract contract Pool is Initializable, IPool {
   /// @notice The original factory contract with protocol-level control variables
   IFactory public factory;
 
+  /// @notice The assigned hook for this pool
   IHook public hook;
 
   /**
@@ -100,20 +101,20 @@ abstract contract Pool is Initializable, IPool {
     uint256 index,
     bytes calldata hookData
   ) public virtual override {
-    bytes32 positionId = msg.sender.getPositionId(index);
+    bytes32 pos = msg.sender.getPositionId(index);
     if (address(hook) != address(0))
-      hook.beforeSupply(msg.sender, positionId, asset, address(this), amount, hookData);
+      hook.beforeSupply(msg.sender, pos, asset, address(this), amount, hookData);
 
     SupplyLogic.executeSupply(
       msg.sender,
       _reserves,
-      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: positionId}),
+      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, onBehalfOfPosition: pos}),
       _balances,
       _totalSupplies
     );
 
     if (address(hook) != address(0))
-      hook.afterSupply(msg.sender, positionId, asset, address(this), amount, hookData);
+      hook.afterSupply(msg.sender, pos, asset, address(this), amount, hookData);
   }
 
   /// @inheritdoc IPool
@@ -141,6 +142,8 @@ abstract contract Pool is Initializable, IPool {
       _balances,
       _totalSupplies
     );
+
+    PoolLogic.executeMintToTreasury(_reserves, asset);
   }
 
   /// @inheritdoc IPool
@@ -168,7 +171,7 @@ abstract contract Pool is Initializable, IPool {
     );
   }
 
-  // @inheritdoc IPool
+  /// @inheritdoc IPool
   function repay(
     address asset,
     uint256 amount,
@@ -191,25 +194,16 @@ abstract contract Pool is Initializable, IPool {
 
   /// @inheritdoc IPool
   function liquidate(
-    address collateralAsset,
-    address debtAsset,
+    address collat,
+    address debt,
     address user,
-    uint256 debtToCover,
+    uint256 debtAmt,
     uint256 index,
-    bytes calldata hookData
+    bytes calldata data
   ) public virtual override {
-    bytes32 positionId = user.getPositionId(index);
+    bytes32 pos = user.getPositionId(index);
     if (address(hook) != address(0))
-      hook.beforeLiquidate(
-        msg.sender,
-        user,
-        positionId,
-        collateralAsset,
-        debtAsset,
-        debtToCover,
-        address(this),
-        hookData
-      );
+      hook.beforeLiquidate(msg.sender, user, pos, collat, debt, debtAmt, address(this), data);
 
     LiquidationLogic.executeLiquidationCall(
       _reserves,
@@ -219,25 +213,16 @@ abstract contract Pool is Initializable, IPool {
       _usersConfig,
       DataTypes.ExecuteLiquidationCallParams({
         reservesCount: _reservesCount,
-        debtToCover: debtToCover,
-        collateralAsset: collateralAsset,
-        debtAsset: debtAsset,
-        position: positionId,
+        debtToCover: debtAmt,
+        collateralAsset: collat,
+        debtAsset: debt,
+        position: pos,
         pool: address(this)
       })
     );
 
     if (address(hook) != address(0))
-      hook.afterLiquidate(
-        msg.sender,
-        user,
-        positionId,
-        collateralAsset,
-        debtAsset,
-        debtToCover,
-        address(this),
-        hookData
-      );
+      hook.afterLiquidate(msg.sender, user, pos, collat, debt, debtAmt, address(this), data);
   }
 
   /// @inheritdoc IPool
@@ -256,11 +241,6 @@ abstract contract Pool is Initializable, IPool {
       flashLoanPremiumTotal: _flashLoanPremiumTotal
     });
     FlashLoanLogic.executeFlashLoanSimple(_reserves[asset], flashParams);
-  }
-
-  /// @inheritdoc IPool
-  function mintToTreasury(address[] calldata assets) external virtual override {
-    PoolLogic.executeMintToTreasury(_reserves, assets);
   }
 
   /// @inheritdoc IPool

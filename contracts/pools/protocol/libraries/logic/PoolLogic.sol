@@ -61,30 +61,25 @@ library PoolLogic {
   /**
    * @notice Mints the assets accrued through the reserve factor to the treasury in the form of aTokens
    * @param reservesData The state of all the reserves
-   * @param assets The list of reserves for which the minting needs to be executed
+   * @param asset The reserves for which the minting needs to be executed
    */
   function executeMintToTreasury(
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    address[] calldata assets
+    address asset
   ) external {
-    for (uint256 i = 0; i < assets.length; i++) {
-      address assetAddress = assets[i];
+    DataTypes.ReserveData storage reserve = reservesData[asset];
 
-      DataTypes.ReserveData storage reserve = reservesData[assetAddress];
+    uint256 accruedToTreasury = reserve.accruedToTreasury;
 
-      // this cover both inactive reserves and invalid reserves since the flag will be 0 for both
-      if (!reserve.configuration.getFrozen()) continue;
+    if (accruedToTreasury != 0) {
+      reserve.accruedToTreasury = 0;
+      uint256 normalizedIncome = reserve.getNormalizedIncome();
+      uint256 amountToMint = accruedToTreasury.rayMul(normalizedIncome);
 
-      uint256 accruedToTreasury = reserve.accruedToTreasury;
+      // todo mint and unwrap to treasury
+      // IAToken(reserve.aTokenAddress).mintToTreasury(amountToMint, normalizedIncome);
 
-      if (accruedToTreasury != 0) {
-        reserve.accruedToTreasury = 0;
-        uint256 normalizedIncome = reserve.getNormalizedIncome();
-        uint256 amountToMint = accruedToTreasury.rayMul(normalizedIncome);
-        // IAToken(reserve.aTokenAddress).mintToTreasury(amountToMint, normalizedIncome);
-
-        emit MintedToTreasury(assetAddress, amountToMint);
-      }
+      emit MintedToTreasury(asset, amountToMint);
     }
   }
 
