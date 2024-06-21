@@ -7,10 +7,12 @@ import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {PoolStorage} from './PoolStorage.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
+import {PositionBalanceConfiguration} from '../libraries/configuration/PositionBalanceConfiguration.sol';
 
 abstract contract PoolGetters is PoolStorage, IPool {
   using ReserveLogic for DataTypes.ReserveData;
   using TokenConfiguration for address;
+  using PositionBalanceConfiguration for DataTypes.PositionBalance;
 
   /// @inheritdoc IPool
   function getReserveData(
@@ -21,12 +23,12 @@ abstract contract PoolGetters is PoolStorage, IPool {
 
   /// @inheritdoc IPool
   function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance) {
-    return _balances[asset][positionId].scaledSupplyBalance;
+    return _balances[asset][positionId].getSupply(_reserves[asset].liquidityIndex);
   }
 
   /// @inheritdoc IPool
   function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt) {
-    return _balances[asset][positionId].scaledDebtBalance;
+    return _balances[asset][positionId].getSupply(_reserves[asset].variableBorrowIndex);
   }
 
   /// @inheritdoc IPool
