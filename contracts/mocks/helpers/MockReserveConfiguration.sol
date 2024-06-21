@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {ReserveConfiguration} from '../../pools/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {DataTypes} from '../../pools/protocol/libraries/types/DataTypes.sol';
+import {ReserveConfiguration} from '../../core/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {DataTypes} from '../../core/protocol/libraries/types/DataTypes.sol';
 
 contract MockReserveConfiguration {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;

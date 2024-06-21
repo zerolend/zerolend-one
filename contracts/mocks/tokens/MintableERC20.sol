@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import {IERC20WithPermit} from '../../pools/interfaces/IERC20WithPermit.sol';
+import {IERC20WithPermit} from '../../core/interfaces/IERC20WithPermit.sol';
 
 /**
  * @title ERC20Mintable

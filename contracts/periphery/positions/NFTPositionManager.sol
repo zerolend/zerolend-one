@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {INFTPositionManager} from './INFTPositionManager.sol';
-import {IPool} from './../../pools/interfaces/IPool.sol';
+import {IPool} from './../../core/interfaces/IPool.sol';
 import {Multicall} from '../multicall/Multicall.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
