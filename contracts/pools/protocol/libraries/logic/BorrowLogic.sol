@@ -83,6 +83,8 @@ library BorrowLogic {
       reserveCache.nextVariableBorrowIndex
     );
     _totalSupplies[params.asset].debt += minted;
+
+    // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
     // todo; update reserveCache.nextScaledVariableDebt
@@ -129,11 +131,10 @@ library BorrowLogic {
     reserve.updateInterestRates(reserveCache, params.asset, paybackAmount, 0);
 
     uint256 burnt = b.burnDebt(paybackAmount, reserveCache.nextVariableBorrowIndex);
-    // todo; update reserveCache.nextScaledVariableDebt
-    reserveCache.nextScaledVariableDebt = b.lastDebtLiquidtyIndex;
 
-    // todo
-    // _totalSupplies[params.asset].totalDebts -= burnt;
+    // todo; update reserveCache.nextScaledVariableDebt
+    _totalSupplies[params.asset].debt -= burnt;
+    reserveCache.nextScaledVariableDebt = _totalSupplies[params.asset].debt;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
     emit Repay(params.asset, params.position, msg.sender, paybackAmount);
