@@ -60,26 +60,17 @@ abstract contract Pool is Initializable, IPool {
    */
   function initialize(IPool.InitParams memory params) public virtual reinitializer(1) {
     factory = IFactory(factory);
-
     configurator = params.configurator;
-    for (uint i = 0; i < params.assets.length; i++) {
-      PoolLogic.executeInitReserve(
-        _reserves,
-        _reservesList,
-        DataTypes.InitReserveParams({
-          asset: params.assets[i],
-          interestRateStrategyAddress: params.rateStrategyAddresses[i],
-          reservesCount: _reservesCount
-        })
-      );
-      _reservesCount++;
 
+    for (uint i = 0; i < params.assets.length; i++) {
       _setReserveConfiguration(
         params.assets[i],
         params.rateStrategyAddresses[i],
         params.sources[i],
         params.configurations[i]
       );
+      _reservesCount++;
+      emit ReserveInitialized(params.assets[i], params.rateStrategyAddresses[i], params.sources[i]);
     }
   }
 
@@ -198,7 +189,7 @@ abstract contract Pool is Initializable, IPool {
       asset: asset,
       amount: amount,
       params: params,
-      flashLoanPremiumToProtocol: 1000, //_flashLoanPremiumToProtocol,
+      flashLoanPremiumToProtocol: factory.flashLoanPremiumToProtocol(),
       flashLoanPremiumTotal: _flashLoanPremiumTotal
     });
     FlashLoanLogic.executeFlashLoanSimple(_reserves[asset], flashParams);
@@ -305,6 +296,44 @@ abstract contract Pool is Initializable, IPool {
     _reserves[asset].configuration = configuration;
     _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
     _assetsSources[asset] = IAggregatorInterface(source);
+
+    // // validation of the parameters: the LTV can
+    // // only be lower or equal than the liquidation threshold
+    // // (otherwise a loan against the asset would cause instantaneous liquidation)
+    // require(input[i].ltv <= input[i].liquidationThreshold, Errors.INVALID_RESERVE_PARAMS);
+
+    // DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(
+    //   input[i].asset
+    // );
+
+    // if (input[i].liquidationThreshold != 0) {
+    //   //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
+    //   //collateral than needed to cover the debt
+    //   require(
+    //     input[i].liquidationBonus > PercentageMath.PERCENTAGE_FACTOR,
+    //     Errors.INVALID_RESERVE_PARAMS
+    //   );
+
+    //   //if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
+    //   //a loan is taken there is enough collateral available to cover the liquidation bonus
+    //   require(
+    //     input[i].liquidationThreshold.percentMul(input[i].liquidationBonus) <=
+    //       PercentageMath.PERCENTAGE_FACTOR,
+    //     Errors.INVALID_RESERVE_PARAMS
+    //   );
+
+    //   currentConfig.setLtv(input[i].ltv);
+    //   currentConfig.setLiquidationThreshold(input[i].liquidationThreshold);
+    //   currentConfig.setLiquidationBonus(input[i].liquidationBonus);
+    //   cachedPool.setConfiguration(input[i].asset, currentConfig);
+
+    //   emit CollateralConfigurationChanged(
+    //     input[i].asset,
+    //     input[i].ltv,
+    //     input[i].liquidationThreshold,
+    //     input[i].liquidationBonus
+    //   );
+    // }
   }
 
   function setReserveConfiguration(

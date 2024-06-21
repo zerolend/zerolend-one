@@ -21,6 +21,9 @@ contract Factory is IFactory, Ownable {
   /// @inheritdoc IFactory
   uint256 public reserveFactor;
 
+  /// @inheritdoc IFactory
+  uint256 public flashLoanPremiumToProtocol;
+
   constructor(address _implementation, address _configurator) {
     setImplementation(_implementation);
     configurator = IPoolConfigurator(_configurator);
@@ -64,9 +67,16 @@ contract Factory is IFactory, Ownable {
   }
 
   /// @inheritdoc IFactory
-  function setReserveFactor(uint256 _reserveFactor) external onlyOwner {
+  function setReserveFactor(uint256 updated) external onlyOwner {
     uint256 old = reserveFactor;
-    reserveFactor = _reserveFactor;
-    emit ReserveFactorUpdated(old, _reserveFactor, msg.sender);
+    reserveFactor = updated;
+    emit ReserveFactorUpdated(old, updated, msg.sender);
+  }
+
+  /// @inheritdoc IFactory
+  function setFlashloanPremium(uint256 updated) external onlyOwner {
+    uint256 old = flashLoanPremiumToProtocol;
+    flashLoanPremiumToProtocol = updated;
+    emit FlashLoanPremiumToProtocolUpdated(old, updated, msg.sender);
   }
 }

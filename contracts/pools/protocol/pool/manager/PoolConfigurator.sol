@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {ConfiguratorInputTypes} from '../../libraries/types/ConfiguratorInputTypes.sol';
-import {ConfiguratorLogic} from '../../libraries/logic/ConfiguratorLogic.sol';
 import {DataTypes} from '../../libraries/types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
@@ -13,8 +12,7 @@ import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfigu
 
 /**
  * @title PoolConfigurator
- * @author Aave
- * @dev Implements the configuration methods for the Aave protocol
+ * @dev Implements the configuration methods for the lending pools
  */
 abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
   using PercentageMath for uint256;
@@ -38,55 +36,6 @@ abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
       getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE),
       getRoleFromPool(pool, POOL_ADMIN_ROLE)
     );
-  }
-
-  // @inheritdoc IPoolConfigurator
-  function initReserves(
-    address pool,
-    ConfiguratorInputTypes.InitReserveInput[] calldata input
-  ) external onlyPoolAdmin(pool) {
-    IPool cachedPool = IPool(pool);
-    for (uint256 i = 0; i < input.length; i++) {
-      ConfiguratorLogic.executeInitReserve(cachedPool, input[i]);
-
-      // validation of the parameters: the LTV can
-      // only be lower or equal than the liquidation threshold
-      // (otherwise a loan against the asset would cause instantaneous liquidation)
-      require(input[i].ltv <= input[i].liquidationThreshold, Errors.INVALID_RESERVE_PARAMS);
-
-      DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(
-        input[i].asset
-      );
-
-      if (input[i].liquidationThreshold != 0) {
-        //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
-        //collateral than needed to cover the debt
-        require(
-          input[i].liquidationBonus > PercentageMath.PERCENTAGE_FACTOR,
-          Errors.INVALID_RESERVE_PARAMS
-        );
-
-        //if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
-        //a loan is taken there is enough collateral available to cover the liquidation bonus
-        require(
-          input[i].liquidationThreshold.percentMul(input[i].liquidationBonus) <=
-            PercentageMath.PERCENTAGE_FACTOR,
-          Errors.INVALID_RESERVE_PARAMS
-        );
-
-        currentConfig.setLtv(input[i].ltv);
-        currentConfig.setLiquidationThreshold(input[i].liquidationThreshold);
-        currentConfig.setLiquidationBonus(input[i].liquidationBonus);
-        cachedPool.setConfiguration(input[i].asset, currentConfig);
-
-        emit CollateralConfigurationChanged(
-          input[i].asset,
-          input[i].ltv,
-          input[i].liquidationThreshold,
-          input[i].liquidationBonus
-        );
-      }
-    }
   }
 
   /// @inheritdoc IPoolConfigurator

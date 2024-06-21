@@ -10,20 +10,6 @@ import {ConfiguratorInputTypes} from '../protocol/libraries/types/ConfiguratorIn
  */
 interface IPoolConfigurator {
   /**
-   * @dev Emitted when a reserve is initialized.
-   * @param asset The address of the underlying asset of the reserve
-   * @param aToken The address of the associated aToken contract
-   * @param variableDebtToken The address of the associated variable rate debt token
-   * @param interestRateStrategyAddress The address of the interest rate strategy for the reserve
-   */
-  event ReserveInitialized(
-    address indexed asset,
-    address indexed aToken,
-    address variableDebtToken,
-    address interestRateStrategyAddress
-  );
-
-  /**
    * @dev Emitted when borrowing is enabled or disabled on a reserve.
    * @param asset The address of the underlying asset of the reserve
    * @param enabled True if borrowing is enabled, false otherwise
