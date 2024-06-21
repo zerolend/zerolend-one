@@ -12,7 +12,6 @@ import {ReserveLogic} from './ReserveLogic.sol';
 
 /**
  * @title BorrowLogic library
-
  * @notice Implements the base logic for all the actions related to borrowing
  */
 library BorrowLogic {

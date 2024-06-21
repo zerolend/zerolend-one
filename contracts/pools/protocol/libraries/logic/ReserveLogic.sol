@@ -14,7 +14,6 @@ import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
  * @title ReserveLogic library
-
  * @notice Implements the logic to update the reserves state
  */
 library ReserveLogic {

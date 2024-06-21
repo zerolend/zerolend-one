@@ -16,7 +16,6 @@ import {IPool} from '../../../interfaces/IPool.sol';
 
 /**
  * @title LiquidationLogic library
-
  * @notice Implements actions involving management of collateral in the protocol, the main one being the liquidations
  */
 library LiquidationLogic {
