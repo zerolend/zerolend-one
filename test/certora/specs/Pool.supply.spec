@@ -5,23 +5,25 @@
 methods {
     function getBalance(address, address, uint256) external returns (uint256) envfree;
     function getReserveData(address) external returns (DataTypes.ReserveData) envfree;
+    function getHook() external returns (address) envfree;
     function getBalanceRaw(address, address, uint256) external returns (DataTypes.PositionBalance) envfree;
-
 }
 
-definition RAY() returns uint128 = 10^27;
+definition RAY() returns uint256 = 10^27;
 
 // Supplying an asset into the pool should increase the pool balance
 // exactly with the amount supplied
 rule supplyShouldIncreaseBalance(address asset, uint256 amount) {
 	env e;
 
+    // no hooks
+    require getHook() == 0;
+
     // ensure liquidity index is initialized at least 1 ray
     DataTypes.ReserveData d1 = getReserveData(asset);
     require d1.liquidityIndex >= RAY();
-    require d1.variableBorrowIndex >= RAY();
 
-    // ensure that user liquidity index is not 0 and is at least the reserve liquidity index
+    // ensure that user liquidity index is set to the reserve liquidity index
     DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e.msg.sender, 0);
     require balanceBeforeRaw.lastSupplyLiquidtyIndex == d1.liquidityIndex;
 
@@ -33,7 +35,6 @@ rule supplyShouldIncreaseBalance(address asset, uint256 amount) {
     // ensure liquidity index is still the same
     DataTypes.ReserveData d2 = getReserveData(asset);
     require d2.liquidityIndex == d1.liquidityIndex;
-    require d2.variableBorrowIndex == d1.variableBorrowIndex;
 
     // disregard overflows
     require balanceBefore + amount < max_uint;
@@ -49,14 +50,17 @@ rule withdrawShouldExecuteAfterValidSupply(address asset, uint256 index1, uint25
 	env e1;
     env e2;
 
+    // no hooks
+    require getHook() == 0;
+
     // ensure liquidity index is initialized at least 1 ray
     DataTypes.ReserveData d = getReserveData(asset);
     require d.liquidityIndex == RAY();
     require d.variableBorrowIndex == RAY();
 
-    // ensure that user liquidity index is not 0 and is at least the reserve liquidity index
-    DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e.msg.sender, 0);
-    require balanceBeforeRaw.lastSupplyLiquidtyIndex == d1.liquidityIndex;
+    // ensure that user liquidity index is set to the reserve liquidity index
+    DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e1.msg.sender, 0);
+    require balanceBeforeRaw.lastSupplyLiquidtyIndex == d.liquidityIndex;
 
     // random supply
     supply(e1, asset, amountSupply, index1);
@@ -92,12 +96,15 @@ rule withdrawShouldExecuteWithValidBalance(address asset, uint256 index, uint256
 rule withdrawShouldReduceBalanceProperly(address asset, uint256 amountWithdraw) {
 	env e;
 
+    // no hooks
+    require getHook() == 0;
+
     // ensure liquidity index is initialized at least 1 ray
     DataTypes.ReserveData d1 = getReserveData(asset);
     require d1.liquidityIndex >= RAY();
     require d1.variableBorrowIndex >= RAY();
 
-    // ensure that user liquidity index is not 0 and is at least the reserve liquidity index
+    // ensure that user liquidity index is set to the reserve liquidity index
     DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e.msg.sender, 0);
     require balanceBeforeRaw.lastSupplyLiquidtyIndex == d1.liquidityIndex;
 

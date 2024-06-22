@@ -14,14 +14,13 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {IPool} from '../../interfaces/IPool.sol';
-import {IFactory} from '../../interfaces/IFactory.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
+import {IHook, IFactory, IPool} from '../../interfaces/IPool.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {PoolStorage} from './PoolStorage.sol';
+import {PositionBalanceConfiguration} from '../libraries/configuration/PositionBalanceConfiguration.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
-import {PositionBalanceConfiguration} from '../libraries/configuration/PositionBalanceConfiguration.sol';
 
 abstract contract PoolGetters is PoolStorage, IPool {
   using ReserveLogic for DataTypes.ReserveData;
@@ -38,6 +37,11 @@ abstract contract PoolGetters is PoolStorage, IPool {
   /// @inheritdoc IPool
   function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance) {
     return _balances[asset][positionId].getSupply(_reserves[asset].liquidityIndex);
+  }
+
+  /// @inheritdoc IPool
+  function getHook() external view returns (IHook) {
+    return _hook;
   }
 
   /// @inheritdoc IPool

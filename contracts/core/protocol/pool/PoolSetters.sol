@@ -18,10 +18,8 @@ import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
-import {IFactory} from '../../interfaces/IFactory.sol';
-import {IHook} from '../../interfaces/IHook.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
-import {IPool} from '../../interfaces/IPool.sol';
+import {IPool, IHook, IFactory} from '../../interfaces/IPool.sol';
 import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 import {PoolGetters} from './PoolGetters.sol';
@@ -42,8 +40,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     DataTypes.ExtraData memory data
   ) internal {
     bytes32 pos = msg.sender.getPositionId(index);
-    if (address(hook) != address(0))
-      hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0))
+      _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     SupplyLogic.executeSupply(
       _reserves,
@@ -58,8 +56,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
       })
     );
 
-    if (address(hook) != address(0))
-      hook.afterSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0))
+      _hook.afterSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
   function _withdraw(
@@ -71,8 +69,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     bytes32 pos = msg.sender.getPositionId(index);
     require(amount <= _balances[asset][pos].scaledSupplyBalance, 'Insufficient Balance!');
 
-    if (address(hook) != address(0))
-      hook.beforeWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0))
+      _hook.beforeWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     withdrawalAmount = SupplyLogic.executeWithdraw(
       _reserves,
@@ -92,8 +90,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
 
     PoolLogic.executeMintToTreasury(_reserves, asset);
 
-    if (address(hook) != address(0))
-      hook.afterWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0))
+      _hook.afterWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
   function _borrow(
@@ -103,8 +101,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     DataTypes.ExtraData memory data
   ) internal {
     bytes32 pos = msg.sender.getPositionId(index);
-    if (address(hook) != address(0))
-      hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0))
+      _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     BorrowLogic.executeBorrow(
       _reserves,
@@ -122,8 +120,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
       })
     );
 
-    if (address(hook) != address(0))
-      hook.afterBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0))
+      _hook.afterBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
   function _repay(
@@ -133,8 +131,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     DataTypes.ExtraData memory data
   ) internal returns (uint256 paybackAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
-    if (address(hook) != address(0))
-      hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0))
+      _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     paybackAmount = BorrowLogic.executeRepay(
       _reserves,
@@ -149,8 +147,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
       })
     );
 
-    if (address(hook) != address(0))
-      hook.afterRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0))
+      _hook.afterRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
   function _liquidate(
@@ -160,8 +158,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     uint256 debtAmt,
     DataTypes.ExtraData memory data
   ) internal {
-    if (address(hook) != address(0))
-      hook.beforeLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
+    if (address(_hook) != address(0))
+      _hook.beforeLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
 
     LiquidationLogic.executeLiquidationCall(
       _reserves,
@@ -178,8 +176,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
       })
     );
 
-    if (address(hook) != address(0))
-      hook.afterLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
+    if (address(_hook) != address(0))
+      _hook.afterLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
   }
 
   function _flashLoan(

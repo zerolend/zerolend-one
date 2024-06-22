@@ -29,7 +29,7 @@ contract Pool is Initializable, PoolSetters {
    */
   function initialize(IPool.InitParams memory params) public virtual reinitializer(1) {
     _factory = IFactory(msg.sender);
-    hook = IHook(params.hook);
+    _hook = IHook(params.hook);
 
     require(params.assets.length >= 2, 'not enough assets');
     require(params.rateStrategyAddresses.length == params.assets.length, '!length');
