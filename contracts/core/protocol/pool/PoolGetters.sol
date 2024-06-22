@@ -16,6 +16,7 @@ pragma solidity 0.8.19;
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {IFactory} from '../../interfaces/IFactory.sol';
+import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {PoolStorage} from './PoolStorage.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
@@ -81,16 +82,16 @@ abstract contract PoolGetters is PoolStorage, IPool {
 
   /// @inheritdoc IPool
   function getReserveNormalizedIncome(
-    address asset
+    address reserve
   ) external view virtual override returns (uint256) {
-    return _reserves[asset].getNormalizedIncome();
+    return _reserves[reserve].getNormalizedIncome();
   }
 
   /// @inheritdoc IPool
   function getReserveNormalizedVariableDebt(
-    address asset
+    address reserve
   ) external view virtual override returns (uint256) {
-    return _reserves[asset].getNormalizedDebt();
+    return _reserves[reserve].getNormalizedDebt();
   }
 
   /// @inheritdoc IPool
@@ -110,8 +111,8 @@ abstract contract PoolGetters is PoolStorage, IPool {
     return _reservesList[id];
   }
 
-  function getAssetPrice(address asset) public view override returns (uint256) {
-    return uint256(_assetsSources[asset].latestAnswer());
+  function getAssetPrice(address reserve) public view override returns (uint256) {
+    return uint256(IAggregatorInterface(_reserves[reserve].oracle).latestAnswer());
   }
 
   function factory() external view returns (IFactory) {

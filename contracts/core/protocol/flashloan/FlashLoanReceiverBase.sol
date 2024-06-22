@@ -13,36 +13,17 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import 'forge-std/src/Test.sol';
+import {IFlashLoanSimpleReceiver} from '../../interfaces/IFlashLoanSimpleReceiver.sol';
+import {IPool} from '../../interfaces/IPool.sol';
 
-contract ExampleContract1 {
-  uint256 public val1;
-  uint256 public val2;
-  uint256 public val3;
+/**
+ * @title FlashLoanReceiverBase
+ * @notice Base contract to develop a flashloan-receiver contract.
+ */
+abstract contract FlashLoanReceiverBase is IFlashLoanSimpleReceiver {
+  IPool public immutable override POOL;
 
-  function addToA(uint256 amount) external {
-    val1 += amount;
-    val3 += amount;
-  }
-
-  function addToB(uint256 amount) external {
-    val2 += amount;
-    val3 += amount;
-  }
-}
-
-contract InvariantExampleTest is Test {
-  ExampleContract1 foo;
-
-  function setUp() external {
-    foo = new ExampleContract1();
-  }
-
-  function invariant_A() external view {
-    assertEq(foo.val1() + foo.val2(), foo.val3());
-  }
-
-  function invariant_B() external view {
-    assertGe(foo.val1() + foo.val2(), foo.val3());
+  constructor(IPool pool) {
+    POOL = pool;
   }
 }
