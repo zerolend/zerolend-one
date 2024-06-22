@@ -15,8 +15,7 @@
  */
 
 // The methods block below gives various declarations regarding solidity methods.
-methods
-{
+methods {
     // When a function is not using the environment (e.g., `msg.sender`), it can be
     // declared as `envfree`
     function balanceOf(address) external returns (uint) envfree;
@@ -35,6 +34,8 @@ rule transferSpec(address recipient, uint amount) {
     // `mathint` is a type that represents an integer of any size
     mathint balance_sender_before = balanceOf(e.msg.sender);
     mathint balance_recip_before = balanceOf(recipient);
+
+    require balance_recip_before + amount < max_uint;
 
     transfer(e, recipient, amount);
 
@@ -93,4 +94,33 @@ rule transferDoesntRevert(address recipient, uint amount) {
 
     transfer@withrevert(e, recipient, amount);
     assert !lastReverted;
+}
+
+
+rule transferFromSpec(address recipient, uint amount, uint approval) {
+    env e;
+
+    // `mathint` is a type that represents an integer of any size
+    mathint balance_sender_before = balanceOf(e.msg.sender);
+    mathint balance_recip_before = balanceOf(recipient);
+    require balance_recip_before + amount < max_uint;
+    require approval >= amount;
+
+    approve(e, recipient, approval);
+    transferFrom(e, e.msg.sender, recipient, amount);
+
+    mathint balance_sender_after = balanceOf(e.msg.sender);
+    mathint balance_recip_after = balanceOf(recipient);
+
+    address sender = e.msg.sender;  // A convenient alias
+
+    // Operations on mathints can never overflow or underflow.
+    assert recipient != sender => balance_sender_after == balance_sender_before - amount,
+        "transfer must decrease sender's balance by amount";
+
+    assert recipient != sender => balance_recip_after == balance_recip_before + amount,
+        "transfer must increase recipient's balance by amount";
+
+    assert recipient == sender => balance_sender_after == balance_sender_before,
+        "transfer must not change sender's balancer when transferring to self";
 }
