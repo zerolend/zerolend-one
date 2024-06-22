@@ -31,6 +31,8 @@ library DataTypes {
     uint16 id;
     //address of the interest rate strategy
     address interestRateStrategyAddress;
+    //address of the oracle
+    address oracle;
     //the current treasury balance, scaled
     uint128 accruedToTreasury;
   }
@@ -196,6 +198,7 @@ library DataTypes {
 
   struct InitReserveParams {
     address asset;
+    address oracle;
     address interestRateStrategyAddress;
     uint16 reservesCount;
   }
