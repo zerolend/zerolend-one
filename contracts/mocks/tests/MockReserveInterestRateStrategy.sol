@@ -59,7 +59,7 @@ abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrateg
   }
 
   function calculateInterestRates(
-    address,
+    bytes32,
     bytes memory,
     DataTypes.CalculateInterestRatesParams memory
   ) external view override returns (uint256 liquidityRate, uint256 variableBorrowRate) {
