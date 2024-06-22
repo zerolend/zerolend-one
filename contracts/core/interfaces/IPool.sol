@@ -306,6 +306,14 @@ interface IPool {
    */
   function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance);
 
+  function getBalance(
+    address asset,
+    address who,
+    uint256 index
+  ) external view returns (uint256 balance);
+
+  function getDebt(address asset, address who, uint256 index) external view returns (uint256 debt);
+
   /**
    * @notice Get the debt of a specific asset in a specific position.
    * @param asset The address of the asset.
