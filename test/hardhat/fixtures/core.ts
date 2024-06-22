@@ -1,6 +1,4 @@
 import { ethers } from 'hardhat';
-import { ZeroAddress } from 'ethers';
-import { Factory } from '../../../types/contracts/core/protocol/factory/Factory';
 
 export async function deployCore() {
   const [owner, whale, ant, governance] = await ethers.getSigners();
@@ -53,7 +51,7 @@ export async function deployCore() {
   const oracleB = await MockAggregator.deploy(2 * 1e8);
   const oracleC = await MockAggregator.deploy(100 * 1e8);
 
-  const irStrategy = await DefaultReserveInterestRateStrategy.deploy(0, 0, 0, 0);
+  const irStrategy = await DefaultReserveInterestRateStrategy.deploy(1, 1, 1, 1);
 
   return {
     owner,
