@@ -42,6 +42,7 @@ contract TestContract is Test {
       .sig(test.map_addr.selector)
       .with_key(address(this))
       .find();
+
     // in the `Storage` constructor, we wrote that this address' value was 1 in the map
     // so when we load the slot, we expect it to be 1
     assertEq(uint(vm.load(address(test), bytes32(slot))), 1);
