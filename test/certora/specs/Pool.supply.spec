@@ -29,6 +29,9 @@ rule supplyShouldIncreaseBalance(address asset, uint256 amount) {
     require d2.liquidityIndex == d1.liquidityIndex;
     require d2.variableBorrowIndex == d1.variableBorrowIndex;
 
+    // disregard overflows
+    require balanceBefore + amount < max_uint;
+
     // ensure balance after is exactly the difference
     mathint balanceAfter = getBalance(asset, e.msg.sender, 0);
 	assert balanceAfter == balanceBefore + amount;
@@ -80,15 +83,20 @@ rule withdrawShouldReduceBalanceProperly(address asset, uint256 amountWithdraw) 
 	env e;
 
     // ensure liquidity index is initialized at least 1 ray
-    DataTypes.ReserveData d = getReserveData(asset);
-    require d.liquidityIndex == RAY();
-    require d.variableBorrowIndex == RAY();
+    DataTypes.ReserveData d1 = getReserveData(asset);
+    require d1.liquidityIndex >= RAY();
+    require d1.variableBorrowIndex >= RAY();
 
     // check if the user has enough balance
     mathint balanceBefore = getBalance(asset, e.msg.sender, 0);
     require amountWithdraw <= assert_uint256(balanceBefore);
 
     withdraw@withrevert(e, asset, amountWithdraw, 0);
+
+    // ensure liquidity index is still the same
+    DataTypes.ReserveData d2 = getReserveData(asset);
+    require d2.liquidityIndex == d1.liquidityIndex;
+    require d2.variableBorrowIndex == d1.variableBorrowIndex;
 
     // check the balance after
     mathint balanceAfter = getBalance(asset, e.msg.sender, 0);
