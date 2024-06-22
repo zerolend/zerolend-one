@@ -24,9 +24,14 @@ rule withdrawShouldDecreaseFromSuppliedBalance(address asset, uint256 index1, ui
 	env e1;
     env e2;
 
+    // random supply
     supply(e1, asset, amountSupply, index1);
+
+    // random withdraw (which might revert)
     withdraw@withrevert(e2, asset, amountWithdraw, index2);
 
+    // if the withdraw did not revert; then it means we had supplied
+    // at least `amountWithdraw` worth of assets into the same position before.
     assert !lastReverted =>
         e1.msg.sender == e2.msg.sender &&
         amountSupply >= amountWithdraw &&
