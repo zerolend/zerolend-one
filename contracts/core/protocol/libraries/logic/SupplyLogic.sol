@@ -71,7 +71,9 @@ library SupplyLogic {
       params.asset,
       IPool(params.pool).getReserveFactor(),
       params.amount,
-      0
+      0,
+      '',
+      ''
     );
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
@@ -126,7 +128,9 @@ library SupplyLogic {
       params.asset,
       IPool(params.pool).getReserveFactor(),
       0,
-      params.amount
+      params.amount,
+      '',
+      ''
     );
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);

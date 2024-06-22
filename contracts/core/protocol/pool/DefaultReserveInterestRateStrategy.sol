@@ -102,7 +102,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
 
   /// @inheritdoc IReserveInterestRateStrategy
   function calculateInterestRates(
-    address,
+    bytes32,
     bytes memory,
     DataTypes.CalculateInterestRatesParams memory params
   ) public view override returns (uint256, uint256) {

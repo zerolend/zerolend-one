@@ -119,7 +119,9 @@ library FlashLoanLogic {
       params.asset,
       IPool(params.pool).getReserveFactor(),
       amountPlusPremium,
-      0
+      0,
+      '',
+      ''
     );
 
     IERC20(params.asset).safeTransferFrom(

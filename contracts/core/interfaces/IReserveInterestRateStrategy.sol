@@ -27,7 +27,7 @@ interface IReserveInterestRateStrategy {
    * @return variableBorrowRate The variable borrow rate expressed in rays
    */
   function calculateInterestRates(
-    address user,
+    bytes32 position,
     bytes memory extraData,
     DataTypes.CalculateInterestRatesParams memory params
   ) external view returns (uint256, uint256);
