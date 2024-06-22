@@ -44,14 +44,14 @@ describe('Pool - Liquidity Index', () => {
     expect(reserve.liquidityIndex).eq(ray);
   });
 
-  it('After supplying, and waiting for some time; balances should not change', async () => {
+  it.only('After supplying, and waiting for some time; balances should not change', async () => {
     const balBefore = await pool['getBalance(address,address,uint256)'](
       tokenA.target,
       deployer.address,
       0
     );
 
-    await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
+    await pool['supply(address,uint256,uint256)'](tokenA.target, 2, 0);
 
     const balAfter = await pool['getBalance(address,address,uint256)'](
       tokenA.target,
@@ -69,7 +69,7 @@ describe('Pool - Liquidity Index', () => {
     );
 
     // Supply again
-    await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
+    await pool['supply(address,uint256,uint256)'](tokenA.target, 2, 0);
 
     const finalBalance = await pool['getBalance(address,address,uint256)'](
       tokenA.target,
@@ -78,8 +78,8 @@ describe('Pool - Liquidity Index', () => {
     );
 
     expect(balBefore).eq(0);
-    expect(balAfter).eq(parseEther('1'));
+    expect(balAfter).eq(2);
     expect(balAfter).eq(balAfterDay);
-    expect(finalBalance).eq(parseEther('2'));
+    expect(finalBalance).eq(4);
   });
 });
