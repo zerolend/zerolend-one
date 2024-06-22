@@ -21,7 +21,7 @@ rule supplyShouldIncreaseBalance(address asset, uint256 amount) {
     require d1.liquidityIndex >= RAY();
     require d1.variableBorrowIndex >= RAY();
 
-    // ensure that liquidity is not 0 and is at least the reserve liquidity index
+    // ensure that user liquidity index is not 0 and is at least the reserve liquidity index
     DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e.msg.sender, 0);
     require balanceBeforeRaw.lastSupplyLiquidtyIndex == d1.liquidityIndex;
 
@@ -53,6 +53,10 @@ rule withdrawShouldExecuteAfterValidSupply(address asset, uint256 index1, uint25
     DataTypes.ReserveData d = getReserveData(asset);
     require d.liquidityIndex == RAY();
     require d.variableBorrowIndex == RAY();
+
+    // ensure that user liquidity index is not 0 and is at least the reserve liquidity index
+    DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e.msg.sender, 0);
+    require balanceBeforeRaw.lastSupplyLiquidtyIndex == d1.liquidityIndex;
 
     // random supply
     supply(e1, asset, amountSupply, index1);
@@ -92,6 +96,10 @@ rule withdrawShouldReduceBalanceProperly(address asset, uint256 amountWithdraw) 
     DataTypes.ReserveData d1 = getReserveData(asset);
     require d1.liquidityIndex >= RAY();
     require d1.variableBorrowIndex >= RAY();
+
+    // ensure that user liquidity index is not 0 and is at least the reserve liquidity index
+    DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e.msg.sender, 0);
+    require balanceBeforeRaw.lastSupplyLiquidtyIndex == d1.liquidityIndex;
 
     // check if the user has enough balance
     mathint balanceBefore = getBalance(asset, e.msg.sender, 0);
