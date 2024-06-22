@@ -80,35 +80,12 @@ interface IPoolConfigurator {
   function setReserveBorrowing(address pool, address asset, bool enabled) external;
 
   /**
-   * @notice Configures the reserve collateralization parameters.
-   * @dev All the values are expressed in bps. A value of 10000, results in 100.00%
-   * @dev The `liquidationBonus` is always above 100%. A value of 105% means the liquidator will receive a 5% bonus
-   * @param asset The address of the underlying asset of the reserve
-   * @param ltv The loan to value of the asset when used as collateral
-   * @param liquidationThreshold The threshold at which loans using this asset as collateral will be considered undercollateralized
-   * @param liquidationBonus The bonus liquidators receive to liquidate this asset
-   */
-  function configureReserveAsCollateral(
-    address asset,
-    uint256 ltv,
-    uint256 liquidationThreshold,
-    uint256 liquidationBonus
-  ) external;
-
-  /**
    * @notice Freeze or unfreeze a reserve. A frozen reserve doesn't allow any new supply, borrow
    * or rate swap but allows repayments, liquidations, rate rebalances and withdrawals.
    * @param asset The address of the underlying asset of the reserve
    * @param freeze True if the reserve needs to be frozen, false otherwise
    */
   function setReserveFreeze(address pool, address asset, bool freeze) external;
-
-  /**
-   * @notice Updates the reserve factor of a reserve.
-   * @param asset The address of the underlying asset of the reserve
-   * @param newReserveFactor The new reserve factor of the reserve
-   */
-  function setReserveFactor(address pool, address asset, uint256 newReserveFactor) external;
 
   function initRoles(address pool, address admin) external;
 

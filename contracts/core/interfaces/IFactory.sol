@@ -22,6 +22,7 @@ interface IFactory is IBeacon {
   event ImplementationUpdated(address indexed old, address indexed updated, address owner);
   event TreasuryUpdated(address indexed old, address indexed updated, address owner);
   event ReserveFactorUpdated(uint256 indexed old, uint256 indexed updated, address owner);
+  event ConfiguratorUpdated(address indexed old, address indexed updated, address owner);
   event RewardsControllerUpdated(address indexed old, address indexed updated, address owner);
   event FlashLoanPremiumToProtocolUpdated(
     uint256 indexed old,
@@ -32,6 +33,8 @@ interface IFactory is IBeacon {
   function configurator() external view returns (IPoolConfigurator);
 
   function createPool(IPool.InitParams memory params) external returns (IPool pool);
+
+  function setConfigurator(address impl) external;
 
   function flashLoanPremiumToProtocol() external view returns (uint256);
 

@@ -29,7 +29,6 @@ contract Pool is Initializable, PoolSetters {
    */
   function initialize(IPool.InitParams memory params) public virtual reinitializer(1) {
     _factory = IFactory(msg.sender);
-    configurator = params.configurator;
     hook = IHook(params.hook);
 
     for (uint i = 0; i < params.assets.length; i++) {
