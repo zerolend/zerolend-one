@@ -16,14 +16,13 @@ pragma solidity 0.8.19;
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 library PositionBalanceConfiguration {
   using WadRayMath for uint256;
-  using SafeCast for uint256;
 
   function mintSupply(
     DataTypes.PositionBalance storage self,
+    DataTypes.ReserveSupplies storage supply,
     uint256 amount,
     uint128 index
   ) internal returns (bool isFirst, uint256 supplyMinted) {
@@ -35,11 +34,14 @@ library PositionBalanceConfiguration {
     self.lastSupplyLiquidtyIndex = index;
     self.scaledSupplyBalance += amountScaled;
 
+    supply.collateral += amountScaled;
+
     return (scaledBalance == 0, amountScaled);
   }
 
   function mintDebt(
     DataTypes.PositionBalance storage self,
+    DataTypes.ReserveSupplies storage supply,
     uint256 amount,
     uint128 index
   ) internal returns (bool isFirst, uint256 supplyMinted) {
@@ -51,11 +53,14 @@ library PositionBalanceConfiguration {
     self.lastDebtLiquidtyIndex = index;
     self.scaledDebtBalance += amountScaled;
 
+    supply.debt += amountScaled;
+
     return (scaledBalance == 0, amountScaled);
   }
 
   function burnSupply(
     DataTypes.PositionBalance storage self,
+    DataTypes.ReserveSupplies storage supply,
     uint256 amount,
     uint128 index
   ) internal returns (uint256 supplyBurnt) {
@@ -64,11 +69,15 @@ library PositionBalanceConfiguration {
 
     self.lastSupplyLiquidtyIndex = index;
     self.scaledSupplyBalance -= amountScaled;
+
+    supply.collateral -= amountScaled;
+
     return amountScaled;
   }
 
   function burnDebt(
     DataTypes.PositionBalance storage self,
+    DataTypes.ReserveSupplies storage supply,
     uint256 amount,
     uint128 index
   ) internal returns (uint256 supplyBurnt) {
@@ -77,6 +86,9 @@ library PositionBalanceConfiguration {
 
     self.lastDebtLiquidtyIndex = index;
     self.scaledDebtBalance -= amountScaled;
+
+    supply.debt -= amountScaled;
+
     return amountScaled;
   }
 

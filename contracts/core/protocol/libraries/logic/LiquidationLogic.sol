@@ -13,18 +13,19 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
-import {WadRayMath} from '../../libraries/math/WadRayMath.sol';
 import {DataTypes} from '../../libraries/types/DataTypes.sol';
-import {ReserveLogic} from './ReserveLogic.sol';
-import {ValidationLogic} from './ValidationLogic.sol';
 import {GenericLogic} from './GenericLogic.sol';
-import {UserConfiguration} from '../../libraries/configuration/UserConfiguration.sol';
-import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
-import {TokenConfiguration} from '../../libraries/configuration/TokenConfiguration.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
+import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
+import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
+import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
+import {ReserveLogic} from './ReserveLogic.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {TokenConfiguration} from '../../libraries/configuration/TokenConfiguration.sol';
+import {UserConfiguration} from '../../libraries/configuration/UserConfiguration.sol';
+import {ValidationLogic} from './ValidationLogic.sol';
+import {WadRayMath} from '../../libraries/math/WadRayMath.sol';
 
 /**
  * @title LiquidationLogic library
@@ -32,6 +33,7 @@ import {IPool} from '../../../interfaces/IPool.sol';
  */
 library LiquidationLogic {
   using PercentageMath for uint256;
+  using PositionBalanceConfiguration for DataTypes.PositionBalance;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
@@ -100,7 +102,8 @@ library LiquidationLogic {
   function executeLiquidationCall(
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
-    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
+    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     mapping(bytes32 => DataTypes.UserConfigurationMap) storage usersConfig,
     DataTypes.ExecuteLiquidationCallParams memory params
   ) external {
@@ -113,7 +116,7 @@ library LiquidationLogic {
     debtReserve.updateState(vars.debtReserveCache);
 
     (, , , , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
-      _balances,
+      balances,
       reservesData,
       reservesList,
       DataTypes.CalculateUserAccountDataParams({
@@ -128,7 +131,7 @@ library LiquidationLogic {
       // vars.debtReserveCache,
       params,
       vars.healthFactor,
-      _balances
+      balances
     );
 
     ValidationLogic.validateLiquidationCall(
@@ -147,7 +150,7 @@ library LiquidationLogic {
       vars.liquidationBonus
     ) = _getConfigurationData(collateralReserve, params);
 
-    vars.userCollateralBalance = _balances[vars.asset][params.position].scaledSupplyBalance;
+    vars.userCollateralBalance = balances[vars.asset][params.position].scaledSupplyBalance;
 
     (
       vars.actualCollateralToLiquidate,
@@ -178,7 +181,7 @@ library LiquidationLogic {
       emit ReserveUsedAsCollateralDisabled(params.collateralAsset, params.position);
     }
 
-    _burnDebtTokens(params, vars);
+    _burnDebtTokens(params, vars, balances[params.debtAsset], totalSupplies[params.debtAsset]);
 
     debtReserve.updateInterestRates(
       vars.debtReserveCache,
@@ -190,7 +193,7 @@ library LiquidationLogic {
       ''
     );
 
-    // _burnCollateralATokens(collateralReserve, params, vars);
+    _burnCollateralTokens(collateralReserve, params, vars, balances, totalSupplies);
 
     // Transfer fee to treasury if it is non-zero
     if (vars.liquidationProtocolFeeAmount != 0) {
@@ -199,11 +202,17 @@ library LiquidationLogic {
         liquidityIndex
       );
       // todo
-      // uint256 scaledDownUserBalance = vars.collateralAToken.scaledBalanceOf(params.position);
-      // // To avoid trying to send more aTokens than available on balance, due to 1 wei imprecision
-      // if (scaledDownLiquidationProtocolFee > scaledDownUserBalance) {
-      //   vars.liquidationProtocolFeeAmount = scaledDownUserBalance.rayMul(liquidityIndex);
-      // }
+      uint256 scaledDownUserBalance = balances[params.collateralAsset][params.position]
+        .scaledSupplyBalance;
+      // To avoid trying to send more aTokens than available on balance, due to 1 wei imprecision
+      if (scaledDownLiquidationProtocolFee > scaledDownUserBalance) {
+        vars.liquidationProtocolFeeAmount = scaledDownUserBalance.rayMul(liquidityIndex);
+      }
+
+      IERC20(params.collateralAsset).transfer(
+        IPool(params.pool).factory().treasury(),
+        vars.liquidationProtocolFeeAmount
+      );
       // vars.collateralAToken.transferOnLiquidation(
       //   params.position,
       //   vars.collateralAToken.RESERVE_TREASURY_ADDRESS(),
@@ -211,20 +220,12 @@ library LiquidationLogic {
       // );
     }
 
-    // todo
-    // // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
-    // IERC20(params.debtAsset).safeTransferFrom(
-    //   msg.sender,
-    //   vars.debtReserveCache.nftPositionManager,
-    //   vars.actualDebtToLiquidate
-    // );
-
-    // todo
-    // IAToken(vars.debtReserveCache.aTokenAddress).handleRepayment(
-    //   msg.sender,
-    //   params.position,
-    //   vars.actualDebtToLiquidate
-    // );
+    // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
+    IERC20(params.debtAsset).safeTransferFrom(
+      msg.sender,
+      address(params.pool),
+      vars.actualDebtToLiquidate
+    );
 
     emit LiquidationCall(
       params.collateralAsset,
@@ -236,63 +237,60 @@ library LiquidationLogic {
     );
   }
 
-  // /**
-  //  * @notice Burns the collateral aTokens and transfers the underlying to the liquidator.
-  //  * @dev   The function also updates the state and the interest rate of the collateral reserve.
-  //  * @param collateralReserve The data of the collateral reserve
-  //  * @param params The additional parameters needed to execute the liquidation function
-  //  * @param vars The executeLiquidationCall() function local vars
-  //  */
-  // function _burnCollateralATokens(
-  //   DataTypes.ReserveData storage collateralReserve,
-  //   DataTypes.ExecuteLiquidationCallParams memory params,
-  //   LiquidationCallLocalVars memory vars
-  // ) internal {
-  //   DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache();
-  //   collateralReserve.updateState(collateralReserveCache);
-  //   collateralReserve.updateInterestRates(
-  //     collateralReserveCache,
-  //     params.collateralAsset,
-  //     0,
-  //     vars.actualCollateralToLiquidate
-  //   );
-  //   // todo
-  //   // // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-  //   // vars.collateralAToken.burn(
-  //   //   params.position,
-  //   //   msg.sender,
-  //   //   vars.actualCollateralToLiquidate,
-  //   //   collateralReserveCache.nextLiquidityIndex
-  //   // );
-  // }
+  /**
+   * @notice Burns the collateral aTokens and transfers the underlying to the liquidator.
+   * @dev   The function also updates the state and the interest rate of the collateral reserve.
+   * @param collateralReserve The data of the collateral reserve
+   * @param params The additional parameters needed to execute the liquidation function
+   * @param vars The executeLiquidationCall() function local vars
+   */
+  function _burnCollateralTokens(
+    DataTypes.ReserveData storage collateralReserve,
+    DataTypes.ExecuteLiquidationCallParams memory params,
+    LiquidationCallLocalVars memory vars,
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
+    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies
+  ) internal {
+    DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache();
+    collateralReserve.updateState(collateralReserveCache);
+    collateralReserve.updateInterestRates(
+      collateralReserveCache,
+      params.collateralAsset,
+      0,
+      IPool(params.pool).getReserveFactor(),
+      vars.actualCollateralToLiquidate,
+      '',
+      ''
+    );
+
+    // Burn the equivalent amount of aToken, sending the underlying to the liquidator
+    balances[params.collateralAsset][params.position].burnSupply(
+      totalSupplies[params.collateralAsset],
+      vars.actualCollateralToLiquidate,
+      collateralReserveCache.nextLiquidityIndex
+    );
+    IERC20(params.collateralAsset).transfer(msg.sender, vars.actualCollateralToLiquidate);
+  }
 
   /**
    * @notice Burns the debt tokens of the user up to the amount being repaid by the liquidator.
    * @dev The function alters the `debtReserveCache` state in `vars` to update the debt related data.
+   *
    * @param params The additional parameters needed to execute the liquidation function
    * @param vars the executeLiquidationCall() function local vars
    */
   function _burnDebtTokens(
     DataTypes.ExecuteLiquidationCallParams memory params,
-    LiquidationCallLocalVars memory vars
+    LiquidationCallLocalVars memory vars,
+    mapping(bytes32 => DataTypes.PositionBalance) storage balances,
+    DataTypes.ReserveSupplies storage totalSupplies
   ) internal {
-    // todo
-    // if (vars.userVariableDebt >= vars.actualDebtToLiquidate) {
-    //   vars.debtReserveCache.nextScaledVariableDebt = IVariableDebtToken(
-    //     vars.debtReserveCache.variableDebtTokenAddress
-    //   ).burn(
-    //       params.user,
-    //       vars.actualDebtToLiquidate,
-    //       vars.debtReserveCache.nextVariableBorrowIndex
-    //     );
-    // } else {
-    //   // If the user doesn't have variable debt, no need to try to burn variable debt tokens
-    //   if (vars.userVariableDebt != 0) {
-    //     vars.debtReserveCache.nextScaledVariableDebt = IVariableDebtToken(
-    //       vars.debtReserveCache.variableDebtTokenAddress
-    //     ).burn(params.user, vars.userVariableDebt, vars.debtReserveCache.nextVariableBorrowIndex);
-    //   }
-    // }
+    uint256 burnt = balances[params.position].burnDebt(
+      totalSupplies,
+      vars.actualDebtToLiquidate,
+      vars.debtReserveCache.nextVariableBorrowIndex
+    );
+    vars.debtReserveCache.nextScaledVariableDebt = burnt;
   }
 
   /**
@@ -307,9 +305,9 @@ library LiquidationLogic {
   function _calculateDebt(
     DataTypes.ExecuteLiquidationCallParams memory params,
     uint256 healthFactor,
-    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances
   ) internal view returns (uint256, uint256) {
-    uint256 userDebt = _balances[params.debtAsset][params.position].scaledDebtBalance;
+    uint256 userDebt = balances[params.debtAsset][params.position].scaledDebtBalance;
 
     uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD
       ? DEFAULT_LIQUIDATION_CLOSE_FACTOR
