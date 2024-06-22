@@ -32,3 +32,6 @@ For example, at the root of the repository:
 ```
 certoraMutate --prover_conf test/certora/confs/ERC20.conf --mutation_conf test/certora/gambit.conf
 ```
+
+# todo
+check if there's any way where pool can have it's liquidity index less than 1 ray
