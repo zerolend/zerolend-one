@@ -54,7 +54,7 @@ library BorrowLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
+    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     DataTypes.ExecuteBorrowParams memory params
   ) public {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -79,17 +79,16 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    (bool isFirstBorrowing, uint256 minted) = b.mintDebt(
+    (bool isFirstBorrowing, ) = b.mintDebt(
+      totalSupplies[params.asset],
       params.amount,
       reserveCache.nextVariableBorrowIndex
     );
-    _totalSupplies[params.asset].debt += minted;
 
     // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
     // todo; update reserveCache.nextScaledVariableDebt
-    _totalSupplies[params.asset].debt -= params.amount;
 
     reserve.updateInterestRates(
       reserveCache,
@@ -122,15 +121,15 @@ library BorrowLogic {
    */
   function executeRepay(
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
+    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     DataTypes.ExecuteRepayParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
 
-    DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
+    DataTypes.PositionBalance storage b = balances[params.asset][params.position];
 
     uint256 paybackAmount = b.scaledDebtBalance;
     ValidationLogic.validateRepay(params.amount, paybackAmount);
@@ -147,11 +146,8 @@ library BorrowLogic {
       ''
     );
 
-    uint256 burnt = b.burnDebt(paybackAmount, reserveCache.nextVariableBorrowIndex);
-
-    // todo; update reserveCache.nextScaledVariableDebt
-    _totalSupplies[params.asset].debt -= burnt;
-    reserveCache.nextScaledVariableDebt = _totalSupplies[params.asset].debt;
+    b.burnDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextVariableBorrowIndex);
+    reserveCache.nextScaledVariableDebt = totalSupplies[params.asset].debt;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
     emit Repay(params.asset, params.position, msg.sender, paybackAmount);

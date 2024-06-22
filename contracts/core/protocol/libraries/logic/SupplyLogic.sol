@@ -57,8 +57,8 @@ library SupplyLogic {
   function executeSupply(
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.UserConfigurationMap storage userConfig,
-    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address => DataTypes.ReserveSupplies) storage _totalSupplies,
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
+    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     DataTypes.ExecuteSupplyParams memory params
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
@@ -78,9 +78,12 @@ library SupplyLogic {
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
 
-    DataTypes.PositionBalance storage bal = _balances[params.asset][params.position];
-    (bool isFirst, uint256 minted) = bal.mintSupply(params.amount, reserveCache.nextLiquidityIndex);
-    _totalSupplies[params.asset].collateral += minted;
+    DataTypes.PositionBalance storage bal = balances[params.asset][params.position];
+    (bool isFirst, uint256 minted) = bal.mintSupply(
+      totalSupplies[params.asset],
+      params.amount,
+      reserveCache.nextLiquidityIndex
+    );
 
     if (isFirst) {
       if (ValidationLogic.validateUseAsCollateral(userConfig, reserveCache.reserveConfiguration)) {
@@ -141,11 +144,11 @@ library SupplyLogic {
     }
 
     // Burn debt. Which is burn supply, update total supply and send tokens to the user
-    uint256 burnt = balances[params.asset][params.position].burnSupply(
+    balances[params.asset][params.position].burnSupply(
+      totalSupplies[params.asset],
       params.amount,
       reserveCache.nextLiquidityIndex
     );
-    totalSupplies[params.asset].collateral -= burnt;
     IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
     if (isCollateral && userConfig.isBorrowingAny())

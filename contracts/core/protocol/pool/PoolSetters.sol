@@ -165,6 +165,7 @@ abstract contract PoolSetters is Initializable, PoolGetters {
       _reserves,
       _reservesList,
       _balances,
+      _totalSupplies,
       _usersConfig,
       DataTypes.ExecuteLiquidationCallParams({
         reservesCount: _reservesCount,
