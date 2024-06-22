@@ -16,14 +16,16 @@ pragma solidity 0.8.19;
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 library PositionBalanceConfiguration {
   using WadRayMath for uint256;
+  using SafeCast for uint256;
 
   function mintSupply(
     DataTypes.PositionBalance storage self,
     uint256 amount,
-    uint256 index
+    uint128 index
   ) internal returns (bool isFirst, uint256 supplyMinted) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
@@ -39,7 +41,7 @@ library PositionBalanceConfiguration {
   function mintDebt(
     DataTypes.PositionBalance storage self,
     uint256 amount,
-    uint256 index
+    uint128 index
   ) internal returns (bool isFirst, uint256 supplyMinted) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
@@ -55,7 +57,7 @@ library PositionBalanceConfiguration {
   function burnSupply(
     DataTypes.PositionBalance storage self,
     uint256 amount,
-    uint256 index
+    uint128 index
   ) internal returns (uint256 supplyBurnt) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
@@ -68,7 +70,7 @@ library PositionBalanceConfiguration {
   function burnDebt(
     DataTypes.PositionBalance storage self,
     uint256 amount,
-    uint256 index
+    uint128 index
   ) internal returns (uint256 supplyBurnt) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
