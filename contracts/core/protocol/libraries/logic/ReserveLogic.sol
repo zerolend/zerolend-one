@@ -264,10 +264,10 @@ library ReserveLogic {
         reserveCache.currLiquidityRate,
         reserveCache.reserveLastUpdateTimestamp
       );
-      reserveCache.nextLiquidityIndex = cumulatedLiquidityInterest.rayMul(
-        reserveCache.currLiquidityIndex
-      );
-      reserve.liquidityIndex = reserveCache.nextLiquidityIndex.toUint128();
+      reserveCache.nextLiquidityIndex = cumulatedLiquidityInterest
+        .rayMul(reserveCache.currLiquidityIndex)
+        .toUint128();
+      reserve.liquidityIndex = reserveCache.nextLiquidityIndex;
     }
 
     // Variable borrow index only gets updated if there is any variable debt.
@@ -279,10 +279,10 @@ library ReserveLogic {
         reserveCache.currVariableBorrowRate,
         reserveCache.reserveLastUpdateTimestamp
       );
-      reserveCache.nextVariableBorrowIndex = cumulatedVariableBorrowInterest.rayMul(
-        reserveCache.currVariableBorrowIndex
-      );
-      reserve.variableBorrowIndex = reserveCache.nextVariableBorrowIndex.toUint128();
+      reserveCache.nextVariableBorrowIndex = cumulatedVariableBorrowInterest
+        .rayMul(reserveCache.currVariableBorrowIndex)
+        .toUint128();
+      reserve.variableBorrowIndex = reserveCache.nextVariableBorrowIndex;
     }
   }
 

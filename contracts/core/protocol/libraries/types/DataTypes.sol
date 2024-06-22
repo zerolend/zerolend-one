@@ -18,13 +18,13 @@ library DataTypes {
     //stores the reserve configuration
     ReserveConfigurationMap configuration;
     //the liquidity index. Expressed in ray
-    uint256 liquidityIndex;
+    uint128 liquidityIndex;
     //the current supply rate. Expressed in ray
-    uint256 currentLiquidityRate;
+    uint128 currentLiquidityRate;
     //variable borrow index. Expressed in ray
-    uint256 variableBorrowIndex;
+    uint128 variableBorrowIndex;
     //the current variable borrow rate. Expressed in ray
-    uint256 currentVariableBorrowRate;
+    uint128 currentVariableBorrowRate;
     //timestamp of last update
     uint40 lastUpdateTimestamp;
     //the id of the reserve. Represents the position in the list of the active reserves
@@ -79,10 +79,10 @@ library DataTypes {
   struct ReserveCache {
     uint256 currScaledVariableDebt;
     uint256 nextScaledVariableDebt;
-    uint256 currLiquidityIndex;
-    uint256 nextLiquidityIndex;
-    uint256 currVariableBorrowIndex;
-    uint256 nextVariableBorrowIndex;
+    uint128 currLiquidityIndex;
+    uint128 nextLiquidityIndex;
+    uint128 currVariableBorrowIndex;
+    uint128 nextVariableBorrowIndex;
     uint256 currLiquidityRate;
     uint256 currVariableBorrowRate;
     // address asset;
@@ -92,9 +92,9 @@ library DataTypes {
 
   struct PositionBalance {
     uint256 scaledSupplyBalance;
-    uint256 lastSupplyLiquidtyIndex;
+    uint128 lastSupplyLiquidtyIndex;
     uint256 scaledDebtBalance;
-    uint256 lastDebtLiquidtyIndex;
+    uint128 lastDebtLiquidtyIndex;
   }
 
   struct ReserveSupplies {
