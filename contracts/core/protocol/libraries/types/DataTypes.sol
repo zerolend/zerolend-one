@@ -18,13 +18,13 @@ library DataTypes {
     //stores the reserve configuration
     ReserveConfigurationMap configuration;
     //the liquidity index. Expressed in ray
-    uint128 liquidityIndex;
+    uint256 liquidityIndex;
     //the current supply rate. Expressed in ray
-    uint128 currentLiquidityRate;
+    uint256 currentLiquidityRate;
     //variable borrow index. Expressed in ray
-    uint128 variableBorrowIndex;
+    uint256 variableBorrowIndex;
     //the current variable borrow rate. Expressed in ray
-    uint128 currentVariableBorrowRate;
+    uint256 currentVariableBorrowRate;
     //timestamp of last update
     uint40 lastUpdateTimestamp;
     //the id of the reserve. Represents the position in the list of the active reserves
@@ -34,7 +34,7 @@ library DataTypes {
     //address of the oracle
     address oracle;
     //the current treasury balance, scaled
-    uint128 accruedToTreasury;
+    uint256 accruedToTreasury;
   }
 
   struct ReserveConfigurationMap {
