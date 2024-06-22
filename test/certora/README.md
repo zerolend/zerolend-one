@@ -8,6 +8,10 @@ The ZeroLend protocol allows users to take out over-collateralized loans for ERC
 
 ## ERC20 tokens and transfers
 
+## Pool Supply Invariant Tests
+
+Here we test invariant checks on the supply and withdraw functions of the Pool contract. Whenever a user supplies an asset, we ensure that we are crediting the user properly. And at the same time whenever a user tries to withdraw a certain number of assets, they have enough supply to do so.
+
 
 # Getting started
 
