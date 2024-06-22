@@ -175,7 +175,6 @@ interface IPool {
   );
 
   struct InitParams {
-    address configurator;
     address hook;
     address[] assets;
     address[] rateStrategyAddresses;

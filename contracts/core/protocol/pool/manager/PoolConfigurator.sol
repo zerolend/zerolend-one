@@ -24,7 +24,7 @@ import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfigu
  * @title PoolConfigurator
  * @dev Implements the configuration methods for the lending pools
  */
-abstract contract PoolConfigurator is PoolManager, IPoolConfigurator {
+contract PoolConfigurator is PoolManager, IPoolConfigurator {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   address public factory;

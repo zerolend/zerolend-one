@@ -42,13 +42,9 @@ contract Factory is IFactory, Ownable {
   /// @inheritdoc IFactory
   uint256 public liquidationProtocolFeePercentage;
 
-  constructor(address _implementation, address _configurator) {
+  constructor(address _implementation) {
     implementation = _implementation;
-    configurator = IPoolConfigurator(_configurator);
     treasury = msg.sender;
-
-    // give some of the master roles (pool = address(0x0)) to the msg.sender
-    configurator.initRoles(address(0), msg.sender);
   }
 
   /// @inheritdoc IFactory
@@ -78,6 +74,16 @@ contract Factory is IFactory, Ownable {
     address old = implementation;
     implementation = impl;
     emit ImplementationUpdated(old, impl, msg.sender);
+  }
+
+  /// @inheritdoc IFactory
+  function setConfigurator(address impl) external onlyOwner {
+    address old = address(configurator);
+    configurator = IPoolConfigurator(impl);
+    emit ConfiguratorUpdated(old, impl, msg.sender);
+
+    // give some of the master roles (pool = address(0x0)) to the msg.sender
+    configurator.initRoles(address(0), msg.sender);
   }
 
   /// @inheritdoc IFactory
