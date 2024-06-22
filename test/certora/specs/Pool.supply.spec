@@ -3,8 +3,10 @@
  */
 
 methods {
-    function getBalance(address asset, address who, uint256 index) external returns (uint256) envfree;
-    function getReserveData(address asset) external returns (DataTypes.ReserveData) envfree;
+    function getBalance(address, address, uint256) external returns (uint256) envfree;
+    function getReserveData(address) external returns (DataTypes.ReserveData) envfree;
+    function getBalanceRaw(address, address, uint256) external returns (DataTypes.PositionBalance) envfree;
+
 }
 
 definition RAY() returns uint128 = 10^27;
@@ -19,8 +21,12 @@ rule supplyShouldIncreaseBalance(address asset, uint256 amount) {
     require d1.liquidityIndex >= RAY();
     require d1.variableBorrowIndex >= RAY();
 
+    // ensure that liquidity is not 0 and is at least the reserve liquidity index
+    DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e.msg.sender, 0);
+    require balanceBeforeRaw.lastSupplyLiquidtyIndex == d1.liquidityIndex;
+
     // fetch balance before supply
-	mathint balanceBefore = getBalance(asset, e.msg.sender, 0);
+    mathint balanceBefore = getBalance(asset, e.msg.sender, 0);
 
     supply(e, asset, amount, 0);
 
