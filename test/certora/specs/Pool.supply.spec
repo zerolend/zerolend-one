@@ -1,18 +1,30 @@
 /**
- * Invariant tests for the core Pool contract regarding supplies
+ * Invariant tests for the core Pool contract regarding supplies and withdrawals.
  */
 
 methods {
-    function getBalance(address asset, address who, uint256 index) external returns (uint256 ) envfree;
+    function getBalance(address asset, address who, uint256 index) external returns (uint256) envfree;
+    function getReserveData(address asset) external returns (DataTypes.ReserveData) envfree;
 }
 
+definition RAY() returns uint128 = 10^27;
 
 // Supplying an asset into the pool should increase the pool balance
 // exactly with the amount supplied
 rule supplyShouldIncreaseBalance(address asset, uint256 amount) {
 	env e;
+
+    // ensure liquidity index is initialized at least 1 ray
+    DataTypes.ReserveData d = getReserveData(asset);
+    require d.liquidityIndex == RAY();
+    require d.variableBorrowIndex == RAY();
+
+    // fetch balance before supply
 	mathint balanceBefore = getBalance(asset, e.msg.sender, 0);
+
     supply(e, asset, amount, 0);
+
+    // ensure balance after is exactly the difference
     mathint balanceAfter = getBalance(asset, e.msg.sender, 0);
 	assert balanceAfter == balanceBefore + amount;
 }
@@ -22,6 +34,11 @@ rule supplyShouldIncreaseBalance(address asset, uint256 amount) {
 rule withdrawShouldExecuteAfterValidSupply(address asset, uint256 index1, uint256 index2, uint256 amountSupply, uint256 amountWithdraw) {
 	env e1;
     env e2;
+
+    // ensure liquidity index is initialized at least 1 ray
+    DataTypes.ReserveData d = getReserveData(asset);
+    require d.liquidityIndex == RAY();
+    require d.variableBorrowIndex == RAY();
 
     // random supply
     supply(e1, asset, amountSupply, index1);
@@ -53,8 +70,14 @@ rule withdrawShouldExecuteWithValidBalance(address asset, uint256 index, uint256
     assert !lastReverted => assert_uint256(balanceBefore) >= amountWithdraw;
 }
 
+// This is a check to ensure that the balance decreases properly if a user executes a withdraw
 rule withdrawShouldReduceBalanceProperly(address asset, uint256 amountWithdraw) {
 	env e;
+
+    // ensure liquidity index is initialized at least 1 ray
+    DataTypes.ReserveData d = getReserveData(asset);
+    require d.liquidityIndex == RAY();
+    require d.variableBorrowIndex == RAY();
 
     // check if the user has enough balance
     mathint balanceBefore = getBalance(asset, e.msg.sender, 0);
