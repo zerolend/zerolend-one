@@ -46,7 +46,7 @@
     "compile:forge": "forge build",
     "compile:hardhat": "hardhat compile",
     "test:hardhat": "hardhat test",
-    "compile": "npx compile:hardhat && npx compile:forge",
+    "compile": "npm run compile:hardhat && npm run compile:forge",
     "docs": "rimraf docs && hardhat docgen",
     "prepare": "husky"
   }
