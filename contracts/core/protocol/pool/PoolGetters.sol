@@ -127,14 +127,17 @@ abstract contract PoolGetters is PoolStorage, IPool {
     return _reservesList[id];
   }
 
+  /// @inheritdoc IPool
   function getAssetPrice(address reserve) public view override returns (uint256) {
     return uint256(IAggregatorInterface(_reserves[reserve].oracle).latestAnswer());
   }
 
+  /// @inheritdoc IPool
   function factory() external view returns (IFactory) {
     return _factory;
   }
 
+  /// @inheritdoc IPool
   function getReserveFactor() external view returns (uint256 reseveFactor) {
     return _factory.reserveFactor();
   }
