@@ -31,7 +31,16 @@ contract Pool is Initializable, PoolSetters {
     _factory = IFactory(msg.sender);
     hook = IHook(params.hook);
 
+    require(params.assets.length >= 2, 'not enough assets');
+    require(params.rateStrategyAddresses.length == params.assets.length, '!length');
+    require(params.sources.length == params.assets.length, '!length');
+    require(params.configurations.length == params.assets.length, '!length');
+
     for (uint i = 0; i < params.assets.length; i++) {
+      require(params.assets[i] != address(0), 'invalid asset');
+      require(params.sources[i] != address(0), 'invalid oracle');
+      require(params.rateStrategyAddresses[i] != address(0), 'invalid strategy');
+
       _setReserveConfiguration(
         params.assets[i],
         params.rateStrategyAddresses[i],
@@ -45,6 +54,7 @@ contract Pool is Initializable, PoolSetters {
         DataTypes.InitReserveParams({
           asset: params.assets[i],
           interestRateStrategyAddress: params.rateStrategyAddresses[i],
+          oracle: params.sources[i],
           reservesCount: _reservesCount
         })
       );

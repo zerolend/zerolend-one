@@ -50,6 +50,8 @@ library PoolLogic {
     DataTypes.InitReserveParams memory params
   ) external returns (bool) {
     require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
+    require(Address.isContract(params.interestRateStrategyAddress), Errors.NOT_CONTRACT);
+
     reservesData[params.asset].init(params.interestRateStrategyAddress);
 
     bool reserveAlreadyAdded = reservesData[params.asset].id != 0 ||

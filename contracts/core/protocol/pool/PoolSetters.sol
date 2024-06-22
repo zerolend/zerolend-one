@@ -205,7 +205,6 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     DataTypes.ReserveConfigurationMap memory config
   ) internal {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-    require(_reserves[asset].id != 0 || _reservesList[0] == asset, Errors.ASSET_NOT_LISTED);
     _reserves[asset].configuration = config;
 
     // set if values are non-0
