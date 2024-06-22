@@ -185,7 +185,9 @@ library LiquidationLogic {
       params.debtAsset,
       IPool(params.pool).getReserveFactor(),
       vars.actualDebtToLiquidate,
-      0
+      0,
+      '',
+      ''
     );
 
     // _burnCollateralATokens(collateralReserve, params, vars);

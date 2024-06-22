@@ -167,7 +167,9 @@ library ReserveLogic {
     address reserveAddress,
     uint256 reserveFactor,
     uint256 liquidityAdded,
-    uint256 liquidityTaken
+    uint256 liquidityTaken,
+    bytes32 position,
+    bytes memory data
   ) internal {
     UpdateInterestRatesLocalVars memory vars;
 
@@ -178,8 +180,8 @@ library ReserveLogic {
     (vars.nextLiquidityRate, vars.nextVariableRate) = IReserveInterestRateStrategy(
       reserve.interestRateStrategyAddress
     ).calculateInterestRates(
-        address(0),
-        '',
+        position,
+        data,
         DataTypes.CalculateInterestRatesParams({
           liquidityAdded: liquidityAdded,
           liquidityTaken: liquidityTaken,

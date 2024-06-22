@@ -96,7 +96,9 @@ library BorrowLogic {
       params.asset,
       IPool(params.pool).getReserveFactor(),
       0,
-      params.amount
+      params.amount,
+      '',
+      ''
     );
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
@@ -140,7 +142,9 @@ library BorrowLogic {
       params.asset,
       IPool(params.pool).getReserveFactor(),
       paybackAmount,
-      0
+      0,
+      '',
+      ''
     );
 
     uint256 burnt = b.burnDebt(paybackAmount, reserveCache.nextVariableBorrowIndex);
