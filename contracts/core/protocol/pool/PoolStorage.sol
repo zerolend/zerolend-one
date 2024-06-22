@@ -49,5 +49,5 @@ contract PoolStorage {
   IFactory internal _factory;
 
   /// @notice The assigned hook for this pool
-  IHook public hook;
+  IHook internal _hook;
 }

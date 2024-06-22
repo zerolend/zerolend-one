@@ -15,6 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 import {IFactory} from './IFactory.sol';
+import {IHook} from './IHook.sol';
 
 /**
  * @title IPool
@@ -233,6 +234,8 @@ interface IPool {
   ) external;
 
   function borrow(address asset, uint256 amount, uint256 index) external;
+
+  function getHook() external view returns (IHook);
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
