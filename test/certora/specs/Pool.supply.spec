@@ -9,7 +9,7 @@ methods {
     function getBalanceRaw(address, address, uint256) external returns (DataTypes.PositionBalance) envfree;
 }
 
-definition RAY() returns uint256 = 10^27;
+definition RAY() returns uint128 = 10^27;
 
 // Supplying an asset into the pool should increase the pool balance
 // exactly with the amount supplied
