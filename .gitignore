@@ -31,3 +31,6 @@ resource_errors.json
 artifacts-zk
 cache-zk
 venv
+typechain-types
+types
+abi

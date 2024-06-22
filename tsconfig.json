@@ -5,15 +5,8 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "noImplicitAny": false,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "declarationDir": "./types"
+    "resolveJsonModule": true
   },
-  "include": ["./scripts", "./test", "./tasks", "./helpers"],
-  "files": [
-    "./hardhat.config.ts",
-    "node_modules/@nomiclabs/hardhat-etherscan/src/type-extensions.ts",
-    "node_modules/hardhat-gas-reporter/src/type-extensions.ts"
-  ]
+  "include": ["./scripts", "./test", "./types"],
+  "files": ["./hardhat.config.ts"]
 }
