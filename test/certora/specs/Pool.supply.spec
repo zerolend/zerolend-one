@@ -15,14 +15,19 @@ rule supplyShouldIncreaseBalance(address asset, uint256 amount) {
 	env e;
 
     // ensure liquidity index is initialized at least 1 ray
-    DataTypes.ReserveData d = getReserveData(asset);
-    require d.liquidityIndex == RAY();
-    require d.variableBorrowIndex == RAY();
+    DataTypes.ReserveData d1 = getReserveData(asset);
+    require d1.liquidityIndex >= RAY();
+    require d1.variableBorrowIndex >= RAY();
 
     // fetch balance before supply
 	mathint balanceBefore = getBalance(asset, e.msg.sender, 0);
 
     supply(e, asset, amount, 0);
+
+    // ensure liquidity index is still the same
+    DataTypes.ReserveData d2 = getReserveData(asset);
+    require d2.liquidityIndex == d1.liquidityIndex;
+    require d2.variableBorrowIndex == d1.variableBorrowIndex;
 
     // ensure balance after is exactly the difference
     mathint balanceAfter = getBalance(asset, e.msg.sender, 0);
