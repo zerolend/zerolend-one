@@ -31,6 +31,9 @@ contract Factory is IFactory, Ownable {
   IPool[] public pools;
 
   /// @inheritdoc IFactory
+  mapping(address => bool) public isPool;
+
+  /// @inheritdoc IFactory
   IPoolConfigurator public configurator;
 
   /// @inheritdoc IFactory
@@ -63,6 +66,7 @@ contract Factory is IFactory, Ownable {
 
     // track the pool
     pools.push(pool);
+    isPool[address(pool)] = true;
     emit PoolCreated(pool, pools.length, msg.sender);
 
     // TODO: once pool is created ask users to deposit some funds to
