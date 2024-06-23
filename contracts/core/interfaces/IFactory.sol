@@ -42,6 +42,8 @@ interface IFactory is IBeacon {
 
   function pools(uint256 index) external view returns (IPool);
 
+  function isPool(address pool) external view returns (bool);
+
   function poolsLength() external view returns (uint256);
 
   function reserveFactor() external view returns (uint256);
