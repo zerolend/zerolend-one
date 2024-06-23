@@ -1,5 +1,5 @@
 // import
-import { ethers } from 'ethers';
+import { ZeroAddress, ethers } from 'ethers';
 import { getCreate2Address } from './create2';
 
 // declare deployment parameters
@@ -8,8 +8,8 @@ const constructorTypes = contractArtifact.abi
   .find((v) => v.type === 'constructor')
   ?.inputs.map((t) => t.type);
 
-const constructorArgs: any[] = ['0x6aac0942b8147bffab73789a82ee12fda7735bac'];
-const factoryAddress = '0x6aac0942b8147bffab73789a82ee12fda7735bac';
+const constructorArgs: any[] = [ZeroAddress];
+const factoryAddress = '0x4a27c059FD7E383854Ea7DE6Be9c390a795f6eE3';
 
 console.log('constructor parameters', constructorTypes, constructorArgs);
 
