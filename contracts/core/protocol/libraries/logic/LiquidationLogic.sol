@@ -240,6 +240,7 @@ library LiquidationLogic {
   /**
    * @notice Burns the collateral aTokens and transfers the underlying to the liquidator.
    * @dev   The function also updates the state and the interest rate of the collateral reserve.
+   *
    * @param collateralReserve The data of the collateral reserve
    * @param params The additional parameters needed to execute the liquidation function
    * @param vars The executeLiquidationCall() function local vars
@@ -296,6 +297,7 @@ library LiquidationLogic {
   /**
    * @notice Calculates the total debt of the user and the actual amount to liquidate depending on the health factor
    * and corresponding close factor.
+   *
    * @dev If the Health Factor is below CLOSE_FACTOR_HF_THRESHOLD, the close factor is increased to MAX_LIQUIDATION_CLOSE_FACTOR
    * @param params The additional parameters needed to execute the liquidation function
    * @param healthFactor The health factor of the position
@@ -326,6 +328,7 @@ library LiquidationLogic {
    * @notice Returns the configuration data for the debt and the collateral reserves.
    * @param collateralReserve The data of the collateral reserve
    * @param params The additional parameters needed to execute the liquidation function
+   *
    * @return The address to use as price source for the collateral
    * @return The address to use as price source for the debt
    * @return The liquidation bonus to apply to the collateral
@@ -363,6 +366,7 @@ library LiquidationLogic {
    * a certain amount of debt asset.
    * @dev This function needs to be called after all the checks to validate the liquidation have been performed,
    *   otherwise it might fail.
+   *
    * @param collateralReserve The data of the collateral reserve
    * @param debtReserveCache The cached data of the debt reserve
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
