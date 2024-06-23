@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {INFTPositionManager} from './INFTPositionManager.sol';
-import {IPool} from './../../core/interfaces/IPool.sol';
+import {IPool, IFactory} from './../../core/interfaces/IFactory.sol';
 import {Multicall} from '../multicall/Multicall.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
@@ -26,6 +26,8 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
  */
 contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPositionManager {
   using SafeERC20Upgradeable for IERC20Upgradeable;
+
+  IFactory factory;
 
   /**
    * @dev The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
@@ -58,7 +60,8 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
   /**
    * @notice Initializes the NFTPositionManager contract.
    */
-  function initialize() external initializer {
+  function initialize(address _factory) external initializer {
+    factory = IFactory(_factory);
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
   }
@@ -72,7 +75,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
    * @custom:event NFTMinted is emitted for each new asset.
    */
   function mint(MintParams calldata params) external returns (uint256 tokenId) {
-    // TODO: verify that pool is a part of protocol deployed via PoolFactory.
+    require(factory.isPool(params.pool), 'not a pool');
 
     if (params.recipient == address(0) || params.asset == address(0))
       revert ZeroAddressNotAllowed();
