@@ -30,11 +30,6 @@ interface INFTPositionManager {
   error ZeroValueNotAllowed();
 
   /**
-   * @notice Error indicating that the provided address is invalid and not present in the debt market.
-   */
-  error InvalidAssetAddress();
-
-  /**
    * @notice Error indicating a mismatch in balance.
    */
   error BalanceMisMatch();
@@ -45,17 +40,35 @@ interface INFTPositionManager {
   error PositionNotCleared();
 
   /**
-   * @notice Emitted when an NFT is minted.
-   * @param recipient The address that received the minted NFT.
-   * @param tokenId The ID of the minted NFT.
+   * @notice Error indicating that pool is not register in pool factory.
    */
-  event NFTMinted(address indexed recipient, uint256 indexed tokenId);
+  error NotPool();
 
   /**
-   * @notice Emitted when an NFT is burned.
-   * @param tokenId The ID of the burned NFT.
+   *
+   * @param asset The address of the asset that we want to borrow.
+   * @param tokenId  The ID of the position token.
+   * @param amount The amount of the asset that we want to borrow.
    */
-  event NFTBurned(uint256 indexed tokenId);
+  event BorrowIncreased(address indexed asset, uint256 indexed amount, uint256 indexed tokenId);
+
+  /**
+   *
+   * @param asset The address of the asset that we want to withdraw
+   * @param amount The amount of asset that we want to withdraw
+   * @param tokenId The ID of the NFT.
+   *
+   */
+
+  event Withdrawal(address indexed asset, uint256 indexed amount, uint256 tokenId);
+
+  /**
+   *
+   * @param asset The address of the asset that we want to repay.
+   * @param tokenId The ID of the NFT.
+   * @param amount The amount of asset that we want to repay
+   */
+  event Repay(address indexed asset, uint256 indexed tokenId, uint256 indexed amount);
 
   /**
    * @notice Emitted when liquidity is increased for a specific position token.
@@ -68,13 +81,11 @@ interface INFTPositionManager {
   /**
    * @notice Parameters required for minting a new position token.
    * @param asset The address of the asset to be supplied.
-   * @param recipient The address of the recipient who will receive the position token.
    * @param pool The address of the pool where the asset will be supplied.
    * @param amount The amount of the asset to be supplied.
    */
   struct MintParams {
     address asset;
-    address recipient;
     address pool;
     uint256 amount;
   }
@@ -90,7 +101,6 @@ interface INFTPositionManager {
   struct LiquidityParams {
     address asset;
     address pool;
-    address user;
     uint256 amount;
     uint256 tokenId;
   }
@@ -120,70 +130,14 @@ interface INFTPositionManager {
   }
 
   /**
-   * @notice Parameters required for increasing liquidity in a position.
-   * @param asset The address of the asset to be added.
-   * @param amount The amount of the asset to be added.
-   * @param tokenId The ID of the position token to be updated.
+   * @notice Parameters required for various asset operations (add liquidity, borrow, repay, withdraw) against a position.
+   * @param asset The address of the asset involved in the operation.
+   * @param amount The amount of the asset involved in the operation.
+   * @param tokenId The ID of the position token involved in the operation.
    */
-  struct AddLiquidityParams {
+  struct AssetOperationParams {
     address asset;
     uint256 amount;
     uint256 tokenId;
-  }
-
-  /**
-   * @notice Parameters required for borrowing an asset against a position.
-   * @param asset The address of the asset to be borrowed.
-   * @param amount The amount of the asset to be borrowed.
-   * @param tokenId The ID of the position token against which the asset is being borrowed.
-   */
-  struct BorrowParams {
-    address asset;
-    uint256 amount;
-    uint256 tokenId;
-  }
-
-  /**
-   * @notice Parameters required for repaying a borrowed asset against a position.
-   * @param asset The address of the asset to be repaid.
-   * @param amount The amount of the asset to be repaid.
-   * @param tokenId The ID of the position token against which the asset is being repaid.
-   */
-  struct RepayParams {
-    address asset;
-    uint256 amount;
-    uint256 tokenId;
-  }
-
-  /**
-   * @notice Parameters required for withdrawing an asset from a position.
-   * @param asset The address of the asset to be withdrawn.
-   * @param user The address of the user who will receive the withdrawn asset.
-   * @param amount The amount of the asset to be withdrawn.
-   * @param tokenId The ID of the position token from which the asset is being withdrawn.
-   */
-  struct WithdrawParams {
-    address asset;
-    address user;
-    uint256 amount;
-    uint256 tokenId;
-  }
-
-  /**
-   * @notice Enum representing the type of operation being performed.
-   * @dev Can be either Supply or Borrow.
-   */
-  enum OperationType {
-    Supply,
-    Borrow
-  }
-
-  /**
-   * @notice Enum representing the action to perform on a position.
-   * @dev Can be either Add or Subtract.
-   */
-  enum ActionType {
-    Add,
-    Subtract
   }
 }
