@@ -32,22 +32,8 @@ contract Pool is Initializable, PoolSetters {
     _hook = IHook(params.hook);
 
     require(params.assets.length >= 2, 'not enough assets');
-    require(params.rateStrategyAddresses.length == params.assets.length, '!length');
-    require(params.sources.length == params.assets.length, '!length');
-    require(params.configurations.length == params.assets.length, '!length');
 
     for (uint i = 0; i < params.assets.length; i++) {
-      require(params.assets[i] != address(0), 'invalid asset');
-      require(params.sources[i] != address(0), 'invalid oracle');
-      require(params.rateStrategyAddresses[i] != address(0), 'invalid strategy');
-
-      _setReserveConfiguration(
-        params.assets[i],
-        params.rateStrategyAddresses[i],
-        params.sources[i],
-        params.configurations[i]
-      );
-
       PoolLogic.executeInitReserve(
         _reserves,
         _reservesList,
@@ -55,17 +41,16 @@ contract Pool is Initializable, PoolSetters {
           asset: params.assets[i],
           interestRateStrategyAddress: params.rateStrategyAddresses[i],
           oracle: params.sources[i],
-          reservesCount: _reservesCount
+          reservesCount: _reservesCount,
+          configuration: params.configurations[i]
         })
       );
 
       _reservesCount++;
-
-      emit ReserveInitialized(params.assets[i], params.rateStrategyAddresses[i], params.sources[i]);
     }
   }
 
-  //// @inheritdoc IPool
+  /// @inheritdoc IPool
   function supply(
     address asset,
     uint256 amount,
@@ -75,11 +60,12 @@ contract Pool is Initializable, PoolSetters {
     _supply(asset, amount, index, data);
   }
 
+  /// @inheritdoc IPool
   function supply(address asset, uint256 amount, uint256 index) public virtual override {
     _supply(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  //// @inheritdoc IPool
+  /// @inheritdoc IPool
   function withdraw(
     address asset,
     uint256 amount,
@@ -89,6 +75,7 @@ contract Pool is Initializable, PoolSetters {
     return _withdraw(asset, amount, index, data);
   }
 
+  /// @inheritdoc IPool
   function withdraw(
     address asset,
     uint256 amount,
@@ -98,7 +85,7 @@ contract Pool is Initializable, PoolSetters {
       _withdraw(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  //// @inheritdoc IPool
+  /// @inheritdoc IPool
   function borrow(
     address asset,
     uint256 amount,
@@ -108,11 +95,12 @@ contract Pool is Initializable, PoolSetters {
     _borrow(asset, amount, index, data);
   }
 
+  /// @inheritdoc IPool
   function borrow(address asset, uint256 amount, uint256 index) public virtual override {
     _borrow(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  //// @inheritdoc IPool
+  /// @inheritdoc IPool
   function repay(
     address asset,
     uint256 amount,
@@ -122,6 +110,7 @@ contract Pool is Initializable, PoolSetters {
     return _repay(asset, amount, index, data);
   }
 
+  /// @inheritdoc IPool
   function repay(address asset, uint256 amount, uint256 index) public virtual returns (uint256) {
     return _repay(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
@@ -137,6 +126,7 @@ contract Pool is Initializable, PoolSetters {
     _liquidate(collat, debt, pos, debtAmt, data);
   }
 
+  /// @inheritdoc IPool
   function liquidate(
     address collat,
     address debt,
@@ -170,6 +160,6 @@ contract Pool is Initializable, PoolSetters {
     DataTypes.ReserveConfigurationMap calldata configuration
   ) external virtual {
     require(msg.sender == address(_factory.configurator()), 'only configurator');
-    _setReserveConfiguration(asset, rateStrategyAddress, source, configuration);
+    PoolLogic.setReserveConfiguration(_reserves, asset, rateStrategyAddress, source, configuration);
   }
 }

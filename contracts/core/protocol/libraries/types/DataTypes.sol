@@ -201,5 +201,6 @@ library DataTypes {
     address oracle;
     address interestRateStrategyAddress;
     uint16 reservesCount;
+    ReserveConfigurationMap configuration;
   }
 }

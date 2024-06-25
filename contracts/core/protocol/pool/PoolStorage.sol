@@ -39,9 +39,6 @@ contract PoolStorage {
   /// @notice Number of active reserves in the pool
   uint16 internal _reservesCount;
 
-  /// @notice Map of asset price sources (asset => priceSource)
-  mapping(address reserve => IAggregatorInterface oracle) internal _assetsSources;
-
   /// @notice The pool configurator contract that can make changes
   address public configurator;
 
