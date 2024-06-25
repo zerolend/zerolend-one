@@ -119,12 +119,10 @@ interface INFTPositionManager {
 
   /**
    * @notice Structure representing a user's position, including assets, pool, and operator.
-   * @param assets An array of assets held in the position.
    * @param pool The address of the pool associated with the position.
    * @param operator The address of the operator managing the position.
    */
   struct Position {
-    Asset[] assets;
     address pool;
     address operator;
   }
