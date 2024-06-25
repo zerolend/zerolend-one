@@ -26,6 +26,12 @@ event TreasuryUpdated(address old, address updated, address owner)
 event ReserveFactorUpdated(uint256 old, uint256 updated, address owner)
 ```
 
+### ConfiguratorUpdated
+
+```solidity
+event ConfiguratorUpdated(address old, address updated, address owner)
+```
+
 ### RewardsControllerUpdated
 
 ```solidity
@@ -50,6 +56,12 @@ function configurator() external view returns (contract IPoolConfigurator)
 function createPool(struct IPool.InitParams params) external returns (contract IPool pool)
 ```
 
+### setConfigurator
+
+```solidity
+function setConfigurator(address impl) external
+```
+
 ### flashLoanPremiumToProtocol
 
 ```solidity
@@ -66,6 +78,12 @@ function liquidationProtocolFeePercentage() external view returns (uint256)
 
 ```solidity
 function pools(uint256 index) external view returns (contract IPool)
+```
+
+### isPool
+
+```solidity
+function isPool(address pool) external view returns (bool)
 ```
 
 ### poolsLength

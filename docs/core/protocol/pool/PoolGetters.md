@@ -43,6 +43,36 @@ Get the balance of a specific asset in a specific position.
 | ---- | ---- | ----------- |
 | balance | uint256 | The balance of the specified asset in the specified position. |
 
+### getHook
+
+```solidity
+function getHook() external view returns (contract IHook)
+```
+
+### getBalance
+
+```solidity
+function getBalance(address asset, address who, uint256 index) external view returns (uint256 balance)
+```
+
+### getBalanceRaw
+
+```solidity
+function getBalanceRaw(address asset, bytes32 positionId) external view returns (struct DataTypes.PositionBalance)
+```
+
+### getBalanceRaw
+
+```solidity
+function getBalanceRaw(address asset, address who, uint256 index) external view returns (struct DataTypes.PositionBalance)
+```
+
+### getTotalSupplyRaw
+
+```solidity
+function getTotalSupplyRaw(address asset) external view returns (struct DataTypes.ReserveSupplies)
+```
+
 ### getDebt
 
 ```solidity
@@ -63,6 +93,12 @@ Get the debt of a specific asset in a specific position.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | debt | uint256 | The debt of the specified asset in the specified position. |
+
+### getDebt
+
+```solidity
+function getDebt(address asset, address who, uint256 index) external view returns (uint256 debt)
+```
 
 ### getUserAccountData
 
@@ -134,7 +170,7 @@ Returns the configuration of the user across all the reserves
 ### getReserveNormalizedIncome
 
 ```solidity
-function getReserveNormalizedIncome(address asset) external view virtual returns (uint256)
+function getReserveNormalizedIncome(address reserve) external view virtual returns (uint256)
 ```
 
 Returns the normalized income of the reserve
@@ -143,7 +179,7 @@ Returns the normalized income of the reserve
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| asset | address | The address of the underlying asset of the reserve |
+| reserve | address |  |
 
 #### Return Values
 
@@ -154,7 +190,7 @@ Returns the normalized income of the reserve
 ### getReserveNormalizedVariableDebt
 
 ```solidity
-function getReserveNormalizedVariableDebt(address asset) external view virtual returns (uint256)
+function getReserveNormalizedVariableDebt(address reserve) external view virtual returns (uint256)
 ```
 
 Returns the normalized variable debt per unit of asset
@@ -171,7 +207,7 @@ variable debt that is not equivalent to how the variable debt index would be upd
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| asset | address | The address of the underlying asset of the reserve |
+| reserve | address |  |
 
 #### Return Values
 
@@ -230,7 +266,7 @@ Returns the address of the underlying asset of a reserve by the reserve id as st
 ### getAssetPrice
 
 ```solidity
-function getAssetPrice(address asset) public view returns (uint256)
+function getAssetPrice(address reserve) public view returns (uint256)
 ```
 
 Returns the asset price in the base currency
@@ -239,7 +275,7 @@ Returns the asset price in the base currency
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| asset | address | The address of the asset |
+| reserve | address |  |
 
 #### Return Values
 

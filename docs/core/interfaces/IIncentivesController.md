@@ -1,8 +1,8 @@
 # Solidity API
 
-## IAaveIncentivesController
+## IIncentivesController
 
-Defines the basic interface for an Aave Incentives Controller.
+Defines the basic interface for an Incentives Controller.
 
 _It only contains one single function, needed as a hook on aToken and debtToken transfers._
 

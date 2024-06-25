@@ -26,14 +26,6 @@ error ZeroValueNotAllowed()
 
 Error indicating that a zero value was provided, which is not allowed.
 
-### InvalidAssetAddress
-
-```solidity
-error InvalidAssetAddress()
-```
-
-Error indicating that the provided address is invalid and not present in the debt market.
-
 ### BalanceMisMatch
 
 ```solidity
@@ -50,34 +42,55 @@ error PositionNotCleared()
 
 Error indicating that the position is not cleared.
 
-### NFTMinted
+### NotPool
 
 ```solidity
-event NFTMinted(address recipient, uint256 tokenId)
+error NotPool()
 ```
 
-Emitted when an NFT is minted.
+Error indicating that pool is not register in pool factory.
+
+### BorrowIncreased
+
+```solidity
+event BorrowIncreased(address asset, uint256 amount, uint256 tokenId)
+```
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| recipient | address | The address that received the minted NFT. |
-| tokenId | uint256 | The ID of the minted NFT. |
+| asset | address | The address of the asset that we want to borrow. |
+| amount | uint256 | The amount of the asset that we want to borrow. |
+| tokenId | uint256 | The ID of the position token. |
 
-### NFTBurned
+### Withdrawal
 
 ```solidity
-event NFTBurned(uint256 tokenId)
+event Withdrawal(address asset, uint256 amount, uint256 tokenId)
 ```
-
-Emitted when an NFT is burned.
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenId | uint256 | The ID of the burned NFT. |
+| asset | address | The address of the asset that we want to withdraw |
+| amount | uint256 | The amount of asset that we want to withdraw |
+| tokenId | uint256 | The ID of the NFT. |
+
+### Repay
+
+```solidity
+event Repay(address asset, uint256 tokenId, uint256 amount)
+```
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| asset | address | The address of the asset that we want to repay. |
+| tokenId | uint256 | The ID of the NFT. |
+| amount | uint256 | The amount of asset that we want to repay |
 
 ### LiquidityIncreased
 
@@ -100,7 +113,6 @@ Emitted when liquidity is increased for a specific position token.
 ```solidity
 struct MintParams {
   address asset;
-  address recipient;
   address pool;
   uint256 amount;
 }
@@ -112,7 +124,6 @@ struct MintParams {
 struct LiquidityParams {
   address asset;
   address pool;
-  address user;
   uint256 amount;
   uint256 tokenId;
 }
@@ -138,62 +149,13 @@ struct Position {
 }
 ```
 
-### AddLiquidityParams
+### AssetOperationParams
 
 ```solidity
-struct AddLiquidityParams {
+struct AssetOperationParams {
   address asset;
   uint256 amount;
   uint256 tokenId;
-}
-```
-
-### BorrowParams
-
-```solidity
-struct BorrowParams {
-  address asset;
-  uint256 amount;
-  uint256 tokenId;
-}
-```
-
-### RepayParams
-
-```solidity
-struct RepayParams {
-  address asset;
-  uint256 amount;
-  uint256 tokenId;
-}
-```
-
-### WithdrawParams
-
-```solidity
-struct WithdrawParams {
-  address asset;
-  address user;
-  uint256 amount;
-  uint256 tokenId;
-}
-```
-
-### OperationType
-
-```solidity
-enum OperationType {
-  Supply,
-  Borrow
-}
-```
-
-### ActionType
-
-```solidity
-enum ActionType {
-  Add,
-  Subtract
 }
 ```
 

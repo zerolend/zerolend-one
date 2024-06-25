@@ -14,7 +14,8 @@ struct ReserveData {
   uint40 lastUpdateTimestamp;
   uint16 id;
   address interestRateStrategyAddress;
-  uint128 accruedToTreasury;
+  address oracle;
+  uint256 accruedToTreasury;
 }
 ```
 
@@ -49,10 +50,10 @@ enum InterestRateMode {
 struct ReserveCache {
   uint256 currScaledVariableDebt;
   uint256 nextScaledVariableDebt;
-  uint256 currLiquidityIndex;
-  uint256 nextLiquidityIndex;
-  uint256 currVariableBorrowIndex;
-  uint256 nextVariableBorrowIndex;
+  uint128 currLiquidityIndex;
+  uint128 nextLiquidityIndex;
+  uint128 currVariableBorrowIndex;
+  uint128 nextVariableBorrowIndex;
   uint256 currLiquidityRate;
   uint256 currVariableBorrowRate;
   struct DataTypes.ReserveConfigurationMap reserveConfiguration;
@@ -65,9 +66,9 @@ struct ReserveCache {
 ```solidity
 struct PositionBalance {
   uint256 scaledSupplyBalance;
-  uint256 lastSupplyLiquidtyIndex;
+  uint128 lastSupplyLiquidtyIndex;
   uint256 scaledDebtBalance;
-  uint256 lastDebtLiquidtyIndex;
+  uint128 lastDebtLiquidtyIndex;
 }
 ```
 
@@ -227,8 +228,10 @@ struct CalculateInterestRatesParams {
 ```solidity
 struct InitReserveParams {
   address asset;
+  address oracle;
   address interestRateStrategyAddress;
   uint16 reservesCount;
+  struct DataTypes.ReserveConfigurationMap configuration;
 }
 ```
 

@@ -122,7 +122,7 @@ struct UpdateInterestRatesLocalVars {
 ### updateInterestRates
 
 ```solidity
-function updateInterestRates(struct DataTypes.ReserveData reserve, struct DataTypes.ReserveCache reserveCache, address reserveAddress, uint256 reserveFactor, uint256 liquidityAdded, uint256 liquidityTaken) internal
+function updateInterestRates(struct DataTypes.ReserveData reserve, struct DataTypes.ReserveCache reserveCache, address reserveAddress, uint256 reserveFactor, uint256 liquidityAdded, uint256 liquidityTaken, bytes32 position, bytes data) internal
 ```
 
 Updates the current variable borrow rate and the current liquidity rate.
@@ -137,6 +137,8 @@ Updates the current variable borrow rate and the current liquidity rate.
 | reserveFactor | uint256 |  |
 | liquidityAdded | uint256 | The amount of liquidity added to the protocol (supply or repay) in the previous action |
 | liquidityTaken | uint256 | The amount of liquidity taken from the protocol (redeem or borrow) |
+| position | bytes32 |  |
+| data | bytes |  |
 
 ### AccrueToTreasuryLocalVars
 

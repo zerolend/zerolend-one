@@ -13,7 +13,7 @@ address factory
 ### constructor
 
 ```solidity
-constructor(address _factory, address _governance) internal
+constructor(address _factory, address _governance) public
 ```
 
 ### initRoles

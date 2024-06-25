@@ -213,7 +213,6 @@ _Emitted when a reserve is initialized._
 
 ```solidity
 struct InitParams {
-  address configurator;
   address hook;
   address[] assets;
   address[] rateStrategyAddresses;
@@ -307,6 +306,12 @@ corresponding debt token (StableDebtToken or VariableDebtToken)
 
 ```solidity
 function borrow(address asset, uint256 amount, uint256 index) external
+```
+
+### getHook
+
+```solidity
+function getHook() external view returns (contract IHook)
 ```
 
 ### repay
@@ -406,6 +411,18 @@ Get the balance of a specific asset in a specific position.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | balance | uint256 | The balance of the specified asset in the specified position. |
+
+### getBalance
+
+```solidity
+function getBalance(address asset, address who, uint256 index) external view returns (uint256 balance)
+```
+
+### getDebt
+
+```solidity
+function getDebt(address asset, address who, uint256 index) external view returns (uint256 debt)
+```
 
 ### getDebt
 

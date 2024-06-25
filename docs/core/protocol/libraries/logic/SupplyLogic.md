@@ -31,7 +31,7 @@ event Supply(address reserve, bytes32 pos, uint256 amount)
 ### executeSupply
 
 ```solidity
-function executeSupply(mapping(address => struct DataTypes.ReserveData) reservesData, struct DataTypes.UserConfigurationMap userConfig, mapping(address => mapping(bytes32 => struct DataTypes.PositionBalance)) _balances, mapping(address => struct DataTypes.ReserveSupplies) _totalSupplies, struct DataTypes.ExecuteSupplyParams params) external
+function executeSupply(mapping(address => struct DataTypes.ReserveData) reservesData, struct DataTypes.UserConfigurationMap userConfig, mapping(address => mapping(bytes32 => struct DataTypes.PositionBalance)) balances, mapping(address => struct DataTypes.ReserveSupplies) totalSupplies, struct DataTypes.ExecuteSupplyParams params) external
 ```
 
 Implements the supply feature. Through `supply()`, users supply assets to the Aave protocol.
@@ -46,8 +46,8 @@ collateral._
 | ---- | ---- | ----------- |
 | reservesData | mapping(address &#x3D;&gt; struct DataTypes.ReserveData) | The state of all the reserves |
 | userConfig | struct DataTypes.UserConfigurationMap |  |
-| _balances | mapping(address &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct DataTypes.PositionBalance)) |  |
-| _totalSupplies | mapping(address &#x3D;&gt; struct DataTypes.ReserveSupplies) |  |
+| balances | mapping(address &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct DataTypes.PositionBalance)) |  |
+| totalSupplies | mapping(address &#x3D;&gt; struct DataTypes.ReserveSupplies) |  |
 | params | struct DataTypes.ExecuteSupplyParams | The additional parameters needed to execute the supply function |
 
 ### executeWithdraw

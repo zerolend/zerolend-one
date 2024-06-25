@@ -8,22 +8,6 @@
 address ETH
 ```
 
-### getAllReservesTokens
-
-```solidity
-function getAllReservesTokens(address pool) external view returns (struct IPoolDataProvider.TokenData[])
-```
-
-Returns the list of the existing reserves in the pool.
-
-_Handling MKR and ETH in a different way since they do not have standard `symbol` functions._
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct IPoolDataProvider.TokenData[] | The list of reserves, pairs of symbols and addresses |
-
 ### getReserveConfigurationData
 
 ```solidity

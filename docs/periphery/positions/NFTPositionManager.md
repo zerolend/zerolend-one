@@ -4,6 +4,12 @@
 
 _Manages the minting and burning of NFT positions, which represent liquidity positions in a pool._
 
+### factory
+
+```solidity
+contract IFactory factory
+```
+
 ### positions
 
 ```solidity
@@ -26,6 +32,15 @@ _Modifier to check if the caller is authorized (owner or approved operator) for 
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token to check authorization for. |
 
+### isPool
+
+```solidity
+modifier isPool(address pool)
+```
+
+@dev Modifier to check if the caller is pool or not.
+ @param pool Address of the pool.
+
 ### constructor
 
 ```solidity
@@ -37,7 +52,7 @@ _Constructor to disable initializers._
 ### initialize
 
 ```solidity
-function initialize() external
+function initialize(address _factory) external
 ```
 
 Initializes the NFTPositionManager contract.
@@ -54,7 +69,7 @@ Mints a new NFT representing a liquidity position.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INFTPositionManager.MintParams | The parameters required for minting the position, including the pool, token, amount, and recipient. |
+| params | struct INFTPositionManager.MintParams | The parameters required for minting the position, including the pool,token and amount. |
 
 #### Return Values
 
@@ -65,7 +80,7 @@ Mints a new NFT representing a liquidity position.
 ### increaseLiquidity
 
 ```solidity
-function increaseLiquidity(struct INFTPositionManager.AddLiquidityParams params) external
+function increaseLiquidity(struct INFTPositionManager.LiquidityParams params) external
 ```
 
 Allow User to increase liquidity in the postion
@@ -74,12 +89,12 @@ Allow User to increase liquidity in the postion
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INFTPositionManager.AddLiquidityParams | The parameters required for increase liquidity the position, including the token, amount, and recipient and asset. |
+| params | struct INFTPositionManager.LiquidityParams | The parameters required for increase liquidity the position, including the token, pool, amount and asset. |
 
 ### borrow
 
 ```solidity
-function borrow(struct INFTPositionManager.BorrowParams params) external
+function borrow(struct INFTPositionManager.AssetOperationParams params) external
 ```
 
 Allow user to borrow the underlying assets
@@ -88,12 +103,12 @@ Allow user to borrow the underlying assets
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INFTPositionManager.BorrowParams | The params required for borrow the position which includes tokenId, market and amount |
+| params | struct INFTPositionManager.AssetOperationParams | The params required for borrow the position which includes tokenId, market and amount |
 
 ### withdraw
 
 ```solidity
-function withdraw(struct INFTPositionManager.WithdrawParams params) external
+function withdraw(struct INFTPositionManager.AssetOperationParams params) external
 ```
 
 Allow user to withdraw their underlying assets.
@@ -102,7 +117,7 @@ Allow user to withdraw their underlying assets.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INFTPositionManager.WithdrawParams | The parameters required for withdrawing from the position, including tokenId, asset, and amount. |
+| params | struct INFTPositionManager.AssetOperationParams | The parameters required for withdrawing from the position, including tokenId, asset, and amount. |
 
 ### burn
 
@@ -121,7 +136,7 @@ Burns a token, removing it from existence.
 ### repay
 
 ```solidity
-function repay(struct INFTPositionManager.RepayParams params) external
+function repay(struct INFTPositionManager.AssetOperationParams params) external
 ```
 
 Allow user to repay thier debt.
@@ -130,5 +145,26 @@ Allow user to repay thier debt.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INFTPositionManager.RepayParams | The params required for repaying the position which includes tokenId, asset and amount. |
+| params | struct INFTPositionManager.AssetOperationParams | The params required for repaying the position which includes tokenId, asset and amount. |
+
+### getPosition
+
+```solidity
+function getPosition(uint256 tokenId) public view returns (struct INFTPositionManager.Asset[] assets, bool isBurnAllowed)
+```
+
+Retrieves the details of a position identified by the given token ID.
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 | The ID of the position token. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assets | struct INFTPositionManager.Asset[] | An array of Asset structs representing the balances and debts of the position's assets. |
+| isBurnAllowed | bool |  |
 

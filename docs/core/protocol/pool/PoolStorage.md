@@ -51,14 +51,6 @@ uint16 _reservesCount
 
 Number of active reserves in the pool
 
-### _assetsSources
-
-```solidity
-mapping(address => contract IAggregatorInterface) _assetsSources
-```
-
-Map of asset price sources (asset => priceSource)
-
 ### configurator
 
 ```solidity
@@ -75,10 +67,10 @@ contract IFactory _factory
 
 The original factory contract with protocol-level control variables
 
-### hook
+### _hook
 
 ```solidity
-contract IHook hook
+contract IHook _hook
 ```
 
 The assigned hook for this pool

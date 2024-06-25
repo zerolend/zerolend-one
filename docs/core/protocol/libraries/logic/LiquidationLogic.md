@@ -73,7 +73,7 @@ struct LiquidationCallLocalVars {
 ### executeLiquidationCall
 
 ```solidity
-function executeLiquidationCall(mapping(address => struct DataTypes.ReserveData) reservesData, mapping(uint256 => address) reservesList, mapping(address => mapping(bytes32 => struct DataTypes.PositionBalance)) _balances, mapping(bytes32 => struct DataTypes.UserConfigurationMap) usersConfig, struct DataTypes.ExecuteLiquidationCallParams params) external
+function executeLiquidationCall(mapping(address => struct DataTypes.ReserveData) reservesData, mapping(uint256 => address) reservesList, mapping(address => mapping(bytes32 => struct DataTypes.PositionBalance)) balances, mapping(address => struct DataTypes.ReserveSupplies) totalSupplies, mapping(bytes32 => struct DataTypes.UserConfigurationMap) usersConfig, struct DataTypes.ExecuteLiquidationCallParams params) external
 ```
 
 Function to liquidate a position if its Health Factor drops below 1. The caller (liquidator)
@@ -88,14 +88,35 @@ _Emits the `LiquidationCall()` event_
 | ---- | ---- | ----------- |
 | reservesData | mapping(address &#x3D;&gt; struct DataTypes.ReserveData) | The state of all the reserves |
 | reservesList | mapping(uint256 &#x3D;&gt; address) | The addresses of all the active reserves |
-| _balances | mapping(address &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct DataTypes.PositionBalance)) |  |
+| balances | mapping(address &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct DataTypes.PositionBalance)) |  |
+| totalSupplies | mapping(address &#x3D;&gt; struct DataTypes.ReserveSupplies) |  |
 | usersConfig | mapping(bytes32 &#x3D;&gt; struct DataTypes.UserConfigurationMap) | The users configuration mapping that track the supplied/borrowed assets |
 | params | struct DataTypes.ExecuteLiquidationCallParams | The additional parameters needed to execute the liquidation function |
+
+### _burnCollateralTokens
+
+```solidity
+function _burnCollateralTokens(struct DataTypes.ReserveData collateralReserve, struct DataTypes.ExecuteLiquidationCallParams params, struct LiquidationLogic.LiquidationCallLocalVars vars, mapping(address => mapping(bytes32 => struct DataTypes.PositionBalance)) balances, mapping(address => struct DataTypes.ReserveSupplies) totalSupplies) internal
+```
+
+Burns the collateral aTokens and transfers the underlying to the liquidator.
+
+_The function also updates the state and the interest rate of the collateral reserve._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| collateralReserve | struct DataTypes.ReserveData | The data of the collateral reserve |
+| params | struct DataTypes.ExecuteLiquidationCallParams | The additional parameters needed to execute the liquidation function |
+| vars | struct LiquidationLogic.LiquidationCallLocalVars | The executeLiquidationCall() function local vars |
+| balances | mapping(address &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct DataTypes.PositionBalance)) |  |
+| totalSupplies | mapping(address &#x3D;&gt; struct DataTypes.ReserveSupplies) |  |
 
 ### _burnDebtTokens
 
 ```solidity
-function _burnDebtTokens(struct DataTypes.ExecuteLiquidationCallParams params, struct LiquidationLogic.LiquidationCallLocalVars vars) internal
+function _burnDebtTokens(struct DataTypes.ExecuteLiquidationCallParams params, struct LiquidationLogic.LiquidationCallLocalVars vars, mapping(bytes32 => struct DataTypes.PositionBalance) balances, struct DataTypes.ReserveSupplies totalSupplies) internal
 ```
 
 Burns the debt tokens of the user up to the amount being repaid by the liquidator.
@@ -108,11 +129,13 @@ _The function alters the `debtReserveCache` state in `vars` to update the debt r
 | ---- | ---- | ----------- |
 | params | struct DataTypes.ExecuteLiquidationCallParams | The additional parameters needed to execute the liquidation function |
 | vars | struct LiquidationLogic.LiquidationCallLocalVars | the executeLiquidationCall() function local vars |
+| balances | mapping(bytes32 &#x3D;&gt; struct DataTypes.PositionBalance) |  |
+| totalSupplies | struct DataTypes.ReserveSupplies |  |
 
 ### _calculateDebt
 
 ```solidity
-function _calculateDebt(struct DataTypes.ExecuteLiquidationCallParams params, uint256 healthFactor, mapping(address => mapping(bytes32 => struct DataTypes.PositionBalance)) _balances) internal view returns (uint256, uint256)
+function _calculateDebt(struct DataTypes.ExecuteLiquidationCallParams params, uint256 healthFactor, mapping(address => mapping(bytes32 => struct DataTypes.PositionBalance)) balances) internal view returns (uint256, uint256)
 ```
 
 Calculates the total debt of the user and the actual amount to liquidate depending on the health factor
@@ -126,7 +149,7 @@ _If the Health Factor is below CLOSE_FACTOR_HF_THRESHOLD, the close factor is in
 | ---- | ---- | ----------- |
 | params | struct DataTypes.ExecuteLiquidationCallParams | The additional parameters needed to execute the liquidation function |
 | healthFactor | uint256 | The health factor of the position |
-| _balances | mapping(address &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct DataTypes.PositionBalance)) |  |
+| balances | mapping(address &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct DataTypes.PositionBalance)) |  |
 
 #### Return Values
 

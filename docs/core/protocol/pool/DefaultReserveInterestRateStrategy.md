@@ -149,7 +149,7 @@ struct CalcInterestRatesLocalVars {
 ### calculateInterestRates
 
 ```solidity
-function calculateInterestRates(address user, bytes extraData, struct DataTypes.CalculateInterestRatesParams params) public view returns (uint256, uint256)
+function calculateInterestRates(bytes32, bytes, struct DataTypes.CalculateInterestRatesParams params) public view returns (uint256, uint256)
 ```
 
 Calculates the interest rates depending on the reserve's state and configurations
@@ -158,8 +158,8 @@ Calculates the interest rates depending on the reserve's state and configuration
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| user | address |  |
-| extraData | bytes |  |
+|  | bytes32 |  |
+|  | bytes |  |
 | params | struct DataTypes.CalculateInterestRatesParams | The parameters needed to calculate interest rates |
 
 #### Return Values

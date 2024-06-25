@@ -30,6 +30,12 @@ address rewardsController
 contract IPool[] pools
 ```
 
+### isPool
+
+```solidity
+mapping(address => bool) isPool
+```
+
 ### configurator
 
 ```solidity
@@ -57,7 +63,7 @@ uint256 liquidationProtocolFeePercentage
 ### constructor
 
 ```solidity
-constructor(address _implementation, address _configurator) public
+constructor(address _implementation) public
 ```
 
 ### poolsLength
@@ -76,6 +82,12 @@ function createPool(struct IPool.InitParams params) external returns (contract I
 
 ```solidity
 function setImplementation(address impl) external
+```
+
+### setConfigurator
+
+```solidity
+function setConfigurator(address impl) external
 ```
 
 ### setTreasury

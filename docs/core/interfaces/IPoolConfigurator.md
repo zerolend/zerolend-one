@@ -114,26 +114,6 @@ Configures borrowing on a reserve.
 | asset | address | The address of the underlying asset of the reserve |
 | enabled | bool | True if borrowing needs to be enabled, false otherwise |
 
-### configureReserveAsCollateral
-
-```solidity
-function configureReserveAsCollateral(address asset, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus) external
-```
-
-Configures the reserve collateralization parameters.
-
-_All the values are expressed in bps. A value of 10000, results in 100.00%
-The `liquidationBonus` is always above 100%. A value of 105% means the liquidator will receive a 5% bonus_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| asset | address | The address of the underlying asset of the reserve |
-| ltv | uint256 | The loan to value of the asset when used as collateral |
-| liquidationThreshold | uint256 | The threshold at which loans using this asset as collateral will be considered undercollateralized |
-| liquidationBonus | uint256 | The bonus liquidators receive to liquidate this asset |
-
 ### setReserveFreeze
 
 ```solidity
@@ -150,22 +130,6 @@ or rate swap but allows repayments, liquidations, rate rebalances and withdrawal
 | pool | address |  |
 | asset | address | The address of the underlying asset of the reserve |
 | freeze | bool | True if the reserve needs to be frozen, false otherwise |
-
-### setReserveFactor
-
-```solidity
-function setReserveFactor(address pool, address asset, uint256 newReserveFactor) external
-```
-
-Updates the reserve factor of a reserve.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| pool | address |  |
-| asset | address | The address of the underlying asset of the reserve |
-| newReserveFactor | uint256 | The new reserve factor of the reserve |
 
 ### initRoles
 

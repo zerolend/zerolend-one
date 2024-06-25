@@ -10,10 +10,22 @@ Implements the logic for Pool specific functions
 event MintedToTreasury(address reserve, uint256 amountMinted)
 ```
 
+### CollateralConfigurationChanged
+
+```solidity
+event CollateralConfigurationChanged(address asset, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus)
+```
+
+### ReserveInitialized
+
+```solidity
+event ReserveInitialized(address asset, address oracle, address interestRateStrategyAddress)
+```
+
 ### executeInitReserve
 
 ```solidity
-function executeInitReserve(mapping(address => struct DataTypes.ReserveData) reservesData, mapping(uint256 => address) reservesList, struct DataTypes.InitReserveParams params) external returns (bool)
+function executeInitReserve(mapping(address => struct DataTypes.ReserveData) reservesData, mapping(uint256 => address) reservesList, struct DataTypes.InitReserveParams params) external
 ```
 
 Initialize an asset reserve and add the reserve to the list of reserves
@@ -25,12 +37,6 @@ Initialize an asset reserve and add the reserve to the list of reserves
 | reservesData | mapping(address &#x3D;&gt; struct DataTypes.ReserveData) | The state of all the reserves |
 | reservesList | mapping(uint256 &#x3D;&gt; address) | The addresses of all the active reserves |
 | params | struct DataTypes.InitReserveParams | Additional parameters needed for initiation |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bool | true if appended, false if inserted at existing empty spot |
 
 ### executeMintToTreasury
 
@@ -74,4 +80,10 @@ Returns the user account data across all the reserves
 | currentLiquidationThreshold | uint256 | The liquidation threshold of the user |
 | ltv | uint256 | The loan to value of The user |
 | healthFactor | uint256 | The current health factor of the user |
+
+### setReserveConfiguration
+
+```solidity
+function setReserveConfiguration(mapping(address => struct DataTypes.ReserveData) _reserves, address asset, address rateStrategyAddress, address source, struct DataTypes.ReserveConfigurationMap config) public
+```
 

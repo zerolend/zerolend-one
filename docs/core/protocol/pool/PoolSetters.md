@@ -38,9 +38,3 @@ function _liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt, 
 function _flashLoan(address receiverAddress, address asset, uint256 amount, bytes params) public virtual
 ```
 
-### _setReserveConfiguration
-
-```solidity
-function _setReserveConfiguration(address asset, address rateStrategyAddress, address source, struct DataTypes.ReserveConfigurationMap config) internal
-```
-
