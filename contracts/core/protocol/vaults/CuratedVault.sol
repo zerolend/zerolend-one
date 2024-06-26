@@ -13,34 +13,29 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {MarketConfig, PendingUint192, PendingAddress, MarketAllocation, ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/ICuratedVault.sol';
-import {IPool} from '../../interfaces/IPool.sol';
-
-import {PendingLib} from './libraries/PendingLib.sol';
 import {ConstantsLib} from './libraries/ConstantsLib.sol';
-import {UtilsLib} from './libraries/UtilsLib.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {SharesMathLib} from './libraries/SharesMathLib.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-
-import {Multicall} from '@openzeppelin/contracts/utils/Multicall.sol';
-import {Ownable2Step, Ownable} from '@openzeppelin/contracts/access/Ownable2Step.sol';
 import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
 import {IERC20, IERC4626, ERC20, ERC4626, Math, SafeERC20} from '@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IPool} from '../../interfaces/IPool.sol';
+import {MarketConfig, PendingUint192, PendingAddress, MarketAllocation, ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/ICuratedVault.sol';
+import {Multicall} from '@openzeppelin/contracts/utils/Multicall.sol';
+import {Ownable2Step, Ownable} from '@openzeppelin/contracts/access/Ownable2Step.sol';
+import {PendingLib} from './libraries/PendingLib.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {SharesMathLib} from './libraries/SharesMathLib.sol';
+import {UtilsLib} from './libraries/UtilsLib.sol';
 
-/// @title MetaMorpho
+/// @title CuratedVault
 /// @author Morpho Labs
 /// @custom:contact security@morpho.org
-/// @notice ERC4626 compliant vault allowing users to deposit assets to Morpho.
-contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVaultStaticTyping {
+/// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
+contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVaultStaticTyping {
   using Math for uint256;
   using UtilsLib for uint256;
   using SafeCast for uint256;
   using SafeERC20 for IERC20;
-  // using MorphoLib for IMorpho;
   using SharesMathLib for uint256;
-  // using MorphoBalancesLib for IMorpho;
-  // using MarketParamsLib for MarketParams;
   using PendingLib for MarketConfig;
   using PendingLib for PendingUint192;
   using PendingLib for PendingAddress;
@@ -99,11 +94,12 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
   /// @inheritdoc ICuratedVaultBase
   uint256 public lastTotalAssets;
 
+  bytes32 public positionId;
+
   /* CONSTRUCTOR */
 
   // / @dev Initializes the contract.
   // / @param owner The owner of the contract.
-  // / @param morpho The address of the Morpho contract.
   // / @param initialTimelock The initial timelock.
   // / @param _asset The address of the underlying asset.
   // / @param _name The name of the vault.
@@ -116,7 +112,6 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
     string memory _symbol
   ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(owner) {
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
-
     _checkTimelockBounds(initialTimelock);
     _setTimelock(initialTimelock);
   }
@@ -248,8 +243,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
 
   /// @inheritdoc ICuratedVaultBase
   function submitCap(IPool id, uint256 newSupplyCap) external onlyCuratorRole {
-    if (marketParams.loanToken != asset()) revert InconsistentAsset(id);
-    if (MORPHO.lastUpdate(id) == 0) revert MarketNotCreated();
+    // if (marketParams.loanToken != asset()) revert InconsistentAsset(id);
+    // if (MORPHO.lastUpdate(id) == 0) revert MarketNotCreated();
     if (pendingCap[id].validAt != 0) revert AlreadyPending();
     if (config[id].removableAt != 0) revert PendingRemoval();
     uint256 supplyCap = config[id].cap;
@@ -556,7 +551,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
   /// @inheritdoc IERC4626
   function totalAssets() public view override returns (uint256 assets) {
     for (uint256 i; i < withdrawQueue.length; ++i) {
-      assets += MORPHO.expectedSupplyAssets(_marketParams(withdrawQueue[i]), address(this));
+      assets += withdrawQueue[i].getBalance(asset, positionId);
     }
   }
 

@@ -17,7 +17,7 @@ import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 import {IPool} from './IPool.sol';
 import {IPoolConfigurator} from './IPoolConfigurator.sol';
 
-interface IFactory is IBeacon {
+interface IPoolFactory is IBeacon {
   event PoolCreated(IPool indexed pool, uint256 indexed index, address creator);
   event ImplementationUpdated(address indexed old, address indexed updated, address owner);
   event TreasuryUpdated(address indexed old, address indexed updated, address owner);

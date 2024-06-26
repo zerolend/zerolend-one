@@ -13,36 +13,36 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IFactory, IBeacon, IPoolConfigurator, IPool} from '../../interfaces/IFactory.sol';
+import {IPoolFactory, IBeacon, IPoolConfigurator, IPool} from '../../interfaces/IPoolFactory.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {BeaconProxy} from './BeaconProxy.sol';
+import {BeaconProxy} from '../factory/BeaconProxy.sol';
 
-contract Factory is IFactory, Ownable {
+contract PoolFactory is IPoolFactory, Ownable {
   /// @inheritdoc IBeacon
   address public implementation;
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   address public treasury;
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   address public rewardsController;
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   IPool[] public pools;
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   mapping(address => bool) public isPool;
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   IPoolConfigurator public configurator;
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   uint256 public reserveFactor;
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   uint256 public flashLoanPremiumToProtocol;
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   uint256 public liquidationProtocolFeePercentage;
 
   constructor(address _implementation) {
@@ -50,12 +50,12 @@ contract Factory is IFactory, Ownable {
     treasury = msg.sender;
   }
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   function poolsLength() external view returns (uint256) {
     return pools.length;
   }
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   function createPool(IPool.InitParams memory params) external returns (IPool pool) {
     // create the pool
     pool = IPool(address(new BeaconProxy(address(this), msg.sender)));
@@ -73,14 +73,14 @@ contract Factory is IFactory, Ownable {
     // set the liquidity index properly
   }
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   function setImplementation(address impl) external onlyOwner {
     address old = implementation;
     implementation = impl;
     emit ImplementationUpdated(old, impl, msg.sender);
   }
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   function setConfigurator(address impl) external onlyOwner {
     address old = address(configurator);
     configurator = IPoolConfigurator(impl);
@@ -90,28 +90,28 @@ contract Factory is IFactory, Ownable {
     configurator.initRoles(address(0), msg.sender);
   }
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   function setTreasury(address _treasury) external onlyOwner {
     address old = treasury;
     treasury = _treasury;
     emit TreasuryUpdated(old, _treasury, msg.sender);
   }
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   function setReserveFactor(uint256 updated) external onlyOwner {
     uint256 old = reserveFactor;
     reserveFactor = updated;
     emit ReserveFactorUpdated(old, updated, msg.sender);
   }
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   function setRewardsController(address _controller) external onlyOwner {
     address old = rewardsController;
     rewardsController = _controller;
     emit RewardsControllerUpdated(old, _controller, msg.sender);
   }
 
-  /// @inheritdoc IFactory
+  /// @inheritdoc IPoolFactory
   function setFlashloanPremium(uint256 updated) external onlyOwner {
     uint256 old = flashLoanPremiumToProtocol;
     flashLoanPremiumToProtocol = updated;

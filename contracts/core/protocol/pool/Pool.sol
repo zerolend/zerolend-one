@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {IFactory} from '../../interfaces/IFactory.sol';
+import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IHook} from '../../interfaces/IHook.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IPool} from '../../interfaces/IPool.sol';
@@ -28,7 +28,7 @@ contract Pool is Initializable, PoolSetters {
    * @dev This function is invoked by the factory contract when the Pool is created
    */
   function initialize(IPool.InitParams memory params) public virtual reinitializer(1) {
-    _factory = IFactory(msg.sender);
+    _factory = IPoolFactory(msg.sender);
     _hook = IHook(params.hook);
 
     require(params.assets.length >= 2, 'not enough assets');
