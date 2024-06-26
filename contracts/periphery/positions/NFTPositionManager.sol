@@ -15,8 +15,8 @@ pragma solidity 0.8.19;
 
 import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {INFTPositionManager} from './INFTPositionManager.sol';
-import {IPool, IFactory} from './../../core/interfaces/IFactory.sol';
-import {Multicall} from '../multicall/Multicall.sol';
+import {IPool, IPoolFactory} from './../../core/interfaces/IPoolFactory.sol';
+import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 
@@ -24,10 +24,14 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPositionManager {
+contract NFTPositionManager is
+  MulticallUpgradeable,
+  ERC721EnumerableUpgradeable,
+  INFTPositionManager
+{
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
-  IFactory factory;
+  IPoolFactory factory;
 
   /**
    * @dev The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
@@ -72,7 +76,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
    * @notice Initializes the NFTPositionManager contract.
    */
   function initialize(address _factory) external initializer {
-    factory = IFactory(_factory);
+    factory = IPoolFactory(_factory);
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
   }
