@@ -7,35 +7,11 @@ import {IERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/IERC2
 
 import {MarketConfig, PendingUint192, PendingAddress} from '../libraries/PendingLib.sol';
 
-struct MarketParams {
-  address loanToken;
-  address collateralToken;
-  address oracle;
-  address irm;
-  uint256 lltv;
-}
-
 struct MarketAllocation {
   /// @notice The market to allocate.
-  MarketParams marketParams;
+  IPool market;
   /// @notice The amount of assets to allocate.
   uint256 assets;
-}
-
-interface IMulticall {
-  function multicall(bytes[] calldata) external returns (bytes[] memory);
-}
-
-interface IOwnable {
-  function owner() external view returns (address);
-
-  function transferOwnership(address) external;
-
-  function renounceOwnership() external;
-
-  function acceptOwnership() external;
-
-  function pendingOwner() external view returns (address);
 }
 
 /// @dev This interface is used for factorizing ICuratedVaultStaticTyping and ICuratedVault.
@@ -101,10 +77,10 @@ interface ICuratedVaultBase {
   /// @dev Warning: Reverts if a cap is already pending. Revoke the pending cap to overwrite it.
   /// @dev Warning: Reverts if a market removal is pending.
   /// @dev In case the new cap is lower than the current one, the cap is set immediately.
-  function submitCap(MarketParams memory marketParams, uint256 newSupplyCap) external;
+  function submitCap(IPool pool, uint256 newSupplyCap) external;
 
   /// @notice Accepts the pending cap of the market defined by `marketParams`.
-  function acceptCap(MarketParams memory marketParams) external;
+  function acceptCap(IPool pool) external;
 
   /// @notice Revokes the pending cap of the market defined by `id`.
   /// @dev Does not revert if there is no pending cap.
@@ -119,7 +95,7 @@ interface ICuratedVaultBase {
   /// @dev Warning: Removing a market with non-zero supply will instantly impact the vault's price per share.
   /// @dev Warning: Reverts for non-zero cap or if there is a pending cap. Successfully submitting a zero cap will
   /// prevent such reverts.
-  function submitMarketRemoval(MarketParams memory marketParams) external;
+  function submitMarketRemoval(IPool pool) external;
 
   /// @notice Revokes the pending removal of the market defined by `id`.
   /// @dev Does not revert if there is no pending market removal.
@@ -207,7 +183,7 @@ interface ICuratedVaultStaticTyping is ICuratedVaultBase {
 /// @author Morpho Labs
 /// @custom:contact security@morpho.org
 /// @dev Use this interface for MetaMorpho to have access to all the functions with the appropriate function signatures.
-interface ICuratedVault is ICuratedVaultBase, IERC4626, IERC20Permit, IOwnable, IMulticall {
+interface ICuratedVault is ICuratedVaultBase, IERC4626, IERC20Permit {
   /// @notice Returns the current configuration of each market.
   function config(IPool) external view returns (MarketConfig memory);
 
