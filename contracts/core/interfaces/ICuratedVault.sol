@@ -149,16 +149,16 @@ interface ICuratedVaultBase {
   event SetGuardian(address indexed caller, address indexed guardian);
 
   /// @notice Emitted when a pending `cap` is submitted for market identified by `id`.
-  event SubmitCap(address indexed caller, address indexed pool, uint256 cap);
+  event SubmitCap(address indexed caller, IPool indexed pool, uint256 cap);
 
   /// @notice Emitted when a new `cap` is set for market identified by `id`.
-  event SetCap(address indexed caller, address indexed pool, uint256 cap);
+  event SetCap(address indexed caller, IPool indexed pool, uint256 cap);
 
   /// @notice Emitted when the vault's last total assets is updated to `updatedTotalAssets`.
   event UpdateLastTotalAssets(uint256 updatedTotalAssets);
 
   /// @notice Emitted when the market identified by `id` is submitted for removal.
-  event SubmitMarketRemoval(address indexed caller, address indexed pool);
+  event SubmitMarketRemoval(address indexed caller, IPool indexed pool);
 
   /// @notice Emitted when `curator` is set to `newCurator`.
   event SetCurator(address indexed newCurator);
@@ -170,19 +170,19 @@ interface ICuratedVaultBase {
   event RevokePendingTimelock(address indexed caller);
 
   /// @notice Emitted when a `pendingCap` for the market identified by `id` is revoked.
-  event RevokePendingCap(address indexed caller, address indexed pool);
+  event RevokePendingCap(address indexed caller, IPool indexed pool);
 
   /// @notice Emitted when a `pendingGuardian` is revoked.
   event RevokePendingGuardian(address indexed caller);
 
   /// @notice Emitted when a pending market removal is revoked.
-  event RevokePendingMarketRemoval(address indexed caller, address indexed pool);
+  event RevokePendingMarketRemoval(address indexed caller, IPool indexed pool);
 
   /// @notice Emitted when the `supplyQueue` is set to `newSupplyQueue`.
-  event SetSupplyQueue(address indexed caller, address[] newSupplyQueue);
+  event SetSupplyQueue(address indexed caller, IPool[] newSupplyQueue);
 
   /// @notice Emitted when the `withdrawQueue` is set to `newWithdrawQueue`.
-  event SetWithdrawQueue(address indexed caller, address[] newWithdrawQueue);
+  event SetWithdrawQueue(address indexed caller, IPool[] newWithdrawQueue);
 
   /// @notice Emitted when a reallocation supplies assets to the market identified by `id`.
   /// @param pool The id of the market.

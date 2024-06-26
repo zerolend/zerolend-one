@@ -37,8 +37,15 @@ library ReserveConfiguration {
   uint256 internal constant LIQUIDATION_THRESHOLD_START_BIT_POSITION = 16;
   uint256 internal constant LIQUIDATION_BONUS_START_BIT_POSITION = 32;
   uint256 internal constant RESERVE_DECIMALS_START_BIT_POSITION = 48;
+  uint256 internal constant IS_ACTIVE_START_BIT_POSITION = 56;
   uint256 internal constant IS_FROZEN_START_BIT_POSITION = 57;
   uint256 internal constant BORROWING_ENABLED_START_BIT_POSITION = 58;
+  uint256 internal constant STABLE_BORROWING_ENABLED_START_BIT_POSITION = 59;
+  uint256 internal constant IS_PAUSED_START_BIT_POSITION = 60;
+  uint256 internal constant BORROWABLE_IN_ISOLATION_START_BIT_POSITION = 61;
+  uint256 internal constant SILOED_BORROWING_START_BIT_POSITION = 62;
+  uint256 internal constant FLASHLOAN_ENABLED_START_BIT_POSITION = 63;
+  uint256 internal constant RESERVE_FACTOR_START_BIT_POSITION = 64;
   uint256 internal constant BORROW_CAP_START_BIT_POSITION = 80;
   uint256 internal constant SUPPLY_CAP_START_BIT_POSITION = 116;
 
@@ -46,8 +53,12 @@ library ReserveConfiguration {
   uint256 internal constant MAX_VALID_LIQUIDATION_THRESHOLD = 65535;
   uint256 internal constant MAX_VALID_LIQUIDATION_BONUS = 65535;
   uint256 internal constant MAX_VALID_DECIMALS = 255;
+  uint256 internal constant MAX_VALID_RESERVE_FACTOR = 65535;
   uint256 internal constant MAX_VALID_BORROW_CAP = 68719476735;
   uint256 internal constant MAX_VALID_SUPPLY_CAP = 68719476735;
+  uint256 internal constant MAX_VALID_LIQUIDATION_PROTOCOL_FEE = 65535;
+
+  uint16 public constant MAX_RESERVES_COUNT = 128;
 
   /**
    * @notice Sets the Loan to Value of the reserve
@@ -262,17 +273,19 @@ library ReserveConfiguration {
    * @return The state param representing liquidation threshold
    * @return The state param representing liquidation bonus
    * @return The state param representing reserve decimals
+   * @return The state param representing reserve factor
    */
   function getParams(
     DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256, uint256, uint256, uint256) {
+  ) internal pure returns (uint256, uint256, uint256, uint256, uint256) {
     uint256 dataLocal = self.data;
 
     return (
       dataLocal & ~LTV_MASK,
       (dataLocal & ~LIQUIDATION_THRESHOLD_MASK) >> LIQUIDATION_THRESHOLD_START_BIT_POSITION,
       (dataLocal & ~LIQUIDATION_BONUS_MASK) >> LIQUIDATION_BONUS_START_BIT_POSITION,
-      (dataLocal & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION
+      (dataLocal & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION,
+      (dataLocal & ~RESERVE_FACTOR_MASK) >> RESERVE_FACTOR_START_BIT_POSITION
     );
   }
 }

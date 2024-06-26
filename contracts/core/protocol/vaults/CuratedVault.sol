@@ -15,14 +15,18 @@ pragma solidity 0.8.19;
 
 import {ConstantsLib} from './libraries/ConstantsLib.sol';
 import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
-import {IERC20, IERC4626, ERC20, ERC4626, Math, SafeERC20} from '@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol';
+import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
+import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IERC4626Upgradeable, ERC20Upgradeable, MathUpgradeable, ERC4626Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {MarketConfig, PendingUint192, PendingAddress, MarketAllocation, ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/ICuratedVault.sol';
-import {Multicall} from '@openzeppelin/contracts/utils/Multicall.sol';
-import {Ownable2Step, Ownable} from '@openzeppelin/contracts/access/Ownable2Step.sol';
+import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
+import {Ownable2StepUpgradeable, OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol';
 import {PendingLib} from './libraries/PendingLib.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
 
@@ -30,8 +34,14 @@ import {UtilsLib} from './libraries/UtilsLib.sol';
 /// @author Morpho Labs
 /// @custom:contact security@morpho.org
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
-contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVaultStaticTyping {
-  using Math for uint256;
+contract CuratedVault is
+  ERC4626Upgradeable,
+  ERC20PermitUpgradeable,
+  Ownable2StepUpgradeable,
+  MulticallUpgradeable,
+  ICuratedVaultStaticTyping
+{
+  using MathUpgradeable for uint256;
   using UtilsLib for uint256;
   using SafeCast for uint256;
   using SafeERC20 for IERC20;
@@ -40,17 +50,10 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
   using PendingLib for PendingUint192;
   using PendingLib for PendingAddress;
 
-  /* IMMUTABLES */
-
-  // /// @inheritdoc ICuratedVaultBase
-  // IMorpho public immutable MORPHO;
-
-  /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
+  /// @notice OpenZeppelin decimals offset used by the ERC4626Upgradeable implementation.
   /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
   /// precision between shares and assets.
-  uint8 public immutable DECIMALS_OFFSET;
-
-  /* STORAGE */
+  uint8 public DECIMALS_OFFSET;
 
   /// @inheritdoc ICuratedVaultBase
   address public curator;
@@ -96,24 +99,33 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
 
   bytes32 public positionId;
 
-  /* CONSTRUCTOR */
-
-  // / @dev Initializes the contract.
-  // / @param owner The owner of the contract.
-  // / @param initialTimelock The initial timelock.
-  // / @param _asset The address of the underlying asset.
-  // / @param _name The name of the vault.
-  // / @param _symbol The symbol of the vault.
-  constructor(
+  /// @dev Initializes the contract.
+  /// @param owner The owner of the contract.
+  /// @param initialTimelock The initial timelock.
+  /// @param _asset The address of the underlying asset.
+  /// @param _name The name of the vault.
+  /// @param _symbol The symbol of the vault.
+  function initialize(
     address owner,
     uint256 initialTimelock,
     address _asset,
     string memory _name,
     string memory _symbol
-  ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(owner) {
+  ) external initializer {
+    __ERC20_init(_name, _symbol);
+    __ERC20Permit_init(_name);
+    __ERC4626_init(IERC20Upgradeable(_asset));
+    __Multicall_init();
+    __Ownable_init();
+    __Ownable2Step_init();
+
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
     _checkTimelockBounds(initialTimelock);
     _setTimelock(initialTimelock);
+
+    _transferOwnership(owner);
+
+    positionId = keccak256(abi.encodePacked(address(this), 'index', uint256(0)));
   }
 
   /* MODIFIERS */
@@ -312,13 +324,13 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
         if (config[id].cap != 0) revert InvalidMarketRemovalNonZeroCap(id);
         if (pendingCap[id].validAt != 0) revert PendingCap(id);
 
-        if (MORPHO.supplyShares(id, address(this)) != 0) {
-          if (config[id].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(id);
-
-          if (block.timestamp < config[id].removableAt) {
-            revert InvalidMarketRemovalTimelockNotElapsed(id);
-          }
-        }
+        // todo
+        // if (MORPHO.supplyShares(id, address(this)) != 0) {
+        //   if (config[id].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(id);
+        //   if (block.timestamp < config[id].removableAt) {
+        //     revert InvalidMarketRemovalTimelockNotElapsed(id);
+        //   }
+        // }
 
         delete config[id];
       }
@@ -335,16 +347,13 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
     uint256 totalWithdrawn;
     for (uint256 i; i < allocations.length; ++i) {
       MarketAllocation memory allocation = allocations[i];
-      IPool id = allocation.marketParams;
+      IPool pool = allocation.market;
 
-      (uint256 supplyAssets, uint256 supplyShares, ) = _accruedSupplyBalance(
-        allocation.marketParams,
-        id
-      );
+      (uint256 supplyAssets, uint256 supplyShares) = _accruedSupplyBalance(pool);
       uint256 withdrawn = supplyAssets.zeroFloorSub(allocation.assets);
 
       if (withdrawn > 0) {
-        if (!config[id].enabled) revert MarketNotEnabled(id);
+        if (!config[pool].enabled) revert MarketNotEnabled(pool);
 
         // Guarantees that unknown frontrunning donations can be withdrawn, in order to disable a market.
         uint256 shares;
@@ -353,15 +362,11 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
           withdrawn = 0;
         }
 
-        (uint256 withdrawnAssets, uint256 withdrawnShares) = id.withdraw(
-          allocation.marketParams,
-          withdrawn,
-          shares,
-          address(this),
-          address(this)
-        );
+        // todo
 
-        emit ReallocateWithdraw(_msgSender(), id, withdrawnAssets, withdrawnShares);
+        uint256 withdrawnAssets = pool.withdraw(asset(), withdrawn, 0);
+
+        // emit ReallocateWithdraw(_msgSender(), id, withdrawnAssets, withdrawnShares);
 
         totalWithdrawn += withdrawnAssets;
       } else {
@@ -371,24 +376,23 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
 
         if (suppliedAssets == 0) continue;
 
-        uint256 supplyCap = config[id].cap;
-        if (supplyCap == 0) revert UnauthorizedMarket(id);
+        uint256 supplyCap = config[pool].cap;
+        if (supplyCap == 0) revert UnauthorizedMarket(pool);
 
-        if (supplyAssets + suppliedAssets > supplyCap) revert SupplyCapExceeded(id);
+        if (supplyAssets + suppliedAssets > supplyCap) revert SupplyCapExceeded(pool);
 
-        // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
-        // IERC20(_asset).forceApprove(morpho, type(uint256).max);
-        (, uint256 suppliedShares) = MORPHO.supply(
-          allocation.marketParams,
-          suppliedAssets,
-          0,
-          address(this),
-          hex''
-        );
-
-        emit ReallocateSupply(_msgSender(), id, suppliedAssets, suppliedShares);
-
-        totalSupplied += suppliedAssets;
+        // todo
+        // // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
+        // // IERC20(_asset).forceApprove(morpho, type(uint256).max);
+        // (, uint256 suppliedShares) = MORPHO.supply(
+        //   allocation.marketParams,
+        //   suppliedAssets,
+        //   0,
+        //   address(this),
+        //   hex''
+        // );
+        // emit ReallocateSupply(_msgSender(), id, suppliedAssets, suppliedShares);
+        // totalSupplied += suppliedAssets;
       }
     }
 
@@ -457,66 +461,82 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
     emit Skim(_msgSender(), token, amount);
   }
 
-  /* ERC4626 (PUBLIC) */
+  /* ERC4626Upgradeable (PUBLIC) */
 
-  /// @inheritdoc IERC20Metadata
-  function decimals() public view override(ERC20, ERC4626) returns (uint8) {
-    return ERC4626.decimals();
+  /// @inheritdoc ERC20Upgradeable
+  function decimals() public view override(ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
+    return ERC4626Upgradeable.decimals();
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   /// @dev Warning: May be higher than the actual max deposit due to duplicate markets in the supplyQueue.
   function maxDeposit(address) public view override returns (uint256) {
     return _maxDeposit();
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   /// @dev Warning: May be higher than the actual max mint due to duplicate markets in the supplyQueue.
   function maxMint(address) public view override returns (uint256) {
     uint256 suppliable = _maxDeposit();
 
-    return _convertToShares(suppliable, Math.Rounding.Floor);
+    return _convertToShares(suppliable, MathUpgradeable.Rounding.Down);
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
     (assets, , ) = _maxWithdraw(owner);
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   /// @dev Warning: May be lower than the actual amount of shares that can be redeemed by `owner` due to conversion
   /// roundings between shares and assets.
   function maxRedeem(address owner) public view override returns (uint256) {
     (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) = _maxWithdraw(owner);
 
-    return _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, Math.Rounding.Floor);
+    return
+      _convertToSharesWithTotals(
+        assets,
+        newTotalSupply,
+        newTotalAssets,
+        MathUpgradeable.Rounding.Down
+      );
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   function deposit(uint256 assets, address receiver) public override returns (uint256 shares) {
     uint256 newTotalAssets = _accrueFee();
 
     // Update `lastTotalAssets` to avoid an inconsistent state in a re-entrant context.
     // It is updated again in `_deposit`.
     lastTotalAssets = newTotalAssets;
-    shares = _convertToSharesWithTotals(assets, totalSupply(), newTotalAssets, Math.Rounding.Floor);
+    shares = _convertToSharesWithTotals(
+      assets,
+      totalSupply(),
+      newTotalAssets,
+      MathUpgradeable.Rounding.Down
+    );
     _deposit(_msgSender(), receiver, assets, shares);
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   function mint(uint256 shares, address receiver) public override returns (uint256 assets) {
     uint256 newTotalAssets = _accrueFee();
 
     // Update `lastTotalAssets` to avoid an inconsistent state in a re-entrant context.
     // It is updated again in `_deposit`.
     lastTotalAssets = newTotalAssets;
-    assets = _convertToAssetsWithTotals(shares, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
+    assets = _convertToAssetsWithTotals(
+      shares,
+      totalSupply(),
+      newTotalAssets,
+      MathUpgradeable.Rounding.Up
+    );
     _deposit(_msgSender(), receiver, assets, shares);
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   function withdraw(
     uint256 assets,
     address receiver,
@@ -525,14 +545,19 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
     uint256 newTotalAssets = _accrueFee();
 
     // Do not call expensive `maxWithdraw` and optimistically withdraw assets.
-    shares = _convertToSharesWithTotals(assets, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
+    shares = _convertToSharesWithTotals(
+      assets,
+      totalSupply(),
+      newTotalAssets,
+      MathUpgradeable.Rounding.Up
+    );
 
     // `newTotalAssets - assets` may be a little off from `totalAssets()`.
     _updateLastTotalAssets(newTotalAssets.zeroFloorSub(assets));
     _withdraw(_msgSender(), receiver, owner, assets, shares);
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   function redeem(
     uint256 shares,
     address receiver,
@@ -541,23 +566,28 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
     uint256 newTotalAssets = _accrueFee();
 
     // Do not call expensive `maxRedeem` and optimistically redeem shares.
-    assets = _convertToAssetsWithTotals(shares, totalSupply(), newTotalAssets, Math.Rounding.Floor);
+    assets = _convertToAssetsWithTotals(
+      shares,
+      totalSupply(),
+      newTotalAssets,
+      MathUpgradeable.Rounding.Down
+    );
 
     // `newTotalAssets - assets` may be a little off from `totalAssets()`.
     _updateLastTotalAssets(newTotalAssets.zeroFloorSub(assets));
     _withdraw(_msgSender(), receiver, owner, assets, shares);
   }
 
-  /// @inheritdoc IERC4626
+  /// @inheritdoc IERC4626Upgradeable
   function totalAssets() public view override returns (uint256 assets) {
     for (uint256 i; i < withdrawQueue.length; ++i) {
-      assets += withdrawQueue[i].getBalance(asset, positionId);
+      // assets += withdrawQueue[i].getBalance(asset, positionId);
     }
   }
 
-  /* ERC4626 (INTERNAL) */
+  /* ERC4626Upgradeable (INTERNAL) */
 
-  /// @inheritdoc ERC4626
+  /// @inheritdoc ERC4626Upgradeable
   function _decimalsOffset() internal view override returns (uint8) {
     return DECIMALS_OFFSET;
   }
@@ -575,7 +605,7 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
       balanceOf(owner),
       newTotalSupply,
       newTotalAssets,
-      Math.Rounding.Floor
+      MathUpgradeable.Rounding.Down
     );
     assets -= _simulateWithdrawMorpho(assets);
   }
@@ -588,32 +618,33 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
       uint256 supplyCap = config[id].cap;
       if (supplyCap == 0) continue;
 
-      uint256 supplyShares = MORPHO.supplyShares(id, address(this));
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = MORPHO.expectedMarketBalances(
-        _marketParams(id)
-      );
-      // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
-      uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+      // todo
+      // uint256 supplyShares = MORPHO.supplyShares(id, address(this));
+      // (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = MORPHO.expectedMarketBalances(
+      //   _marketParams(id)
+      // );
+      // // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
+      // uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
-      totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
+      // totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
     }
   }
 
-  /// @inheritdoc ERC4626
+  /// @inheritdoc ERC4626Upgradeable
   /// @dev The accrual of performance fees is taken into account in the conversion.
   function _convertToShares(
     uint256 assets,
-    Math.Rounding rounding
+    MathUpgradeable.Rounding rounding
   ) internal view override returns (uint256) {
     (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
     return _convertToSharesWithTotals(assets, totalSupply() + feeShares, newTotalAssets, rounding);
   }
 
-  /// @inheritdoc ERC4626
+  /// @inheritdoc ERC4626Upgradeable
   /// @dev The accrual of performance fees is taken into account in the conversion.
   function _convertToAssets(
     uint256 shares,
-    Math.Rounding rounding
+    MathUpgradeable.Rounding rounding
   ) internal view override returns (uint256) {
     (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
     return _convertToAssetsWithTotals(shares, totalSupply() + feeShares, newTotalAssets, rounding);
@@ -625,7 +656,7 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
     uint256 assets,
     uint256 newTotalSupply,
     uint256 newTotalAssets,
-    Math.Rounding rounding
+    MathUpgradeable.Rounding rounding
   ) internal view returns (uint256) {
     return assets.mulDiv(newTotalSupply + 10 ** _decimalsOffset(), newTotalAssets + 1, rounding);
   }
@@ -636,12 +667,12 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
     uint256 shares,
     uint256 newTotalSupply,
     uint256 newTotalAssets,
-    Math.Rounding rounding
+    MathUpgradeable.Rounding rounding
   ) internal view returns (uint256) {
     return shares.mulDiv(newTotalAssets + 1, newTotalSupply + 10 ** _decimalsOffset(), rounding);
   }
 
-  /// @inheritdoc ERC4626
+  /// @inheritdoc ERC4626Upgradeable
   /// @dev Used in mint or deposit to deposit the underlying asset to Morpho markets.
   function _deposit(
     address caller,
@@ -657,7 +688,7 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
     _updateLastTotalAssets(lastTotalAssets + assets);
   }
 
-  /// @inheritdoc ERC4626
+  /// @inheritdoc ERC4626Upgradeable
   /// @dev Used in redeem or withdraw to withdraw the underlying asset from Morpho markets.
   /// @dev Depending on 3 cases, reverts when withdrawing "too much" with:
   /// 1. NotEnoughLiquidity when withdrawing more than available liquidity.
@@ -680,7 +711,7 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
   /// @dev Accrues interest on Morpho Blue and returns the vault's assets & corresponding shares supplied on the
   /// market defined by `marketParams`, as well as the market's state.
   /// @dev Assumes that the inputs `marketParams` and `id` match.
-  function _accruedSupplyBalance(IPool id) internal returns (uint256 assets, uint256 shares) {
+  function _accruedSupplyBalance(IPool pool) internal returns (uint256 assets, uint256 shares) {
     // MORPHO.accrueInterest(marketParams);
     // market = MORPHO.market(id);
     // shares = MORPHO.supplyShares(id, address(this));
@@ -720,10 +751,11 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
 
         marketConfig.enabled = true;
 
-        // Take into account assets of the new market without applying a fee.
-        _updateLastTotalAssets(
-          lastTotalAssets + MORPHO.expectedSupplyAssets(marketParams, address(this))
-        );
+        // todo
+        // // Take into account assets of the new market without applying a fee.
+        // _updateLastTotalAssets(
+        //   lastTotalAssets + MORPHO.expectedSupplyAssets(marketParams, address(this))
+        // );
 
         emit SetWithdrawQueue(msg.sender, withdrawQueue);
       }
@@ -749,22 +781,23 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
       // IPool marketParams = _marketParams(id);
       // MORPHO.accrueInterest(marketParams);
 
-      Market memory market = MORPHO.market(id);
-      uint256 supplyShares = MORPHO.supplyShares(id, address(this));
-      // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      uint256 supplyAssets = supplyShares.toAssetsUp(
-        market.totalSupplyAssets,
-        market.totalSupplyShares
-      );
+      // todo
+      // Market memory market = MORPHO.market(id);
+      // uint256 supplyShares = MORPHO.supplyShares(id, address(this));
+      // // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
+      // uint256 supplyAssets = supplyShares.toAssetsUp(
+      //   market.totalSupplyAssets,
+      //   market.totalSupplyShares
+      // );
 
-      uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
+      // uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
 
-      if (toSupply > 0) {
-        // Using try/catch to skip markets that revert.
-        try MORPHO.supply(marketParams, toSupply, 0, address(this), hex'') {
-          assets -= toSupply;
-        } catch {}
-      }
+      // if (toSupply > 0) {
+      //   // Using try/catch to skip markets that revert.
+      //   try MORPHO.supply(marketParams, toSupply, 0, address(this), hex'') {
+      //     assets -= toSupply;
+      //   } catch {}
+      // }
 
       if (assets == 0) return;
     }
@@ -776,19 +809,17 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
   function _withdrawMorpho(uint256 assets) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool id = withdrawQueue[i];
-      (uint256 supplyAssets, , Market memory market) = _accruedSupplyBalance(id);
-
-      uint256 toWithdraw = UtilsLib.min(
-        _withdrawable(id, market.totalSupplyAssets, market.totalBorrowAssets, supplyAssets),
-        assets
-      );
-
-      if (toWithdraw > 0) {
-        // Using try/catch to skip markets that revert.
-        try MORPHO.withdraw(marketParams, toWithdraw, 0, address(this), address(this)) {
-          assets -= toWithdraw;
-        } catch {}
-      }
+      (uint256 supplyAssets, ) = _accruedSupplyBalance(id);
+      // uint256 toWithdraw = UtilsLib.min(
+      //   _withdrawable(id, market.totalSupplyAssets, market.totalBorrowAssets, supplyAssets),
+      //   assets
+      // );
+      // if (toWithdraw > 0) {
+      //   // Using try/catch to skip markets that revert.
+      //   try MORPHO.withdraw(marketParams, toWithdraw, 0, address(this), address(this)) {
+      //     assets -= toWithdraw;
+      //   } catch {}
+      // }
 
       if (assets == 0) return;
     }
@@ -803,22 +834,23 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
       IPool id = withdrawQueue[i];
       // MarketConfig marketParams = _marketParams(id);
 
-      uint256 supplyShares = MORPHO.supplyShares(id, address(this));
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = MORPHO
-        .expectedMarketBalances(id);
+      // todo
+      // uint256 supplyShares = MORPHO.supplyShares(id, address(this));
+      // (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = MORPHO
+      //   .expectedMarketBalances(id);
 
-      // The vault withdrawing from Morpho cannot fail because:
-      // 1. oracle.price() is never called (the vault doesn't borrow)
-      // 2. the amount is capped to the liquidity available on Morpho
-      // 3. virtually accruing interest didn't fail
-      assets = assets.zeroFloorSub(
-        _withdrawable(
-          marketParams,
-          totalSupplyAssets,
-          totalBorrowAssets,
-          supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares)
-        )
-      );
+      // // The vault withdrawing from Morpho cannot fail because:
+      // // 1. oracle.price() is never called (the vault doesn't borrow)
+      // // 2. the amount is capped to the liquidity available on Morpho
+      // // 3. virtually accruing interest didn't fail
+      // assets = assets.zeroFloorSub(
+      //   _withdrawable(
+      //     marketParams,
+      //     totalSupplyAssets,
+      //     totalBorrowAssets,
+      //     supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares)
+      //   )
+      // );
 
       if (assets == 0) break;
     }
@@ -834,13 +866,14 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
     uint256 totalBorrowAssets,
     uint256 supplyAssets
   ) internal view returns (uint256) {
-    // Inside a flashloan callback, liquidity on Morpho Blue may be limited to the singleton's balance.
-    uint256 availableLiquidity = UtilsLib.min(
-      totalSupplyAssets - totalBorrowAssets,
-      ERC20(marketParams.loanToken).balanceOf(address(MORPHO))
-    );
-
-    return UtilsLib.min(supplyAssets, availableLiquidity);
+    // todo
+    // // Inside a flashloan callback, liquidity on Morpho Blue may be limited to the singleton's balance.
+    // uint256 availableLiquidity = UtilsLib.min(
+    //   totalSupplyAssets - totalBorrowAssets,
+    //   ERC20(marketParams.loanToken).balanceOf(address(MORPHO))
+    // );
+    // return UtilsLib.min(supplyAssets, availableLiquidity);
+    return 0;
   }
 
   /* FEE MANAGEMENT */
@@ -876,7 +909,7 @@ contract CuratedVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICurated
         feeAssets,
         totalSupply(),
         newTotalAssets - feeAssets,
-        Math.Rounding.Floor
+        MathUpgradeable.Rounding.Down
       );
     }
   }
