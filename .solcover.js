@@ -1,17 +1,16 @@
-const accounts = require(`./test-wallets.js`).accounts;
-const cp = require('child_process');
-
+const { execSync } = require("child_process");
 module.exports = {
-  configureYulOptimizer: true,
-  skipFiles: ['./mocks', './interfaces', './dependencies'],
+  port: 8555,
+  providerOpts: {
+    // See example coverage settings at https://github.com/sc-forks/solidity-coverage
+    gas: 0xfffffff,
+    gasPrice: 0x01,
+  },
   mocha: {
     enableTimeouts: false,
+    grep: /@gas|@no-cov/,
+    invert: true,
   },
-  providerOptions: {
-    accounts,
-  },
-  onCompileComplete: function () {
-    console.log('onCompileComplete hook');
-    cp.execSync('. ./setup-test-env.sh', {stdio: 'inherit'});
-  },
+  skipFiles: ["test"],
+  istanbulReporter: ["html", "lcov", "text", "json", "cobertura"],
 };
