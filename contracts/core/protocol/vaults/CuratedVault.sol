@@ -15,6 +15,7 @@ pragma solidity 0.8.19;
 
 import {MarketConfig, PendingUint192, PendingAddress, MarketAllocation, IMetaMorphoBase, IMetaMorphoStaticTyping} from './interfaces/IMetaMorpho.sol';
 // import {Id, MarketParams, Market, IMorpho} from '../lib/morpho-blue/src/interfaces/IMorpho.sol';
+import {IPool} from '../../interfaces/IPool.sol';
 
 import {PendingUint192, PendingAddress, PendingLib} from './libraries/PendingLib.sol';
 import {ConstantsLib} from './libraries/ConstantsLib.sol';
@@ -52,8 +53,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
 
   /* IMMUTABLES */
 
-  /// @inheritdoc IMetaMorphoBase
-  IMorpho public immutable MORPHO;
+  // /// @inheritdoc IMetaMorphoBase
+  // IMorpho public immutable MORPHO;
 
   /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
   /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
@@ -72,7 +73,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
   address public guardian;
 
   /// @inheritdoc IMetaMorphoStaticTyping
-  mapping(Id => MarketConfig) public config;
+  mapping(IPool => MarketConfig) public config;
 
   /// @inheritdoc IMetaMorphoBase
   uint256 public timelock;
@@ -81,7 +82,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
   PendingAddress public pendingGuardian;
 
   /// @inheritdoc IMetaMorphoStaticTyping
-  mapping(Id => PendingUint192) public pendingCap;
+  mapping(IPool => PendingUint192) public pendingCap;
 
   /// @inheritdoc IMetaMorphoStaticTyping
   PendingUint192 public pendingTimelock;
@@ -96,10 +97,10 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
   address public skimRecipient;
 
   /// @inheritdoc IMetaMorphoBase
-  Id[] public supplyQueue;
+  IPool[] public supplyQueue;
 
   /// @inheritdoc IMetaMorphoBase
-  Id[] public withdrawQueue;
+  IPool[] public withdrawQueue;
 
   /// @inheritdoc IMetaMorphoBase
   uint256 public lastTotalAssets;

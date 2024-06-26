@@ -1,67 +1,67 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.21;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import {IMetaMorpho} from './interfaces/IMetaMorpho.sol';
-import {IMetaMorphoFactory} from './interfaces/IMetaMorphoFactory.sol';
+// ███████╗███████╗██████╗  ██████╗
+// ╚══███╔╝██╔════╝██╔══██╗██╔═══██╗
+//   ███╔╝ █████╗  ██████╔╝██║   ██║
+//  ███╔╝  ██╔══╝  ██╔══██╗██║   ██║
+// ███████╗███████╗██║  ██║╚██████╔╝
+// ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝
 
-import {EventsLib} from './libraries/EventsLib.sol';
-import {ErrorsLib} from './libraries/ErrorsLib.sol';
+// Website: https://zerolend.xyz
+// Discord: https://discord.gg/zerolend
+// Twitter: https://twitter.com/zerolendxyz
+// Telegram: https://t.me/zerolendxyz
 
-import {MetaMorpho} from './CuratedVault.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {BeaconProxy} from '../factory/BeaconProxy.sol';
+import {ICuratedVaultFactory, ICuratedVault, IBeacon} from './interfaces/ICuratedVaultFactory.sol';
 
-/// @title MetaMorphoFactory
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
-/// @notice This contract allows to create MetaMorpho vaults, and to index them easily.
-contract MetaMorphoFactory is IMetaMorphoFactory {
-  /* IMMUTABLES */
+contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
+  /// @inheritdoc IBeacon
+  address public implementation;
 
-  /// @inheritdoc IMetaMorphoFactory
-  address public immutable MORPHO;
+  /// @inheritdoc ICuratedVaultFactory
+  ICuratedVault[] public vaults;
 
-  /* STORAGE */
+  /// @inheritdoc ICuratedVaultFactory
+  mapping(address => bool) public isVault;
 
-  /// @inheritdoc IMetaMorphoFactory
-  mapping(address => bool) public isMetaMorpho;
-
-  /* CONSTRUCTOR */
-
-  /// @dev Initializes the contract.
-  /// @param morpho The address of the Morpho contract.
-  constructor(address morpho) {
-    if (morpho == address(0)) revert ErrorsLib.ZeroAddress();
-
-    MORPHO = morpho;
+  constructor(address _implementation) {
+    implementation = _implementation;
   }
 
-  /* EXTERNAL */
+  /// @inheritdoc ICuratedVaultFactory
+  function vaultsLength() external view returns (uint256) {
+    return vaults.length;
+  }
 
-  /// @inheritdoc IMetaMorphoFactory
-  function createMetaMorpho(
+  /// @inheritdoc ICuratedVaultFactory
+  function createVault(
     address initialOwner,
     uint256 initialTimelock,
     address asset,
     string memory name,
     string memory symbol,
     bytes32 salt
-  ) external returns (IMetaMorpho metaMorpho) {
-    metaMorpho = IMetaMorpho(
-      address(
-        new MetaMorpho{salt: salt}(initialOwner, MORPHO, initialTimelock, asset, name, symbol)
-      )
-    );
+  ) external returns (ICuratedVault pool) {
+    // create the pool
+    pool = ICuratedVault(address(new BeaconProxy{salt: salt}(address(this), msg.sender)));
+    pool.initialize(initialOwner, initialTimelock, asset, name, symbol);
 
-    isMetaMorpho[address(metaMorpho)] = true;
+    // track the pool
+    vaults.push(pool);
+    isVault[address(pool)] = true;
+    emit VaultCreated(pool, vaults.length, msg.sender);
 
-    emit EventsLib.CreateMetaMorpho(
-      address(metaMorpho),
-      msg.sender,
-      initialOwner,
-      initialTimelock,
-      asset,
-      name,
-      symbol,
-      salt
-    );
+    // TODO: once pool is created ask users to deposit some funds to
+    // set the liquidity index properly
+  }
+
+  /// @inheritdoc ICuratedVaultFactory
+  function setImplementation(address impl) external onlyOwner {
+    address old = implementation;
+    implementation = impl;
+    emit ImplementationUpdated(old, impl, msg.sender);
   }
 }
