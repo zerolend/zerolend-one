@@ -19,7 +19,7 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
-import {IPool, IHook, IFactory} from '../../interfaces/IPool.sol';
+import {IPool, IHook, IPoolFactory} from '../../interfaces/IPool.sol';
 import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 import {PoolGetters} from './PoolGetters.sol';

@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
-import {IHook, IFactory, IPool} from '../../interfaces/IPool.sol';
+import {IHook, IPoolFactory, IPool} from '../../interfaces/IPool.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {PoolStorage} from './PoolStorage.sol';
 import {PositionBalanceConfiguration} from '../libraries/configuration/PositionBalanceConfiguration.sol';
@@ -159,7 +159,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPool
-  function factory() external view returns (IFactory) {
+  function factory() external view returns (IPoolFactory) {
     return _factory;
   }
 

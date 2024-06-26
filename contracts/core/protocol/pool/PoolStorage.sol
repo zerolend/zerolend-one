@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
-import {IFactory} from '../../interfaces/IFactory.sol';
+import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IHook} from '../../interfaces/IHook.sol';
 
 contract PoolStorage {
@@ -43,7 +43,7 @@ contract PoolStorage {
   address public configurator;
 
   /// @notice The original factory contract with protocol-level control variables
-  IFactory internal _factory;
+  IPoolFactory internal _factory;
 
   /// @notice The assigned hook for this pool
   IHook internal _hook;

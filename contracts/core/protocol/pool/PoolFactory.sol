@@ -58,7 +58,7 @@ contract PoolFactory is IPoolFactory, Ownable {
   /// @inheritdoc IPoolFactory
   function createPool(IPool.InitParams memory params) external returns (IPool pool) {
     // create the pool
-    pool = IPool(address(new RevokableRevokableBeaconProxy(address(this), msg.sender)));
+    pool = IPool(address(new RevokableBeaconProxy(address(this), msg.sender)));
     pool.initialize(params);
 
     // give roles to the user
