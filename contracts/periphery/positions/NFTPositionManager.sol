@@ -16,7 +16,7 @@ pragma solidity 0.8.19;
 import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {INFTPositionManager} from './INFTPositionManager.sol';
 import {IPool, IFactory} from './../../core/interfaces/IFactory.sol';
-import {Multicall} from '../multicall/Multicall.sol';
+import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 
@@ -24,7 +24,11 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPositionManager {
+contract NFTPositionManager is
+  MulticallUpgradeable,
+  ERC721EnumerableUpgradeable,
+  INFTPositionManager
+{
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
   IFactory factory;
