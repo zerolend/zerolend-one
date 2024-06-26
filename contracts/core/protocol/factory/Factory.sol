@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {IFactory, IBeacon, IPoolConfigurator, IPool} from '../../interfaces/IFactory.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {BeaconProxy} from './BeaconProxy.sol';
+import {RevokableBeaconProxy} from './RevokableBeaconProxy.sol';
 
 contract Factory is IFactory, Ownable {
   /// @inheritdoc IBeacon
@@ -58,7 +58,7 @@ contract Factory is IFactory, Ownable {
   /// @inheritdoc IFactory
   function createPool(IPool.InitParams memory params) external returns (IPool pool) {
     // create the pool
-    pool = IPool(address(new BeaconProxy(address(this), msg.sender)));
+    pool = IPool(address(new RevokableBeaconProxy(address(this), msg.sender)));
     pool.initialize(params);
 
     // give roles to the user

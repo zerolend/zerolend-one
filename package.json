@@ -2,7 +2,7 @@
   "name": "zerolend-one",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "BSL-3.0",
+  "license": "BUSL-1.1",
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "2.0.7",
     "@nomicfoundation/hardhat-ethers": "3.0.6",
