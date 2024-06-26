@@ -39,6 +39,7 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   /// @inheritdoc ICuratedVaultFactory
   function createVault(
     address initialOwner,
+    address initialProxyOwner,
     uint256 initialTimelock,
     address asset,
     string memory name,
@@ -46,7 +47,7 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
     bytes32 salt
   ) external returns (ICuratedVault pool) {
     // create the pool
-    pool = ICuratedVault(address(new BeaconProxy{salt: salt}(address(this), msg.sender)));
+    pool = ICuratedVault(address(new BeaconProxy{salt: salt}(address(this), initialProxyOwner)));
     pool.initialize(initialOwner, initialTimelock, asset, name, symbol);
 
     // track the pool

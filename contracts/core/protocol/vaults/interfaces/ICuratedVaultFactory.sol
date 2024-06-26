@@ -22,6 +22,7 @@ interface ICuratedVaultFactory is IBeacon {
 
   function createVault(
     address initialOwner,
+    address initialProxyOwner,
     uint256 initialTimelock,
     address asset,
     string memory name,
