@@ -13,20 +13,15 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {MarketConfig, PendingUint192, PendingAddress, MarketAllocation, ICuratedVaultBase, ICuratedVaultStaticTyping} from './interfaces/ICuratedVault.sol';
+import {MarketConfig, PendingUint192, PendingAddress, MarketAllocation, ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/ICuratedVault.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 
-import {PendingUint192, PendingAddress, PendingLib} from './libraries/PendingLib.sol';
+import {PendingLib} from './libraries/PendingLib.sol';
 import {ConstantsLib} from './libraries/ConstantsLib.sol';
-import {ErrorsLib} from './libraries/ErrorsLib.sol';
-import {EventsLib} from './libraries/EventsLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
-// import {MorphoLib} from '../lib/morpho-blue/src/libraries/periphery/MorphoLib.sol';
-// import {MarketParamsLib} from './libraries/MarketParamsLib.sol';
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-// import {MorphoBalancesLib} from '../lib/morpho-blue/src/libraries/periphery/MorphoBalancesLib.sol';
 
 import {Multicall} from '@openzeppelin/contracts/utils/Multicall.sol';
 import {Ownable2Step, Ownable} from '@openzeppelin/contracts/access/Ownable2Step.sol';
@@ -131,7 +126,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
   /// @dev Reverts if the caller doesn't have the curator role.
   modifier onlyCuratorRole() {
     address sender = _msgSender();
-    if (sender != curator && sender != owner()) revert ErrorsLib.NotCuratorRole();
+    if (sender != curator && sender != owner()) revert NotCuratorRole();
     _;
   }
 
@@ -139,21 +134,21 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
   modifier onlyAllocatorRole() {
     address sender = _msgSender();
     if (!isAllocator[sender] && sender != curator && sender != owner()) {
-      revert ErrorsLib.NotAllocatorRole();
+      revert NotAllocatorRole();
     }
     _;
   }
 
   /// @dev Reverts if the caller doesn't have the guardian role.
   modifier onlyGuardianRole() {
-    if (_msgSender() != owner() && _msgSender() != guardian) revert ErrorsLib.NotGuardianRole();
+    if (_msgSender() != owner() && _msgSender() != guardian) revert NotGuardianRole();
     _;
   }
 
   /// @dev Reverts if the caller doesn't have the curator nor the guardian role.
   modifier onlyCuratorOrGuardianRole() {
     if (_msgSender() != guardian && _msgSender() != curator && _msgSender() != owner()) {
-      revert ErrorsLib.NotCuratorNorGuardianRole();
+      revert NotCuratorNorGuardianRole();
     }
     _;
   }
@@ -163,8 +158,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
   /// - there's no pending value;
   /// - the timelock has not elapsed since the pending value has been submitted.
   modifier afterTimelock(uint256 validAt) {
-    if (validAt == 0) revert ErrorsLib.NoPendingValue();
-    if (block.timestamp < validAt) revert ErrorsLib.TimelockNotElapsed();
+    if (validAt == 0) revert NoPendingValue();
+    if (block.timestamp < validAt) revert TimelockNotElapsed();
     _;
   }
 
@@ -172,29 +167,29 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
 
   /// @inheritdoc ICuratedVaultBase
   function setCurator(address newCurator) external onlyOwner {
-    if (newCurator == curator) revert ErrorsLib.AlreadySet();
+    if (newCurator == curator) revert AlreadySet();
     curator = newCurator;
-    emit EventsLib.SetCurator(newCurator);
+    emit SetCurator(newCurator);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function setIsAllocator(address newAllocator, bool newIsAllocator) external onlyOwner {
-    if (isAllocator[newAllocator] == newIsAllocator) revert ErrorsLib.AlreadySet();
+    if (isAllocator[newAllocator] == newIsAllocator) revert AlreadySet();
     isAllocator[newAllocator] = newIsAllocator;
-    emit EventsLib.SetIsAllocator(newAllocator, newIsAllocator);
+    emit SetIsAllocator(newAllocator, newIsAllocator);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function setSkimRecipient(address newSkimRecipient) external onlyOwner {
-    if (newSkimRecipient == skimRecipient) revert ErrorsLib.AlreadySet();
+    if (newSkimRecipient == skimRecipient) revert AlreadySet();
     skimRecipient = newSkimRecipient;
-    emit EventsLib.SetSkimRecipient(newSkimRecipient);
+    emit SetSkimRecipient(newSkimRecipient);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function submitTimelock(uint256 newTimelock) external onlyOwner {
-    if (newTimelock == timelock) revert ErrorsLib.AlreadySet();
-    if (pendingTimelock.validAt != 0) revert ErrorsLib.AlreadyPending();
+    if (newTimelock == timelock) revert AlreadySet();
+    if (pendingTimelock.validAt != 0) revert AlreadyPending();
     _checkTimelockBounds(newTimelock);
 
     if (newTimelock > timelock) {
@@ -203,15 +198,15 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
       // Safe "unchecked" cast because newTimelock <= MAX_TIMELOCK.
       pendingTimelock.update(uint184(newTimelock), timelock);
 
-      emit EventsLib.SubmitTimelock(newTimelock);
+      emit SubmitTimelock(newTimelock);
     }
   }
 
   /// @inheritdoc ICuratedVaultBase
   function setFee(uint256 newFee) external onlyOwner {
-    if (newFee == fee) revert ErrorsLib.AlreadySet();
-    if (newFee > ConstantsLib.MAX_FEE) revert ErrorsLib.MaxFeeExceeded();
-    if (newFee != 0 && feeRecipient == address(0)) revert ErrorsLib.ZeroFeeRecipient();
+    if (newFee == fee) revert AlreadySet();
+    if (newFee > ConstantsLib.MAX_FEE) revert MaxFeeExceeded();
+    if (newFee != 0 && feeRecipient == address(0)) revert ZeroFeeRecipient();
 
     // Accrue fee using the previous fee set before changing it.
     _updateLastTotalAssets(_accrueFee());
@@ -219,33 +214,33 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
     // Safe "unchecked" cast because newFee <= MAX_FEE.
     fee = uint96(newFee);
 
-    emit EventsLib.SetFee(_msgSender(), fee);
+    emit SetFee(_msgSender(), fee);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function setFeeRecipient(address newFeeRecipient) external onlyOwner {
-    if (newFeeRecipient == feeRecipient) revert ErrorsLib.AlreadySet();
-    if (newFeeRecipient == address(0) && fee != 0) revert ErrorsLib.ZeroFeeRecipient();
+    if (newFeeRecipient == feeRecipient) revert AlreadySet();
+    if (newFeeRecipient == address(0) && fee != 0) revert ZeroFeeRecipient();
 
     // Accrue fee to the previous fee recipient set before changing it.
     _updateLastTotalAssets(_accrueFee());
 
     feeRecipient = newFeeRecipient;
 
-    emit EventsLib.SetFeeRecipient(newFeeRecipient);
+    emit SetFeeRecipient(newFeeRecipient);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function submitGuardian(address newGuardian) external onlyOwner {
-    if (newGuardian == guardian) revert ErrorsLib.AlreadySet();
-    if (pendingGuardian.validAt != 0) revert ErrorsLib.AlreadyPending();
+    if (newGuardian == guardian) revert AlreadySet();
+    if (pendingGuardian.validAt != 0) revert AlreadyPending();
 
     if (guardian == address(0)) {
       _setGuardian(newGuardian);
     } else {
       pendingGuardian.update(newGuardian, timelock);
 
-      emit EventsLib.SubmitGuardian(newGuardian);
+      emit SubmitGuardian(newGuardian);
     }
   }
 
@@ -253,31 +248,30 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
 
   /// @inheritdoc ICuratedVaultBase
   function submitCap(IPool id, uint256 newSupplyCap) external onlyCuratorRole {
-    if (marketParams.loanToken != asset()) revert ErrorsLib.InconsistentAsset(id);
-    if (MORPHO.lastUpdate(id) == 0) revert ErrorsLib.MarketNotCreated();
-    if (pendingCap[id].validAt != 0) revert ErrorsLib.AlreadyPending();
-    if (config[id].removableAt != 0) revert ErrorsLib.PendingRemoval();
+    if (marketParams.loanToken != asset()) revert InconsistentAsset(id);
+    if (MORPHO.lastUpdate(id) == 0) revert MarketNotCreated();
+    if (pendingCap[id].validAt != 0) revert AlreadyPending();
+    if (config[id].removableAt != 0) revert PendingRemoval();
     uint256 supplyCap = config[id].cap;
-    if (newSupplyCap == supplyCap) revert ErrorsLib.AlreadySet();
+    if (newSupplyCap == supplyCap) revert AlreadySet();
 
-    if (newSupplyCap < supplyCap) {
-      _setCap(id, newSupplyCap.toUint184());
-    } else {
+    if (newSupplyCap < supplyCap) _setCap(id, newSupplyCap.toUint184());
+    else {
       pendingCap[id].update(newSupplyCap.toUint184(), timelock);
-      emit EventsLib.SubmitCap(_msgSender(), id, newSupplyCap);
+      emit SubmitCap(_msgSender(), id, newSupplyCap);
     }
   }
 
   /// @inheritdoc ICuratedVaultBase
   function submitMarketRemoval(IPool id) external onlyCuratorRole {
-    if (config[id].removableAt != 0) revert ErrorsLib.AlreadyPending();
-    if (config[id].cap != 0) revert ErrorsLib.NonZeroCap();
-    if (!config[id].enabled) revert ErrorsLib.MarketNotEnabled(id);
-    if (pendingCap[id].validAt != 0) revert ErrorsLib.PendingCap(id);
+    if (config[id].removableAt != 0) revert AlreadyPending();
+    if (config[id].cap != 0) revert NonZeroCap();
+    if (!config[id].enabled) revert MarketNotEnabled(id);
+    if (pendingCap[id].validAt != 0) revert PendingCap(id);
 
     // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
     config[id].removableAt = uint64(block.timestamp + timelock);
-    emit EventsLib.SubmitMarketRemoval(_msgSender(), id);
+    emit SubmitMarketRemoval(_msgSender(), id);
   }
 
   /* ONLY ALLOCATOR FUNCTIONS */
@@ -286,16 +280,15 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
   function setSupplyQueue(IPool[] calldata newSupplyQueue) external onlyAllocatorRole {
     uint256 length = newSupplyQueue.length;
 
-    if (length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
+    if (length > ConstantsLib.MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
 
     for (uint256 i; i < length; ++i) {
-      if (config[newSupplyQueue[i]].cap == 0)
-        revert ErrorsLib.UnauthorizedMarket(newSupplyQueue[i]);
+      if (config[newSupplyQueue[i]].cap == 0) revert UnauthorizedMarket(newSupplyQueue[i]);
     }
 
     supplyQueue = newSupplyQueue;
 
-    emit EventsLib.SetSupplyQueue(_msgSender(), newSupplyQueue);
+    emit SetSupplyQueue(_msgSender(), newSupplyQueue);
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -311,7 +304,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
 
       // If prevIndex >= currLength, it will revert with native "Index out of bounds".
       IPool id = withdrawQueue[prevIndex];
-      if (seen[prevIndex]) revert ErrorsLib.DuplicateMarket(id);
+      if (seen[prevIndex]) revert DuplicateMarket(id);
       seen[prevIndex] = true;
 
       newWithdrawQueue[i] = id;
@@ -321,14 +314,14 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
       if (!seen[i]) {
         IPool id = withdrawQueue[i];
 
-        if (config[id].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(id);
-        if (pendingCap[id].validAt != 0) revert ErrorsLib.PendingCap(id);
+        if (config[id].cap != 0) revert InvalidMarketRemovalNonZeroCap(id);
+        if (pendingCap[id].validAt != 0) revert PendingCap(id);
 
         if (MORPHO.supplyShares(id, address(this)) != 0) {
-          if (config[id].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(id);
+          if (config[id].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(id);
 
           if (block.timestamp < config[id].removableAt) {
-            revert ErrorsLib.InvalidMarketRemovalTimelockNotElapsed(id);
+            revert InvalidMarketRemovalTimelockNotElapsed(id);
           }
         }
 
@@ -338,7 +331,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
 
     withdrawQueue = newWithdrawQueue;
 
-    emit EventsLib.SetWithdrawQueue(_msgSender(), newWithdrawQueue);
+    emit SetWithdrawQueue(_msgSender(), newWithdrawQueue);
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -356,7 +349,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
       uint256 withdrawn = supplyAssets.zeroFloorSub(allocation.assets);
 
       if (withdrawn > 0) {
-        if (!config[id].enabled) revert ErrorsLib.MarketNotEnabled(id);
+        if (!config[id].enabled) revert MarketNotEnabled(id);
 
         // Guarantees that unknown frontrunning donations can be withdrawn, in order to disable a market.
         uint256 shares;
@@ -373,7 +366,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
           address(this)
         );
 
-        emit EventsLib.ReallocateWithdraw(_msgSender(), id, withdrawnAssets, withdrawnShares);
+        emit ReallocateWithdraw(_msgSender(), id, withdrawnAssets, withdrawnShares);
 
         totalWithdrawn += withdrawnAssets;
       } else {
@@ -384,9 +377,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
         if (suppliedAssets == 0) continue;
 
         uint256 supplyCap = config[id].cap;
-        if (supplyCap == 0) revert ErrorsLib.UnauthorizedMarket(id);
+        if (supplyCap == 0) revert UnauthorizedMarket(id);
 
-        if (supplyAssets + suppliedAssets > supplyCap) revert ErrorsLib.SupplyCapExceeded(id);
+        if (supplyAssets + suppliedAssets > supplyCap) revert SupplyCapExceeded(id);
 
         // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
         // IERC20(_asset).forceApprove(morpho, type(uint256).max);
@@ -398,13 +391,13 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
           hex''
         );
 
-        emit EventsLib.ReallocateSupply(_msgSender(), id, suppliedAssets, suppliedShares);
+        emit ReallocateSupply(_msgSender(), id, suppliedAssets, suppliedShares);
 
         totalSupplied += suppliedAssets;
       }
     }
 
-    if (totalWithdrawn != totalSupplied) revert ErrorsLib.InconsistentReallocation();
+    if (totalWithdrawn != totalSupplied) revert InconsistentReallocation();
   }
 
   /* REVOKE FUNCTIONS */
@@ -412,25 +405,25 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
   /// @inheritdoc ICuratedVaultBase
   function revokePendingTimelock() external onlyGuardianRole {
     delete pendingTimelock;
-    emit EventsLib.RevokePendingTimelock(_msgSender());
+    emit RevokePendingTimelock(_msgSender());
   }
 
   /// @inheritdoc ICuratedVaultBase
   function revokePendingGuardian() external onlyGuardianRole {
     delete pendingGuardian;
-    emit EventsLib.RevokePendingGuardian(_msgSender());
+    emit RevokePendingGuardian(_msgSender());
   }
 
   /// @inheritdoc ICuratedVaultBase
   function revokePendingCap(IPool id) external onlyCuratorOrGuardianRole {
     delete pendingCap[id];
-    emit EventsLib.RevokePendingCap(_msgSender(), id);
+    emit RevokePendingCap(_msgSender(), id);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function revokePendingMarketRemoval(IPool id) external onlyCuratorOrGuardianRole {
     delete config[id].removableAt;
-    emit EventsLib.RevokePendingMarketRemoval(_msgSender(), id);
+    emit RevokePendingMarketRemoval(_msgSender(), id);
   }
 
   /* EXTERNAL */
@@ -463,10 +456,10 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
 
   /// @inheritdoc ICuratedVaultBase
   function skim(address token) external {
-    if (skimRecipient == address(0)) revert ErrorsLib.ZeroAddress();
+    if (skimRecipient == address(0)) revert ZeroAddress();
     uint256 amount = IERC20(token).balanceOf(address(this));
     IERC20(token).safeTransfer(skimRecipient, amount);
-    emit EventsLib.Skim(_msgSender(), token, amount);
+    emit Skim(_msgSender(), token, amount);
   }
 
   /* ERC4626 (PUBLIC) */
@@ -701,21 +694,21 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
 
   /// @dev Reverts if `newTimelock` is not within the bounds.
   function _checkTimelockBounds(uint256 newTimelock) internal pure {
-    if (newTimelock > ConstantsLib.MAX_TIMELOCK) revert ErrorsLib.AboveMaxTimelock();
-    if (newTimelock < ConstantsLib.MIN_TIMELOCK) revert ErrorsLib.BelowMinTimelock();
+    if (newTimelock > ConstantsLib.MAX_TIMELOCK) revert AboveMaxTimelock();
+    if (newTimelock < ConstantsLib.MIN_TIMELOCK) revert BelowMinTimelock();
   }
 
   /// @dev Sets `timelock` to `newTimelock`.
   function _setTimelock(uint256 newTimelock) internal {
     timelock = newTimelock;
-    emit EventsLib.SetTimelock(_msgSender(), newTimelock);
+    emit SetTimelock(_msgSender(), newTimelock);
     delete pendingTimelock;
   }
 
   /// @dev Sets `guardian` to `newGuardian`.
   function _setGuardian(address newGuardian) internal {
     guardian = newGuardian;
-    emit EventsLib.SetGuardian(_msgSender(), newGuardian);
+    emit SetGuardian(_msgSender(), newGuardian);
     delete pendingGuardian;
   }
 
@@ -728,8 +721,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
       if (!marketConfig.enabled) {
         withdrawQueue.push(id);
 
-        if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH)
-          revert ErrorsLib.MaxQueueLengthExceeded();
+        if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
 
         marketConfig.enabled = true;
 
@@ -738,14 +730,14 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
           lastTotalAssets + MORPHO.expectedSupplyAssets(marketParams, address(this))
         );
 
-        emit EventsLib.SetWithdrawQueue(msg.sender, withdrawQueue);
+        emit SetWithdrawQueue(msg.sender, withdrawQueue);
       }
 
       marketConfig.removableAt = 0;
     }
 
     marketConfig.cap = supplyCap;
-    emit EventsLib.SetCap(_msgSender(), id, supplyCap);
+    emit SetCap(_msgSender(), id, supplyCap);
     delete pendingCap[id];
   }
 
@@ -782,7 +774,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
       if (assets == 0) return;
     }
 
-    if (assets != 0) revert ErrorsLib.AllCapsReached();
+    if (assets != 0) revert AllCapsReached();
   }
 
   /// @dev Withdraws `assets` from Morpho.
@@ -806,7 +798,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
       if (assets == 0) return;
     }
 
-    if (assets != 0) revert ErrorsLib.NotEnoughLiquidity();
+    if (assets != 0) revert NotEnoughLiquidity();
   }
 
   /// @dev Simulates a withdraw of `assets` from Morpho.
@@ -862,7 +854,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
   function _updateLastTotalAssets(uint256 updatedTotalAssets) internal {
     lastTotalAssets = updatedTotalAssets;
 
-    emit EventsLib.UpdateLastTotalAssets(updatedTotalAssets);
+    emit UpdateLastTotalAssets(updatedTotalAssets);
   }
 
   /// @dev Accrues the fee and mints the fee shares to the fee recipient.
@@ -871,7 +863,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, ICuratedVa
     uint256 feeShares;
     (feeShares, newTotalAssets) = _accruedFeeShares();
     if (feeShares != 0) _mint(feeRecipient, feeShares);
-    emit EventsLib.AccrueInterest(newTotalAssets, feeShares);
+    emit AccrueInterest(newTotalAssets, feeShares);
   }
 
   /// @dev Computes and returns the fee shares (`feeShares`) to mint and the new vault's total assets

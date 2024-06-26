@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {BeaconProxy} from '../factory/BeaconProxy.sol';
-import {ICuratedVaultFactory, ICuratedVault, IBeacon} from './interfaces/ICuratedVaultFactory.sol';
+import {ICuratedVaultFactory, ICuratedVault, IBeacon} from '../../interfaces/ICuratedVaultFactory.sol';
 
 contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   /// @inheritdoc IBeacon

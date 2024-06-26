@@ -1,28 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-struct MarketConfig {
-  /// @notice The maximum amount of assets that can be allocated to the market.
-  uint184 cap;
-  /// @notice Whether the market is in the withdraw queue.
-  bool enabled;
-  /// @notice The timestamp at which the market can be instantly removed from the withdraw queue.
-  uint64 removableAt;
-}
-
-struct PendingUint192 {
-  /// @notice The pending value to set.
-  uint192 value;
-  /// @notice The timestamp at which the pending value becomes valid.
-  uint64 validAt;
-}
-
-struct PendingAddress {
-  /// @notice The pending value to set.
-  address value;
-  /// @notice The timestamp at which the pending value becomes valid.
-  uint64 validAt;
-}
+import {PendingUint192, PendingAddress} from '../../../interfaces/ICuratedVault.sol';
 
 /// @title PendingLib
 /// @author Morpho Labs
