@@ -20,19 +20,18 @@ import {PendingUint192, PendingAddress, PendingLib} from './libraries/PendingLib
 import {ConstantsLib} from './libraries/ConstantsLib.sol';
 import {ErrorsLib} from './libraries/ErrorsLib.sol';
 import {EventsLib} from './libraries/EventsLib.sol';
-import {WAD} from '../lib/morpho-blue/src/libraries/MathLib.sol';
-import {UtilsLib} from '../lib/morpho-blue/src/libraries/UtilsLib.sol';
-import {SafeCast} from '../lib/openzeppelin-contracts/contracts/utils/math/SafeCast.sol';
-import {SharesMathLib} from '../lib/morpho-blue/src/libraries/SharesMathLib.sol';
-import {MorphoLib} from '../lib/morpho-blue/src/libraries/periphery/MorphoLib.sol';
-import {MarketParamsLib} from '../lib/morpho-blue/src/libraries/MarketParamsLib.sol';
-import {IERC20Metadata} from '../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import {MorphoBalancesLib} from '../lib/morpho-blue/src/libraries/periphery/MorphoBalancesLib.sol';
+import {UtilsLib} from './libraries/UtilsLib.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {SharesMathLib} from './libraries/SharesMathLib.sol';
+// import {MorphoLib} from '../lib/morpho-blue/src/libraries/periphery/MorphoLib.sol';
+// import {MarketParamsLib} from './libraries/MarketParamsLib.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+// import {MorphoBalancesLib} from '../lib/morpho-blue/src/libraries/periphery/MorphoBalancesLib.sol';
 
-import {Multicall} from '../lib/openzeppelin-contracts/contracts/utils/Multicall.sol';
-import {Ownable2Step, Ownable} from '../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol';
-import {ERC20Permit} from '../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol';
-import {IERC20, IERC4626, ERC20, ERC4626, Math, SafeERC20} from '../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626.sol';
+import {Multicall} from '@openzeppelin/contracts/utils/Multicall.sol';
+import {Ownable2Step, Ownable} from '@openzeppelin/contracts/access/Ownable2Step.sol';
+import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
+import {IERC20, IERC4626, ERC20, ERC4626, Math, SafeERC20} from '@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol';
 
 /// @title MetaMorpho
 /// @author Morpho Labs
@@ -46,7 +45,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
   using MorphoLib for IMorpho;
   using SharesMathLib for uint256;
   using MorphoBalancesLib for IMorpho;
-  using MarketParamsLib for MarketParams;
+  // using MarketParamsLib for MarketParams;
   using PendingLib for MarketConfig;
   using PendingLib for PendingUint192;
   using PendingLib for PendingAddress;
@@ -951,7 +950,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     uint256 totalInterest = newTotalAssets.zeroFloorSub(lastTotalAssets);
     if (totalInterest != 0 && fee != 0) {
       // It is acknowledged that `feeAssets` may be rounded down to 0 if `totalInterest * fee < WAD`.
-      uint256 feeAssets = totalInterest.mulDiv(fee, WAD);
+      uint256 feeAssets = totalInterest.mulDiv(fee, 1e18);
       // The fee assets is subtracted from the total assets in this calculation to compensate for the fact
       // that total assets is already increased by the total interest (including the fee assets).
       feeShares = _convertToSharesWithTotals(
