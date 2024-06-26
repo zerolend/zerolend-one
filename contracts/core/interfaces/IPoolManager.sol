@@ -14,10 +14,10 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 /**
- * @title IACLManager
+ * @title IPoolManager
  * @notice Defines the basic interface for the ACL Manager
  */
-interface IACLManager {
+interface IPoolManager {
   /**
    * @notice Returns the identifier of the PoolAdmin role
    * @return The id of the PoolAdmin role
@@ -35,14 +35,6 @@ interface IACLManager {
    * @return The id of the RiskAdmin role
    */
   function RISK_ADMIN_ROLE() external view returns (bytes32);
-
-  /**
-   * @notice Set the role as admin of a specific role.
-   * @dev By default the admin role for all roles is `DEFAULT_ADMIN_ROLE`.
-   * @param role The role to be managed by the admin role
-   * @param adminRole The admin role
-   */
-  function setRoleAdmin(bytes32 role, bytes32 adminRole) external;
 
   /**
    * @notice Adds a new admin as PoolAdmin
@@ -100,4 +92,6 @@ interface IACLManager {
    * @return True if the given address is RiskAdmin, false otherwise
    */
   function isRiskAdmin(address pool, address admin) external view returns (bool);
+
+  function getRoleFromPool(address pool, bytes32 role) external pure returns (bytes32);
 }

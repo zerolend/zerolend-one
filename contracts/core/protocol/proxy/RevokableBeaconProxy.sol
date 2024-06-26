@@ -34,6 +34,8 @@ contract RevokableBeaconProxy is Proxy {
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = _admin;
   }
 
+  // todo add events for admin and implementation changes
+
   /**
    * @dev Returns the current implementation address of the associated beacon.
    */

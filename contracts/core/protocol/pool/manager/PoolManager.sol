@@ -13,11 +13,11 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IACLManager} from '../../../interfaces/IACLManager.sol';
+import {IPoolManager} from '../../../interfaces/IPoolManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {TimelockedActions} from './TimelockedActions.sol';
 
-contract PoolManager is TimelockedActions {
+contract PoolManager is IPoolManager, TimelockedActions {
   bytes32 public constant POOL_ADMIN_ROLE = keccak256('POOL_ADMIN');
   bytes32 public constant EMERGENCY_ADMIN_ROLE = keccak256('EMERGENCY_ADMIN');
   bytes32 public constant RISK_ADMIN_ROLE = keccak256('RISK_ADMIN');
@@ -49,38 +49,47 @@ contract PoolManager is TimelockedActions {
     _cancel(id);
   }
 
+  /// @inheritdoc IPoolManager
   function addPoolAdmin(address pool, address admin) public {
     grantRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
   }
 
+  /// @inheritdoc IPoolManager
   function addEmergencyAdmin(address pool, address admin) public {
     grantRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
   }
 
+  /// @inheritdoc IPoolManager
   function addRiskAdmin(address pool, address admin) public {
     grantRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
   }
 
+  /// @inheritdoc IPoolManager
   function isPoolAdmin(address pool, address admin) public view returns (bool) {
     return hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
   }
 
+  /// @inheritdoc IPoolManager
   function isEmergencyAdmin(address pool, address admin) public view returns (bool) {
     return hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
   }
 
+  /// @inheritdoc IPoolManager
   function isRiskAdmin(address pool, address admin) public view returns (bool) {
     return hasRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
   }
 
+  /// @inheritdoc IPoolManager
   function removeEmergencyAdmin(address pool, address admin) public {
     revokeRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
   }
 
+  /// @inheritdoc IPoolManager
   function removeRiskAdmin(address pool, address admin) public {
     revokeRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
   }
 
+  /// @inheritdoc IPoolManager
   function removePoolAdmin(address pool, address admin) public {
     revokeRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
   }
@@ -121,6 +130,7 @@ contract PoolManager is TimelockedActions {
     _;
   }
 
+  /// @inheritdoc IPoolManager
   function getRoleFromPool(address pool, bytes32 role) public pure returns (bytes32) {
     return keccak256(abi.encode(pool, role));
   }
