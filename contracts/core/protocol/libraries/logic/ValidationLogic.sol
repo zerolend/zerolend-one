@@ -73,7 +73,7 @@ library ValidationLogic {
   ) internal view {
     require(params.amount != 0, Errors.INVALID_AMOUNT);
 
-    (bool isFrozen, , ) = reserveCache.reserveConfiguration.getFlags();
+    (bool isFrozen, ) = reserveCache.reserveConfiguration.getFlags();
     require(!isFrozen, Errors.RESERVE_FROZEN);
 
     uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
@@ -131,7 +131,7 @@ library ValidationLogic {
 
     ValidateBorrowLocalVars memory vars;
 
-    (vars.isFrozen, vars.borrowingEnabled, ) = params.reserveCache.reserveConfiguration.getFlags();
+    (vars.isFrozen, vars.borrowingEnabled) = params.reserveCache.reserveConfiguration.getFlags();
 
     require(!vars.isFrozen, Errors.RESERVE_FROZEN);
     require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);

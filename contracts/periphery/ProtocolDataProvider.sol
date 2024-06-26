@@ -85,7 +85,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
     (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration
       .getParams();
 
-    (isFrozen, borrowingEnabled, ) = configuration.getFlags();
+    (isFrozen, borrowingEnabled) = configuration.getFlags();
 
     usageAsCollateralEnabled = liquidationThreshold != 0;
   }
