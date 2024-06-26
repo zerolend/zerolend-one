@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {IFactory} from './IFactory.sol';
+import {IPoolFactory} from './IPoolFactory.sol';
 import {IHook} from './IHook.sol';
 
 /**
@@ -327,7 +327,7 @@ interface IPool {
 
   function getReserveFactor() external view returns (uint256 reseveFactor);
 
-  function factory() external view returns (IFactory f);
+  function factory() external view returns (IPoolFactory f);
 
   /**
    * @notice Returns the user account data across all the reserves
