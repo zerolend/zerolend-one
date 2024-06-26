@@ -71,6 +71,15 @@ contract RevokableBeaconProxy is Proxy {
     return _getBeacon();
   }
 
+  /**
+   * @notice Checks if the beacon is revoked in which case the contract is as good as immutable.
+   * @dev The revoked implementation address can be found in the `implementation()` call.
+   * @return revoked True iff the beacon has been revoked.
+   */
+  function isBeaconRevoked() external view returns (bool revoked) {
+    revoked = _getBeacon() == address(0);
+  }
+
   function _getBeacon() private view returns (address) {
     return StorageSlot.getAddressSlot(_BEACON_SLOT).value;
   }
