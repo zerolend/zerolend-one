@@ -16,6 +16,7 @@ describe('NFT Position Manager', () => {
     positionManager = await upgrades.deployProxy(NFTPositionManager, [await factory.getAddress()], {
       initializer: 'initialize',
       kind: 'transparent',
+      unsafeAllow: ['delegatecall'],
     });
     await positionManager.waitForDeployment();
     // console.log(`NFT Position Manager Proxy Deployed to ${await positionManager.getAddress()}`);
@@ -136,8 +137,6 @@ describe('NFT Position Manager', () => {
         'ZeroValueNotAllowed'
       );
     });
-    it('Should revert if the caller is not owner or approved for tokenId', async () => {
-      
-    });
+    it('Should revert if the caller is not owner or approved for tokenId', async () => {});
   });
 });
