@@ -44,7 +44,7 @@ describe('Pool - Liquidity Index', () => {
     expect(reserve.liquidityIndex).eq(ray);
   });
 
-  it.only('After supplying, and waiting for some time; balances should not change', async () => {
+  it('After supplying, and waiting for some time; balances should not change', async () => {
     const balBefore = await pool['getBalance(address,address,uint256)'](
       tokenA.target,
       deployer.address,
