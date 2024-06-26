@@ -18,7 +18,13 @@ import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 import {Proxy} from '@openzeppelin/contracts/proxy/Proxy.sol';
 import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
 
-contract BeaconProxy is Proxy {
+/**
+ * @title A beacon proxy with the ability to have its upgradability revoked
+ * @author Deadshot Ryker <ryker@zerolend.xyz>
+ * @notice This is a beacon proxy contract that has the ability for the proxy admin to revoke
+ * the beacon's ability to upgrade the contract.
+ */
+contract RevokableBeaconProxy is Proxy {
   bytes32 internal constant _IMPLEMENTATION_SLOT = keccak256('eip1967.proxy.impl');
   bytes32 internal constant _BEACON_SLOT = keccak256('eip1967.proxy.beacon');
   bytes32 internal constant _ADMIN_SLOT = keccak256('eip1967.proxy.admin');
@@ -44,6 +50,10 @@ contract BeaconProxy is Proxy {
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = newAdmin;
   }
 
+  /**
+   * @notice Revokes the beacon's ability to upgrade this contract and forver seals the implementation
+   * into the code forever.
+   */
   function revokeBeacon() external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
     _revokeBeacon();

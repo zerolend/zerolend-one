@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {BeaconProxy} from '../factory/BeaconProxy.sol';
+import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
 import {ICuratedVaultFactory, ICuratedVault, IBeacon} from '../../interfaces/ICuratedVaultFactory.sol';
 
 contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
@@ -47,7 +47,9 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
     bytes32 salt
   ) external returns (ICuratedVault pool) {
     // create the pool
-    pool = ICuratedVault(address(new BeaconProxy{salt: salt}(address(this), initialProxyOwner)));
+    pool = ICuratedVault(
+      address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner))
+    );
     pool.initialize(initialOwner, initialTimelock, asset, name, symbol);
 
     // track the pool
