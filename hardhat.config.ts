@@ -23,6 +23,9 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  paths: {
+    tests: './test/hardhat',
+  },
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
