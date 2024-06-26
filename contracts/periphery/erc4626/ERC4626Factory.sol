@@ -38,11 +38,11 @@ contract ERC4626Factory is Ownable, IERC4626Factory {
 
   /// @inheritdoc IERC4626Factory
   function createVault(address pool, address token) external returns (IPoolERC4626Vault vault) {
-    // create the pool
+    // create the vault
     vault = IPoolERC4626Vault(address(new BeaconProxy(address(this), msg.sender)));
     vault.initialize(pool, token);
 
-    // track the pool
+    // track the vault
     vaults.push(vault);
     isVault[address(vault)] = true;
     emit VaultCreated(vault, vaults.length, msg.sender);
