@@ -581,7 +581,7 @@ contract CuratedVault is
   /// @inheritdoc IERC4626Upgradeable
   function totalAssets() public view override returns (uint256 assets) {
     for (uint256 i; i < withdrawQueue.length; ++i) {
-      // assets += withdrawQueue[i].getBalance(asset, positionId);
+      assets += withdrawQueue[i].getBalance(asset(), positionId);
     }
   }
 
@@ -682,7 +682,7 @@ contract CuratedVault is
   ) internal override {
     super._deposit(caller, receiver, assets, shares);
 
-    _supplyMorpho(assets);
+    _supplyPool(assets);
 
     // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
     _updateLastTotalAssets(lastTotalAssets + assets);
@@ -701,8 +701,7 @@ contract CuratedVault is
     uint256 assets,
     uint256 shares
   ) internal override {
-    _withdrawMorpho(assets);
-
+    _withdrawPool(assets);
     super._withdraw(caller, receiver, owner, assets, shares);
   }
 
@@ -771,7 +770,7 @@ contract CuratedVault is
   /* LIQUIDITY ALLOCATION */
 
   /// @dev Supplies `assets` to Morpho.
-  function _supplyMorpho(uint256 assets) internal {
+  function _supplyPool(uint256 assets) internal {
     for (uint256 i; i < supplyQueue.length; ++i) {
       IPool id = supplyQueue[i];
 
@@ -806,7 +805,7 @@ contract CuratedVault is
   }
 
   /// @dev Withdraws `assets` from Morpho.
-  function _withdrawMorpho(uint256 assets) internal {
+  function _withdrawPool(uint256 assets) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool id = withdrawQueue[i];
       (uint256 supplyAssets, ) = _accruedSupplyBalance(id);
