@@ -64,9 +64,9 @@ const config: HardhatUserConfig = {
       saveDeployments: true,
     },
     blast: {
-      // url: `https://rpc.blast.io`,
-      url: `http://127.0.0.1:8545/`,
+      url: `https://rpc.blast.io`,
       accounts: [process.env.WALLET_PRIVATE_KEY || ''],
+      saveDeployments: true,
     },
     blastSepolia: {
       url: `https://sepolia.blast.io`,
@@ -150,6 +150,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api-sepolia.blastscan.io/api',
           browserURL: 'https://sepolia.blastscan.io/',
+        },
+      },
+      {
+        network: 'sepolia',
+        chainId: 168587773,
+        urls: {
+          apiURL: 'https://api-sepolia.etherscan.io/api',
+          browserURL: 'https://sepolia.etherscan.io/',
         },
       },
     ],
