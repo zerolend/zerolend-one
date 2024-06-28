@@ -16,13 +16,12 @@ pragma solidity 0.8.19;
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IHook} from '../../interfaces/IHook.sol';
-import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {PoolGetters} from './PoolGetters.sol';
 import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {PoolSetters} from './PoolSetters.sol';
 
-contract Pool is Initializable, PoolSetters {
+contract Pool is PoolSetters {
   /**
    * @notice Initializes the Pool.
    * @dev This function is invoked by the factory contract when the Pool is created
@@ -48,6 +47,8 @@ contract Pool is Initializable, PoolSetters {
 
       _reservesCount++;
     }
+
+    __ReentrancyGuard_init();
   }
 
   /// @inheritdoc IPool

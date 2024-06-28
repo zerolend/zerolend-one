@@ -18,7 +18,6 @@ import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
-import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IPool, IHook, IPoolFactory} from '../../interfaces/IPool.sol';
 import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
@@ -27,8 +26,9 @@ import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
+import {ReentrancyGuardUpgradeable} from '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
 
-abstract contract PoolSetters is Initializable, PoolGetters {
+abstract contract PoolSetters is ReentrancyGuardUpgradeable, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using PercentageMath for uint256;
   using TokenConfiguration for address;
@@ -38,7 +38,7 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal {
+  ) internal nonReentrant {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0))
       _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -65,7 +65,7 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal returns (uint256 withdrawalAmount) {
+  ) internal nonReentrant returns (uint256 withdrawalAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
     require(amount <= _balances[asset][pos].scaledSupplyBalance, 'Insufficient Balance!');
 
@@ -99,7 +99,7 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal {
+  ) internal nonReentrant {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0))
       _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -129,7 +129,7 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal returns (uint256 paybackAmount) {
+  ) internal nonReentrant returns (uint256 paybackAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0))
       _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -157,7 +157,7 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     bytes32 pos,
     uint256 debtAmt,
     DataTypes.ExtraData memory data
-  ) internal {
+  ) internal nonReentrant {
     if (address(_hook) != address(0))
       _hook.beforeLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
 
@@ -186,7 +186,7 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     address asset,
     uint256 amount,
     bytes calldata params
-  ) public virtual {
+  ) public virtual nonReentrant {
     DataTypes.FlashloanSimpleParams memory flashParams = DataTypes.FlashloanSimpleParams({
       receiverAddress: receiverAddress,
       asset: asset,
