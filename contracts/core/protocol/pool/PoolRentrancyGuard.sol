@@ -15,6 +15,12 @@ pragma solidity 0.8.19;
 
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 
+/**
+ * @title PoolRentrancyGuard
+ * @author ZeroLend
+ * @notice This is specialized rentrancy contract that checks the rentrancy state for lending, flashloans and
+ * liquidations seperately.
+ */
 abstract contract PoolRentrancyGuard is Initializable {
   enum RentrancyKind {
     LENDING,
