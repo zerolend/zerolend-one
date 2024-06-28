@@ -301,6 +301,14 @@ interface IPool {
     bytes calldata params
   ) external;
 
+  function flashLoan(
+    address receiverAddress,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    DataTypes.ExtraData memory data
+  ) external;
+
   /**
    * @notice Get the balance of a specific asset in a specific position.
    * @param asset The address of the asset.

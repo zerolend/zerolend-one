@@ -96,8 +96,8 @@ library BorrowLogic {
       IPool(params.pool).getReserveFactor(),
       0,
       params.amount,
-      '',
-      ''
+      params.position,
+      params.data.interestRateData
     );
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);

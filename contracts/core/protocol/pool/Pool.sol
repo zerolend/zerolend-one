@@ -148,9 +148,26 @@ contract Pool is PoolSetters {
     address receiverAddress,
     address asset,
     uint256 amount,
+    bytes calldata params,
+    DataTypes.ExtraData memory data
+  ) public virtual override {
+    _flashLoan(receiverAddress, asset, amount, params, data);
+  }
+
+  /// @inheritdoc IPool
+  function flashLoan(
+    address receiverAddress,
+    address asset,
+    uint256 amount,
     bytes calldata params
   ) public virtual override {
-    _flashLoan(receiverAddress, asset, amount, params);
+    _flashLoan(
+      receiverAddress,
+      asset,
+      amount,
+      params,
+      DataTypes.ExtraData({interestRateData: '', hookData: ''})
+    );
   }
 
   /// @inheritdoc IPool

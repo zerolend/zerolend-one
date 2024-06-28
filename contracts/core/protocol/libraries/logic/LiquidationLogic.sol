@@ -260,8 +260,8 @@ library LiquidationLogic {
       0,
       IPool(params.pool).getReserveFactor(),
       vars.actualCollateralToLiquidate,
-      '',
-      ''
+      params.position,
+      params.data.interestRateData
     );
 
     // Burn the equivalent amount of aToken, sending the underlying to the liquidator

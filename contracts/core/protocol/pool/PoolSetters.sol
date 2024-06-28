@@ -51,6 +51,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       DataTypes.ExecuteSupplyParams({
         asset: asset,
         amount: amount,
+        data: data,
         position: pos,
         pool: address(this)
       })
@@ -83,6 +84,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
         asset: asset,
         amount: amount,
         position: pos,
+        data: data,
         reservesCount: _reservesCount,
         pool: address(this)
       })
@@ -115,6 +117,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
         user: msg.sender,
         position: pos,
         amount: amount,
+        data: data,
         reservesCount: 0,
         pool: address(this)
       })
@@ -143,7 +146,8 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
         amount: amount,
         user: msg.sender,
         pool: address(this),
-        position: pos
+        position: pos,
+        data: data
       })
     );
 
@@ -173,6 +177,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
         collateralAsset: collat,
         debtAsset: debt,
         position: pos,
+        data: data,
         pool: address(this)
       })
     );
@@ -185,12 +190,14 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     address receiverAddress,
     address asset,
     uint256 amount,
-    bytes calldata params
+    bytes calldata params,
+    DataTypes.ExtraData memory data
   ) public virtual nonReentrant(RentrancyKind.FLASHLOAN) {
     DataTypes.FlashloanSimpleParams memory flashParams = DataTypes.FlashloanSimpleParams({
       receiverAddress: receiverAddress,
       asset: asset,
       amount: amount,
+      data: data,
       params: params,
       flashLoanPremiumTotal: _factory.flashLoanPremiumToProtocol()
     });

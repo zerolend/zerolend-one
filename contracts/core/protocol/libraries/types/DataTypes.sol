@@ -109,6 +109,7 @@ library DataTypes {
     bytes32 position;
     uint256 debtToCover;
     uint256 reservesCount;
+    ExtraData data;
   }
 
   struct ExecuteSupplyParams {
@@ -116,6 +117,7 @@ library DataTypes {
     address pool;
     bytes32 position;
     uint256 amount;
+    ExtraData data;
   }
 
   struct ExtraData {
@@ -130,6 +132,7 @@ library DataTypes {
     bytes32 position;
     uint256 amount;
     uint256 reservesCount;
+    ExtraData data;
   }
 
   struct ExecuteRepayParams {
@@ -138,6 +141,7 @@ library DataTypes {
     address user;
     bytes32 position;
     uint256 amount;
+    ExtraData data;
   }
 
   struct ExecuteWithdrawParams {
@@ -147,6 +151,7 @@ library DataTypes {
     bytes32 position;
     uint256 reservesCount;
     address pool;
+    ExtraData data;
   }
 
   struct FlashloanSimpleParams {
@@ -155,6 +160,7 @@ library DataTypes {
     uint256 amount;
     bytes params;
     uint256 flashLoanPremiumTotal;
+    ExtraData data;
   }
 
   struct FlashLoanRepaymentParams {
