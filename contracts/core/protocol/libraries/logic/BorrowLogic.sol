@@ -134,8 +134,10 @@ library BorrowLogic {
     uint256 paybackAmount = b.scaledDebtBalance;
 
     // Allows a user to max repay without leaving dust from interest.
-    if (params.amount == type(uint256).max)
+    if (params.amount == type(uint256).max) {
       params.amount = b.getDebt(reserveCache.nextVariableBorrowIndex);
+      paybackAmount = params.amount;
+    }
 
     ValidationLogic.validateRepay(params.amount, paybackAmount);
 
