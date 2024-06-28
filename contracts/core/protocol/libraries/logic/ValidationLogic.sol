@@ -30,6 +30,7 @@ import {GenericLogic} from './GenericLogic.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {TokenConfiguration} from '../../libraries/configuration/TokenConfiguration.sol';
 
+import "hardhat/console.sol";
 /**
  * @title ReserveLogic library
 
@@ -130,7 +131,6 @@ library ValidationLogic {
     require(params.amount != 0, Errors.INVALID_AMOUNT);
 
     ValidateBorrowLocalVars memory vars;
-
     (vars.isFrozen, vars.borrowingEnabled, ) = params.reserveCache.reserveConfiguration.getFlags();
 
     require(!vars.isFrozen, Errors.RESERVE_FROZEN);
@@ -173,22 +173,27 @@ library ValidationLogic {
       })
     );
 
+    console.log(">>>>>",vars.userCollateralInBaseCurrency);
     require(vars.userCollateralInBaseCurrency != 0, Errors.COLLATERAL_BALANCE_IS_ZERO);
+    console.log(">>>>>>>>");
     require(vars.currentLtv != 0, Errors.LTV_VALIDATION_FAILED);
 
     require(
       vars.healthFactor > HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
       Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
+    console.log(">>>>>>>>");
 
     vars.amountInBaseCurrency = IPool(params.pool).getAssetPrice(params.asset) * params.amount;
     unchecked {
       vars.amountInBaseCurrency /= vars.assetUnit;
     }
+    console.log(">>>>>>>>");
 
     //add the current already borrowed amount to the amount requested to calculate the total collateral needed.
     vars.collateralNeededInBaseCurrency = (vars.userDebtInBaseCurrency + vars.amountInBaseCurrency)
       .percentDiv(vars.currentLtv); //LTV is calculated in percentage
+    console.log(">>>>>>>>");
 
     require(
       vars.collateralNeededInBaseCurrency <= vars.userCollateralInBaseCurrency,
@@ -333,8 +338,11 @@ library ValidationLogic {
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ReserveConfigurationMap memory reserveConfig
   ) internal view returns (bool) {
+    console.log("# ~ file: ValidationLogic.sol:342 ~ )internalviewreturns ~ reserveConfig.getLtv():", reserveConfig.getLtv());
     if (reserveConfig.getLtv() == 0) return false;
+    console.log("# ~ file: ValidationLogic.sol:346 ~ )internalviewreturns ~ userConfig.isUsingAsCollateralAny():", userConfig.isUsingAsCollateralAny());
     if (!userConfig.isUsingAsCollateralAny()) return true;
     return false;
   }
+
 }

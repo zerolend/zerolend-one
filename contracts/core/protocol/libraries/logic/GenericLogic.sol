@@ -22,7 +22,7 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
-
+import "hardhat/console.sol";
 /**
  * @title GenericLogic library
  * @notice Implements protocol-level logic to calculate and validate the state of a user
@@ -77,9 +77,11 @@ library GenericLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.CalculateUserAccountDataParams memory params
   ) internal view returns (uint256, uint256, uint256, uint256, uint256, bool) {
+    console.log("####>>>>", params.userConfig.isEmpty());
     if (params.userConfig.isEmpty()) {
       return (0, 0, 0, 0, type(uint256).max, false);
     }
+    console.log("####");
 
     CalculateUserAccountDataVars memory vars;
 
@@ -92,6 +94,8 @@ library GenericLogic {
       }
 
       vars.currentReserveAddress = reservesList[vars.i];
+      console.log("# ~ file: GenericLogic.sol:95 ~ )internalviewreturns ~ currentReserveAddress:", vars.currentReserveAddress);
+
 
       if (vars.currentReserveAddress == address(0)) {
         unchecked {

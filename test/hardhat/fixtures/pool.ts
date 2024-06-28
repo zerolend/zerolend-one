@@ -1,11 +1,11 @@
 import { ethers } from 'hardhat';
 import { IPool } from '../../../types/contracts/core/interfaces';
 import { deployCore } from './core';
-import { ZeroAddress } from 'ethers';
+import { ZeroAddress, parseEther } from 'ethers';
 
 export async function deployPool() {
   const fixture = await deployCore();
-  const { factory, tokenA, tokenB, tokenC, irStrategy, oracleA, oracleB, oracleC } = fixture;
+  const { factory, configurator, tokenA, tokenB, tokenC, irStrategy, oracleA, oracleB, oracleC } = fixture;
 
   const input: IPool.InitParamsStruct = {
     hook: ZeroAddress,
@@ -21,6 +21,10 @@ export async function deployPool() {
   // grab the instance and return
   const poolAddr = await factory.pools(0);
   const pool = await ethers.getContractAt('Pool', poolAddr);
+
+  await configurator.setReserveBorrowing(poolAddr, tokenA.target, true);
+  await configurator.setReserveBorrowing(poolAddr, tokenB.target, true);
+  await configurator.setReserveBorrowing(poolAddr, tokenC.target, true);
 
   return {
     ...fixture,

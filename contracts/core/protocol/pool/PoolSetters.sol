@@ -27,6 +27,7 @@ import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
+import "hardhat/console.sol";
 
 abstract contract PoolSetters is Initializable, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -40,6 +41,8 @@ abstract contract PoolSetters is Initializable, PoolGetters {
     DataTypes.ExtraData memory data
   ) internal {
     bytes32 pos = msg.sender.getPositionId(index);
+    console.log("# ~ file: PoolSetters.sol:43 ~ pos:", index);
+
     if (address(_hook) != address(0))
       _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 

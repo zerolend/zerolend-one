@@ -8,11 +8,12 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 describe('Pool', () => {
   let pool: Pool;
   let tokenA: MintableERC20;
+  let tokenB: MintableERC20;
   let deployer: SignerWithAddress;
 
   beforeEach(async () => {
     const fixture = await deployPool();
-    ({ tokenA, pool, owner: deployer } = fixture);
+    ({ tokenA, tokenB, pool, owner: deployer } = fixture);
   });
 
   describe('Supply functions', () => {
@@ -30,7 +31,7 @@ describe('Pool', () => {
       await pool['withdraw(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
     });
 
-    it('Should give right balances for supploed positions', async () => {
+    it('Should give right balances for supplied positions', async () => {
       await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
       await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('2'), 1);
 
@@ -46,6 +47,31 @@ describe('Pool', () => {
       await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
       const t = pool['withdraw(address,uint256,uint256)'](tokenA.target, parseEther('1'), 1);
       await expect(t).to.revertedWith('Insufficient Balance!');
+    });
+  });
+
+  describe.only("Borrow functions", () => {
+    beforeEach(async () => {
+      await tokenA['mint(uint256)'](parseEther('10'));
+      await tokenA.approve(pool.target, parseEther('3'));
+      console.log("!!!!!!!!!!!!!!");
+      
+      await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
+      console.log("!!!!!!!!!!!!!!");
+      await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
+
+      console.log(await pool.getUserAccountData(deployer.address, 0));
+      
+    });
+
+    it("Should borrow from the pool", async () => {
+      // const balanceBefore = await tokenB.balanceOf(deployer.address);
+      // console.log("# ~ file: pool.spec.ts:63 ~ it ~ balanceBefore:", balanceBefore);
+      
+      // // await pool['borrow(address,uint256,uint256)'](tokenB.target, parseEther('1'), 0);
+      
+      // const balanceAfter = await tokenB.balanceOf(deployer.address);
+      // console.log("# ~ file: pool.spec.ts:68 ~ it ~ balanceAfter:", balanceAfter);
     });
   });
 });

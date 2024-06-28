@@ -23,6 +23,11 @@ const config: HardhatUserConfig = {
   docgen: {
     pages: 'files',
   },
+  networks: {
+    hardhat:{
+      allowUnlimitedContractSize: true
+    }
+  },
   typechain: {
     outDir: 'types',
   },

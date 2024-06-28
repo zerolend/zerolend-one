@@ -25,7 +25,7 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
-
+import "hardhat/console.sol";
 /**
  * @title SupplyLogic library
  * @notice Implements the base logic for supply/withdraw
@@ -62,6 +62,7 @@ library SupplyLogic {
     DataTypes.ExecuteSupplyParams memory params
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
+    console.log(params.asset);
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
     reserve.updateState(reserveCache);
