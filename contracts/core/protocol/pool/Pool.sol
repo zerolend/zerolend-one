@@ -48,7 +48,7 @@ contract Pool is PoolSetters {
       _reservesCount++;
     }
 
-    __ReentrancyGuard_init();
+    __PoolRentrancyGuard_init();
   }
 
   /// @inheritdoc IPool

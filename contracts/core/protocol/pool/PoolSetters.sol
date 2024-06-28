@@ -26,9 +26,9 @@ import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
 import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
-import {ReentrancyGuardUpgradeable} from '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
+import {PoolRentrancyGuard} from './PoolRentrancyGuard.sol';
 
-abstract contract PoolSetters is ReentrancyGuardUpgradeable, PoolGetters {
+abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using PercentageMath for uint256;
   using TokenConfiguration for address;
@@ -38,7 +38,7 @@ abstract contract PoolSetters is ReentrancyGuardUpgradeable, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant {
+  ) internal nonReentrant(RentrancyKind.LENDING) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0))
       _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -65,7 +65,7 @@ abstract contract PoolSetters is ReentrancyGuardUpgradeable, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant returns (uint256 withdrawalAmount) {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 withdrawalAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
     require(amount <= _balances[asset][pos].scaledSupplyBalance, 'Insufficient Balance!');
 
@@ -99,7 +99,7 @@ abstract contract PoolSetters is ReentrancyGuardUpgradeable, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant {
+  ) internal nonReentrant(RentrancyKind.LENDING) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0))
       _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -129,7 +129,7 @@ abstract contract PoolSetters is ReentrancyGuardUpgradeable, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant returns (uint256 paybackAmount) {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 paybackAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0))
       _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -157,7 +157,7 @@ abstract contract PoolSetters is ReentrancyGuardUpgradeable, PoolGetters {
     bytes32 pos,
     uint256 debtAmt,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant {
+  ) internal nonReentrant(RentrancyKind.LIQUIDATION) {
     if (address(_hook) != address(0))
       _hook.beforeLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
 
@@ -186,7 +186,7 @@ abstract contract PoolSetters is ReentrancyGuardUpgradeable, PoolGetters {
     address asset,
     uint256 amount,
     bytes calldata params
-  ) public virtual nonReentrant {
+  ) public virtual nonReentrant(RentrancyKind.FLASHLOAN) {
     DataTypes.FlashloanSimpleParams memory flashParams = DataTypes.FlashloanSimpleParams({
       receiverAddress: receiverAddress,
       asset: asset,
