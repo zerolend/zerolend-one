@@ -118,7 +118,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
         position: pos,
         amount: amount,
         data: data,
-        reservesCount: 0,
+        reservesCount: _reservesCount,
         pool: address(this)
       })
     );
