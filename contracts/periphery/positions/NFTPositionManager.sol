@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {ERC721EnumerableUpgradeable, ERC721Upgradeable, IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {INFTPositionManager} from './INFTPositionManager.sol';
 import {IPool, IPoolFactory} from './../../core/interfaces/IPoolFactory.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
@@ -36,7 +36,7 @@ contract NFTPositionManager is
   /**
    * @dev The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
    */
-  uint256 private _nextId = 1;
+  uint256 private _nextId;
 
   /**
    * @notice Mapping from token ID to the Position struct representing the details of the liquidity position.
@@ -65,9 +65,7 @@ contract NFTPositionManager is
     _;
   }
 
-  /**
-   * @dev Constructor to disable initializers.
-   */
+  /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
     _disableInitializers();
   }
@@ -79,6 +77,7 @@ contract NFTPositionManager is
     factory = IPoolFactory(_factory);
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
+    _nextId = 1;
   }
 
   /**
@@ -87,7 +86,6 @@ contract NFTPositionManager is
    * @return tokenId The ID of the newly minted token.
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
    * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
-   * @custom:event NFTMinted is emitted for each new asset.
    */
   function mint(MintParams calldata params) external isPool(params.pool) returns (uint256 tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
@@ -95,6 +93,9 @@ contract NFTPositionManager is
 
     tokenId = _nextId;
     _nextId++;
+
+    positions[tokenId].pool = params.pool;
+    positions[tokenId].operator = address(0);
 
     _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, tokenId));
     _mint(msg.sender, tokenId);
@@ -223,6 +224,21 @@ contract NFTPositionManager is
     emit Repay(params.asset, params.amount, params.tokenId);
   }
 
+  /// @inheritdoc IERC721Upgradeable
+  function getApproved(
+    uint256 tokenId
+  ) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (address) {
+    require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
+
+    return positions[tokenId].operator;
+  }
+
+  /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
+  function _approve(address to, uint256 tokenId) internal override(ERC721Upgradeable) {
+    positions[tokenId].operator = to;
+    emit Approval(ownerOf(tokenId), to, tokenId);
+  }
+
   /**
    * @notice Handles the liquidity operations including transferring tokens, approving the pool, and updating balances.
    * @param params The liquidity parameters including asset, pool, user, amount, and tokenId.
@@ -233,6 +249,7 @@ contract NFTPositionManager is
     IERC20Upgradeable(params.asset).forceApprove(params.pool, params.amount);
 
     IPool pool = IPool(params.pool);
+
     pool.supply(params.asset, params.amount, params.tokenId);
     emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
   }
