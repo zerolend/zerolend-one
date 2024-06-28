@@ -132,6 +132,11 @@ library BorrowLogic {
     DataTypes.PositionBalance storage b = balances[params.asset][params.position];
 
     uint256 paybackAmount = b.scaledDebtBalance;
+
+    // Allows a user to max repay without leaving dust from interest.
+    if (params.amount == type(uint256).max)
+      params.amount = b.getDebt(reserveCache.nextVariableBorrowIndex);
+
     ValidationLogic.validateRepay(params.amount, paybackAmount);
 
     if (params.amount < paybackAmount) paybackAmount = params.amount;
@@ -142,8 +147,8 @@ library BorrowLogic {
       IPool(params.pool).getReserveFactor(),
       paybackAmount,
       0,
-      '',
-      ''
+      params.position,
+      params.data.interestRateData
     );
 
     b.burnDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextVariableBorrowIndex);

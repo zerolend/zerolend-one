@@ -1,4 +1,4 @@
-import { parseEther } from 'ethers';
+import { MaxUint256, parseEther } from 'ethers';
 import { MintableERC20 } from '../../types';
 import { Pool } from '../../types/contracts/core/protocol/pool';
 import { deployPool } from './fixtures/pool';
@@ -16,7 +16,7 @@ describe('Pool', () => {
     ({ tokenA, tokenB, pool, owner: deployer } = fixture);
   });
 
-  describe('Supply functions', () => {
+  describe('Supply / Withdraw functions', () => {
     beforeEach(async () => {
       await tokenA['mint(uint256)'](parseEther('10'));
       await tokenA.approve(pool.target, parseEther('3'));
@@ -50,7 +50,7 @@ describe('Pool', () => {
     });
   });
 
-  describe.only('Borrow functions', () => {
+  describe('Borrow / Repay functions', () => {
     beforeEach(async () => {
       await tokenA['mint(uint256)'](parseEther('10'));
       await tokenB['mint(uint256)'](parseEther('10'));
@@ -63,7 +63,17 @@ describe('Pool', () => {
     });
 
     it('Try to borrow from a pool', async () => {
+      expect(await tokenB.balanceOf(deployer.address)).eq(parseEther('5'));
       await pool['borrow(address,uint256,uint256)'](tokenB.target, parseEther('1'), 0);
+      expect(await tokenB.balanceOf(deployer.address)).eq(parseEther('6'));
+    });
+
+    it('Try to repay whatever was borrowed', async () => {
+      expect(await tokenB.balanceOf(deployer.address)).eq(parseEther('5'));
+      await pool['borrow(address,uint256,uint256)'](tokenB.target, parseEther('1'), 0);
+      expect(await tokenB.balanceOf(deployer.address)).eq(parseEther('6'));
+      await pool['repay(address,uint256,uint256)'](tokenB.target, MaxUint256.toString(), 0);
+      expect(await tokenB.balanceOf(deployer.address)).closeTo(parseEther('5'), parseEther('0.01'));
     });
   });
 });
