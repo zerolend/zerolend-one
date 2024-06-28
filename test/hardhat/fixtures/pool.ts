@@ -5,7 +5,16 @@ import { ZeroAddress } from 'ethers';
 
 export async function deployPool() {
   const fixture = await deployCore();
-  const { factory, tokenA, tokenB, tokenC, irStrategy, oracleA, oracleB, oracleC } = fixture;
+  const {
+    poolFactory: factory,
+    tokenA,
+    tokenB,
+    tokenC,
+    irStrategy,
+    oracleA,
+    oracleB,
+    oracleC,
+  } = fixture;
 
   const input: IPool.InitParamsStruct = {
     hook: ZeroAddress,

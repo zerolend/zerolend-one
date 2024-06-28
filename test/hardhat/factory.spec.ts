@@ -5,11 +5,11 @@ import {
   MintableERC20,
   MockAggregator,
 } from '../../types';
-import { Factory } from '../../types/contracts/core/protocol/factory/Factory';
+import { PoolFactory } from '../../types/contracts/core/protocol/pool/PoolFactory';
 import { deployCore } from './fixtures/core';
 
 describe('Factory', () => {
-  let factory: Factory;
+  let poolFactory: PoolFactory;
 
   let tokenA: MintableERC20;
   let tokenB: MintableERC20;
@@ -23,7 +23,7 @@ describe('Factory', () => {
 
   before(async () => {
     const fixture = await deployCore();
-    ({ factory, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } = fixture);
+    ({ poolFactory, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } = fixture);
   });
 
   it('Should create a new pool', async () => {
@@ -35,7 +35,7 @@ describe('Factory', () => {
       configurations: [{ data: 0 }, { data: 0 }, { data: 0 }],
     };
 
-    const tx = await factory.createPool(input);
+    const tx = await poolFactory.createPool(input);
 
     // todo check logs
     // const receipt = await tx.wait();

@@ -9,7 +9,7 @@ export async function deployCore() {
   const PoolLogic = await ethers.getContractFactory('PoolLogic');
   const SupplyLogic = await ethers.getContractFactory('SupplyLogic');
 
-  const Factory = await ethers.getContractFactory('Factory');
+  const PoolFactory = await ethers.getContractFactory('PoolFactory');
   const PoolConfigurator = await ethers.getContractFactory('PoolConfigurator');
 
   const MintableERC20 = await ethers.getContractFactory('MintableERC20');
@@ -24,7 +24,7 @@ export async function deployCore() {
   const poolLogic = await PoolLogic.deploy();
   const supplyLogic = await SupplyLogic.deploy();
 
-  const PoolFactory = await ethers.getContractFactory('Pool', {
+  const Pool = await ethers.getContractFactory('Pool', {
     libraries: {
       BorrowLogic: borrowLogic.target,
       FlashLoanLogic: flashLoanLogic.target,
@@ -35,11 +35,11 @@ export async function deployCore() {
   });
 
   // deploy pool
-  const poolImpl = await PoolFactory.deploy();
-  const factory = await Factory.deploy(poolImpl.target);
-  const configurator = await PoolConfigurator.deploy(factory.target, governance.address);
+  const poolImpl = await Pool.deploy();
+  const poolFactory = await PoolFactory.deploy(poolImpl.target);
+  const configurator = await PoolConfigurator.deploy(poolFactory.target, governance.address);
 
-  await factory.setConfigurator(configurator.target);
+  await poolFactory.setConfigurator(configurator.target);
 
   // create dummy tokens
   const tokenA = await MintableERC20.deploy('TOKEN A', 'TOKENA');
@@ -61,7 +61,7 @@ export async function deployCore() {
     governance,
     irStrategy,
     poolImpl,
-    factory,
+    poolFactory,
     tokenA,
     tokenB,
     tokenC,
