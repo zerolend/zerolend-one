@@ -8,11 +8,12 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 describe('Pool', () => {
   let pool: Pool;
   let tokenA: MintableERC20;
+  let tokenB: MintableERC20;
   let deployer: SignerWithAddress;
 
   beforeEach(async () => {
     const fixture = await deployPool();
-    ({ tokenA, pool, owner: deployer } = fixture);
+    ({ tokenA, tokenB, pool, owner: deployer } = fixture);
   });
 
   describe('Supply functions', () => {
@@ -46,6 +47,23 @@ describe('Pool', () => {
       await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
       const t = pool['withdraw(address,uint256,uint256)'](tokenA.target, parseEther('1'), 1);
       await expect(t).to.revertedWith('Insufficient Balance!');
+    });
+  });
+
+  describe.only('Borrow functions', () => {
+    beforeEach(async () => {
+      await tokenA['mint(uint256)'](parseEther('10'));
+      await tokenB['mint(uint256)'](parseEther('10'));
+
+      await tokenA.approve(pool.target, parseEther('10'));
+      await tokenB.approve(pool.target, parseEther('10'));
+
+      await pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('5'), 0);
+      await pool['supply(address,uint256,uint256)'](tokenB.target, parseEther('5'), 0);
+    });
+
+    it('Try to borrow from a pool', async () => {
+      await pool['borrow(address,uint256,uint256)'](tokenB.target, parseEther('1'), 0);
     });
   });
 });

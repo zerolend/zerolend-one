@@ -26,7 +26,7 @@ contract Pool is PoolSetters {
    * @notice Initializes the Pool.
    * @dev This function is invoked by the factory contract when the Pool is created
    */
-  function initialize(IPool.InitParams memory params) public virtual reinitializer(1) {
+  function initialize(DataTypes.InitPoolParams memory params) public virtual reinitializer(1) {
     _factory = IPoolFactory(msg.sender);
     _hook = IHook(params.hook);
 

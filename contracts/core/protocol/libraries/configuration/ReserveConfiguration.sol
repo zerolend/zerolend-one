@@ -67,7 +67,6 @@ library ReserveConfiguration {
    */
   function setLtv(DataTypes.ReserveConfigurationMap memory self, uint256 ltv) internal pure {
     require(ltv <= MAX_VALID_LTV, Errors.INVALID_LTV);
-
     self.data = (self.data & LTV_MASK) | ltv;
   }
 

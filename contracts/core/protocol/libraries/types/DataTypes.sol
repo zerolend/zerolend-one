@@ -202,11 +202,30 @@ library DataTypes {
     address reserve;
   }
 
+  struct InitReserveConfig {
+    uint256 ltv;
+    uint256 liquidationThreshold;
+    uint256 liquidationBonus;
+    uint256 decimals;
+    bool frozen;
+    bool borrowable;
+    uint256 borrowCap;
+    uint256 supplyCap;
+  }
+
   struct InitReserveParams {
     address asset;
     address oracle;
     address interestRateStrategyAddress;
     uint16 reservesCount;
-    ReserveConfigurationMap configuration;
+    InitReserveConfig configuration;
+  }
+
+  struct InitPoolParams {
+    address hook;
+    address[] assets;
+    address[] rateStrategyAddresses;
+    address[] sources;
+    DataTypes.InitReserveConfig[] configurations;
   }
 }

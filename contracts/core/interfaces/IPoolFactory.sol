@@ -15,6 +15,7 @@ pragma solidity 0.8.19;
 
 import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 import {IPool} from './IPool.sol';
+import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 import {IPoolConfigurator} from './IPoolConfigurator.sol';
 
 interface IPoolFactory is IBeacon {
@@ -32,7 +33,7 @@ interface IPoolFactory is IBeacon {
 
   function configurator() external view returns (IPoolConfigurator);
 
-  function createPool(IPool.InitParams memory params) external returns (IPool pool);
+  function createPool(DataTypes.InitPoolParams memory params) external returns (IPool pool);
 
   function setConfigurator(address impl) external;
 

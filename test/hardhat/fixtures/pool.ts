@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
-import { IPool } from '../../../types/contracts/core/interfaces';
 import { deployCore } from './core';
 import { ZeroAddress } from 'ethers';
+import { DataTypes } from '../../../types/contracts/core/protocol/pool/Pool';
 
 export async function deployPool() {
   const fixture = await deployCore();
@@ -16,12 +16,23 @@ export async function deployPool() {
     oracleC,
   } = fixture;
 
-  const input: IPool.InitParamsStruct = {
+  const basicConfig: DataTypes.InitReserveConfigStruct = {
+    ltv: 7500,
+    liquidationThreshold: 8000,
+    liquidationBonus: 10500,
+    decimals: 18,
+    frozen: false,
+    borrowable: true,
+    borrowCap: 0,
+    supplyCap: 0,
+  };
+
+  const input: DataTypes.InitPoolParamsStruct = {
     hook: ZeroAddress,
     assets: [tokenA.target, tokenB.target, tokenC.target],
     rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
     sources: [oracleA.target, oracleB.target, oracleC.target],
-    configurations: [{ data: 0 }, { data: 0 }, { data: 0 }],
+    configurations: [basicConfig, basicConfig, basicConfig],
   };
 
   // create a pool

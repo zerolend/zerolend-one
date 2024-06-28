@@ -65,12 +65,22 @@ library PoolLogic {
     require(Address.isContract(params.interestRateStrategyAddress), Errors.NOT_CONTRACT);
     require(Address.isContract(params.oracle), Errors.NOT_CONTRACT);
 
+    DataTypes.ReserveConfigurationMap memory config;
+    config.setLtv(params.configuration.ltv);
+    config.setLiquidationThreshold(params.configuration.liquidationThreshold);
+    config.setLiquidationBonus(params.configuration.liquidationBonus);
+    config.setDecimals(params.configuration.decimals);
+    config.setFrozen(params.configuration.frozen);
+    config.setBorrowingEnabled(params.configuration.borrowable);
+    config.setBorrowCap(params.configuration.borrowCap);
+    config.setSupplyCap(params.configuration.supplyCap);
+
     setReserveConfiguration(
       reservesData,
       params.asset,
       params.interestRateStrategyAddress,
       params.oracle,
-      params.configuration
+      config
     );
 
     reservesData[params.asset].init(params.interestRateStrategyAddress);

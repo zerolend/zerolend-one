@@ -175,15 +175,7 @@ interface IPool {
     address interestRateStrategyAddress
   );
 
-  struct InitParams {
-    address hook;
-    address[] assets;
-    address[] rateStrategyAddresses;
-    address[] sources;
-    DataTypes.ReserveConfigurationMap[] configurations;
-  }
-
-  function initialize(InitParams memory params) external;
+  function initialize(DataTypes.InitPoolParams memory params) external;
 
   /**
    * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
