@@ -24,7 +24,7 @@ describe('NFT Position Manager', () => {
         kind: 'transparent',
         unsafeAllow: ['delegatecall'],
       }
-    )) as NFTPositionManager;
+    )) as any as NFTPositionManager;
     await manager.waitForDeployment();
   });
 
@@ -38,7 +38,7 @@ describe('NFT Position Manager', () => {
   });
 
   describe('Mint', () => {
-    it('should revert if the pool are not deployed through factory', async () => {
+    it('Should revert if the pool are not deployed through factory', async () => {
       const mintParams = {
         asset: await tokenA.getAddress(),
         pool: ZeroAddress,

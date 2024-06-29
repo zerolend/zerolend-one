@@ -4,7 +4,7 @@ import { deployCore } from './fixtures/core';
 import { PoolFactory } from '../../types/contracts/core/protocol/pool/PoolFactory';
 import { ZeroAddress } from 'ethers';
 
-describe('Factory', () => {
+describe('factory', () => {
   let poolFactory: PoolFactory;
 
   let tokenA: MintableERC20;
@@ -22,7 +22,7 @@ describe('Factory', () => {
     ({ poolFactory, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } = fixture);
   });
 
-  it('Should create a new pool', async () => {
+  it('should create a new pool', async () => {
     const basicConfig: DataTypes.InitReserveConfigStruct = {
       ltv: 7500,
       liquidationThreshold: 8000,
