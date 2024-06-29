@@ -36,7 +36,7 @@ jobs:
         run: yarn compile:forge && yarn coverage:forge
         #  && genhtml ./lcov.info --output-dir coverage/foundry --branch-coverage  --ignore-errors inconsistent
       - name: Report code coverage
-        run: genhtml lcov.info --output-dir coverage/foundry --rc lcov_branch_coverage=1
+        run: ls && genhtml lcov.info --output-dir coverage/foundry --rc lcov_branch_coverage=1
         shell: bash
 
       - name: Run hardhat coverage
