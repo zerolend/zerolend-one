@@ -1,4 +1,4 @@
-name: Foundary
+name: Foundry
 
 on:
   push:
