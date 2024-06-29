@@ -5,6 +5,7 @@ import '@nomicfoundation/hardhat-toolbox-viem';
 import '@openzeppelin/hardhat-upgrades';
 import '@typechain/hardhat';
 import 'hardhat-abi-exporter';
+import 'hardhat-contract-sizer';
 import 'hardhat-dependency-compiler';
 import 'hardhat-deploy';
 import 'solidity-coverage';
@@ -36,8 +37,14 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true,
       live: false,
+      loggingEnabled: false,
+      allowUnlimitedContractSize: true
+    },
+    sepolia: {
+      url: `https://1rpc.io/sepolia`,
+      accounts: [process.env.WALLET_PRIVATE_KEY || ''],
+      saveDeployments: true,
     },
   },
   abiExporter: {
@@ -51,6 +58,15 @@ const config: HardhatUserConfig = {
   },
   typechain: {
     outDir: 'types',
+  },
+  namedAccounts: {
+    deployer: 0,
+  },
+  etherscan: {
+    apiKey: {
+      sepolia: process.env.ETHERSCAN_KEY || '',
+      mainnet: process.env.ETHERSCAN_KEY || '',
+    },
   },
 };
 
