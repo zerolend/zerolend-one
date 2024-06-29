@@ -9,7 +9,7 @@
   gas_reports = ["*"]
   optimizer = true
   optimizer_runs = 10_000
-  out = "out"
+  out = "forge-build"
   script = "script"
   solc = "0.8.19"
   src = "src"
