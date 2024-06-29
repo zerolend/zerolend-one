@@ -154,6 +154,8 @@ interface IPool {
    * - E.g. User supplies 100 USDC and gets in return 100 aUSDC
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
+   * @param index The index of the user's position
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
 
@@ -169,6 +171,7 @@ interface IPool {
    * @param asset The address of the underlying asset to withdraw
    * @param amount The underlying amount to be withdrawn
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
+   * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
    * @return The final amount withdrawn
    */
@@ -188,6 +191,7 @@ interface IPool {
    *   and 100 stable/variable debt tokens, depending on the `interestRateMode`
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
+   * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   function borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
@@ -204,6 +208,7 @@ interface IPool {
    * @param asset The address of the borrowed underlying asset previously borrowed
    * @param amount The amount to repay
    * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
+   * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
    * @return The final amount repaid
    */
@@ -308,6 +313,7 @@ interface IPool {
   /**
    * @notice Returns the user account data across all the reserves
    * @param user The address of the user
+   * @param index The index of the user's position
    * @return totalCollateralBase The total collateral of the user in the base currency used by the price feed
    * @return totalDebtBase The total debt of the user in the base currency used by the price feed
    * @return availableBorrowsBase The borrowing power left of the user in the base currency used by the price feed
@@ -327,6 +333,8 @@ interface IPool {
    * @notice Sets the configuration bitmap of the reserve as a whole
    * @dev Only callable by the PoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
+   * @param rateStrategyAddress The address of the rate strategy for the reserve
+   * @param source The address of the oracle for the reserve
    * @param configuration The new configuration bitmap
    */
   function setReserveConfiguration(address asset, address rateStrategyAddress, address source, DataTypes.ReserveConfigurationMap calldata configuration) external;
@@ -341,6 +349,7 @@ interface IPool {
   /**
    * @notice Returns the configuration of the user across all the reserves
    * @param user The user address
+   * @param index The index of the user's position
    * @return The configuration of the user
    */
   function getUserConfiguration(address user, uint256 index) external view returns (DataTypes.UserConfigurationMap memory);
@@ -405,4 +414,24 @@ interface IPool {
    * @return The hook for the pool, if set.
    */
   function getHook() external view returns (IHook);
+
+  /**
+   * @notice Gets the raw balance object for the asset for a given position id
+   */
+  function getBalanceRawByPositionId(address asset, bytes32 positionId) external view returns (DataTypes.PositionBalance memory);
+
+  /**
+   * @notice Gets the raw balance object for the asset for a given user and the position index.
+   * @param asset The address of the asset
+   * @param who The address of the user
+   * @param index The index of the user's position
+   */
+  function getBalanceRaw(address asset, address who, uint256 index) external view returns (DataTypes.PositionBalance memory);
+
+  /**
+   * @notice Gets the raw reserve supply object for a given asset.
+   * @param asset The address of the asset
+   * @return data The reserve supply information of the given asset
+   */
+  function getTotalSupplyRaw(address asset) external view returns (DataTypes.ReserveSupplies memory data);
 }

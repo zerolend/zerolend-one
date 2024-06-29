@@ -48,15 +48,18 @@ abstract contract PoolGetters is PoolStorage, IPool {
     return _balances[asset][positionId].getSupply(_reserves[asset].liquidityIndex);
   }
 
-  function getBalanceRaw(address asset, bytes32 positionId) external view returns (DataTypes.PositionBalance memory) {
+  /// @inheritdoc IPool
+  function getBalanceRawByPositionId(address asset, bytes32 positionId) external view returns (DataTypes.PositionBalance memory) {
     return _balances[asset][positionId];
   }
 
+  /// @inheritdoc IPool
   function getBalanceRaw(address asset, address who, uint256 index) external view returns (DataTypes.PositionBalance memory) {
     bytes32 positionId = who.getPositionId(index);
     return _balances[asset][positionId];
   }
 
+  /// @inheritdoc IPool
   function getTotalSupplyRaw(address asset) external view returns (DataTypes.ReserveSupplies memory) {
     return _totalSupplies[asset];
   }
