@@ -25,9 +25,9 @@ import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
  * the beacon's ability to upgrade the contract.
  */
 contract RevokableBeaconProxy is Proxy {
-  bytes32 internal constant _IMPLEMENTATION_SLOT = keccak256('eip1967.proxy.impl');
-  bytes32 internal constant _BEACON_SLOT = keccak256('eip1967.proxy.beacon');
-  bytes32 internal constant _ADMIN_SLOT = keccak256('eip1967.proxy.admin');
+  bytes32 internal immutable _IMPLEMENTATION_SLOT = keccak256('eip1967.proxy.impl');
+  bytes32 internal immutable _BEACON_SLOT = keccak256('eip1967.proxy.beacon');
+  bytes32 internal immutable _ADMIN_SLOT = keccak256('eip1967.proxy.admin');
 
   constructor(address _beacon, address _admin) {
     StorageSlot.getAddressSlot(_BEACON_SLOT).value = _beacon;
