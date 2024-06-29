@@ -14,14 +14,14 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import {ReserveConfiguration} from '../core/protocol/pool/configuration/ReserveConfiguration.sol';
-import {UserConfiguration} from '../core/protocol/pool/configuration/UserConfiguration.sol';
-import {DataTypes} from '../core/protocol/pool/configuration/DataTypes.sol';
-import {WadRayMath} from '../core/protocol/pool/utils/WadRayMath.sol';
-import {IPool} from '../core/interfaces/IPool.sol';
-import {IPoolDataProvider} from '../core/interfaces/IPoolDataProvider.sol';
+import {ReserveConfiguration} from '../../core/protocol/pool/configuration/ReserveConfiguration.sol';
+import {UserConfiguration} from '../../core/protocol/pool/configuration/UserConfiguration.sol';
+import {DataTypes} from '../../core/protocol/pool/configuration/DataTypes.sol';
+import {WadRayMath} from '../../core/protocol/pool/utils/WadRayMath.sol';
+import {IPool} from '../../core/interfaces/IPool.sol';
+import {IPoolDataProvider} from '../../core/interfaces/IPoolDataProvider.sol';
 
-abstract contract ProtocolDataProvider is IPoolDataProvider {
+abstract contract PoolDataProvider is IPoolDataProvider {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using WadRayMath for uint256;
