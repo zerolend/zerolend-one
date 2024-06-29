@@ -36,12 +36,7 @@ library PercentageMath {
   function percentMul(uint256 value, uint256 percentage) internal pure returns (uint256 result) {
     // to avoid overflow, value <= (type(uint256).max - HALF_PERCENTAGE_FACTOR) / percentage
     assembly {
-      if iszero(
-        or(
-          iszero(percentage),
-          iszero(gt(value, div(sub(not(0), HALF_PERCENTAGE_FACTOR), percentage)))
-        )
-      ) {
+      if iszero(or(iszero(percentage), iszero(gt(value, div(sub(not(0), HALF_PERCENTAGE_FACTOR), percentage))))) {
         revert(0, 0)
       }
 
@@ -59,10 +54,7 @@ library PercentageMath {
   function percentDiv(uint256 value, uint256 percentage) internal pure returns (uint256 result) {
     // to avoid overflow, value <= (type(uint256).max - halfPercentage) / PERCENTAGE_FACTOR
     assembly {
-      if or(
-        iszero(percentage),
-        iszero(iszero(gt(value, div(sub(not(0), div(percentage, 2)), PERCENTAGE_FACTOR))))
-      ) {
+      if or(iszero(percentage), iszero(iszero(gt(value, div(sub(not(0), div(percentage, 2)), PERCENTAGE_FACTOR))))) {
         revert(0, 0)
       }
 

@@ -18,12 +18,6 @@ import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 import {Proxy} from '@openzeppelin/contracts/proxy/Proxy.sol';
 import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
 
-/**
- * @title A beacon proxy with the ability to have it's upgradability revoked
- * @author ZeroLend
- * @notice This is a beacon proxy contract that has the ability for the proxy admin to revoke
- * the beacon's ability to upgrade the contract.
- */
 interface IRevokableBeaconProxy {
   // todo add events for admin and implementation changes
 
