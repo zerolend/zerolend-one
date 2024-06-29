@@ -1,9 +1,9 @@
-import { DataTypes } from '../../types/IPool';
-import { DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator } from '../../types';
-import { deployCore } from './fixtures/core';
-import { PoolFactory } from '../../types/contracts/core/protocol/pool/PoolFactory';
+import { DataTypes } from '../../../types/IPool';
+import { DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator } from '../../../types';
+import { deployCore } from '../fixtures/core';
+import { PoolFactory } from '../../../types/contracts/core/protocol/pool/PoolFactory';
 import { ZeroAddress } from 'ethers';
-import { basicConfig } from './fixtures/pool';
+import { basicConfig } from '../fixtures/pool';
 import { expect } from 'chai';
 
 describe('Pool Factory', () => {

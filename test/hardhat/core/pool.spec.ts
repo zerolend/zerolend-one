@@ -1,7 +1,7 @@
 import { MaxUint256, parseEther as eth } from 'ethers';
-import { MintableERC20 } from '../../types';
-import { Pool } from '../../types/contracts/core/protocol/pool';
-import { deployPool } from './fixtures/pool';
+import { MintableERC20 } from '../../../types';
+import { Pool } from '../../../types/contracts/core/protocol/pool';
+import { deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
