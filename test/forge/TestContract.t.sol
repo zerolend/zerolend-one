@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import 'forge-std/src/Test.sol';
+import '../../lib/forge-std/src/Test.sol';
 
 contract TestContract is Test {
   using stdStorage for StdStorage;
