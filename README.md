@@ -19,7 +19,7 @@ While designing ZeroLend One, we keep the following philosophies in mind.
 ## Documentation
 
 - [docs-one.zerolend.xyz](https://docs-one.zerolend.xyz/) - Contains a high level overview of the entire protocol including architecture documentation.
-- [docs folders](./docs) - Contains the technical documentation for each contract and what they do.
+- [wiki pages](https://github.com/zerolend/zerolend-one/wiki) - The wiki pages contains the technical documentation for each contract and what they do.
 - [test folders](./test) - The unit tests for the protocol are also documented and can be browsed through for insights about how each test works.
 
 ## Tests
@@ -38,7 +38,7 @@ yarn compile
 yarn test
 ```
 
-Furthermore, the unit tests coverage can be viewed on Github pages
+Unit test coverages for hardhat and foundry; along with gas reports can be found here:
 
 - [Hardhat coverage](https://zerolend.github.io/zerolend-one/hardhat/) - Code coverage of the hardhat unit tests
 - [Foundry coverage](https://zerolend.github.io/zerolend-one/foundry/) - Code coverage of the foundry unit tests
