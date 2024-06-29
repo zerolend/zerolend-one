@@ -3,29 +3,19 @@ import { deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
 import { Signer, ZeroAddress } from 'ethers';
 import { MintableERC20, NFTPositionManager, Pool } from '../../../types';
+import { deployNftPositionManager } from '../fixtures/periphery';
 
 describe('NFT Position Manager', () => {
   let manager: NFTPositionManager;
   let poolFactory;
   let pool: Pool;
   let tokenA: MintableERC20;
-  let alice: Signer, bob: Signer;
+  let governance: Signer, alice: Signer, bob: Signer;
 
   beforeEach(async () => {
     [alice, bob] = await ethers.getSigners();
-    ({ poolFactory, pool, tokenA } = await deployPool());
-
-    const NFTPositionManagerFactory = await ethers.getContractFactory('NFTPositionManager');
-    manager = (await upgrades.deployProxy(
-      NFTPositionManagerFactory,
-      [await poolFactory.getAddress()],
-      {
-        initializer: 'initialize',
-        kind: 'transparent',
-        unsafeAllow: ['delegatecall'],
-      }
-    )) as any as NFTPositionManager;
-    await manager.waitForDeployment();
+    ({ poolFactory, pool, tokenA, governance } = await deployPool());
+    manager = await deployNftPositionManager(poolFactory, await governance.getAddress());
   });
 
   describe('ERC721-Enumerable', () => {
@@ -43,6 +33,7 @@ describe('NFT Position Manager', () => {
         asset: await tokenA.getAddress(),
         pool: ZeroAddress,
         amount: 10,
+        data: { interestRateData: '', hookData: '' },
       };
       await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(manager, 'NotPool');
     });
@@ -51,6 +42,7 @@ describe('NFT Position Manager', () => {
         asset: ZeroAddress,
         pool,
         amount: 0,
+        data: { interestRateData: '', hookData: '' },
       };
       await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(
         manager,
@@ -62,6 +54,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: 0,
+        data: { interestRateData: '', hookData: '' },
       };
       await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(
         manager,
@@ -80,6 +73,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: supplyAmount,
+        data: { interestRateData: '', hookData: '' },
       };
 
       // Approve the NFT Position Manager
@@ -101,6 +95,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: ethers.parseUnits('10', 'wei'),
+        data: { interestRateData: '', hookData: '' },
       };
 
       // Approve the NFT Position Manager
@@ -128,6 +123,7 @@ describe('NFT Position Manager', () => {
         asset: ZeroAddress,
         pool,
         amount: 0,
+        data: { interestRateData: '', hookData: '' },
       };
       await expect(manager.mint(liquidityParams)).to.be.revertedWithCustomError(
         manager,
@@ -139,6 +135,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: 0,
+        data: { interestRateData: '', hookData: '' },
       };
       await expect(manager.mint(liquidityParams)).to.be.revertedWithCustomError(
         manager,
@@ -154,6 +151,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: supplyAmount,
+        data: { interestRateData: '', hookData: '' },
       };
 
       await tokenA.connect(alice).approve(manager.target, supplyAmount);
@@ -164,6 +162,7 @@ describe('NFT Position Manager', () => {
         pool,
         amount: supplyAmount,
         tokenId: 1,
+        data: { interestRateData: '', hookData: '' },
       };
       await expect(
         manager.connect(bob).increaseLiquidity(liquidityParams)
@@ -179,6 +178,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: supplyAmount,
+        data: { interestRateData: '', hookData: '' },
       };
 
       // Approve the NFT Position Manager
@@ -203,6 +203,7 @@ describe('NFT Position Manager', () => {
         pool,
         amount: supplyAmount,
         tokenId: 1,
+        data: { interestRateData: '', hookData: '' },
       };
 
       await manager.connect(bob).increaseLiquidity(liquidityParams);

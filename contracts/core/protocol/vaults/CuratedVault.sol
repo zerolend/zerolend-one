@@ -34,13 +34,7 @@ import {UtilsLib} from './libraries/UtilsLib.sol';
 /// @author Morpho Labs
 /// @custom:contact security@morpho.org
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
-contract CuratedVault is
-  ERC4626Upgradeable,
-  ERC20PermitUpgradeable,
-  Ownable2StepUpgradeable,
-  MulticallUpgradeable,
-  ICuratedVaultStaticTyping
-{
+contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2StepUpgradeable, MulticallUpgradeable, ICuratedVaultStaticTyping {
   using MathUpgradeable for uint256;
   using UtilsLib for uint256;
   using SafeCast for uint256;
@@ -105,13 +99,7 @@ contract CuratedVault is
   /// @param _asset The address of the underlying asset.
   /// @param _name The name of the vault.
   /// @param _symbol The symbol of the vault.
-  function initialize(
-    address owner,
-    uint256 initialTimelock,
-    address _asset,
-    string memory _name,
-    string memory _symbol
-  ) external initializer {
+  function initialize(address owner, uint256 initialTimelock, address _asset, string memory _name, string memory _symbol) external initializer {
     __ERC20_init(_name, _symbol);
     __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
@@ -364,15 +352,13 @@ contract CuratedVault is
 
         // todo
 
-        uint256 withdrawnAssets = pool.withdraw(asset(), withdrawn, 0);
+        uint256 withdrawnAssets = pool.withdrawSimple(asset(), withdrawn, 0);
 
         // emit ReallocateWithdraw(_msgSender(), id, withdrawnAssets, withdrawnShares);
 
         totalWithdrawn += withdrawnAssets;
       } else {
-        uint256 suppliedAssets = allocation.assets == type(uint256).max
-          ? totalWithdrawn.zeroFloorSub(totalSupplied)
-          : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets = allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
@@ -495,13 +481,7 @@ contract CuratedVault is
   function maxRedeem(address owner) public view override returns (uint256) {
     (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) = _maxWithdraw(owner);
 
-    return
-      _convertToSharesWithTotals(
-        assets,
-        newTotalSupply,
-        newTotalAssets,
-        MathUpgradeable.Rounding.Down
-      );
+    return _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, MathUpgradeable.Rounding.Down);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -511,12 +491,7 @@ contract CuratedVault is
     // Update `lastTotalAssets` to avoid an inconsistent state in a re-entrant context.
     // It is updated again in `_deposit`.
     lastTotalAssets = newTotalAssets;
-    shares = _convertToSharesWithTotals(
-      assets,
-      totalSupply(),
-      newTotalAssets,
-      MathUpgradeable.Rounding.Down
-    );
+    shares = _convertToSharesWithTotals(assets, totalSupply(), newTotalAssets, MathUpgradeable.Rounding.Down);
     _deposit(_msgSender(), receiver, assets, shares);
   }
 
@@ -527,30 +502,16 @@ contract CuratedVault is
     // Update `lastTotalAssets` to avoid an inconsistent state in a re-entrant context.
     // It is updated again in `_deposit`.
     lastTotalAssets = newTotalAssets;
-    assets = _convertToAssetsWithTotals(
-      shares,
-      totalSupply(),
-      newTotalAssets,
-      MathUpgradeable.Rounding.Up
-    );
+    assets = _convertToAssetsWithTotals(shares, totalSupply(), newTotalAssets, MathUpgradeable.Rounding.Up);
     _deposit(_msgSender(), receiver, assets, shares);
   }
 
   /// @inheritdoc IERC4626Upgradeable
-  function withdraw(
-    uint256 assets,
-    address receiver,
-    address owner
-  ) public override returns (uint256 shares) {
+  function withdraw(uint256 assets, address receiver, address owner) public override returns (uint256 shares) {
     uint256 newTotalAssets = _accrueFee();
 
     // Do not call expensive `maxWithdraw` and optimistically withdraw assets.
-    shares = _convertToSharesWithTotals(
-      assets,
-      totalSupply(),
-      newTotalAssets,
-      MathUpgradeable.Rounding.Up
-    );
+    shares = _convertToSharesWithTotals(assets, totalSupply(), newTotalAssets, MathUpgradeable.Rounding.Up);
 
     // `newTotalAssets - assets` may be a little off from `totalAssets()`.
     _updateLastTotalAssets(newTotalAssets.zeroFloorSub(assets));
@@ -558,20 +519,11 @@ contract CuratedVault is
   }
 
   /// @inheritdoc IERC4626Upgradeable
-  function redeem(
-    uint256 shares,
-    address receiver,
-    address owner
-  ) public override returns (uint256 assets) {
+  function redeem(uint256 shares, address receiver, address owner) public override returns (uint256 assets) {
     uint256 newTotalAssets = _accrueFee();
 
     // Do not call expensive `maxRedeem` and optimistically redeem shares.
-    assets = _convertToAssetsWithTotals(
-      shares,
-      totalSupply(),
-      newTotalAssets,
-      MathUpgradeable.Rounding.Down
-    );
+    assets = _convertToAssetsWithTotals(shares, totalSupply(), newTotalAssets, MathUpgradeable.Rounding.Down);
 
     // `newTotalAssets - assets` may be a little off from `totalAssets()`.
     _updateLastTotalAssets(newTotalAssets.zeroFloorSub(assets));
@@ -581,7 +533,7 @@ contract CuratedVault is
   /// @inheritdoc IERC4626Upgradeable
   function totalAssets() public view override returns (uint256 assets) {
     for (uint256 i; i < withdrawQueue.length; ++i) {
-      assets += withdrawQueue[i].getBalance(asset(), positionId);
+      assets += withdrawQueue[i].getBalanceByPosition(asset(), positionId);
     }
   }
 
@@ -594,19 +546,12 @@ contract CuratedVault is
 
   /// @dev Returns the maximum amount of asset (`assets`) that the `owner` can withdraw from the vault, as well as the
   /// new vault's total supply (`newTotalSupply`) and total assets (`newTotalAssets`).
-  function _maxWithdraw(
-    address owner
-  ) internal view returns (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) {
+  function _maxWithdraw(address owner) internal view returns (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) {
     uint256 feeShares;
     (feeShares, newTotalAssets) = _accruedFeeShares();
     newTotalSupply = totalSupply() + feeShares;
 
-    assets = _convertToAssetsWithTotals(
-      balanceOf(owner),
-      newTotalSupply,
-      newTotalAssets,
-      MathUpgradeable.Rounding.Down
-    );
+    assets = _convertToAssetsWithTotals(balanceOf(owner), newTotalSupply, newTotalAssets, MathUpgradeable.Rounding.Down);
     assets -= _simulateWithdrawMorpho(assets);
   }
 
@@ -632,54 +577,33 @@ contract CuratedVault is
 
   /// @inheritdoc ERC4626Upgradeable
   /// @dev The accrual of performance fees is taken into account in the conversion.
-  function _convertToShares(
-    uint256 assets,
-    MathUpgradeable.Rounding rounding
-  ) internal view override returns (uint256) {
+  function _convertToShares(uint256 assets, MathUpgradeable.Rounding rounding) internal view override returns (uint256) {
     (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
     return _convertToSharesWithTotals(assets, totalSupply() + feeShares, newTotalAssets, rounding);
   }
 
   /// @inheritdoc ERC4626Upgradeable
   /// @dev The accrual of performance fees is taken into account in the conversion.
-  function _convertToAssets(
-    uint256 shares,
-    MathUpgradeable.Rounding rounding
-  ) internal view override returns (uint256) {
+  function _convertToAssets(uint256 shares, MathUpgradeable.Rounding rounding) internal view override returns (uint256) {
     (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
     return _convertToAssetsWithTotals(shares, totalSupply() + feeShares, newTotalAssets, rounding);
   }
 
   /// @dev Returns the amount of shares that the vault would exchange for the amount of `assets` provided.
   /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
-  function _convertToSharesWithTotals(
-    uint256 assets,
-    uint256 newTotalSupply,
-    uint256 newTotalAssets,
-    MathUpgradeable.Rounding rounding
-  ) internal view returns (uint256) {
+  function _convertToSharesWithTotals(uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets, MathUpgradeable.Rounding rounding) internal view returns (uint256) {
     return assets.mulDiv(newTotalSupply + 10 ** _decimalsOffset(), newTotalAssets + 1, rounding);
   }
 
   /// @dev Returns the amount of assets that the vault would exchange for the amount of `shares` provided.
   /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
-  function _convertToAssetsWithTotals(
-    uint256 shares,
-    uint256 newTotalSupply,
-    uint256 newTotalAssets,
-    MathUpgradeable.Rounding rounding
-  ) internal view returns (uint256) {
+  function _convertToAssetsWithTotals(uint256 shares, uint256 newTotalSupply, uint256 newTotalAssets, MathUpgradeable.Rounding rounding) internal view returns (uint256) {
     return shares.mulDiv(newTotalAssets + 1, newTotalSupply + 10 ** _decimalsOffset(), rounding);
   }
 
   /// @inheritdoc ERC4626Upgradeable
   /// @dev Used in mint or deposit to deposit the underlying asset to Morpho markets.
-  function _deposit(
-    address caller,
-    address receiver,
-    uint256 assets,
-    uint256 shares
-  ) internal override {
+  function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
     super._deposit(caller, receiver, assets, shares);
 
     _supplyPool(assets);
@@ -694,13 +618,7 @@ contract CuratedVault is
   /// 1. NotEnoughLiquidity when withdrawing more than available liquidity.
   /// 2. ERC20InsufficientAllowance when withdrawing more than `caller`'s allowance.
   /// 3. ERC20InsufficientBalance when withdrawing more than `owner`'s balance.
-  function _withdraw(
-    address caller,
-    address receiver,
-    address owner,
-    uint256 assets,
-    uint256 shares
-  ) internal override {
+  function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares) internal override {
     _withdrawPool(assets);
     super._withdraw(caller, receiver, owner, assets, shares);
   }
@@ -859,12 +777,7 @@ contract CuratedVault is
 
   /// @dev Returns the withdrawable amount of assets from the market defined by `marketParams`, given the market's
   /// total supply and borrow assets and the vault's assets supplied.
-  function _withdrawable(
-    IPool marketParams,
-    uint256 totalSupplyAssets,
-    uint256 totalBorrowAssets,
-    uint256 supplyAssets
-  ) internal view returns (uint256) {
+  function _withdrawable(IPool marketParams, uint256 totalSupplyAssets, uint256 totalBorrowAssets, uint256 supplyAssets) internal view returns (uint256) {
     // todo
     // // Inside a flashloan callback, liquidity on Morpho Blue may be limited to the singleton's balance.
     // uint256 availableLiquidity = UtilsLib.min(
@@ -904,12 +817,7 @@ contract CuratedVault is
       uint256 feeAssets = totalInterest.mulDiv(fee, 1e18);
       // The fee assets is subtracted from the total assets in this calculation to compensate for the fact
       // that total assets is already increased by the total interest (including the fee assets).
-      feeShares = _convertToSharesWithTotals(
-        feeAssets,
-        totalSupply(),
-        newTotalAssets - feeAssets,
-        MathUpgradeable.Rounding.Down
-      );
+      feeShares = _convertToSharesWithTotals(feeAssets, totalSupply(), newTotalAssets - feeAssets, MathUpgradeable.Rounding.Down);
     }
   }
 }

@@ -28,14 +28,12 @@ abstract contract PoolGetters is PoolStorage, IPool {
   using PositionBalanceConfiguration for DataTypes.PositionBalance;
 
   /// @inheritdoc IPool
-  function getReserveData(
-    address asset
-  ) external view virtual override returns (DataTypes.ReserveData memory) {
+  function getReserveData(address asset) external view virtual override returns (DataTypes.ReserveData memory) {
     return _reserves[asset];
   }
 
   /// @inheritdoc IPool
-  function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance) {
+  function getBalanceByPosition(address asset, bytes32 positionId) external view returns (uint256 balance) {
     return _balances[asset][positionId].getSupply(_reserves[asset].liquidityIndex);
   }
 
@@ -45,34 +43,21 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPool
-  function getBalance(
-    address asset,
-    address who,
-    uint256 index
-  ) external view returns (uint256 balance) {
+  function getBalance(address asset, address who, uint256 index) external view returns (uint256 balance) {
     bytes32 positionId = who.getPositionId(index);
     return _balances[asset][positionId].getSupply(_reserves[asset].liquidityIndex);
   }
 
-  function getBalanceRaw(
-    address asset,
-    bytes32 positionId
-  ) external view returns (DataTypes.PositionBalance memory) {
+  function getBalanceRaw(address asset, bytes32 positionId) external view returns (DataTypes.PositionBalance memory) {
     return _balances[asset][positionId];
   }
 
-  function getBalanceRaw(
-    address asset,
-    address who,
-    uint256 index
-  ) external view returns (DataTypes.PositionBalance memory) {
+  function getBalanceRaw(address asset, address who, uint256 index) external view returns (DataTypes.PositionBalance memory) {
     bytes32 positionId = who.getPositionId(index);
     return _balances[asset][positionId];
   }
 
-  function getTotalSupplyRaw(
-    address asset
-  ) external view returns (DataTypes.ReserveSupplies memory) {
+  function getTotalSupplyRaw(address asset) external view returns (DataTypes.ReserveSupplies memory) {
     return _totalSupplies[asset];
   }
 
@@ -88,51 +73,34 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPool
-  function getUserAccountData(
-    address user,
-    uint256 index
-  ) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
+  function getUserAccountData(address user, uint256 index) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
     bytes32 positionId = user.getPositionId(index);
     return
       PoolLogic.executeGetUserAccountData(
         _balances,
         _reserves,
         _reservesList,
-        DataTypes.CalculateUserAccountDataParams({
-          userConfig: _usersConfig[positionId],
-          reservesCount: _reservesCount,
-          position: positionId,
-          pool: address(this)
-        })
+        DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], reservesCount: _reservesCount, position: positionId, pool: address(this)})
       );
   }
 
   /// @inheritdoc IPool
-  function getConfiguration(
-    address asset
-  ) external view virtual override returns (DataTypes.ReserveConfigurationMap memory) {
+  function getConfiguration(address asset) external view virtual override returns (DataTypes.ReserveConfigurationMap memory) {
     return _reserves[asset].configuration;
   }
 
   /// @inheritdoc IPool
-  function getUserConfiguration(
-    address user,
-    uint256 index
-  ) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
+  function getUserConfiguration(address user, uint256 index) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
     return _usersConfig[user.getPositionId(index)];
   }
 
   /// @inheritdoc IPool
-  function getReserveNormalizedIncome(
-    address reserve
-  ) external view virtual override returns (uint256) {
+  function getReserveNormalizedIncome(address reserve) external view virtual override returns (uint256) {
     return _reserves[reserve].getNormalizedIncome();
   }
 
   /// @inheritdoc IPool
-  function getReserveNormalizedVariableDebt(
-    address reserve
-  ) external view virtual override returns (uint256) {
+  function getReserveNormalizedVariableDebt(address reserve) external view virtual override returns (uint256) {
     return _reserves[reserve].getNormalizedDebt();
   }
 

@@ -63,6 +63,9 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: 0,
   },
+  dependencyCompiler: {
+    paths: ['@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol'],
+  },
   etherscan: {
     apiKey: {
       sepolia: process.env.ETHERSCAN_KEY || '',

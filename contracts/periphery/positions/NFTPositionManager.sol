@@ -24,11 +24,7 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is
-  MulticallUpgradeable,
-  ERC721EnumerableUpgradeable,
-  INFTPositionManager
-{
+contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable, INFTPositionManager {
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
   IPoolFactory factory;
@@ -97,7 +93,7 @@ contract NFTPositionManager is
     positions[tokenId].pool = params.pool;
     positions[tokenId].operator = address(0);
 
-    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, tokenId));
+    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, tokenId, params.data));
     _mint(msg.sender, tokenId);
   }
 
@@ -107,13 +103,11 @@ contract NFTPositionManager is
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
    * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
    */
-  function increaseLiquidity(
-    LiquidityParams memory params
-  ) external isAuthorizedForToken(params.tokenId) {
+  function increaseLiquidity(LiquidityParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
 
-    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, params.tokenId));
+    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, params.tokenId, params.data));
   }
 
   /**
@@ -124,9 +118,7 @@ contract NFTPositionManager is
    * @custom:error BalanceMisMatch error thrown if difference of currentDebtBalance and previousDebtBalance is not equal to amount
    * @custom:event BorrowIncreased emitted whenever user borrows asset
    */
-  function borrow(
-    AssetOperationParams memory params
-  ) external isAuthorizedForToken(params.tokenId) {
+  function borrow(AssetOperationParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
 
@@ -134,7 +126,7 @@ contract NFTPositionManager is
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
     uint256 previousContractBalance = asset.balanceOf(address(this));
-    pool.borrow(params.asset, params.amount, params.tokenId);
+    pool.borrow(params.asset, params.amount, params.tokenId, params.data);
     uint256 currentContractBalance = asset.balanceOf(address(this));
 
     if (currentContractBalance - previousContractBalance != params.amount) {
@@ -154,9 +146,7 @@ contract NFTPositionManager is
    * @custom:event Withdrawal emitted whenever user withdraws asset
    */
 
-  function withdraw(
-    AssetOperationParams memory params
-  ) external isAuthorizedForToken(params.tokenId) {
+  function withdraw(AssetOperationParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
 
@@ -164,7 +154,7 @@ contract NFTPositionManager is
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
     uint256 previousContractBalance = asset.balanceOf(address(this));
-    pool.withdraw(params.asset, params.amount, params.tokenId);
+    pool.withdraw(params.asset, params.amount, params.tokenId, params.data);
     uint256 currentContractBalance = asset.balanceOf(address(this));
 
     if (currentContractBalance - previousContractBalance != params.amount) {
@@ -209,7 +199,7 @@ contract NFTPositionManager is
     bytes32 positionId = _getPositionId(params.tokenId);
 
     uint256 previousDebtBalance = pool.getDebt(params.asset, positionId);
-    uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId);
+    uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId, params.data);
     uint256 currentDebtBalance = pool.getDebt(params.asset, positionId);
 
     if (previousDebtBalance - currentDebtBalance != finalRepayAmout) {
@@ -225,9 +215,7 @@ contract NFTPositionManager is
   }
 
   /// @inheritdoc IERC721Upgradeable
-  function getApproved(
-    uint256 tokenId
-  ) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (address) {
+  function getApproved(uint256 tokenId) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (address) {
     require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
 
     return positions[tokenId].operator;
@@ -250,7 +238,7 @@ contract NFTPositionManager is
 
     IPool pool = IPool(params.pool);
 
-    pool.supply(params.asset, params.amount, params.tokenId);
+    pool.supply(params.asset, params.amount, params.tokenId, params.data);
     emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
   }
 
@@ -267,9 +255,7 @@ contract NFTPositionManager is
    * @param tokenId The ID of the position token.
    * @return assets An array of Asset structs representing the balances and debts of the position's assets.
    */
-  function getPosition(
-    uint256 tokenId
-  ) public view returns (Asset[] memory assets, bool isBurnAllowed) {
+  function getPosition(uint256 tokenId) public view returns (Asset[] memory assets, bool isBurnAllowed) {
     Position memory position = positions[tokenId];
 
     IPool pool = IPool(position.pool);

@@ -27,13 +27,13 @@ describe('Pool - Liquidity Index', () => {
   });
 
   it('after supplying, liquidity index should not change', async () => {
-    pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
+    pool.supplySimple(tokenA.target, parseEther('1'), 0);
     const reserve = await pool.getReserveData(tokenA.target);
     expect(reserve.liquidityIndex).eq(RAY);
   });
 
   it('after supplying, and waiting for some time liquidity index should not change', async () => {
-    pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
+    pool.supplySimple(tokenA.target, parseEther('1'), 0);
 
     // wait for a day
     await time.increase(86400);
@@ -43,37 +43,21 @@ describe('Pool - Liquidity Index', () => {
   });
 
   it('after supplying, and waiting for some time; balances should not change', async () => {
-    const balBefore = await pool['getBalance(address,address,uint256)'](
-      tokenA.target,
-      deployer.address,
-      0
-    );
+    const balBefore = await pool.getBalance(tokenA.target, deployer.address, 0);
 
-    await pool['supply(address,uint256,uint256)'](tokenA.target, 2, 0);
+    await pool.supplySimple(tokenA.target, 2, 0);
 
-    const balAfter = await pool['getBalance(address,address,uint256)'](
-      tokenA.target,
-      deployer.address,
-      0
-    );
+    const balAfter = await pool.getBalance(tokenA.target, deployer.address, 0);
 
     // wait for a day
     await time.increase(86400);
 
-    const balAfterDay = await pool['getBalance(address,address,uint256)'](
-      tokenA.target,
-      deployer.address,
-      0
-    );
+    const balAfterDay = await pool.getBalance(tokenA.target, deployer.address, 0);
 
     // Supply again
-    await pool['supply(address,uint256,uint256)'](tokenA.target, 2, 0);
+    await pool.supplySimple(tokenA.target, 2, 0);
 
-    const finalBalance = await pool['getBalance(address,address,uint256)'](
-      tokenA.target,
-      deployer.address,
-      0
-    );
+    const finalBalance = await pool.getBalance(tokenA.target, deployer.address, 0);
 
     expect(balBefore).eq(0);
     expect(balAfter).eq(2);

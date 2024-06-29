@@ -50,14 +50,7 @@ interface IPool {
    * @param interestRateMode The rate mode: 1 for Stable, 2 for Variable
    * @param borrowRate The numeric rate at which the user has borrowed, expressed in ray
    */
-  event Borrow(
-    address indexed reserve,
-    address user,
-    address indexed onBehalfOf,
-    uint256 amount,
-    DataTypes.InterestRateMode interestRateMode,
-    uint256 borrowRate
-  );
+  event Borrow(address indexed reserve, address user, address indexed onBehalfOf, uint256 amount, DataTypes.InterestRateMode interestRateMode, uint256 borrowRate);
 
   /**
    * @dev Emitted on repay()
@@ -67,13 +60,7 @@ interface IPool {
    * @param amount The amount repaid
    * @param useATokens True if the repayment is done using aTokens, `false` if done with underlying asset directly
    */
-  event Repay(
-    address indexed reserve,
-    address indexed user,
-    address indexed repayer,
-    uint256 amount,
-    bool useATokens
-  );
+  event Repay(address indexed reserve, address indexed user, address indexed repayer, uint256 amount, bool useATokens);
 
   /**
    * @dev Emitted on setUserUseReserveAsCollateral()
@@ -97,13 +84,7 @@ interface IPool {
    * @param amount The amount flash borrowed
    * @param premium The fee flash borrowed
    */
-  event FlashLoan(
-    address indexed target,
-    address initiator,
-    address indexed asset,
-    uint256 amount,
-    uint256 premium
-  );
+  event FlashLoan(address indexed target, address initiator, address indexed asset, uint256 amount, uint256 premium);
 
   /**
    * @dev Emitted when a borrower is liquidated.
@@ -134,13 +115,7 @@ interface IPool {
    * @param liquidityIndex The next liquidity index
    * @param variableBorrowIndex The next variable borrow index
    */
-  event ReserveDataUpdated(
-    address indexed reserve,
-    uint256 liquidityRate,
-    uint256 variableBorrowRate,
-    uint256 liquidityIndex,
-    uint256 variableBorrowIndex
-  );
+  event ReserveDataUpdated(address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 variableBorrowIndex);
 
   /**
    * @dev Emitted when the protocol treasury receives minted aTokens from the accrued interest.
@@ -156,12 +131,7 @@ interface IPool {
    * @param liquidationThreshold The threshold at which loans using this asset as collateral will be considered undercollateralized
    * @param liquidationBonus The bonus liquidators receive to liquidate this asset
    */
-  event CollateralConfigurationChanged(
-    address indexed asset,
-    uint256 ltv,
-    uint256 liquidationThreshold,
-    uint256 liquidationBonus
-  );
+  event CollateralConfigurationChanged(address indexed asset, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus);
 
   /**
    * @dev Emitted when a reserve is initialized.
@@ -169,11 +139,7 @@ interface IPool {
    * @param oracle The address of the oracle
    * @param interestRateStrategyAddress The address of the interest rate strategy for the reserve
    */
-  event ReserveInitialized(
-    address indexed asset,
-    address oracle,
-    address interestRateStrategyAddress
-  );
+  event ReserveInitialized(address indexed asset, address oracle, address interestRateStrategyAddress);
 
   function initialize(DataTypes.InitPoolParams memory params) external;
 
@@ -183,14 +149,9 @@ interface IPool {
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
    */
-  function supply(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) external;
+  function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
 
-  function supply(address asset, uint256 amount, uint256 index) external;
+  function supplySimple(address asset, uint256 amount, uint256 index) external;
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -200,14 +161,9 @@ interface IPool {
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
    * @return The final amount withdrawn
    */
-  function withdraw(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) external returns (uint256);
+  function withdraw(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external returns (uint256);
 
-  function withdraw(address asset, uint256 amount, uint256 index) external returns (uint256);
+  function withdrawSimple(address asset, uint256 amount, uint256 index) external returns (uint256);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -218,14 +174,9 @@ interface IPool {
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
    */
-  function borrow(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) external;
+  function borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
 
-  function borrow(address asset, uint256 amount, uint256 index) external;
+  function borrowSimple(address asset, uint256 amount, uint256 index) external;
 
   function getHook() external view returns (IHook);
 
@@ -237,14 +188,9 @@ interface IPool {
    * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
    * @return The final amount repaid
    */
-  function repay(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) external returns (uint256);
+  function repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external returns (uint256);
 
-  function repay(address asset, uint256 amount, uint256 index) external returns (uint256);
+  function repaySimple(address asset, uint256 amount, uint256 index) external returns (uint256);
 
   // /**
   //  * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
@@ -261,20 +207,14 @@ interface IPool {
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
    */
-  function liquidate(
-    address collateralAsset,
-    address debtAsset,
-    bytes32 position,
-    uint256 debtToCover,
-    DataTypes.ExtraData memory data
-  ) external;
+  function liquidate(address collateralAsset, address debtAsset, bytes32 position, uint256 debtToCover, DataTypes.ExtraData memory data) external;
 
-  function liquidate(
-    address collateralAsset,
-    address debtAsset,
-    bytes32 position,
-    uint256 debtToCover
-  ) external;
+  function liquidateSimple(address collateralAsset, address debtAsset, bytes32 position, uint256 debtToCover) external;
+
+  /**
+   * @dev See {IPool-flashLoan} for the full documentation.
+   */
+  function flashLoanSimple(address receiverAddress, address asset, uint256 amount, bytes calldata params) external;
 
   /**
    * @notice Allows smartcontracts to access the liquidity of the pool within one transaction,
@@ -285,21 +225,9 @@ interface IPool {
    * @param asset The address of the asset being flash-borrowed
    * @param amount The amount of the asset being flash-borrowed
    * @param params Variadic packed params to pass to the receiver as extra information
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
-  function flashLoan(
-    address receiverAddress,
-    address asset,
-    uint256 amount,
-    bytes calldata params
-  ) external;
-
-  function flashLoan(
-    address receiverAddress,
-    address asset,
-    uint256 amount,
-    bytes calldata params,
-    DataTypes.ExtraData memory data
-  ) external;
+  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) external;
 
   /**
    * @notice Get the balance of a specific asset in a specific position.
@@ -307,13 +235,9 @@ interface IPool {
    * @param positionId The ID of the position.
    * @return balance The balance of the specified asset in the specified position.
    */
-  function getBalance(address asset, bytes32 positionId) external view returns (uint256 balance);
+  function getBalanceByPosition(address asset, bytes32 positionId) external view returns (uint256 balance);
 
-  function getBalance(
-    address asset,
-    address who,
-    uint256 index
-  ) external view returns (uint256 balance);
+  function getBalance(address asset, address who, uint256 index) external view returns (uint256 balance);
 
   function getDebt(address asset, address who, uint256 index) external view returns (uint256 debt);
 
@@ -327,6 +251,9 @@ interface IPool {
 
   function getReserveFactor() external view returns (uint256 reseveFactor);
 
+  /**
+   * @notice The factory contract that created this contract
+   */
   function factory() external view returns (IPoolFactory f);
 
   /**
@@ -345,14 +272,7 @@ interface IPool {
   )
     external
     view
-    returns (
-      uint256 totalCollateralBase,
-      uint256 totalDebtBase,
-      uint256 availableBorrowsBase,
-      uint256 currentLiquidationThreshold,
-      uint256 ltv,
-      uint256 healthFactor
-    );
+    returns (uint256 totalCollateralBase, uint256 totalDebtBase, uint256 availableBorrowsBase, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor);
 
   /**
    * @notice Sets the configuration bitmap of the reserve as a whole
@@ -360,31 +280,21 @@ interface IPool {
    * @param asset The address of the underlying asset of the reserve
    * @param configuration The new configuration bitmap
    */
-  function setReserveConfiguration(
-    address asset,
-    address rateStrategyAddress,
-    address source,
-    DataTypes.ReserveConfigurationMap calldata configuration
-  ) external;
+  function setReserveConfiguration(address asset, address rateStrategyAddress, address source, DataTypes.ReserveConfigurationMap calldata configuration) external;
 
   /**
    * @notice Returns the configuration of the reserve
    * @param asset The address of the underlying asset of the reserve
    * @return The configuration of the reserve
    */
-  function getConfiguration(
-    address asset
-  ) external view returns (DataTypes.ReserveConfigurationMap memory);
+  function getConfiguration(address asset) external view returns (DataTypes.ReserveConfigurationMap memory);
 
   /**
    * @notice Returns the configuration of the user across all the reserves
    * @param user The user address
    * @return The configuration of the user
    */
-  function getUserConfiguration(
-    address user,
-    uint256 index
-  ) external view returns (DataTypes.UserConfigurationMap memory);
+  function getUserConfiguration(address user, uint256 index) external view returns (DataTypes.UserConfigurationMap memory);
 
   /**
    * @notice Returns the normalized income of the reserve

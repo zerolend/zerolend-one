@@ -13,6 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {DataTypes} from '../../core/protocol/libraries/types/DataTypes.sol';
+
 interface INFTPositionManager {
   /**
    * @notice Error indicating that the caller is not the owner or approved operator of the token ID.
@@ -83,11 +85,13 @@ interface INFTPositionManager {
    * @param asset The address of the asset to be supplied.
    * @param pool The address of the pool where the asset will be supplied.
    * @param amount The amount of the asset to be supplied.
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   struct MintParams {
     address asset;
     address pool;
     uint256 amount;
+    DataTypes.ExtraData data;
   }
 
   /**
@@ -97,12 +101,14 @@ interface INFTPositionManager {
    * @param user The address of the user performing the operation.
    * @param amount The amount of the asset involved in the operation.
    * @param tokenId The ID of the position token related to the operation.
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   struct LiquidityParams {
     address asset;
     address pool;
     uint256 amount;
     uint256 tokenId;
+    DataTypes.ExtraData data;
   }
 
   /**
@@ -132,10 +138,12 @@ interface INFTPositionManager {
    * @param asset The address of the asset involved in the operation.
    * @param amount The amount of the asset involved in the operation.
    * @param tokenId The ID of the position token involved in the operation.
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   struct AssetOperationParams {
     address asset;
     uint256 amount;
     uint256 tokenId;
+    DataTypes.ExtraData data;
   }
 }

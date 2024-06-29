@@ -15,7 +15,6 @@ pragma solidity 0.8.19;
 
 /**
  * @title IPoolDataProvider
-
  * @notice Defines the basic interface of a PoolDataProvider
  */
 interface IPoolDataProvider {
@@ -60,10 +59,7 @@ interface IPoolDataProvider {
    * @return borrowCap The borrow cap of the reserve
    * @return supplyCap The supply cap of the reserve
    */
-  function getReserveCaps(
-    address pool,
-    address asset
-  ) external view returns (uint256 borrowCap, uint256 supplyCap);
+  function getReserveCaps(address pool, address asset) external view returns (uint256 borrowCap, uint256 supplyCap);
 
   /**
    * @notice Returns the protocol fee on the liquidation bonus
@@ -132,24 +128,12 @@ interface IPoolDataProvider {
     address pool,
     address asset,
     address user
-  )
-    external
-    view
-    returns (
-      uint256 currentATokenBalance,
-      uint256 currentVariableDebt,
-      uint256 scaledVariableDebt,
-      uint256 liquidityRate,
-      bool usageAsCollateralEnabled
-    );
+  ) external view returns (uint256 currentATokenBalance, uint256 currentVariableDebt, uint256 scaledVariableDebt, uint256 liquidityRate, bool usageAsCollateralEnabled);
 
   /**
    * @notice Returns the address of the Interest Rate strategy
    * @param asset The address of the underlying asset of the reserve
    * @return irStrategyAddress The address of the Interest Rate strategy
    */
-  function getInterestRateStrategyAddress(
-    address pool,
-    address asset
-  ) external view returns (address irStrategyAddress);
+  function getInterestRateStrategyAddress(address pool, address asset) external view returns (address irStrategyAddress);
 }
