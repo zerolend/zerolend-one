@@ -20,9 +20,9 @@ While designing ZeroLend One, we keep the following philosophies in mind.
 
 - [docs-one.zerolend.xyz](https://docs-one.zerolend.xyz/) - Contains a high level overview of the entire protocol including architecture documentation.
 - [docs folders](./docs) - Contains the technical documentation for each contract and what they do.
-- [test folders](./test) - The unit tests for the protocol are also documented and can be browsed through for insights about how e
+- [test folders](./test) - The unit tests for the protocol are also documented and can be browsed through for insights about how each test works.
 
-## Running Tests
+## Tests
 
 There are three test suites that this repository uses.
 
