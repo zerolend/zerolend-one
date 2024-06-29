@@ -1,4 +1,4 @@
-name: Hardhat
+name: Report Gas
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -11,7 +11,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Run Hardhat unit tests
+    name: Report Gas Usage
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,5 +20,5 @@ jobs:
       - uses: ./.github/actions/install
       - name: Build contracts
         run: yarn compile:hardhat --force # don't use compilation cache
-      - name: Run hardhat tests
-        run: yarn test:hardhat
+      - name: Run hardhat tests with gas report
+        run: REPORT_GAS=true npx hardhat test

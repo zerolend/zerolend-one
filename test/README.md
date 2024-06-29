@@ -26,7 +26,7 @@ yarn test:forge
 
 ## Running Certora Tests
 
-To run certora, you need to make sure that the `certora-cli` and `solc` is locally installed. To do that we recommend spinning up a `virtualenv` and running the following commands from the project root.
+To run certora, you need to make sure that the `certora-cli` and `solc` binaries are locally installed. To do that we recommend spinning up a `virtualenv` and running the following commands from the project root.
 
 ```
 virtualenv venv
