@@ -1,21 +1,21 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { getPoolLibraries } from "../../../helpers/contract-getters";
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { getPoolLibraries } from '../../../helpers/contract-getters';
 
 async function main(hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre;
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
-  
-  const deployment = await deploy("Pool", {
+
+  const deployment = await deploy('Pool', {
     from: deployer,
-    contract: "Pool",
+    contract: 'Pool',
     autoMine: true,
     log: true,
-    libraries: await getPoolLibraries(hre)
+    libraries: await getPoolLibraries(hre),
   });
 
-  await hre.run("verify:verify", { address: deployment.address });
+  await hre.run('verify:verify', { address: deployment.address });
 }
 
-main.tags = ["Pool"];
+main.tags = ['Pool'];
 export default main;

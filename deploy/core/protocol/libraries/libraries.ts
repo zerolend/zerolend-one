@@ -1,5 +1,5 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function ({
   getNamedAccounts,
@@ -9,27 +9,27 @@ const func: DeployFunction = async function ({
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  await deploy("SupplyLogic", {
+  await deploy('SupplyLogic', {
     from: deployer,
     args: [],
     log: true,
-    deterministicDeployment: false
+    deterministicDeployment: false,
   });
 
-  const borrowLogicArtifact = await deploy("BorrowLogic", {
+  const borrowLogicArtifact = await deploy('BorrowLogic', {
     from: deployer,
     args: [],
     log: true,
-    deterministicDeployment: false
+    deterministicDeployment: false,
   });
 
-  await deploy("LiquidationLogic", {
+  await deploy('LiquidationLogic', {
     from: deployer,
     log: true,
-    deterministicDeployment: false
+    deterministicDeployment: false,
   });
 
-  await deploy("FlashLoanLogic", {
+  await deploy('FlashLoanLogic', {
     from: deployer,
     log: true,
     deterministicDeployment: false,
@@ -38,16 +38,16 @@ const func: DeployFunction = async function ({
     },
   });
 
-  await deploy("PoolLogic", {
+  await deploy('PoolLogic', {
     from: deployer,
     log: true,
-    deterministicDeployment: false
+    deterministicDeployment: false,
   });
 
   return true;
 };
 
-func.id = "LogicLibraries";
-func.tags = ["LogicLibraries", "core", "logic"];
+func.id = 'LogicLibraries';
+func.tags = ['LogicLibraries', 'core', 'logic'];
 
 export default func;
