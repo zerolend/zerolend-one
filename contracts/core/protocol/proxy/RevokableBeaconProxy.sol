@@ -20,7 +20,7 @@ import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
 
 /**
  * @title A beacon proxy with the ability to have it's upgradability revoked
- * @author Deadshot Ryker <ryker@zerolend.xyz>
+ * @author ZeroLend
  * @notice This is a beacon proxy contract that has the ability for the proxy admin to revoke
  * the beacon's ability to upgrade the contract.
  */
@@ -29,7 +29,7 @@ contract RevokableBeaconProxy is Proxy {
   bytes32 internal constant _BEACON_SLOT = keccak256('eip1967.proxy.beacon');
   bytes32 internal constant _ADMIN_SLOT = keccak256('eip1967.proxy.admin');
 
-  constructor(address _beacon, address _admin) payable {
+  constructor(address _beacon, address _admin) {
     StorageSlot.getAddressSlot(_BEACON_SLOT).value = _beacon;
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = _admin;
   }
@@ -37,7 +37,7 @@ contract RevokableBeaconProxy is Proxy {
   // todo add events for admin and implementation changes
 
   /**
-   * @dev Returns the current implementation address of the associated beacon.
+   * @inheritdoc Proxy
    */
   function _implementation() internal view virtual override returns (address) {
     address _beacon = _getBeacon();
@@ -47,6 +47,11 @@ contract RevokableBeaconProxy is Proxy {
     return _getFrozenImpl();
   }
 
+  /**
+   * @notice Transfer the ownership of the proxy to another address
+   * @dev Can only be called by the proxy admin
+   * @param newAdmin The new admin to transfer ownership to
+   */
   function setAdmin(address newAdmin) external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = newAdmin;
@@ -55,12 +60,26 @@ contract RevokableBeaconProxy is Proxy {
   /**
    * @notice Revokes the beacon's ability to upgrade this contract and forver seals the implementation
    * into the code forever.
+   * @dev Can only be called by the proxy admin
    */
   function revokeBeacon() external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
     _revokeBeacon();
   }
 
+  /**
+   * @notice Revoke the beacon's admin
+   * @dev Can only be called by the proxy admin
+   */
+  function revokeAdmin() external {
+    require(msg.sender == _getAdmin(), 'not proxy admin');
+    StorageSlot.getAddressSlot(_ADMIN_SLOT).value = address(0);
+  }
+
+  /**
+   * @notice Returns the implementation of the current proxy
+   * @return The proxy's current implementation
+   */
   function implementation() external view returns (address) {
     return _implementation();
   }
