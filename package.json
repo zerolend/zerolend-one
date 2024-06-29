@@ -20,7 +20,7 @@
     "test": "npm run test:hardhat && npm run test:forge",
     "test:forge": "forge test",
     "test:hardhat": "hardhat test",
-    "prepublish": "npm run compile && npm run lint && npm run docs && npm run test",
+    "prepublishOnly": "npm run compile && npm run lint && npm run docs && npm run test",
     "test:certora": "bash ./certora.sh",
     "prepare": "husky"
   },
