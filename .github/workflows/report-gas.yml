@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  report-gas:
     runs-on: ubuntu-latest
     name: Report Gas Usage
     steps:

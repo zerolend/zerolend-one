@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test-hardhat:
     runs-on: ubuntu-latest
     name: Run Hardhat unit tests
     steps:

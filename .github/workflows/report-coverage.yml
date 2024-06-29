@@ -7,9 +7,7 @@ concurrency:
 
 on:
   push:
-  pull_request:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    # branches: master
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -18,9 +16,9 @@ permissions:
   id-token: write
 
 jobs:
-  test:
+  coverage:
     runs-on: ubuntu-latest
-    name: Run Hardhat unit tests
+    name: Build Coverage Report
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,12 +27,19 @@ jobs:
       - uses: ./.github/actions/install
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Build contracts
-        run: yarn compile:hardhat --force # don't use compilation cache
-      - name: Run hardhat tests
-        run: yarn test:hardhat
-      - name: Check hardhat coverage
-        run: yarn coverage:hardhat
+
+      # # build hardhat coverage
+      # - name: Build hardhat contracts
+      #   run: yarn compile:hardhat --force # don't use compilation cache
+      # - name: Check hardhat coverage
+      #   run: yarn coverage:hardhat
+
+      # build foundry coverage
+      - name: Build foundry contracts
+        run: yarn compile:forge # don't use compilation cache
+      - name: Check forge coverage
+        run: yarn coverage:forge && genhtml ./lcov.info --output-dir coverage/foundry --branch-coverage
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

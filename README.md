@@ -38,6 +38,11 @@ yarn compile
 yarn test
 ```
 
+Furthermore, the unit tests coverage can be viewed on Github pages
+
+- [Hardhat coverage](https://zerolend.github.io/zerolend-one/hardhat/) - Code coverage of the hardhat unit tests
+- [Foundry coverage](https://zerolend.github.io/zerolend-one/foundry/) - Code coverage of the foundry unit tests
+
 ---
 
 For any questions or queries, feel free to reach out to us on [Discord](https://discord.gg/zerolend)

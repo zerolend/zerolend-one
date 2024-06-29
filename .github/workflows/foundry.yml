@@ -32,7 +32,7 @@ jobs:
             out
           key: forge-${{ github.ref_name }}
 
-  test:
+  test-forge:
     needs: build-no-ir
     name: Tests
     runs-on: ubuntu-latest
