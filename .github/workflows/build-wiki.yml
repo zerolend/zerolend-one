@@ -31,4 +31,5 @@ jobs:
         with:
           personal_token: ${{ secrets.PERSONAL_TOKEN }}
           publish_dir: ./docs
+          publish_branch: master
           external_repository: zerolend/zerolend-one.wiki
