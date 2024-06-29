@@ -1,0 +1,45 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Report Coverage
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+on:
+  push:
+  pull_request:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Run Hardhat unit tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/install
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Build contracts
+        run: yarn compile:hardhat --force # don't use compilation cache
+      - name: Run hardhat tests
+        run: yarn test:hardhat
+      - name: Check hardhat coverage
+        run: yarn coverage:hardhat
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload only report folder
+          path: './coverage'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

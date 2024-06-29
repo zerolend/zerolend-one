@@ -1,4 +1,3 @@
-const { execSync } = require("child_process");
 module.exports = {
   port: 8555,
   providerOpts: {
@@ -11,6 +10,7 @@ module.exports = {
     grep: /@gas|@no-cov/,
     invert: true,
   },
+  istanbulFolder: 'coverage/hardhat',
   skipFiles: ["test"],
   istanbulReporter: ["html", "lcov", "text", "json", "cobertura"],
 };
