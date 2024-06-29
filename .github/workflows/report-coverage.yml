@@ -20,36 +20,30 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Coverage Report
     steps:
+      # setup env
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - uses: ./.github/actions/install
-
       - name: Install genhtml
         run: sudo apt-get install lcov
         shell: bash
-
+      - uses: ./.github/actions/install
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # build hardhat coverage
-      - name: Build hardhat contracts
-        run: yarn compile:hardhat --force # don't use compilation cache
-      - name: Check hardhat coverage
-        run: yarn coverage:hardhat
-
       # build foundry coverage
-      - name: Build foundry contracts
-        run: yarn compile:forge # don't use compilation cache
-      - name: Check foundry coverage
-        run: yarn coverage:forge && genhtml ./lcov.info --output-dir coverage/foundry --branch-coverage  --ignore-errors inconsistent
+      - name: Run foundry coverage
+        run: yarn compile:forge && yarn coverage:forge && genhtml ./lcov.info --output-dir coverage/foundry --branch-coverage  --ignore-errors inconsistent
 
+      # build hardhat coverage
+      - name: Run hardhat coverage
+        run: yarn compile:hardhat --force & &yarn coverage:hardhat
+
+      # Deploy to gh pages
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload only report folder
           path: './coverage'
       - name: Deploy to GitHub Pages
         id: deployment
