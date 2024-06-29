@@ -1,1 +1,2 @@
+echo "Checking code format. Use 'yarn lint:fix' if this check fails"
 yarn lint
