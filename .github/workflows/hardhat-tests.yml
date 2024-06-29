@@ -1,4 +1,4 @@
-name: certora
+name: Hardhat Tests
 
 on:
   push:
