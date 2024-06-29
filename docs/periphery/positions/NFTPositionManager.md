@@ -7,7 +7,7 @@ _Manages the minting and burning of NFT positions, which represent liquidity pos
 ### factory
 
 ```solidity
-contract IFactory factory
+contract IPoolFactory factory
 ```
 
 ### positions
@@ -46,8 +46,6 @@ modifier isPool(address pool)
 ```solidity
 constructor() public
 ```
-
-_Constructor to disable initializers._
 
 ### initialize
 
@@ -146,6 +144,26 @@ Allow user to repay thier debt.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | params | struct INFTPositionManager.AssetOperationParams | The params required for repaying the position which includes tokenId, asset and amount. |
+
+### getApproved
+
+```solidity
+function getApproved(uint256 tokenId) public view returns (address)
+```
+
+_Returns the account approved for `tokenId` token.
+
+Requirements:
+
+- `tokenId` must exist._
+
+### _approve
+
+```solidity
+function _approve(address to, uint256 tokenId) internal
+```
+
+_Overrides _approve to use the operator in the position, which is packed with the position permit nonce_
 
 ### getPosition
 

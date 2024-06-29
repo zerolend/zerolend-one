@@ -1,6 +1,9 @@
 # Solidity API
 
-## BeaconProxy
+## RevokableBeaconProxy
+
+This is a beacon proxy contract that has the ability for the proxy admin to revoke
+the beacon's ability to upgrade the contract.
 
 ### _IMPLEMENTATION_SLOT
 
@@ -46,6 +49,9 @@ function setAdmin(address newAdmin) external
 function revokeBeacon() external
 ```
 
+Revokes the beacon's ability to upgrade this contract and forver seals the implementation
+into the code forever.
+
 ### implementation
 
 ```solidity
@@ -63,4 +69,20 @@ function admin() external view returns (address)
 ```solidity
 function beacon() external view returns (address)
 ```
+
+### isBeaconRevoked
+
+```solidity
+function isBeaconRevoked() external view returns (bool revoked)
+```
+
+Checks if the beacon is revoked in which case the contract is as good as immutable.
+
+_The revoked implementation address can be found in the `implementation()` call._
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| revoked | bool | True iff the beacon has been revoked. |
 

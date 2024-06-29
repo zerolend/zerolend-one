@@ -286,7 +286,7 @@ Returns the asset price in the base currency
 ### factory
 
 ```solidity
-function factory() external view returns (contract IFactory)
+function factory() external view returns (contract IPoolFactory)
 ```
 
 ### getReserveFactor

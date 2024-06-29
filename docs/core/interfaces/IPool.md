@@ -209,22 +209,10 @@ _Emitted when a reserve is initialized._
 | oracle | address | The address of the oracle |
 | interestRateStrategyAddress | address | The address of the interest rate strategy for the reserve |
 
-### InitParams
-
-```solidity
-struct InitParams {
-  address hook;
-  address[] assets;
-  address[] rateStrategyAddresses;
-  address[] sources;
-  struct DataTypes.ReserveConfigurationMap[] configurations;
-}
-```
-
 ### initialize
 
 ```solidity
-function initialize(struct IPool.InitParams params) external
+function initialize(struct DataTypes.InitPoolParams params) external
 ```
 
 ### supply
@@ -391,6 +379,12 @@ into consideration. For further details please visit https://docs.aave.com/devel
 | amount | uint256 | The amount of the asset being flash-borrowed |
 | params | bytes | Variadic packed params to pass to the receiver as extra information |
 
+### flashLoan
+
+```solidity
+function flashLoan(address receiverAddress, address asset, uint256 amount, bytes params, struct DataTypes.ExtraData data) external
+```
+
 ### getBalance
 
 ```solidity
@@ -454,7 +448,7 @@ function getReserveFactor() external view returns (uint256 reseveFactor)
 ### factory
 
 ```solidity
-function factory() external view returns (contract IFactory f)
+function factory() external view returns (contract IPoolFactory f)
 ```
 
 ### getUserAccountData

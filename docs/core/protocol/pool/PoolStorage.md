@@ -62,7 +62,7 @@ The pool configurator contract that can make changes
 ### _factory
 
 ```solidity
-contract IFactory _factory
+contract IPoolFactory _factory
 ```
 
 The original factory contract with protocol-level control variables

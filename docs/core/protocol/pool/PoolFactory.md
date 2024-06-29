@@ -1,6 +1,6 @@
 # Solidity API
 
-## Factory
+## PoolFactory
 
 ### implementation
 
@@ -75,7 +75,7 @@ function poolsLength() external view returns (uint256)
 ### createPool
 
 ```solidity
-function createPool(struct IPool.InitParams params) external returns (contract IPool pool)
+function createPool(struct DataTypes.InitPoolParams params) external returns (contract IPool pool)
 ```
 
 ### setImplementation

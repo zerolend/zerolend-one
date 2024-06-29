@@ -107,7 +107,7 @@ function getSupplyCap() external view returns (uint256)
 ### getFlags
 
 ```solidity
-function getFlags() external view returns (bool, bool, bool)
+function getFlags() external view returns (bool, bool)
 ```
 
 ### getParams

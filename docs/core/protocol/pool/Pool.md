@@ -5,7 +5,7 @@
 ### initialize
 
 ```solidity
-function initialize(struct IPool.InitParams params) public virtual
+function initialize(struct DataTypes.InitPoolParams params) public virtual
 ```
 
 Initializes the Pool.
@@ -147,6 +147,12 @@ Function to liquidate a non-healthy position collateral-wise, with Health Factor
 
 ```solidity
 function liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt) public virtual
+```
+
+### flashLoan
+
+```solidity
+function flashLoan(address receiverAddress, address asset, uint256 amount, bytes params, struct DataTypes.ExtraData data) public virtual
 ```
 
 ### flashLoan

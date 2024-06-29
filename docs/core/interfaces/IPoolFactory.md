@@ -1,6 +1,6 @@
 # Solidity API
 
-## IFactory
+## IPoolFactory
 
 ### PoolCreated
 
@@ -53,7 +53,7 @@ function configurator() external view returns (contract IPoolConfigurator)
 ### createPool
 
 ```solidity
-function createPool(struct IPool.InitParams params) external returns (contract IPool pool)
+function createPool(struct DataTypes.InitPoolParams params) external returns (contract IPool pool)
 ```
 
 ### setConfigurator

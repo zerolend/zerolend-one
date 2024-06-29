@@ -35,6 +35,6 @@ function _liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt, 
 ### _flashLoan
 
 ```solidity
-function _flashLoan(address receiverAddress, address asset, uint256 amount, bytes params) public virtual
+function _flashLoan(address receiverAddress, address asset, uint256 amount, bytes params, struct DataTypes.ExtraData data) public virtual
 ```
 

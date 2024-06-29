@@ -1,6 +1,6 @@
 # Solidity API
 
-## IACLManager
+## IPoolManager
 
 Defines the basic interface for the ACL Manager
 
@@ -45,23 +45,6 @@ Returns the identifier of the RiskAdmin role
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bytes32 | The id of the RiskAdmin role |
-
-### setRoleAdmin
-
-```solidity
-function setRoleAdmin(bytes32 role, bytes32 adminRole) external
-```
-
-Set the role as admin of a specific role.
-
-_By default the admin role for all roles is `DEFAULT_ADMIN_ROLE`._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| role | bytes32 | The role to be managed by the admin role |
-| adminRole | bytes32 | The admin role |
 
 ### addPoolAdmin
 
@@ -215,4 +198,10 @@ Returns true if the address is RiskAdmin, false otherwise
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bool | True if the given address is RiskAdmin, false otherwise |
+
+### getRoleFromPool
+
+```solidity
+function getRoleFromPool(address pool, bytes32 role) external pure returns (bytes32)
+```
 

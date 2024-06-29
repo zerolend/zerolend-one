@@ -143,7 +143,6 @@ struct Asset {
 
 ```solidity
 struct Position {
-  struct INFTPositionManager.Asset[] assets;
   address pool;
   address operator;
 }

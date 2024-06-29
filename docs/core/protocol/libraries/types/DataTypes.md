@@ -91,6 +91,7 @@ struct ExecuteLiquidationCallParams {
   bytes32 position;
   uint256 debtToCover;
   uint256 reservesCount;
+  struct DataTypes.ExtraData data;
 }
 ```
 
@@ -102,6 +103,7 @@ struct ExecuteSupplyParams {
   address pool;
   bytes32 position;
   uint256 amount;
+  struct DataTypes.ExtraData data;
 }
 ```
 
@@ -124,6 +126,7 @@ struct ExecuteBorrowParams {
   bytes32 position;
   uint256 amount;
   uint256 reservesCount;
+  struct DataTypes.ExtraData data;
 }
 ```
 
@@ -136,6 +139,7 @@ struct ExecuteRepayParams {
   address user;
   bytes32 position;
   uint256 amount;
+  struct DataTypes.ExtraData data;
 }
 ```
 
@@ -149,6 +153,7 @@ struct ExecuteWithdrawParams {
   bytes32 position;
   uint256 reservesCount;
   address pool;
+  struct DataTypes.ExtraData data;
 }
 ```
 
@@ -161,6 +166,7 @@ struct FlashloanSimpleParams {
   uint256 amount;
   bytes params;
   uint256 flashLoanPremiumTotal;
+  struct DataTypes.ExtraData data;
 }
 ```
 
@@ -223,6 +229,21 @@ struct CalculateInterestRatesParams {
 }
 ```
 
+### InitReserveConfig
+
+```solidity
+struct InitReserveConfig {
+  uint256 ltv;
+  uint256 liquidationThreshold;
+  uint256 liquidationBonus;
+  uint256 decimals;
+  bool frozen;
+  bool borrowable;
+  uint256 borrowCap;
+  uint256 supplyCap;
+}
+```
+
 ### InitReserveParams
 
 ```solidity
@@ -231,7 +252,19 @@ struct InitReserveParams {
   address oracle;
   address interestRateStrategyAddress;
   uint16 reservesCount;
-  struct DataTypes.ReserveConfigurationMap configuration;
+  struct DataTypes.InitReserveConfig configuration;
+}
+```
+
+### InitPoolParams
+
+```solidity
+struct InitPoolParams {
+  address hook;
+  address[] assets;
+  address[] rateStrategyAddresses;
+  address[] sources;
+  struct DataTypes.InitReserveConfig[] configurations;
 }
 ```
 

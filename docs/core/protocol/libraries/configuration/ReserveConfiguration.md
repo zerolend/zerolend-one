@@ -28,12 +28,6 @@ uint256 LIQUIDATION_BONUS_MASK
 uint256 DECIMALS_MASK
 ```
 
-### ACTIVE_MASK
-
-```solidity
-uint256 ACTIVE_MASK
-```
-
 ### FROZEN_MASK
 
 ```solidity
@@ -44,30 +38,6 @@ uint256 FROZEN_MASK
 
 ```solidity
 uint256 BORROWING_MASK
-```
-
-### STABLE_BORROWING_MASK
-
-```solidity
-uint256 STABLE_BORROWING_MASK
-```
-
-### PAUSED_MASK
-
-```solidity
-uint256 PAUSED_MASK
-```
-
-### BORROWABLE_IN_ISOLATION_MASK
-
-```solidity
-uint256 BORROWABLE_IN_ISOLATION_MASK
-```
-
-### SILOED_BORROWING_MASK
-
-```solidity
-uint256 SILOED_BORROWING_MASK
 ```
 
 ### FLASHLOAN_ENABLED_MASK
@@ -92,30 +62,6 @@ uint256 BORROW_CAP_MASK
 
 ```solidity
 uint256 SUPPLY_CAP_MASK
-```
-
-### LIQUIDATION_PROTOCOL_FEE_MASK
-
-```solidity
-uint256 LIQUIDATION_PROTOCOL_FEE_MASK
-```
-
-### EMODE_CATEGORY_MASK
-
-```solidity
-uint256 EMODE_CATEGORY_MASK
-```
-
-### UNBACKED_MINT_CAP_MASK
-
-```solidity
-uint256 UNBACKED_MINT_CAP_MASK
-```
-
-### DEBT_CEILING_MASK
-
-```solidity
-uint256 DEBT_CEILING_MASK
 ```
 
 ### LIQUIDATION_THRESHOLD_START_BIT_POSITION
@@ -202,30 +148,6 @@ uint256 BORROW_CAP_START_BIT_POSITION
 
 ```solidity
 uint256 SUPPLY_CAP_START_BIT_POSITION
-```
-
-### LIQUIDATION_PROTOCOL_FEE_START_BIT_POSITION
-
-```solidity
-uint256 LIQUIDATION_PROTOCOL_FEE_START_BIT_POSITION
-```
-
-### EMODE_CATEGORY_START_BIT_POSITION
-
-```solidity
-uint256 EMODE_CATEGORY_START_BIT_POSITION
-```
-
-### UNBACKED_MINT_CAP_START_BIT_POSITION
-
-```solidity
-uint256 UNBACKED_MINT_CAP_START_BIT_POSITION
-```
-
-### DEBT_CEILING_START_BIT_POSITION
-
-```solidity
-uint256 DEBT_CEILING_START_BIT_POSITION
 ```
 
 ### MAX_VALID_LTV
@@ -565,7 +487,7 @@ Gets the supply cap of the reserve
 ### getFlags
 
 ```solidity
-function getFlags(struct DataTypes.ReserveConfigurationMap self) internal pure returns (bool, bool, bool)
+function getFlags(struct DataTypes.ReserveConfigurationMap self) internal pure returns (bool, bool)
 ```
 
 Gets the configuration flags of the reserve
@@ -582,7 +504,6 @@ Gets the configuration flags of the reserve
 | ---- | ---- | ----------- |
 | [0] | bool | The state flag representing frozen |
 | [1] | bool | The state flag representing borrowing enabled |
-| [2] | bool | The state flag representing stableRateBorrowing enabled |
 
 ### getParams
 

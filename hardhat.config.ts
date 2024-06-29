@@ -1,14 +1,14 @@
 import { HardhatUserConfig } from 'hardhat/config';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomicfoundation/hardhat-ethers';
 import '@nomicfoundation/hardhat-toolbox-viem';
 import '@openzeppelin/hardhat-upgrades';
-import 'hardhat-deploy';
 import '@typechain/hardhat';
-import '@nomicfoundation/hardhat-ethers';
-import '@nomicfoundation/hardhat-chai-matchers';
 import 'hardhat-abi-exporter';
 import 'hardhat-dependency-compiler';
-import 'solidity-docgen';
+import 'hardhat-deploy';
 import 'solidity-coverage';
+import 'solidity-docgen';
 
 import dotenv from 'dotenv';
 dotenv.config();
