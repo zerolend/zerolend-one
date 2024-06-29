@@ -6,7 +6,7 @@ concurrency:
 
 on:
   push:
-    branches: master
+    branches: [master, develop]
 
 # # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
 # permissions:
