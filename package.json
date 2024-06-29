@@ -74,5 +74,18 @@
   "engines" : {
     "npm" : ">=9.0.0",
     "node" : ">=18.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerolend/zerolend-one.git"
+  },
+  "author": {
+    "name": "ZeroLend",
+    "email": "security@zerolend.xyz",
+    "url": "https://github.com/zerolend"
+  },
+  "bugs": {
+    "url": "https://github.com/zerolend/zerolend-one/issues"
+  },
+  "homepage": "https://github.com/zerolend/zerolend-one#readme"
 }
