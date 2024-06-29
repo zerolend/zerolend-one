@@ -141,6 +141,12 @@ interface IPool {
    */
   event ReserveInitialized(address indexed asset, address oracle, address interestRateStrategyAddress);
 
+  /**
+   * @notice Initializes the pool with the given parameters. This call sets all the assets and their configs (LTV/LT/Oracle etc..)
+   * in one call. Since assets once created cannot be changed, this has to be done within the initialize call itself.
+   * @dev This is function is called by the factory contract.
+   * @param params The init parameters for the pool. See {DataTypes-InitPoolParams}
+   */
   function initialize(DataTypes.InitPoolParams memory params) external;
 
   /**
@@ -151,6 +157,9 @@ interface IPool {
    */
   function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
 
+  /**
+   * @dev See {IPool-supply} for the full documentation.
+   */
   function supplySimple(address asset, uint256 amount, uint256 index) external;
 
   /**
@@ -159,10 +168,14 @@ interface IPool {
    * @param asset The address of the underlying asset to withdraw
    * @param amount The underlying amount to be withdrawn
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    * @return The final amount withdrawn
    */
   function withdraw(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external returns (uint256);
 
+  /**
+   * @dev See {IPool-withdraw} for the full documentation.
+   */
   function withdrawSimple(address asset, uint256 amount, uint256 index) external returns (uint256);
 
   /**
@@ -173,12 +186,14 @@ interface IPool {
    *   and 100 stable/variable debt tokens, depending on the `interestRateMode`
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   function borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
 
+  /**
+   * @dev See {IPool-borrow} for the full documentation.
+   */
   function borrowSimple(address asset, uint256 amount, uint256 index) external;
-
-  function getHook() external view returns (IHook);
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -186,10 +201,14 @@ interface IPool {
    * @param asset The address of the borrowed underlying asset previously borrowed
    * @param amount The amount to repay
    * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    * @return The final amount repaid
    */
   function repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external returns (uint256);
 
+  /**
+   * @dev See {IPool-repay} for the full documentation.
+   */
   function repaySimple(address asset, uint256 amount, uint256 index) external returns (uint256);
 
   // /**
@@ -206,9 +225,13 @@ interface IPool {
    * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
+   * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   function liquidate(address collateralAsset, address debtAsset, bytes32 position, uint256 debtToCover, DataTypes.ExtraData memory data) external;
 
+  /**
+   * @dev See {IPool-liquidate} for the full documentation.
+   */
   function liquidateSimple(address collateralAsset, address debtAsset, bytes32 position, uint256 debtToCover) external;
 
   /**
@@ -237,8 +260,22 @@ interface IPool {
    */
   function getBalanceByPosition(address asset, bytes32 positionId) external view returns (uint256 balance);
 
+  /**
+   * @notice Get the balance of a specific asset for a user given a position index
+   * @param asset The address of the asset.
+   * @param who The user to find the balance of
+   * @param index The index of the user's position
+   * @return balance The balance of the specified asset for the given user and position idnex.
+   */
   function getBalance(address asset, address who, uint256 index) external view returns (uint256 balance);
 
+  /**
+   * @notice Get the debt of a specific asset for a user given a position index
+   * @param asset The address of the asset.
+   * @param who The user to find the debt of
+   * @param index The index of the user's position
+   * @return debt The debt of the specified asset for the given user and position idnex.
+   */
   function getDebt(address asset, address who, uint256 index) external view returns (uint256 debt);
 
   /**
@@ -247,8 +284,14 @@ interface IPool {
    * @param positionId The ID of the position.
    * @return debt The debt of the specified asset in the specified position.
    */
-  function getDebt(address asset, bytes32 positionId) external view returns (uint256 debt);
+  function getDebtByPosition(address asset, bytes32 positionId) external view returns (uint256 debt);
 
+  /**
+   * @notice Gets the reserve factor that this pool charges. The reserve factory is the percentage of
+   * revenue that the pool shares with the governance.
+   * @dev This parameter is immutable.
+   * @return reseveFactor The amount of revenue that gets shared to governance.
+   */
   function getReserveFactor() external view returns (uint256 reseveFactor);
 
   /**
@@ -349,4 +392,11 @@ interface IPool {
    * @return The price of the asset
    */
   function getAssetPrice(address asset) external view returns (uint256);
+
+  /**
+   * @notice Returns the current hook for the pool.
+   * @dev The hook is immutable. Once it is set, it cannot be changed.
+   * @return The hook for the pool, if set.
+   */
+  function getHook() external view returns (IHook);
 }

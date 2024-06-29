@@ -198,9 +198,9 @@ contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable
 
     bytes32 positionId = _getPositionId(params.tokenId);
 
-    uint256 previousDebtBalance = pool.getDebt(params.asset, positionId);
+    uint256 previousDebtBalance = pool.getDebtByPosition(params.asset, positionId);
     uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId, params.data);
-    uint256 currentDebtBalance = pool.getDebt(params.asset, positionId);
+    uint256 currentDebtBalance = pool.getDebtByPosition(params.asset, positionId);
 
     if (previousDebtBalance - currentDebtBalance != finalRepayAmout) {
       revert BalanceMisMatch();
