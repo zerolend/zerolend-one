@@ -1,5 +1,5 @@
 # Simple workflow for deploying static content to GitHub Pages
-name: Report Coverage
+name: Coverage & Gas Report
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -18,7 +18,7 @@ permissions:
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    name: Build Coverage Report
+    name: Build Coverage & Gas Report
     steps:
       # setup env
       - name: Checkout
@@ -38,7 +38,7 @@ jobs:
       - name: Run hardhat coverage
         run: yarn compile:hardhat --force && yarn coverage:hardhat
 
-      - name: Run hardhat tests with gas report
+      - name: Run gas report
         run: REPORT_GAS=true npx hardhat test
 
       # Deploy to gh pages

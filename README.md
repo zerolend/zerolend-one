@@ -42,6 +42,7 @@ Furthermore, the unit tests coverage can be viewed on Github pages
 
 - [Hardhat coverage](https://zerolend.github.io/zerolend-one/hardhat/) - Code coverage of the hardhat unit tests
 - [Foundry coverage](https://zerolend.github.io/zerolend-one/foundry/) - Code coverage of the foundry unit tests
+- [Gas Report](https://zerolend.github.io/zerolend-one/gasReport.txt) - A gas report for each function
 
 ---
 

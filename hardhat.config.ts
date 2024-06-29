@@ -25,8 +25,9 @@ const config: HardhatUserConfig = {
   },
   gasReporter: {
     // @ts-ignore
-    reportFormat: 'markdown',
-    outputFile: 'coverage/gasReport.md',
+    reportFormat: 'terminal',
+    outputFile: 'coverage/gasReport.txt',
+    noColors: true,
     forceTerminalOutput: true,
     forceTerminalOutputFormat: 'terminal',
   },
