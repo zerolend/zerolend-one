@@ -47,7 +47,14 @@
     "compile:forge": "forge build",
     "compile:hardhat": "hardhat compile",
     "test:hardhat": "hardhat test",
+    "lint": "yarn lint:forge && yarn lint:ts",
+    "lint:ts": "prettier --check test/hardhat",
+    "lint:forge": "forge fmt --check",
+    "lint:fix": "yarn lint:forge:fix && yarn lint:ts:fix",
+    "lint:ts:fix": "prettier --write test/hardhat",
+    "lint:forge:fix": "forge fmt",
     "compile": "npm run compile:hardhat && npm run compile:forge",
+    "clean": "hardhat clean && forge clean",
     "docs": "rimraf docs && hardhat docgen",
     "prepare": "husky"
   }
