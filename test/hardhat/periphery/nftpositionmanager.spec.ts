@@ -1,8 +1,8 @@
 import { ethers, upgrades } from 'hardhat';
-import { deployPool } from './fixtures/pool';
+import { deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
 import { Signer, ZeroAddress } from 'ethers';
-import { MintableERC20, NFTPositionManager, Pool } from '../../types';
+import { MintableERC20, NFTPositionManager, Pool } from '../../../types';
 
 describe('NFT Position Manager', () => {
   let manager: NFTPositionManager;
