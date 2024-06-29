@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "license": "BUSL-1.1",
   "scripts": {
-    "build": "tsc",
     "clean": "hardhat clean && forge clean",
     "compile:forge": "forge build",
     "compile:hardhat": "hardhat compile",
@@ -18,8 +17,10 @@
     "lint:ts:fix": "prettier --write test/hardhat",
     "lint:ts": "prettier --check test/hardhat",
     "lint": "yarn lint:forge && yarn lint:ts",
+    "test": "npm run test:hardhat && npm run test:forge",
     "test:forge": "forge test",
     "test:hardhat": "hardhat test",
+    "prepublish": "npm run compile && npm run lint && npm run docs && npm run test",
     "test:certora": "bash ./certora.sh",
     "prepare": "husky"
   },
