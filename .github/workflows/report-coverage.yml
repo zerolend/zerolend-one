@@ -34,17 +34,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # # build hardhat coverage
-      # - name: Build hardhat contracts
-      #   run: yarn compile:hardhat --force # don't use compilation cache
-      # - name: Check hardhat coverage
-      #   run: yarn coverage:hardhat
+      # build hardhat coverage
+      - name: Build hardhat contracts
+        run: yarn compile:hardhat --force # don't use compilation cache
+      - name: Check hardhat coverage
+        run: yarn coverage:hardhat
 
       # build foundry coverage
       - name: Build foundry contracts
         run: yarn compile:forge # don't use compilation cache
-      - name: Check forge coverage
-        run: yarn coverage:forge && genhtml ./lcov.info --output-dir coverage/foundry --branch-coverage
+      - name: Check foundry coverage
+        run: yarn coverage:forge && genhtml ./lcov.info --output-dir coverage/foundry --branch-coverage  --ignore-errors inconsistent
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
