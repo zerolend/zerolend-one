@@ -17,7 +17,6 @@ import {IReserveInterestRateStrategy} from './IReserveInterestRateStrategy.sol';
 
 /**
  * @title IDefaultInterestRateStrategy
-
  * @notice Defines the basic interface of the DefaultReserveInterestRateStrategy
  */
 interface IDefaultInterestRateStrategy is IReserveInterestRateStrategy {

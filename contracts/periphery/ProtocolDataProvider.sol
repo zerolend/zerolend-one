@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IERC20Detailed} from '../core/interfaces/IERC20Detailed.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 import {ReserveConfiguration} from '../core/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../core/protocol/libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../core/protocol/libraries/types/DataTypes.sol';
@@ -39,7 +39,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   //       continue;
   //     }
   //     reservesTokens[i] = TokenData({
-  //       symbol: IERC20Detailed(reserves[i]).symbol(),
+  //       symbol: IERC20Metadata(reserves[i]).symbol(),
   //       tokenAddress: reserves[i]
   //     });
   //   }
@@ -54,7 +54,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   //   for (uint256 i = 0; i < reserves.length; i++) {
   //     DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(reserves[i]);
   //     aTokens[i] = TokenData({
-  //       symbol: IERC20Detailed(reserveData).symbol(),
+  //       symbol: IERC20Metadata(reserveData).symbol(),
   //       tokenAddress: reserveData.aTokenAddress
   //     });
   //   }
@@ -82,8 +82,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   {
     DataTypes.ReserveConfigurationMap memory configuration = IPool(pool).getConfiguration(asset);
 
-    (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration
-      .getParams();
+    (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration.getParams();
 
     (isFrozen, borrowingEnabled) = configuration.getFlags();
 
@@ -91,10 +90,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   }
 
   /// @inheritdoc IPoolDataProvider
-  function getReserveCaps(
-    address pool,
-    address asset
-  ) external view override returns (uint256 borrowCap, uint256 supplyCap) {
+  function getReserveCaps(address pool, address asset) external view override returns (uint256 borrowCap, uint256 supplyCap) {
     // (borrowCap, supplyCap) = IPool(pool).getConfiguration(asset).getCaps();
   }
 
@@ -122,8 +118,8 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
 
   //   return (
   //     reserve.accruedToTreasury,
-  //     IERC20Detailed(reserve.aTokenAddress).totalSupply(),
-  //     IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply(),
+  //     IERC20Metadata(reserve.aTokenAddress).totalSupply(),
+  //     IERC20Metadata(reserve.variableDebtTokenAddress).totalSupply(),
   //     reserve.currentLiquidityRate,
   //     reserve.currentVariableBorrowRate,
   //     reserve.liquidityIndex,
@@ -138,13 +134,13 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   //   address asset
   // ) external view override returns (uint256) {
   //   DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
-  //   return IERC20Detailed(reserve.aTokenAddress).totalSupply();
+  //   return IERC20Metadata(reserve.aTokenAddress).totalSupply();
   // }
 
   /// @inheritdoc IPoolDataProvider
   // function getTotalDebt(address pool, address asset) external view override returns (uint256) {
   //   DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
-  //   return IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply();
+  //   return IERC20Metadata(reserve.variableDebtTokenAddress).totalSupply();
   // }
 
   /// @inheritdoc IPoolDataProvider
@@ -169,8 +165,8 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   //   // todo
   //   DataTypes.UserConfigurationMap memory userConfig; //= IPool(pool).getUserConfiguration(user);
 
-  //   currentATokenBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
-  //   currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
+  //   currentATokenBalance = IERC20Metadata(reserve.aTokenAddress).balanceOf(user);
+  //   currentVariableDebt = IERC20Metadata(reserve.variableDebtTokenAddress).balanceOf(user);
   //   // scaledVariableDebt = IVariableDebtToken(reserve.variableDebtTokenAddress).scaledBalanceOf(user);
   //   liquidityRate = reserve.currentLiquidityRate;
 
@@ -188,10 +184,7 @@ abstract contract ProtocolDataProvider is IPoolDataProvider {
   // }
 
   /// @inheritdoc IPoolDataProvider
-  function getInterestRateStrategyAddress(
-    address pool,
-    address asset
-  ) external view override returns (address irStrategyAddress) {
+  function getInterestRateStrategyAddress(address pool, address asset) external view override returns (address irStrategyAddress) {
     DataTypes.ReserveData memory reserve = IPool(pool).getReserveData(asset);
     return (reserve.interestRateStrategyAddress);
   }
