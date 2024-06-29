@@ -235,7 +235,7 @@ interface IPool {
   function liquidateSimple(address collateralAsset, address debtAsset, bytes32 position, uint256 debtToCover) external;
 
   /**
-   * @dev See {IPool-flashLoan} for the full documentation.
+   * @dev See [flashLoan(...)](#flashLoan) for the full documentation.
    */
   function flashLoanSimple(address receiverAddress, address asset, uint256 amount, bytes calldata params) external;
 
