@@ -55,7 +55,7 @@
     "compile:forge": "forge build",
     "compile:hardhat": "hardhat compile",
     "compile": "npm run compile:hardhat && npm run compile:forge",
-    "coverage:forge": "forge coverage",
+    "coverage:forge": "forge coverage --report lcov",
     "coverage:hardhat": "SOLIDITY_COVERAGE=true hardhat coverage",
     "coverage": "npm run coverage:hardhat && npm run coverage:forge",
     "docs": "rimraf docs && hardhat docgen",
