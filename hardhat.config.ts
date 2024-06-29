@@ -23,6 +23,13 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  gasReporter: {
+    // @ts-ignore
+    reportFormat: 'markdown',
+    outputFile: 'coverage/gasReport.md',
+    forceTerminalOutput: true,
+    forceTerminalOutputFormat: 'terminal',
+  },
   paths: {
     tests: './test/hardhat',
   },

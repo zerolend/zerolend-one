@@ -33,20 +33,22 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Run foundry coverage
-        run: yarn compile:forge && yarn coverage:forge
-        #  && genhtml ./lcov.info --output-dir coverage/foundry --branch-coverage  --ignore-errors inconsistent
-      - name: Report code coverage
-        run: ls && genhtml lcov.info --output-dir coverage/foundry --rc lcov_branch_coverage=1
-        shell: bash
+        run: yarn compile:forge && \
+          yarn coverage:forge && \
+          genhtml lcov.info --output-dir coverage/foundry --rc lcov_branch_coverage=1
 
       - name: Run hardhat coverage
         run: yarn compile:hardhat --force && yarn coverage:hardhat
+
+      - name: Run hardhat tests with gas report
+        run: REPORT_GAS=true npx hardhat test
 
       # Deploy to gh pages
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './coverage'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
