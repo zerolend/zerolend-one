@@ -1,13 +1,11 @@
 import { parseEther } from 'ethers';
 import { MintableERC20 } from '../../types';
 import { Pool } from '../../types/contracts/core/protocol/pool';
-import { deployPool } from './fixtures/pool';
+import { deployPool, RAY } from './fixtures/pool';
 import { expect } from 'chai';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-
-const ray = parseEther('1000000000');
 
 describe('Pool - Liquidity Index', () => {
   let pool: Pool;
@@ -25,13 +23,13 @@ describe('Pool - Liquidity Index', () => {
 
   it('Liquidity index for a new reserve should be set to 1 ray', async () => {
     const reserve = await pool.getReserveData(tokenA.target);
-    expect(reserve.liquidityIndex).eq(ray);
+    expect(reserve.liquidityIndex).eq(RAY);
   });
 
   it('After supplying, liquidity index should not change', async () => {
     pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
     const reserve = await pool.getReserveData(tokenA.target);
-    expect(reserve.liquidityIndex).eq(ray);
+    expect(reserve.liquidityIndex).eq(RAY);
   });
 
   it('After supplying, and waiting for some time liquidity index should not change', async () => {
@@ -41,7 +39,7 @@ describe('Pool - Liquidity Index', () => {
     await time.increase(86400);
 
     const reserve = await pool.getReserveData(tokenA.target);
-    expect(reserve.liquidityIndex).eq(ray);
+    expect(reserve.liquidityIndex).eq(RAY);
   });
 
   it('After supplying, and waiting for some time; balances should not change', async () => {

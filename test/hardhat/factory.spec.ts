@@ -3,6 +3,8 @@ import { DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator } fro
 import { deployCore } from './fixtures/core';
 import { PoolFactory } from '../../types/contracts/core/protocol/pool/PoolFactory';
 import { ZeroAddress } from 'ethers';
+import { basicConfig } from './fixtures/pool';
+import { expect } from 'chai';
 
 describe('factory', () => {
   let poolFactory: PoolFactory;
@@ -23,17 +25,6 @@ describe('factory', () => {
   });
 
   it('should create a new pool', async () => {
-    const basicConfig: DataTypes.InitReserveConfigStruct = {
-      ltv: 7500,
-      liquidationThreshold: 8000,
-      liquidationBonus: 10500,
-      decimals: 18,
-      frozen: false,
-      borrowable: true,
-      borrowCap: 0,
-      supplyCap: 0,
-    };
-
     const input: DataTypes.InitPoolParamsStruct = {
       hook: ZeroAddress,
       assets: [tokenA.target, tokenB.target, tokenC.target],
@@ -42,10 +33,11 @@ describe('factory', () => {
       configurations: [basicConfig, basicConfig, basicConfig],
     };
 
-    const tx = await poolFactory.createPool(input);
+    expect(await poolFactory.poolsLength()).eq(0);
 
-    // todo check logs
-    // const receipt = await tx.wait();
-    // console.log('pool created', receipt?.logs);
+    const tx = await poolFactory.createPool(input);
+    await expect(tx).to.emit(poolFactory, 'PoolCreated');
+
+    expect(await poolFactory.poolsLength()).eq(1);
   });
 });

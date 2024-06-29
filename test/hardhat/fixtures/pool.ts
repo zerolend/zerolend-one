@@ -1,7 +1,20 @@
 import { ethers } from 'hardhat';
 import { deployCore } from './core';
-import { ZeroAddress } from 'ethers';
+import { ZeroAddress, parseEther } from 'ethers';
 import { DataTypes } from '../../../types/contracts/core/protocol/pool/Pool';
+
+export const basicConfig: DataTypes.InitReserveConfigStruct = {
+  ltv: 7500,
+  liquidationThreshold: 8000,
+  liquidationBonus: 10500,
+  decimals: 18,
+  frozen: false,
+  borrowable: true,
+  borrowCap: 0,
+  supplyCap: 0,
+};
+
+export const RAY = parseEther('1000000000');
 
 export async function deployPool() {
   const fixture = await deployCore();
@@ -15,17 +28,6 @@ export async function deployPool() {
     oracleB,
     oracleC,
   } = fixture;
-
-  const basicConfig: DataTypes.InitReserveConfigStruct = {
-    ltv: 7500,
-    liquidationThreshold: 8000,
-    liquidationBonus: 10500,
-    decimals: 18,
-    frozen: false,
-    borrowable: true,
-    borrowCap: 0,
-    supplyCap: 0,
-  };
 
   const input: DataTypes.InitPoolParamsStruct = {
     hook: ZeroAddress,
