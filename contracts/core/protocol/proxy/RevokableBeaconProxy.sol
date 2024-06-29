@@ -17,6 +17,7 @@ import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 import {Proxy} from '@openzeppelin/contracts/proxy/Proxy.sol';
 import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
+import {IRevokableBeaconProxy} from '../../interfaces/IRevokableBeaconProxy.sol';
 
 /**
  * @title A beacon proxy with the ability to have it's upgradability revoked
@@ -24,11 +25,21 @@ import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
  * @notice This is a beacon proxy contract that has the ability for the proxy admin to revoke
  * the beacon's ability to upgrade the contract.
  */
-contract RevokableBeaconProxy is Proxy {
+contract RevokableBeaconProxy is IRevokableBeaconProxy, Proxy {
+  /// @dev The keccak256 hash used for the implementation slot
   bytes32 internal immutable _IMPLEMENTATION_SLOT = keccak256('eip1967.proxy.impl');
+
+  /// @dev The keccak256 hash used for the beacon slot
   bytes32 internal immutable _BEACON_SLOT = keccak256('eip1967.proxy.beacon');
+
+  /// @dev The keccak256 hash used for the admin slot
   bytes32 internal immutable _ADMIN_SLOT = keccak256('eip1967.proxy.admin');
 
+  /**
+   * @notice Constructor for the beacon proxy. Ideally called by a factory contract.
+   * @param _beacon The address of the beacon contract.
+   * @param _admin The admin to revoke the beacon contract
+   */
   constructor(address _beacon, address _admin) {
     StorageSlot.getAddressSlot(_BEACON_SLOT).value = _beacon;
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = _admin;
@@ -48,9 +59,7 @@ contract RevokableBeaconProxy is Proxy {
   }
 
   /**
-   * @notice Transfer the ownership of the proxy to another address
-   * @dev Can only be called by the proxy admin
-   * @param newAdmin The new admin to transfer ownership to
+   * @inheritdoc IRevokableBeaconProxy
    */
   function setAdmin(address newAdmin) external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
@@ -58,9 +67,7 @@ contract RevokableBeaconProxy is Proxy {
   }
 
   /**
-   * @notice Revokes the beacon's ability to upgrade this contract and forver seals the implementation
-   * into the code forever.
-   * @dev Can only be called by the proxy admin
+   * @inheritdoc IRevokableBeaconProxy
    */
   function revokeBeacon() external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
@@ -68,8 +75,7 @@ contract RevokableBeaconProxy is Proxy {
   }
 
   /**
-   * @notice Revoke the beacon's admin
-   * @dev Can only be called by the proxy admin
+   * @inheritdoc IRevokableBeaconProxy
    */
   function revokeAdmin() external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
@@ -77,25 +83,28 @@ contract RevokableBeaconProxy is Proxy {
   }
 
   /**
-   * @notice Returns the implementation of the current proxy
-   * @return The proxy's current implementation
+   * @inheritdoc IRevokableBeaconProxy
    */
   function implementation() external view returns (address) {
     return _implementation();
   }
 
+  /**
+   * @inheritdoc IRevokableBeaconProxy
+   */
   function admin() external view returns (address) {
     return _getAdmin();
   }
 
+  /**
+   * @inheritdoc IRevokableBeaconProxy
+   */
   function beacon() external view returns (address) {
     return _getBeacon();
   }
 
   /**
-   * @notice Checks if the beacon is revoked in which case the contract is as good as immutable.
-   * @dev The revoked implementation address can be found in the `implementation()` call.
-   * @return revoked True iff the beacon has been revoked.
+   * @inheritdoc IRevokableBeaconProxy
    */
   function isBeaconRevoked() external view returns (bool revoked) {
     revoked = _getBeacon() == address(0);
