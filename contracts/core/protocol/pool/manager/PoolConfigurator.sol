@@ -41,18 +41,11 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
 
     _setRoleAdmin(getRoleFromPool(pool, POOL_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
     _setRoleAdmin(getRoleFromPool(pool, RISK_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
-    _setRoleAdmin(
-      getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE),
-      getRoleFromPool(pool, POOL_ADMIN_ROLE)
-    );
+    _setRoleAdmin(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
   }
 
   /// @inheritdoc IPoolConfigurator
-  function setReserveBorrowing(
-    address pool,
-    address asset,
-    bool enabled
-  ) external onlyPoolAdmin(pool) {
+  function setReserveBorrowing(address pool, address asset, bool enabled) external onlyPoolAdmin(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setBorrowingEnabled(enabled);
@@ -61,11 +54,7 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
   }
 
   /// @inheritdoc IPoolConfigurator
-  function setReserveFreeze(
-    address pool,
-    address asset,
-    bool freeze
-  ) external onlyRiskOrPoolAdmins(pool) {
+  function setReserveFreeze(address pool, address asset, bool freeze) external onlyRiskOrPoolAdmins(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     currentConfig.setFrozen(freeze);
@@ -79,9 +68,7 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
     address[] memory reserves = cachedPool.getReservesList();
 
     for (uint256 i = 0; i < reserves.length; i++) {
-      DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(
-        reserves[i]
-      );
+      DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(reserves[i]);
       currentConfig.setFrozen(freeze);
       cachedPool.setReserveConfiguration(reserves[i], address(0), address(0), currentConfig);
       emit ReserveFrozen(reserves[i], freeze);
@@ -89,11 +76,7 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
   }
 
   /// @inheritdoc IPoolConfigurator
-  function setBorrowCap(
-    address pool,
-    address asset,
-    uint256 newBorrowCap
-  ) external onlyRiskOrPoolAdmins(pool) {
+  function setBorrowCap(address pool, address asset, uint256 newBorrowCap) external onlyRiskOrPoolAdmins(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     uint256 oldBorrowCap = currentConfig.getBorrowCap();
@@ -103,11 +86,7 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
   }
 
   /// @inheritdoc IPoolConfigurator
-  function setSupplyCap(
-    address pool,
-    address asset,
-    uint256 newSupplyCap
-  ) external onlyRiskOrPoolAdmins(pool) {
+  function setSupplyCap(address pool, address asset, uint256 newSupplyCap) external onlyRiskOrPoolAdmins(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);
     uint256 oldSupplyCap = currentConfig.getSupplyCap();
@@ -117,11 +96,7 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
   }
 
   // @inheritdoc IPoolConfigurator
-  function setReserveInterestRateStrategyAddress(
-    address pool,
-    address asset,
-    address newRateStrategyAddress
-  ) external onlyPoolAdmin(pool) {
+  function setReserveInterestRateStrategyAddress(address pool, address asset, address newRateStrategyAddress) external onlyPoolAdmin(pool) {
     IPool cachedPool = IPool(pool);
     DataTypes.ReserveData memory reserve = cachedPool.getReserveData(asset);
     DataTypes.ReserveConfigurationMap memory currentConfig = cachedPool.getConfiguration(asset);

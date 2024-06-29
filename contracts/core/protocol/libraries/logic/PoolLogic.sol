@@ -38,17 +38,8 @@ library PoolLogic {
 
   // See `IPool` for descriptions
   event MintedToTreasury(address indexed reserve, uint256 amountMinted);
-  event CollateralConfigurationChanged(
-    address indexed asset,
-    uint256 ltv,
-    uint256 liquidationThreshold,
-    uint256 liquidationBonus
-  );
-  event ReserveInitialized(
-    address indexed asset,
-    address oracle,
-    address interestRateStrategyAddress
-  );
+  event CollateralConfigurationChanged(address indexed asset, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus);
+  event ReserveInitialized(address indexed asset, address oracle, address interestRateStrategyAddress);
 
   /**
    * @notice Initialize an asset reserve and add the reserve to the list of reserves
@@ -75,18 +66,11 @@ library PoolLogic {
     config.setBorrowCap(params.configuration.borrowCap);
     config.setSupplyCap(params.configuration.supplyCap);
 
-    setReserveConfiguration(
-      reservesData,
-      params.asset,
-      params.interestRateStrategyAddress,
-      params.oracle,
-      config
-    );
+    setReserveConfiguration(reservesData, params.asset, params.interestRateStrategyAddress, params.oracle, config);
 
     reservesData[params.asset].init(params.interestRateStrategyAddress);
 
-    bool reserveAlreadyAdded = reservesData[params.asset].id != 0 ||
-      reservesList[0] == params.asset;
+    bool reserveAlreadyAdded = reservesData[params.asset].id != 0 || reservesList[0] == params.asset;
     require(!reserveAlreadyAdded, Errors.RESERVE_ALREADY_ADDED);
 
     reservesData[params.asset].id = params.reservesCount;
@@ -100,10 +84,7 @@ library PoolLogic {
    * @param reservesData The state of all the reserves
    * @param asset The reserves for which the minting needs to be executed
    */
-  function executeMintToTreasury(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    address asset
-  ) external {
+  function executeMintToTreasury(mapping(address => DataTypes.ReserveData) storage reservesData, address asset) external {
     DataTypes.ReserveData storage reserve = reservesData[asset];
 
     uint256 accruedToTreasury = reserve.accruedToTreasury;
@@ -140,29 +121,10 @@ library PoolLogic {
   )
     external
     view
-    returns (
-      uint256 totalCollateralBase,
-      uint256 totalDebtBase,
-      uint256 availableBorrowsBase,
-      uint256 currentLiquidationThreshold,
-      uint256 ltv,
-      uint256 healthFactor
-    )
+    returns (uint256 totalCollateralBase, uint256 totalDebtBase, uint256 availableBorrowsBase, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor)
   {
-    (
-      totalCollateralBase,
-      totalDebtBase,
-      ltv,
-      currentLiquidationThreshold,
-      healthFactor,
-
-    ) = GenericLogic.calculateUserAccountData(_balances, reservesData, reservesList, params);
-
-    availableBorrowsBase = GenericLogic.calculateAvailableBorrows(
-      totalCollateralBase,
-      totalDebtBase,
-      ltv
-    );
+    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor, ) = GenericLogic.calculateUserAccountData(_balances, reservesData, reservesList, params);
+    availableBorrowsBase = GenericLogic.calculateAvailableBorrows(totalCollateralBase, totalDebtBase, ltv);
   }
 
   function setReserveConfiguration(
@@ -176,9 +138,10 @@ library PoolLogic {
     _reserves[asset].configuration = config;
 
     // set if values are non-0
-    if (rateStrategyAddress != address(0))
-      _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
+    if (rateStrategyAddress != address(0)) _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
     if (source != address(0)) _reserves[asset].oracle = source;
+
+    require(config.getDecimals() >= 6, 'not enough decimals');
 
     // validation of the parameters: the LTV can
     // only be lower or equal than the liquidation threshold
@@ -188,25 +151,13 @@ library PoolLogic {
     if (config.getLiquidationThreshold() != 0) {
       // liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
       // collateral than needed to cover the debt
-      require(
-        config.getLiquidationBonus() > PercentageMath.PERCENTAGE_FACTOR,
-        Errors.INVALID_RESERVE_PARAMS
-      );
+      require(config.getLiquidationBonus() > PercentageMath.PERCENTAGE_FACTOR, Errors.INVALID_RESERVE_PARAMS);
 
       // if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
       // a loan is taken there is enough collateral available to cover the liquidation bonus
-      require(
-        config.getLiquidationThreshold().percentMul(config.getLiquidationBonus()) <=
-          PercentageMath.PERCENTAGE_FACTOR,
-        Errors.INVALID_RESERVE_PARAMS
-      );
+      require(config.getLiquidationThreshold().percentMul(config.getLiquidationBonus()) <= PercentageMath.PERCENTAGE_FACTOR, Errors.INVALID_RESERVE_PARAMS);
 
-      emit CollateralConfigurationChanged(
-        asset,
-        config.getLtv(),
-        config.getLiquidationThreshold(),
-        config.getLiquidationThreshold()
-      );
+      emit CollateralConfigurationChanged(asset, config.getLtv(), config.getLiquidationThreshold(), config.getLiquidationThreshold());
     }
   }
 }
