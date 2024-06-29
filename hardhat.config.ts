@@ -39,11 +39,11 @@ const config: HardhatUserConfig = {
     hardhat: {
       live: false,
       loggingEnabled: false,
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
     },
     sepolia: {
       url: `https://1rpc.io/sepolia`,
-      accounts: [process.env.WALLET_PRIVATE_KEY || ''],
+      accounts: process.env.WALLET_PRIVATE_KEY ? [process.env.WALLET_PRIVATE_KEY] : [],
       saveDeployments: true,
     },
   },
