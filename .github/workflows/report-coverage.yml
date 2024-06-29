@@ -39,10 +39,9 @@ jobs:
       - name: Report code coverage
         uses: zgosalvez/github-actions-report-lcov@v3
         with:
-          coverage-files: lcov.info
+          coverage-files: 'lcov.info'
           # minimum-coverage: 90
-          artifact-name: coverage/foundry
-          # github-token: ${{ secrets.GITHUB_TOKEN }}
+          artifact-name: 'coverage/foundry'
           # working-directory: apps/my-first-app
           # update-comment: true
       # build hardhat coverage
