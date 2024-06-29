@@ -16,17 +16,14 @@ pragma solidity 0.8.19;
 import '../../lib/forge-std/src/Test.sol';
 
 contract Safe {
-
   receive() external payable { }
 
   function withdraw() external {
     payable(msg.sender).transfer(address(this).balance);
   }
-
 }
 
 contract FuzzingExampleTest is Test {
-
   Safe safe;
 
   // Needed so the test contract itself can receive ether
@@ -54,5 +51,4 @@ contract FuzzingExampleTest is Test {
     uint256 postBalance = address(this).balance;
     assertEq(preBalance + amount, postBalance);
   }
-
 }

@@ -39,7 +39,7 @@
   number_underscore = "thousands"
   sort_imports = true
   quote_style = "single"
-  contract_new_lines = true
+  contract_new_lines = false
   override_spacing = true
   tab_width = 2
   wrap_comments = true

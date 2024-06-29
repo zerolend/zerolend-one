@@ -16,7 +16,6 @@ pragma solidity 0.8.19;
 import '../../lib/forge-std/src/Test.sol';
 
 contract ExampleContract1 {
-
   uint256 public val1;
   uint256 public val2;
   uint256 public val3;
@@ -30,11 +29,9 @@ contract ExampleContract1 {
     val2 += amount;
     val3 += amount;
   }
-
 }
 
 contract InvariantExampleTest is Test {
-
   ExampleContract1 foo;
 
   function setUp() external {
@@ -48,5 +45,4 @@ contract InvariantExampleTest is Test {
   function invariant_B() external view {
     assertGe(foo.val1() + foo.val2(), foo.val3());
   }
-
 }

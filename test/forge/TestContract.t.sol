@@ -16,7 +16,6 @@ pragma solidity 0.8.19;
 import '../../lib/forge-std/src/Test.sol';
 
 contract TestContract is Test {
-
   using stdStorage for StdStorage;
 
   Storage test;
@@ -70,12 +69,10 @@ contract TestContract is Test {
     assertEq(uint256(vm.load(address(test), bytes32(slot_for_a_field))), 1);
     assertEq(uint256(vm.load(address(test), bytes32(slot_for_b_field))), 2);
   }
-
 }
 
 // A complex storage contract
 contract Storage {
-
   struct UnpackedStruct {
     uint256 a;
     uint256 b;
@@ -100,5 +97,4 @@ contract Storage {
       t := sload(slot)
     }
   }
-
 }
