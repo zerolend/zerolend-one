@@ -32,19 +32,13 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # build foundry coverage
       - name: Run foundry coverage
         run: yarn compile:forge && yarn coverage:forge
         #  && genhtml ./lcov.info --output-dir coverage/foundry --branch-coverage  --ignore-errors inconsistent
       - name: Report code coverage
-        uses: zgosalvez/github-actions-report-lcov@v3
-        with:
-          coverage-files: 'lcov.info'
-          # minimum-coverage: 90
-          artifact-name: 'coverage/foundry'
-          # working-directory: apps/my-first-app
-          # update-comment: true
-      # build hardhat coverage
+        run: genhtml lcov.info --output-dir coverage/foundry --rc lcov_branch_coverage=1
+        shell: bash
+
       - name: Run hardhat coverage
         run: yarn compile:hardhat --force && yarn coverage:hardhat
 
