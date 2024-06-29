@@ -38,9 +38,6 @@ contract PoolStorage {
   /// @notice Number of active reserves in the pool
   uint16 internal _reservesCount;
 
-  /// @notice The pool configurator contract that can make changes
-  address public configurator;
-
   /// @notice The original factory contract with protocol-level control variables
   IPoolFactory internal _factory;
 

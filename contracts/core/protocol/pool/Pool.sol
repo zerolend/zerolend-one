@@ -112,8 +112,8 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function setReserveConfiguration(address asset, address rateStrategyAddress, address source, DataTypes.ReserveConfigurationMap calldata configuration) external virtual {
+  function setReserveConfiguration(address asset, address rateStrategy, address source, DataTypes.ReserveConfigurationMap calldata config) external virtual {
     require(msg.sender == address(_factory.configurator()), 'only configurator');
-    PoolLogic.setReserveConfiguration(_reserves, asset, rateStrategyAddress, source, configuration);
+    PoolLogic.setReserveConfiguration(_reserves, asset, rateStrategy, source, config);
   }
 }

@@ -434,4 +434,10 @@ interface IPool {
    * @return data The reserve supply information of the given asset
    */
   function getTotalSupplyRaw(address asset) external view returns (DataTypes.ReserveSupplies memory data);
+
+  /**
+   * @notice Gets the Pool Configurator
+   * @return The address of the Pool Configurator
+   */
+  function getConfigurator() external view returns (address);
 }

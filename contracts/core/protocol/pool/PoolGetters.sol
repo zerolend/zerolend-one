@@ -120,6 +120,11 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPool
+  function getConfigurator() external view override returns (address) {
+    return address(_factory.configurator());
+  }
+
+  /// @inheritdoc IPool
   function getReserveAddressById(uint16 id) external view returns (address) {
     return _reservesList[id];
   }
