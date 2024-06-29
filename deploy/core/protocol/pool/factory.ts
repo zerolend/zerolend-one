@@ -1,21 +1,21 @@
-import { ZeroAddress } from "ethers";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { ZeroAddress } from 'ethers';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 async function main(hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre;
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const deployment = await deploy("Factory", {
+  const deployment = await deploy('PoolFactory', {
     from: deployer,
-    contract: "Factory",
+    contract: 'PoolFactory',
     args: [ZeroAddress],
     autoMine: true,
     log: true,
   });
 
-  await hre.run("verify:verify", { address: deployment.address });
+  await hre.run('verify:verify', { address: deployment.address });
 }
 
-main.tags = ["Factory"];
+main.tags = ['PoolFactory'];
 export default main;

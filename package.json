@@ -72,9 +72,9 @@
     "typescript": "~5.0.4",
     "viem": "^2.10.9"
   },
-  "engines" : {
-    "npm" : ">=9.0.0",
-    "node" : ">=18.0.0"
+  "engines": {
+    "npm": ">=9.0.0",
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
