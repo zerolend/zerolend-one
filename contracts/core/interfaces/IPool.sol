@@ -158,7 +158,8 @@ interface IPool {
   function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
 
   /**
-   * @dev See {IPool-supply} for the full documentation.
+   * @dev See [supply(...)](#supply) for the full documentation. This call executes the same function with
+   * dummy data params
    */
   function supplySimple(address asset, uint256 amount, uint256 index) external;
 
@@ -174,7 +175,8 @@ interface IPool {
   function withdraw(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external returns (uint256);
 
   /**
-   * @dev See {IPool-withdraw} for the full documentation.
+   * @dev See [withdraw(...)](#withdraw) for the full documentation. This call executes the same function with
+   * dummy data params
    */
   function withdrawSimple(address asset, uint256 amount, uint256 index) external returns (uint256);
 
@@ -191,7 +193,8 @@ interface IPool {
   function borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
 
   /**
-   * @dev See {IPool-borrow} for the full documentation.
+   * @dev See [borrow(...)](#borrow) for the full documentation. This call executes the same function with
+   * dummy data params
    */
   function borrowSimple(address asset, uint256 amount, uint256 index) external;
 
@@ -207,7 +210,8 @@ interface IPool {
   function repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external returns (uint256);
 
   /**
-   * @dev See {IPool-repay} for the full documentation.
+   * @dev See [repay(...)](#repay) for the full documentation. This call executes the same function with
+   * dummy data params
    */
   function repaySimple(address asset, uint256 amount, uint256 index) external returns (uint256);
 
@@ -230,12 +234,14 @@ interface IPool {
   function liquidate(address collateralAsset, address debtAsset, bytes32 position, uint256 debtToCover, DataTypes.ExtraData memory data) external;
 
   /**
-   * @dev See {IPool-liquidate} for the full documentation.
+   * @dev See [liquidate(...)](#liquidate) for the full documentation. This call executes the same function with
+   * dummy data params
    */
   function liquidateSimple(address collateralAsset, address debtAsset, bytes32 position, uint256 debtToCover) external;
 
   /**
-   * @dev See [flashLoan(...)](#flashLoan) for the full documentation.
+   * @dev See [flashLoan(...)](#flashLoan) for the full documentation. This call executes the same function with
+   * dummy data params
    */
   function flashLoanSimple(address receiverAddress, address asset, uint256 amount, bytes calldata params) external;
 
