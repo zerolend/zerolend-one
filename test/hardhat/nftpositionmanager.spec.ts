@@ -38,7 +38,7 @@ describe('NFT Position Manager', () => {
   });
 
   describe('Mint', () => {
-    it('Should revert if the pool are not deployed through factory', async () => {
+    it('should revert if the pool are not deployed through factory', async () => {
       const mintParams = {
         asset: await tokenA.getAddress(),
         pool: ZeroAddress,
@@ -46,7 +46,7 @@ describe('NFT Position Manager', () => {
       };
       await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(manager, 'NotPool');
     });
-    it('Should revert if user pass invalid asset address', async () => {
+    it('should revert if user pass invalid asset address', async () => {
       const mintParams = {
         asset: ZeroAddress,
         pool,
@@ -57,7 +57,7 @@ describe('NFT Position Manager', () => {
         'ZeroAddressNotAllowed'
       );
     });
-    it('Should revert if user pass invalid amount', async () => {
+    it('should revert if user pass invalid amount', async () => {
       let mintParams = {
         asset: tokenA,
         pool,
@@ -69,7 +69,7 @@ describe('NFT Position Manager', () => {
       );
     });
 
-    it('Should emit the event IncreasedLiquidity on Mint', async () => {
+    it('should emit the event IncreasedLiquidity on Mint', async () => {
       // mint asset tokens to alice
       const mintAmount = ethers.parseUnits('100', 'wei');
       const supplyAmount = ethers.parseUnits('10', 'wei');
@@ -123,7 +123,7 @@ describe('NFT Position Manager', () => {
   });
 
   describe('IncreaseLiquidity', () => {
-    it('Should revert if user pass invalid asset address', async () => {
+    it('should revert if user pass invalid asset address', async () => {
       const liquidityParams = {
         asset: ZeroAddress,
         pool,
@@ -134,7 +134,7 @@ describe('NFT Position Manager', () => {
         'ZeroAddressNotAllowed'
       );
     });
-    it('Should revert if user pass invalid amount', async () => {
+    it('should revert if user pass invalid amount', async () => {
       const liquidityParams = {
         asset: tokenA,
         pool,
@@ -145,7 +145,7 @@ describe('NFT Position Manager', () => {
         'ZeroValueNotAllowed'
       );
     });
-    it('Should revert if the caller is not owner or approved for tokenId', async () => {
+    it('should revert if the caller is not owner or approved for tokenId', async () => {
       const supplyAmount = ethers.parseUnits('10', 'wei');
       const mintAmount = ethers.parseUnits('100', 'wei');
       await tokenA.connect(alice)['mint(uint256)'](mintAmount);

@@ -21,18 +21,18 @@ describe('Pool - Liquidity Index', () => {
     await tokenA.approve(pool.target, parseEther('3'));
   });
 
-  it('Liquidity index for a new reserve should be set to 1 ray', async () => {
+  it('liquidity index for a new reserve should be set to 1 ray', async () => {
     const reserve = await pool.getReserveData(tokenA.target);
     expect(reserve.liquidityIndex).eq(RAY);
   });
 
-  it('After supplying, liquidity index should not change', async () => {
+  it('after supplying, liquidity index should not change', async () => {
     pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
     const reserve = await pool.getReserveData(tokenA.target);
     expect(reserve.liquidityIndex).eq(RAY);
   });
 
-  it('After supplying, and waiting for some time liquidity index should not change', async () => {
+  it('after supplying, and waiting for some time liquidity index should not change', async () => {
     pool['supply(address,uint256,uint256)'](tokenA.target, parseEther('1'), 0);
 
     // wait for a day
@@ -42,7 +42,7 @@ describe('Pool - Liquidity Index', () => {
     expect(reserve.liquidityIndex).eq(RAY);
   });
 
-  it('After supplying, and waiting for some time; balances should not change', async () => {
+  it('after supplying, and waiting for some time; balances should not change', async () => {
     const balBefore = await pool['getBalance(address,address,uint256)'](
       tokenA.target,
       deployer.address,

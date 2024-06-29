@@ -6,7 +6,7 @@ import { ZeroAddress } from 'ethers';
 import { basicConfig } from './fixtures/pool';
 import { expect } from 'chai';
 
-describe('factory', () => {
+describe('Pool Factory', () => {
   let poolFactory: PoolFactory;
 
   let tokenA: MintableERC20;
