@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {Errors} from '../helpers/Errors.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import {Errors} from '../utils/Errors.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from './ReserveConfiguration.sol';
 
 /**
@@ -25,10 +25,8 @@ import {ReserveConfiguration} from './ReserveConfiguration.sol';
 library UserConfiguration {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  uint256 internal constant BORROWING_MASK =
-    0x5555555555555555555555555555555555555555555555555555555555555555;
-  uint256 internal constant COLLATERAL_MASK =
-    0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
+  uint256 internal constant BORROWING_MASK = 0x5555555555555555555555555555555555555555555555555555555555555555;
+  uint256 internal constant COLLATERAL_MASK = 0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
 
   /**
    * @notice Sets if the user is borrowing the reserve identified by reserveIndex
@@ -36,11 +34,7 @@ library UserConfiguration {
    * @param reserveIndex The index of the reserve in the bitmap
    * @param borrowing True if the user is borrowing the reserve, false otherwise
    */
-  function setBorrowing(
-    DataTypes.UserConfigurationMap storage self,
-    uint256 reserveIndex,
-    bool borrowing
-  ) internal {
+  function setBorrowing(DataTypes.UserConfigurationMap storage self, uint256 reserveIndex, bool borrowing) internal {
     unchecked {
       uint256 bit = 1 << (reserveIndex << 1);
       if (borrowing) {
@@ -57,11 +51,7 @@ library UserConfiguration {
    * @param reserveIndex The index of the reserve in the bitmap
    * @param usingAsCollateral True if the user is using the reserve as collateral, false otherwise
    */
-  function setUsingAsCollateral(
-    DataTypes.UserConfigurationMap storage self,
-    uint256 reserveIndex,
-    bool usingAsCollateral
-  ) internal {
+  function setUsingAsCollateral(DataTypes.UserConfigurationMap storage self, uint256 reserveIndex, bool usingAsCollateral) internal {
     unchecked {
       require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, Errors.INVALID_RESERVE_INDEX);
       uint256 bit = 1 << ((reserveIndex << 1) + 1);
@@ -79,10 +69,7 @@ library UserConfiguration {
    * @param reserveIndex The index of the reserve in the bitmap
    * @return True if the user has been using a reserve for borrowing or as collateral, false otherwise
    */
-  function isUsingAsCollateralOrBorrowing(
-    DataTypes.UserConfigurationMap memory self,
-    uint256 reserveIndex
-  ) internal pure returns (bool) {
+  function isUsingAsCollateralOrBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex) internal pure returns (bool) {
     unchecked {
       require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, Errors.INVALID_RESERVE_INDEX);
       return (self.data >> (reserveIndex << 1)) & 3 != 0;
@@ -95,10 +82,7 @@ library UserConfiguration {
    * @param reserveIndex The index of the reserve in the bitmap
    * @return True if the user has been using a reserve for borrowing, false otherwise
    */
-  function isBorrowing(
-    DataTypes.UserConfigurationMap memory self,
-    uint256 reserveIndex
-  ) internal pure returns (bool) {
+  function isBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex) internal pure returns (bool) {
     unchecked {
       require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, Errors.INVALID_RESERVE_INDEX);
       return (self.data >> (reserveIndex << 1)) & 1 != 0;
@@ -111,10 +95,7 @@ library UserConfiguration {
    * @param reserveIndex The index of the reserve in the bitmap
    * @return True if the user has been using a reserve as collateral, false otherwise
    */
-  function isUsingAsCollateral(
-    DataTypes.UserConfigurationMap memory self,
-    uint256 reserveIndex
-  ) internal pure returns (bool) {
+  function isUsingAsCollateral(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex) internal pure returns (bool) {
     unchecked {
       require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, Errors.INVALID_RESERVE_INDEX);
       return (self.data >> ((reserveIndex << 1) + 1)) & 1 != 0;
@@ -127,9 +108,7 @@ library UserConfiguration {
    * @param self The configuration object
    * @return True if the user has been supplying as collateral one reserve, false otherwise
    */
-  function isUsingAsCollateralOne(
-    DataTypes.UserConfigurationMap memory self
-  ) internal pure returns (bool) {
+  function isUsingAsCollateralOne(DataTypes.UserConfigurationMap memory self) internal pure returns (bool) {
     uint256 collateralData = self.data & COLLATERAL_MASK;
     return collateralData != 0 && (collateralData & (collateralData - 1) == 0);
   }
@@ -139,9 +118,7 @@ library UserConfiguration {
    * @param self The configuration object
    * @return True if the user has been supplying as collateral any reserve, false otherwise
    */
-  function isUsingAsCollateralAny(
-    DataTypes.UserConfigurationMap memory self
-  ) internal pure returns (bool) {
+  function isUsingAsCollateralAny(DataTypes.UserConfigurationMap memory self) internal pure returns (bool) {
     return self.data & COLLATERAL_MASK != 0;
   }
 
@@ -179,10 +156,7 @@ library UserConfiguration {
    * @param self The configuration object
    * @return The index of the first asset flagged in the bitmap once the corresponding mask is applied
    */
-  function _getFirstAssetIdByMask(
-    DataTypes.UserConfigurationMap memory self,
-    uint256 mask
-  ) internal pure returns (uint256) {
+  function _getFirstAssetIdByMask(DataTypes.UserConfigurationMap memory self, uint256 mask) internal pure returns (uint256) {
     unchecked {
       uint256 bitmapData = self.data & mask;
       uint256 firstAssetPosition = bitmapData & ~(bitmapData - 1);

@@ -14,8 +14,8 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IDefaultInterestRateStrategy} from '../../core/interfaces/IDefaultInterestRateStrategy.sol';
-import {WadRayMath} from '../../core/protocol/libraries/math/WadRayMath.sol';
-import {DataTypes} from '../../core/protocol/libraries/types/DataTypes.sol';
+import {WadRayMath} from '../../core/protocol/pool/utils/WadRayMath.sol';
+import {DataTypes} from '../../core/protocol/pool/configuration/DataTypes.sol';
 
 abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   uint256 public OPTIMAL_USAGE_RATIO;
@@ -34,12 +34,7 @@ abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrateg
   uint256 internal _stableBorrowRate;
   uint256 internal _variableBorrowRate;
 
-  constructor(
-    uint256 optimalUsageRatio,
-    uint256 baseVariableBorrowRate,
-    uint256 variableRateSlope1,
-    uint256 variableRateSlope2
-  ) {
+  constructor(uint256 optimalUsageRatio, uint256 baseVariableBorrowRate, uint256 variableRateSlope1, uint256 variableRateSlope2) {
     OPTIMAL_USAGE_RATIO = optimalUsageRatio;
     _baseVariableBorrowRate = baseVariableBorrowRate;
     _variableRateSlope1 = variableRateSlope1;

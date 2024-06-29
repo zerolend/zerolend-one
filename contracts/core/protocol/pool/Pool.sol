@@ -13,12 +13,12 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../libraries/types/DataTypes.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IHook} from '../../interfaces/IHook.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {PoolGetters} from './PoolGetters.sol';
-import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
+import {PoolLogic} from './logic/PoolLogic.sol';
 import {PoolSetters} from './PoolSetters.sol';
 
 contract Pool is PoolSetters {

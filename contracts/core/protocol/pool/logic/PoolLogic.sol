@@ -17,13 +17,13 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {Errors} from '../helpers/Errors.sol';
-import {WadRayMath} from '../math/WadRayMath.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import {Errors} from '../utils/Errors.sol';
+import {WadRayMath} from '../utils/WadRayMath.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
 import {GenericLogic} from './GenericLogic.sol';
-import {PercentageMath} from '../math/PercentageMath.sol';
+import {PercentageMath} from '../utils/PercentageMath.sol';
 
 /**
  * @title PoolLogic library

@@ -13,19 +13,19 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../../libraries/types/DataTypes.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
-import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
+import {PercentageMath} from '../utils/PercentageMath.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
-import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
+import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {TokenConfiguration} from '../../libraries/configuration/TokenConfiguration.sol';
-import {UserConfiguration} from '../../libraries/configuration/UserConfiguration.sol';
+import {TokenConfiguration} from '../configuration/TokenConfiguration.sol';
+import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
-import {WadRayMath} from '../../libraries/math/WadRayMath.sol';
+import {WadRayMath} from '../utils/WadRayMath.sol';
 
 /**
  * @title LiquidationLogic library
@@ -119,12 +119,7 @@ library LiquidationLogic {
       balances,
       reservesData,
       reservesList,
-      DataTypes.CalculateUserAccountDataParams({
-        userConfig: userConfig,
-        reservesCount: params.reservesCount,
-        position: params.position,
-        pool: params.pool
-      })
+      DataTypes.CalculateUserAccountDataParams({userConfig: userConfig, reservesCount: params.reservesCount, position: params.position, pool: params.pool})
     );
 
     (vars.userDebt, vars.actualDebtToLiquidate) = _calculateDebt(
@@ -137,26 +132,14 @@ library LiquidationLogic {
     ValidationLogic.validateLiquidationCall(
       userConfig,
       collateralReserve,
-      DataTypes.ValidateLiquidationCallParams({
-        debtReserveCache: vars.debtReserveCache,
-        totalDebt: vars.userDebt,
-        healthFactor: vars.healthFactor
-      })
+      DataTypes.ValidateLiquidationCallParams({debtReserveCache: vars.debtReserveCache, totalDebt: vars.userDebt, healthFactor: vars.healthFactor})
     );
 
-    (
-      vars.collateralPriceSource,
-      vars.debtPriceSource,
-      vars.liquidationBonus
-    ) = _getConfigurationData(collateralReserve, params);
+    (vars.collateralPriceSource, vars.debtPriceSource, vars.liquidationBonus) = _getConfigurationData(collateralReserve, params);
 
     vars.userCollateralBalance = balances[vars.asset][params.position].scaledSupplyBalance;
 
-    (
-      vars.actualCollateralToLiquidate,
-      vars.actualDebtToLiquidate,
-      vars.liquidationProtocolFeeAmount
-    ) = _calculateAvailableCollateralToLiquidate(
+    (vars.actualCollateralToLiquidate, vars.actualDebtToLiquidate, vars.liquidationProtocolFeeAmount) = _calculateAvailableCollateralToLiquidate(
       collateralReserve,
       vars.debtReserveCache,
       vars.actualDebtToLiquidate,
@@ -173,46 +156,29 @@ library LiquidationLogic {
 
     // If the collateral being liquidated is equal to the user balance,
     // we set the currency as not being used as collateral anymore
-    if (
-      vars.actualCollateralToLiquidate + vars.liquidationProtocolFeeAmount ==
-      vars.userCollateralBalance
-    ) {
+    if (vars.actualCollateralToLiquidate + vars.liquidationProtocolFeeAmount == vars.userCollateralBalance) {
       userConfig.setUsingAsCollateral(collateralReserve.id, false);
       emit ReserveUsedAsCollateralDisabled(params.collateralAsset, params.position);
     }
 
     _burnDebtTokens(params, vars, balances[params.debtAsset], totalSupplies[params.debtAsset]);
 
-    debtReserve.updateInterestRates(
-      vars.debtReserveCache,
-      params.debtAsset,
-      IPool(params.pool).getReserveFactor(),
-      vars.actualDebtToLiquidate,
-      0,
-      '',
-      ''
-    );
+    debtReserve.updateInterestRates(vars.debtReserveCache, params.debtAsset, IPool(params.pool).getReserveFactor(), vars.actualDebtToLiquidate, 0, '', '');
 
     _burnCollateralTokens(collateralReserve, params, vars, balances, totalSupplies);
 
     // Transfer fee to treasury if it is non-zero
     if (vars.liquidationProtocolFeeAmount != 0) {
       uint256 liquidityIndex = collateralReserve.getNormalizedIncome();
-      uint256 scaledDownLiquidationProtocolFee = vars.liquidationProtocolFeeAmount.rayDiv(
-        liquidityIndex
-      );
+      uint256 scaledDownLiquidationProtocolFee = vars.liquidationProtocolFeeAmount.rayDiv(liquidityIndex);
       // todo
-      uint256 scaledDownUserBalance = balances[params.collateralAsset][params.position]
-        .scaledSupplyBalance;
+      uint256 scaledDownUserBalance = balances[params.collateralAsset][params.position].scaledSupplyBalance;
       // To avoid trying to send more aTokens than available on balance, due to 1 wei imprecision
       if (scaledDownLiquidationProtocolFee > scaledDownUserBalance) {
         vars.liquidationProtocolFeeAmount = scaledDownUserBalance.rayMul(liquidityIndex);
       }
 
-      IERC20(params.collateralAsset).transfer(
-        IPool(params.pool).factory().treasury(),
-        vars.liquidationProtocolFeeAmount
-      );
+      IERC20(params.collateralAsset).transfer(IPool(params.pool).factory().treasury(), vars.liquidationProtocolFeeAmount);
       // vars.collateralAToken.transferOnLiquidation(
       //   params.position,
       //   vars.collateralAToken.RESERVE_TREASURY_ADDRESS(),
@@ -221,20 +187,9 @@ library LiquidationLogic {
     }
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
-    IERC20(params.debtAsset).safeTransferFrom(
-      msg.sender,
-      address(params.pool),
-      vars.actualDebtToLiquidate
-    );
+    IERC20(params.debtAsset).safeTransferFrom(msg.sender, address(params.pool), vars.actualDebtToLiquidate);
 
-    emit LiquidationCall(
-      params.collateralAsset,
-      params.debtAsset,
-      params.position,
-      vars.actualDebtToLiquidate,
-      vars.actualCollateralToLiquidate,
-      msg.sender
-    );
+    emit LiquidationCall(params.collateralAsset, params.debtAsset, params.position, vars.actualDebtToLiquidate, vars.actualCollateralToLiquidate, msg.sender);
   }
 
   /**
@@ -286,11 +241,7 @@ library LiquidationLogic {
     mapping(bytes32 => DataTypes.PositionBalance) storage balances,
     DataTypes.ReserveSupplies storage totalSupplies
   ) internal {
-    uint256 burnt = balances[params.position].burnDebt(
-      totalSupplies,
-      vars.actualDebtToLiquidate,
-      vars.debtReserveCache.nextVariableBorrowIndex
-    );
+    uint256 burnt = balances[params.position].burnDebt(totalSupplies, vars.actualDebtToLiquidate, vars.debtReserveCache.nextVariableBorrowIndex);
     vars.debtReserveCache.nextScaledVariableDebt = burnt;
   }
 
@@ -311,15 +262,11 @@ library LiquidationLogic {
   ) internal view returns (uint256, uint256) {
     uint256 userDebt = balances[params.debtAsset][params.position].scaledDebtBalance;
 
-    uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD
-      ? DEFAULT_LIQUIDATION_CLOSE_FACTOR
-      : MAX_LIQUIDATION_CLOSE_FACTOR;
+    uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD ? DEFAULT_LIQUIDATION_CLOSE_FACTOR : MAX_LIQUIDATION_CLOSE_FACTOR;
 
     uint256 maxLiquidatableDebt = userDebt.percentMul(closeFactor);
 
-    uint256 actualDebtToLiquidate = params.debtToCover > maxLiquidatableDebt
-      ? maxLiquidatableDebt
-      : params.debtToCover;
+    uint256 actualDebtToLiquidate = params.debtToCover > maxLiquidatableDebt ? maxLiquidatableDebt : params.debtToCover;
 
     return (userDebt, actualDebtToLiquidate);
   }
@@ -406,35 +353,24 @@ library LiquidationLogic {
     //   .getLiquidationProtocolFee();
 
     // This is the base collateral to liquidate based on the given debt to cover
-    vars.baseCollateral =
-      ((vars.debtAssetPrice * debtToCover * vars.collateralAssetUnit)) /
-      (vars.collateralPrice * vars.debtAssetUnit);
+    vars.baseCollateral = ((vars.debtAssetPrice * debtToCover * vars.collateralAssetUnit)) / (vars.collateralPrice * vars.debtAssetUnit);
 
     vars.maxCollateralToLiquidate = vars.baseCollateral.percentMul(liquidationBonus);
 
     if (vars.maxCollateralToLiquidate > userCollateralBalance) {
       vars.collateralAmount = userCollateralBalance;
-      vars.debtAmountNeeded = ((vars.collateralPrice * vars.collateralAmount * vars.debtAssetUnit) /
-        (vars.debtAssetPrice * vars.collateralAssetUnit)).percentDiv(liquidationBonus);
+      vars.debtAmountNeeded = ((vars.collateralPrice * vars.collateralAmount * vars.debtAssetUnit) / (vars.debtAssetPrice * vars.collateralAssetUnit)).percentDiv(liquidationBonus);
     } else {
       vars.collateralAmount = vars.maxCollateralToLiquidate;
       vars.debtAmountNeeded = debtToCover;
     }
 
     if (vars.liquidationProtocolFeePercentage != 0) {
-      vars.bonusCollateral =
-        vars.collateralAmount -
-        vars.collateralAmount.percentDiv(liquidationBonus);
+      vars.bonusCollateral = vars.collateralAmount - vars.collateralAmount.percentDiv(liquidationBonus);
 
-      vars.liquidationProtocolFee = vars.bonusCollateral.percentMul(
-        vars.liquidationProtocolFeePercentage
-      );
+      vars.liquidationProtocolFee = vars.bonusCollateral.percentMul(vars.liquidationProtocolFeePercentage);
 
-      return (
-        vars.collateralAmount - vars.liquidationProtocolFee,
-        vars.debtAmountNeeded,
-        vars.liquidationProtocolFee
-      );
+      return (vars.collateralAmount - vars.liquidationProtocolFee, vars.debtAmountNeeded, vars.liquidationProtocolFee);
     } else {
       return (vars.collateralAmount, vars.debtAmountNeeded, 0);
     }

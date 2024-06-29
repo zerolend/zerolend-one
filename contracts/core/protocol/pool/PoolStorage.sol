@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../libraries/types/DataTypes.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IHook} from '../../interfaces/IHook.sol';
@@ -26,8 +26,7 @@ contract PoolStorage {
   mapping(bytes32 position => DataTypes.UserConfigurationMap config) internal _usersConfig;
 
   /// @notice Map of position's individual balances
-  mapping(address reserve => mapping(bytes32 position => DataTypes.PositionBalance balance))
-    internal _balances;
+  mapping(address reserve => mapping(bytes32 position => DataTypes.PositionBalance balance)) internal _balances;
 
   /// @notice Map of total supply of tokens
   mapping(address reserve => DataTypes.ReserveSupplies totalSupply) internal _totalSupplies;

@@ -21,14 +21,14 @@ import {IPool} from '../../../interfaces/IPool.sol';
 import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
-import {Errors} from '../helpers/Errors.sol';
-import {WadRayMath} from '../math/WadRayMath.sol';
-import {PercentageMath} from '../math/PercentageMath.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import {Errors} from '../utils/Errors.sol';
+import {WadRayMath} from '../utils/WadRayMath.sol';
+import {PercentageMath} from '../utils/PercentageMath.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {TokenConfiguration} from '../../libraries/configuration/TokenConfiguration.sol';
+import {TokenConfiguration} from '../configuration/TokenConfiguration.sol';
 
 /**
  * @title ReserveLogic library
@@ -80,9 +80,7 @@ library ValidationLogic {
     // todo
     require(
       supplyCap == 0 ||
-        ((IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasury)).rayMul(
-          reserveCache.nextLiquidityIndex
-        ) + params.amount) <=
+        ((IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + params.amount) <=
         supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
       Errors.SUPPLY_CAP_EXCEEDED
     );
@@ -143,9 +141,7 @@ library ValidationLogic {
     }
 
     if (vars.borrowCap != 0) {
-      vars.totalSupplyVariableDebt = params.reserveCache.currScaledVariableDebt.rayMul(
-        params.reserveCache.nextVariableBorrowIndex
-      );
+      vars.totalSupplyVariableDebt = params.reserveCache.currScaledVariableDebt.rayMul(params.reserveCache.nextVariableBorrowIndex);
 
       vars.totalDebt = vars.totalSupplyVariableDebt + params.amount;
 
@@ -154,32 +150,17 @@ library ValidationLogic {
       }
     }
 
-    (
-      vars.userCollateralInBaseCurrency,
-      vars.userDebtInBaseCurrency,
-      vars.currentLtv,
-      ,
-      vars.healthFactor,
-
-    ) = GenericLogic.calculateUserAccountData(
+    (vars.userCollateralInBaseCurrency, vars.userDebtInBaseCurrency, vars.currentLtv, , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
       _balances,
       reservesData,
       reservesList,
-      DataTypes.CalculateUserAccountDataParams({
-        userConfig: params.userConfig,
-        reservesCount: params.reservesCount,
-        position: params.position,
-        pool: params.pool
-      })
+      DataTypes.CalculateUserAccountDataParams({userConfig: params.userConfig, reservesCount: params.reservesCount, position: params.position, pool: params.pool})
     );
 
     require(vars.userCollateralInBaseCurrency != 0, Errors.COLLATERAL_BALANCE_IS_ZERO);
     require(vars.currentLtv != 0, Errors.LTV_VALIDATION_FAILED);
 
-    require(
-      vars.healthFactor > HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-      Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-    );
+    require(vars.healthFactor > HEALTH_FACTOR_LIQUIDATION_THRESHOLD, Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
 
     vars.amountInBaseCurrency = IPool(params.pool).getAssetPrice(params.asset) * params.amount;
     unchecked {
@@ -187,13 +168,9 @@ library ValidationLogic {
     }
 
     //add the current already borrowed amount to the amount requested to calculate the total collateral needed.
-    vars.collateralNeededInBaseCurrency = (vars.userDebtInBaseCurrency + vars.amountInBaseCurrency)
-      .percentDiv(vars.currentLtv); //LTV is calculated in percentage
+    vars.collateralNeededInBaseCurrency = (vars.userDebtInBaseCurrency + vars.amountInBaseCurrency).percentDiv(vars.currentLtv); //LTV is calculated in percentage
 
-    require(
-      vars.collateralNeededInBaseCurrency <= vars.userCollateralInBaseCurrency,
-      Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW
-    );
+    require(vars.collateralNeededInBaseCurrency <= vars.userCollateralInBaseCurrency, Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
   }
 
   /**
@@ -237,14 +214,9 @@ library ValidationLogic {
   ) internal view {
     ValidateLiquidationCallLocalVars memory vars;
 
-    require(
-      params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-      Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-    );
+    require(params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD, Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
 
-    vars.isCollateralEnabled =
-      collateralReserve.configuration.getLiquidationThreshold() != 0 &&
-      userConfig.isUsingAsCollateral(collateralReserve.id);
+    vars.isCollateralEnabled = collateralReserve.configuration.getLiquidationThreshold() != 0 && userConfig.isUsingAsCollateral(collateralReserve.id);
 
     //if collateral isn't enabled as collateral by user, it cannot be liquidated
     require(vars.isCollateralEnabled, Errors.COLLATERAL_CANNOT_BE_LIQUIDATED);
@@ -269,23 +241,14 @@ library ValidationLogic {
     uint256 reservesCount,
     address oracle
   ) internal view returns (uint256, bool) {
-    (, , , , uint256 healthFactor, bool hasZeroLtvCollateral) = GenericLogic
-      .calculateUserAccountData(
-        _balances,
-        reservesData,
-        reservesList,
-        DataTypes.CalculateUserAccountDataParams({
-          userConfig: userConfig,
-          reservesCount: reservesCount,
-          position: position,
-          pool: oracle
-        })
-      );
-
-    require(
-      healthFactor >= HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-      Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    (, , , , uint256 healthFactor, bool hasZeroLtvCollateral) = GenericLogic.calculateUserAccountData(
+      _balances,
+      reservesData,
+      reservesList,
+      DataTypes.CalculateUserAccountDataParams({userConfig: userConfig, reservesCount: reservesCount, position: position, pool: oracle})
     );
+
+    require(healthFactor >= HEALTH_FACTOR_LIQUIDATION_THRESHOLD, Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
 
     return (healthFactor, hasZeroLtvCollateral);
   }
@@ -306,20 +269,9 @@ library ValidationLogic {
   ) internal view {
     DataTypes.ReserveData memory reserve = reservesData[params.asset];
 
-    (, bool hasZeroLtvCollateral) = validateHealthFactor(
-      _balances,
-      reservesData,
-      reservesList,
-      userConfig,
-      params.position,
-      params.reservesCount,
-      params.pool
-    );
+    (, bool hasZeroLtvCollateral) = validateHealthFactor(_balances, reservesData, reservesList, userConfig, params.position, params.reservesCount, params.pool);
 
-    require(
-      !hasZeroLtvCollateral || reserve.configuration.getLtv() == 0,
-      Errors.LTV_VALIDATION_FAILED
-    );
+    require(!hasZeroLtvCollateral || reserve.configuration.getLtv() == 0, Errors.LTV_VALIDATION_FAILED);
   }
 
   /**
@@ -329,10 +281,7 @@ library ValidationLogic {
    * @param reserveConfig The reserve configuration
    * @return True if the asset can be activated as collateral, false otherwise
    */
-  function validateUseAsCollateral(
-    DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ReserveConfigurationMap memory reserveConfig
-  ) internal view returns (bool) {
+  function validateUseAsCollateral(DataTypes.UserConfigurationMap storage userConfig, DataTypes.ReserveConfigurationMap memory reserveConfig) internal view returns (bool) {
     if (reserveConfig.getLtv() == 0) return false;
     if (!userConfig.isUsingAsCollateralAny()) return true;
     return false;

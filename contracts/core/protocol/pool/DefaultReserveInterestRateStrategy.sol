@@ -14,10 +14,10 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {WadRayMath} from '../libraries/math/WadRayMath.sol';
-import {PercentageMath} from '../libraries/math/PercentageMath.sol';
-import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
+import {WadRayMath} from './utils/WadRayMath.sol';
+import {PercentageMath} from './utils/PercentageMath.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
+import {Errors} from './utils/Errors.sol';
 import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
 import {IReserveInterestRateStrategy} from '../../interfaces/IReserveInterestRateStrategy.sol';
 
@@ -55,12 +55,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
    * @param variableRateSlope1 The variable rate slope below optimal usage ratio
    * @param variableRateSlope2 The variable rate slope above optimal usage ratio
    */
-  constructor(
-    uint256 optimalUsageRatio,
-    uint256 baseVariableBorrowRate,
-    uint256 variableRateSlope1,
-    uint256 variableRateSlope2
-  ) {
+  constructor(uint256 optimalUsageRatio, uint256 baseVariableBorrowRate, uint256 variableRateSlope1, uint256 variableRateSlope2) {
     require(WadRayMath.RAY >= optimalUsageRatio, Errors.INVALID_OPTIMAL_USAGE_RATIO);
     OPTIMAL_USAGE_RATIO = optimalUsageRatio;
     MAX_EXCESS_USAGE_RATIO = WadRayMath.RAY - optimalUsageRatio;
@@ -101,11 +96,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   }
 
   /// @inheritdoc IReserveInterestRateStrategy
-  function calculateInterestRates(
-    bytes32,
-    bytes memory,
-    DataTypes.CalculateInterestRatesParams memory params
-  ) public view override returns (uint256, uint256) {
+  function calculateInterestRates(bytes32, bytes memory, DataTypes.CalculateInterestRatesParams memory params) public view override returns (uint256, uint256) {
     CalcInterestRatesLocalVars memory vars;
 
     vars.totalDebt = params.totalVariableDebt;
@@ -114,10 +105,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
     vars.currentVariableBorrowRate = _baseVariableBorrowRate;
 
     if (vars.totalDebt != 0) {
-      vars.availableLiquidity =
-        IERC20(params.reserve).balanceOf(msg.sender) +
-        params.liquidityAdded -
-        params.liquidityTaken;
+      vars.availableLiquidity = IERC20(params.reserve).balanceOf(msg.sender) + params.liquidityAdded - params.liquidityTaken;
 
       vars.availableLiquidityPlusDebt = vars.availableLiquidity + vars.totalDebt;
       vars.borrowUsageRatio = vars.totalDebt.rayDiv(vars.availableLiquidityPlusDebt);
@@ -125,25 +113,16 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
     }
 
     if (vars.borrowUsageRatio > OPTIMAL_USAGE_RATIO) {
-      uint256 excessBorrowUsageRatio = (vars.borrowUsageRatio - OPTIMAL_USAGE_RATIO).rayDiv(
-        MAX_EXCESS_USAGE_RATIO
-      );
+      uint256 excessBorrowUsageRatio = (vars.borrowUsageRatio - OPTIMAL_USAGE_RATIO).rayDiv(MAX_EXCESS_USAGE_RATIO);
 
-      vars.currentVariableBorrowRate +=
-        _variableRateSlope1 +
-        _variableRateSlope2.rayMul(excessBorrowUsageRatio);
+      vars.currentVariableBorrowRate += _variableRateSlope1 + _variableRateSlope2.rayMul(excessBorrowUsageRatio);
     } else {
-      vars.currentVariableBorrowRate += _variableRateSlope1.rayMul(vars.borrowUsageRatio).rayDiv(
-        OPTIMAL_USAGE_RATIO
-      );
+      vars.currentVariableBorrowRate += _variableRateSlope1.rayMul(vars.borrowUsageRatio).rayDiv(OPTIMAL_USAGE_RATIO);
     }
 
-    vars.currentLiquidityRate = _getOverallBorrowRate(
-      params.totalVariableDebt,
-      vars.currentVariableBorrowRate
-    ).rayMul(vars.supplyUsageRatio).percentMul(
-        PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor
-      );
+    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalVariableDebt, vars.currentVariableBorrowRate).rayMul(vars.supplyUsageRatio).percentMul(
+      PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor
+    );
 
     return (vars.currentLiquidityRate, vars.currentVariableBorrowRate);
   }
@@ -154,10 +133,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
    * @param currentVariableBorrowRate The current variable borrow rate of the reserve
    * @return The weighted averaged borrow rate
    */
-  function _getOverallBorrowRate(
-    uint256 totalVariableDebt,
-    uint256 currentVariableBorrowRate
-  ) internal pure returns (uint256) {
+  function _getOverallBorrowRate(uint256 totalVariableDebt, uint256 currentVariableBorrowRate) internal pure returns (uint256) {
     uint256 totalDebt = totalVariableDebt;
     if (totalDebt == 0) return 0;
     uint256 weightedVariableRate = totalVariableDebt.wadToRay().rayMul(currentVariableBorrowRate);

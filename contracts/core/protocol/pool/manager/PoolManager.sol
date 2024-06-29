@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IPoolManager} from '../../../interfaces/IPoolManager.sol';
-import {Errors} from '../../libraries/helpers/Errors.sol';
+import {Errors} from '../utils/Errors.sol';
 import {TimelockedActions} from './TimelockedActions.sol';
 
 contract PoolManager is IPoolManager, TimelockedActions {
@@ -40,12 +40,7 @@ contract PoolManager is IPoolManager, TimelockedActions {
   }
 
   function cancelAction(address pool, bytes32 id) external {
-    require(
-      isPoolAdmin(pool, msg.sender) ||
-        isRiskAdmin(pool, msg.sender) ||
-        isRiskAdmin(address(0), msg.sender),
-      'not pool or risk admin'
-    );
+    require(isPoolAdmin(pool, msg.sender) || isRiskAdmin(pool, msg.sender) || isRiskAdmin(address(0), msg.sender), 'not pool or risk admin');
     _cancel(id);
   }
 
@@ -103,11 +98,7 @@ contract PoolManager is IPoolManager, TimelockedActions {
   }
 
   modifier onlyEmergencyAdmin(address pool) {
-    require(
-      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender) ||
-        hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender),
-      'not risk or pool admin'
-    );
+    require(hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender) || hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender), 'not risk or pool admin');
     _;
   }
 
@@ -122,11 +113,7 @@ contract PoolManager is IPoolManager, TimelockedActions {
   }
 
   modifier onlyRiskOrPoolAdmins(address pool) {
-    require(
-      hasRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), msg.sender) ||
-        hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
-      'not risk or pool admin'
-    );
+    require(hasRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), msg.sender) || hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender), 'not risk or pool admin');
     _;
   }
 

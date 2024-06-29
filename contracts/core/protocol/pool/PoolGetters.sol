@@ -13,14 +13,14 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../libraries/types/DataTypes.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {IHook, IPoolFactory, IPool} from '../../interfaces/IPool.sol';
-import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
+import {PoolLogic} from './logic/PoolLogic.sol';
 import {PoolStorage} from './PoolStorage.sol';
-import {PositionBalanceConfiguration} from '../libraries/configuration/PositionBalanceConfiguration.sol';
-import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
-import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
+import {PositionBalanceConfiguration} from './configuration/PositionBalanceConfiguration.sol';
+import {ReserveLogic} from './logic/ReserveLogic.sol';
+import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 
 abstract contract PoolGetters is PoolStorage, IPool {
   using ReserveLogic for DataTypes.ReserveData;

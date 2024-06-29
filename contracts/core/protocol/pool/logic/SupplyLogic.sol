@@ -13,18 +13,18 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../types/DataTypes.sol';
-import {Errors} from '../helpers/Errors.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
+import {Errors} from '../utils/Errors.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
-import {PercentageMath} from '../math/PercentageMath.sol';
+import {PercentageMath} from '../utils/PercentageMath.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
-import {WadRayMath} from '../math/WadRayMath.sol';
+import {WadRayMath} from '../utils/WadRayMath.sol';
 
 /**
  * @title SupplyLogic library
@@ -66,24 +66,12 @@ library SupplyLogic {
 
     reserve.updateState(reserveCache);
     ValidationLogic.validateSupply(reserveCache, reserve, params, params.pool);
-    reserve.updateInterestRates(
-      reserveCache,
-      params.asset,
-      IPool(params.pool).getReserveFactor(),
-      params.amount,
-      0,
-      params.position,
-      params.data.interestRateData
-    );
+    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), params.amount, 0, params.position, params.data.interestRateData);
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
 
     DataTypes.PositionBalance storage bal = balances[params.asset][params.position];
-    (bool isFirst, uint256 minted) = bal.mintSupply(
-      totalSupplies[params.asset],
-      params.amount,
-      reserveCache.nextLiquidityIndex
-    );
+    (bool isFirst, uint256 minted) = bal.mintSupply(totalSupplies[params.asset], params.amount, reserveCache.nextLiquidityIndex);
 
     if (isFirst) {
       if (ValidationLogic.validateUseAsCollateral(userConfig, reserveCache.reserveConfiguration)) {
@@ -119,22 +107,12 @@ library SupplyLogic {
 
     reserve.updateState(reserveCache);
 
-    uint256 userBalance = balances[params.asset][params.position].scaledSupplyBalance.rayMul(
-      reserveCache.nextLiquidityIndex
-    );
+    uint256 userBalance = balances[params.asset][params.position].scaledSupplyBalance.rayMul(reserveCache.nextLiquidityIndex);
 
     if (params.amount == type(uint256).max) params.amount = userBalance;
 
     ValidationLogic.validateWithdraw(params.amount, userBalance);
-    reserve.updateInterestRates(
-      reserveCache,
-      params.asset,
-      IPool(params.pool).getReserveFactor(),
-      0,
-      params.amount,
-      params.position,
-      params.data.interestRateData
-    );
+    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
 
@@ -144,15 +122,10 @@ library SupplyLogic {
     }
 
     // Burn debt. Which is burn supply, update total supply and send tokens to the user
-    balances[params.asset][params.position].burnSupply(
-      totalSupplies[params.asset],
-      params.amount,
-      reserveCache.nextLiquidityIndex
-    );
+    balances[params.asset][params.position].burnSupply(totalSupplies[params.asset], params.amount, reserveCache.nextLiquidityIndex);
     IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
-    if (isCollateral && userConfig.isBorrowingAny())
-      ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);
+    if (isCollateral && userConfig.isBorrowingAny()) ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);
 
     emit Withdraw(params.asset, params.position, params.destination, params.amount);
 

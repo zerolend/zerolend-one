@@ -14,10 +14,10 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import {ReserveConfiguration} from '../core/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {UserConfiguration} from '../core/protocol/libraries/configuration/UserConfiguration.sol';
-import {DataTypes} from '../core/protocol/libraries/types/DataTypes.sol';
-import {WadRayMath} from '../core/protocol/libraries/math/WadRayMath.sol';
+import {ReserveConfiguration} from '../core/protocol/pool/configuration/ReserveConfiguration.sol';
+import {UserConfiguration} from '../core/protocol/pool/configuration/UserConfiguration.sol';
+import {DataTypes} from '../core/protocol/pool/configuration/DataTypes.sol';
+import {WadRayMath} from '../core/protocol/pool/utils/WadRayMath.sol';
 import {IPool} from '../core/interfaces/IPool.sol';
 import {IPoolDataProvider} from '../core/interfaces/IPoolDataProvider.sol';
 

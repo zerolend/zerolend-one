@@ -18,9 +18,9 @@ import {IPool} from '../../../interfaces/IPool.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
-import {PercentageMath} from '../math/PercentageMath.sol';
-import {WadRayMath} from '../math/WadRayMath.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import {PercentageMath} from '../utils/PercentageMath.sol';
+import {WadRayMath} from '../utils/WadRayMath.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 
 /**
@@ -102,9 +102,7 @@ library GenericLogic {
 
       DataTypes.ReserveData storage currentReserve = reservesData[vars.currentReserveAddress];
 
-      (vars.ltv, vars.liquidationThreshold, , vars.decimals, ) = currentReserve
-        .configuration
-        .getParams();
+      (vars.ltv, vars.liquidationThreshold, , vars.decimals, ) = currentReserve.configuration.getParams();
 
       unchecked {
         vars.assetUnit = 10 ** vars.decimals;
@@ -128,18 +126,11 @@ library GenericLogic {
           vars.hasZeroLtvCollateral = true;
         }
 
-        vars.avgLiquidationThreshold +=
-          vars.PositionBalanceInBaseCurrency *
-          (vars.isInEModeCategory ? vars.eModeLiqThreshold : vars.liquidationThreshold);
+        vars.avgLiquidationThreshold += vars.PositionBalanceInBaseCurrency * (vars.isInEModeCategory ? vars.eModeLiqThreshold : vars.liquidationThreshold);
       }
 
       if (params.userConfig.isBorrowing(vars.i)) {
-        vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(
-          _balances[vars.currentReserveAddress][params.position],
-          currentReserve,
-          vars.assetPrice,
-          vars.assetUnit
-        );
+        vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(_balances[vars.currentReserveAddress][params.position], currentReserve, vars.assetPrice, vars.assetUnit);
       }
 
       unchecked {
@@ -148,27 +139,14 @@ library GenericLogic {
     }
 
     unchecked {
-      vars.avgLtv = vars.totalCollateralInBaseCurrency != 0
-        ? vars.avgLtv / vars.totalCollateralInBaseCurrency
-        : 0;
-      vars.avgLiquidationThreshold = vars.totalCollateralInBaseCurrency != 0
-        ? vars.avgLiquidationThreshold / vars.totalCollateralInBaseCurrency
-        : 0;
+      vars.avgLtv = vars.totalCollateralInBaseCurrency != 0 ? vars.avgLtv / vars.totalCollateralInBaseCurrency : 0;
+      vars.avgLiquidationThreshold = vars.totalCollateralInBaseCurrency != 0 ? vars.avgLiquidationThreshold / vars.totalCollateralInBaseCurrency : 0;
     }
 
     vars.healthFactor = (vars.totalDebtInBaseCurrency == 0)
       ? type(uint256).max
-      : (vars.totalCollateralInBaseCurrency.percentMul(vars.avgLiquidationThreshold)).wadDiv(
-        vars.totalDebtInBaseCurrency
-      );
-    return (
-      vars.totalCollateralInBaseCurrency,
-      vars.totalDebtInBaseCurrency,
-      vars.avgLtv,
-      vars.avgLiquidationThreshold,
-      vars.healthFactor,
-      vars.hasZeroLtvCollateral
-    );
+      : (vars.totalCollateralInBaseCurrency.percentMul(vars.avgLiquidationThreshold)).wadDiv(vars.totalDebtInBaseCurrency);
+    return (vars.totalCollateralInBaseCurrency, vars.totalDebtInBaseCurrency, vars.avgLtv, vars.avgLiquidationThreshold, vars.healthFactor, vars.hasZeroLtvCollateral);
   }
 
   /**
@@ -179,11 +157,7 @@ library GenericLogic {
    * @param ltv The average loan to value
    * @return The amount available to borrow in the base currency of the used by the price feed
    */
-  function calculateAvailableBorrows(
-    uint256 totalCollateralInBaseCurrency,
-    uint256 totalDebtInBaseCurrency,
-    uint256 ltv
-  ) internal pure returns (uint256) {
+  function calculateAvailableBorrows(uint256 totalCollateralInBaseCurrency, uint256 totalDebtInBaseCurrency, uint256 ltv) internal pure returns (uint256) {
     uint256 availableBorrowsInBaseCurrency = totalCollateralInBaseCurrency.percentMul(ltv);
 
     if (availableBorrowsInBaseCurrency < totalDebtInBaseCurrency) {

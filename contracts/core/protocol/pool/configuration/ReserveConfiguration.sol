@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {Errors} from '../helpers/Errors.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import {Errors} from '../utils/Errors.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 
 /**
  * @title ReserveConfiguration library
@@ -84,15 +84,10 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @param threshold The new liquidation threshold
    */
-  function setLiquidationThreshold(
-    DataTypes.ReserveConfigurationMap memory self,
-    uint256 threshold
-  ) internal pure {
+  function setLiquidationThreshold(DataTypes.ReserveConfigurationMap memory self, uint256 threshold) internal pure {
     require(threshold <= MAX_VALID_LIQUIDATION_THRESHOLD, Errors.INVALID_LIQ_THRESHOLD);
 
-    self.data =
-      (self.data & LIQUIDATION_THRESHOLD_MASK) |
-      (threshold << LIQUIDATION_THRESHOLD_START_BIT_POSITION);
+    self.data = (self.data & LIQUIDATION_THRESHOLD_MASK) | (threshold << LIQUIDATION_THRESHOLD_START_BIT_POSITION);
   }
 
   /**
@@ -100,9 +95,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @return The liquidation threshold
    */
-  function getLiquidationThreshold(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256) {
+  function getLiquidationThreshold(DataTypes.ReserveConfigurationMap memory self) internal pure returns (uint256) {
     return (self.data & ~LIQUIDATION_THRESHOLD_MASK) >> LIQUIDATION_THRESHOLD_START_BIT_POSITION;
   }
 
@@ -111,15 +104,10 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @param bonus The new liquidation bonus
    */
-  function setLiquidationBonus(
-    DataTypes.ReserveConfigurationMap memory self,
-    uint256 bonus
-  ) internal pure {
+  function setLiquidationBonus(DataTypes.ReserveConfigurationMap memory self, uint256 bonus) internal pure {
     require(bonus <= MAX_VALID_LIQUIDATION_BONUS, Errors.INVALID_LIQ_BONUS);
 
-    self.data =
-      (self.data & LIQUIDATION_BONUS_MASK) |
-      (bonus << LIQUIDATION_BONUS_START_BIT_POSITION);
+    self.data = (self.data & LIQUIDATION_BONUS_MASK) | (bonus << LIQUIDATION_BONUS_START_BIT_POSITION);
   }
 
   /**
@@ -127,9 +115,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @return The liquidation bonus
    */
-  function getLiquidationBonus(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256) {
+  function getLiquidationBonus(DataTypes.ReserveConfigurationMap memory self) internal pure returns (uint256) {
     return (self.data & ~LIQUIDATION_BONUS_MASK) >> LIQUIDATION_BONUS_START_BIT_POSITION;
   }
 
@@ -138,10 +124,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @param decimals The decimals
    */
-  function setDecimals(
-    DataTypes.ReserveConfigurationMap memory self,
-    uint256 decimals
-  ) internal pure {
+  function setDecimals(DataTypes.ReserveConfigurationMap memory self, uint256 decimals) internal pure {
     require(decimals <= MAX_VALID_DECIMALS, Errors.INVALID_DECIMALS);
     self.data = (self.data & DECIMALS_MASK) | (decimals << RESERVE_DECIMALS_START_BIT_POSITION);
   }
@@ -151,9 +134,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @return The decimals of the asset
    */
-  function getDecimals(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256) {
+  function getDecimals(DataTypes.ReserveConfigurationMap memory self) internal pure returns (uint256) {
     return (self.data & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION;
   }
 
@@ -163,9 +144,7 @@ library ReserveConfiguration {
    * @param frozen The frozen state
    */
   function setFrozen(DataTypes.ReserveConfigurationMap memory self, bool frozen) internal pure {
-    self.data =
-      (self.data & FROZEN_MASK) |
-      (uint256(frozen ? 1 : 0) << IS_FROZEN_START_BIT_POSITION);
+    self.data = (self.data & FROZEN_MASK) | (uint256(frozen ? 1 : 0) << IS_FROZEN_START_BIT_POSITION);
   }
 
   /**
@@ -182,13 +161,8 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @param enabled True if the borrowing needs to be enabled, false otherwise
    */
-  function setBorrowingEnabled(
-    DataTypes.ReserveConfigurationMap memory self,
-    bool enabled
-  ) internal pure {
-    self.data =
-      (self.data & BORROWING_MASK) |
-      (uint256(enabled ? 1 : 0) << BORROWING_ENABLED_START_BIT_POSITION);
+  function setBorrowingEnabled(DataTypes.ReserveConfigurationMap memory self, bool enabled) internal pure {
+    self.data = (self.data & BORROWING_MASK) | (uint256(enabled ? 1 : 0) << BORROWING_ENABLED_START_BIT_POSITION);
   }
 
   /**
@@ -196,9 +170,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @return The borrowing state
    */
-  function getBorrowingEnabled(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (bool) {
+  function getBorrowingEnabled(DataTypes.ReserveConfigurationMap memory self) internal pure returns (bool) {
     return (self.data & ~BORROWING_MASK) != 0;
   }
 
@@ -207,10 +179,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @param borrowCap The borrow cap
    */
-  function setBorrowCap(
-    DataTypes.ReserveConfigurationMap memory self,
-    uint256 borrowCap
-  ) internal pure {
+  function setBorrowCap(DataTypes.ReserveConfigurationMap memory self, uint256 borrowCap) internal pure {
     require(borrowCap <= MAX_VALID_BORROW_CAP, Errors.INVALID_BORROW_CAP);
 
     self.data = (self.data & BORROW_CAP_MASK) | (borrowCap << BORROW_CAP_START_BIT_POSITION);
@@ -221,9 +190,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @return The borrow cap
    */
-  function getBorrowCap(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256) {
+  function getBorrowCap(DataTypes.ReserveConfigurationMap memory self) internal pure returns (uint256) {
     return (self.data & ~BORROW_CAP_MASK) >> BORROW_CAP_START_BIT_POSITION;
   }
 
@@ -232,10 +199,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @param supplyCap The supply cap
    */
-  function setSupplyCap(
-    DataTypes.ReserveConfigurationMap memory self,
-    uint256 supplyCap
-  ) internal pure {
+  function setSupplyCap(DataTypes.ReserveConfigurationMap memory self, uint256 supplyCap) internal pure {
     require(supplyCap <= MAX_VALID_SUPPLY_CAP, Errors.INVALID_SUPPLY_CAP);
 
     self.data = (self.data & SUPPLY_CAP_MASK) | (supplyCap << SUPPLY_CAP_START_BIT_POSITION);
@@ -246,9 +210,7 @@ library ReserveConfiguration {
    * @param self The reserve configuration
    * @return The supply cap
    */
-  function getSupplyCap(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256) {
+  function getSupplyCap(DataTypes.ReserveConfigurationMap memory self) internal pure returns (uint256) {
     return (self.data & ~SUPPLY_CAP_MASK) >> SUPPLY_CAP_START_BIT_POSITION;
   }
 
@@ -258,9 +220,7 @@ library ReserveConfiguration {
    * @return The state flag representing frozen
    * @return The state flag representing borrowing enabled
    */
-  function getFlags(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (bool, bool) {
+  function getFlags(DataTypes.ReserveConfigurationMap memory self) internal pure returns (bool, bool) {
     uint256 dataLocal = self.data;
     return ((dataLocal & ~FROZEN_MASK) != 0, (dataLocal & ~BORROWING_MASK) != 0);
   }
@@ -274,9 +234,7 @@ library ReserveConfiguration {
    * @return The state param representing reserve decimals
    * @return The state param representing reserve factor
    */
-  function getParams(
-    DataTypes.ReserveConfigurationMap memory self
-  ) internal pure returns (uint256, uint256, uint256, uint256, uint256) {
+  function getParams(DataTypes.ReserveConfigurationMap memory self) internal pure returns (uint256, uint256, uint256, uint256, uint256) {
     uint256 dataLocal = self.data;
 
     return (

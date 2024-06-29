@@ -13,12 +13,12 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../../libraries/types/DataTypes.sol';
-import {Errors} from '../../libraries/helpers/Errors.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
+import {Errors} from '../utils/Errors.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 import {IPoolConfigurator} from '../../../interfaces/IPoolConfigurator.sol';
 import {PoolManager} from './PoolManager.sol';
-import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
+import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 
 /**
  * @title PoolConfigurator

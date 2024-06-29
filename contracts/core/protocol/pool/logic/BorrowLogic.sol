@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {DataTypes} from '../types/DataTypes.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
@@ -26,19 +26,8 @@ library BorrowLogic {
   using SafeCast for uint256;
 
   // See `IPool` for descriptions
-  event Borrow(
-    address indexed reserve,
-    address user,
-    bytes32 indexed position,
-    uint256 amount,
-    uint256 borrowRate
-  );
-  event Repay(
-    address indexed reserve,
-    bytes32 indexed position,
-    address indexed repayer,
-    uint256 amount
-  );
+  event Borrow(address indexed reserve, address user, bytes32 indexed position, uint256 amount, uint256 borrowRate);
+  event Repay(address indexed reserve, bytes32 indexed position, address indexed repayer, uint256 amount);
 
   /**
    * @notice Implements the borrow feature. Borrowing allows users that provided collateral to draw liquidity from the
@@ -79,36 +68,18 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    (bool isFirstBorrowing, ) = b.mintDebt(
-      totalSupplies[params.asset],
-      params.amount,
-      reserveCache.nextVariableBorrowIndex
-    );
+    (bool isFirstBorrowing, ) = b.mintDebt(totalSupplies[params.asset], params.amount, reserveCache.nextVariableBorrowIndex);
 
     // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
     // todo; update reserveCache.nextScaledVariableDebt
 
-    reserve.updateInterestRates(
-      reserveCache,
-      params.asset,
-      IPool(params.pool).getReserveFactor(),
-      0,
-      params.amount,
-      params.position,
-      params.data.interestRateData
-    );
+    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
-    emit Borrow(
-      params.asset,
-      params.user,
-      params.position,
-      params.amount,
-      reserve.currentVariableBorrowRate
-    );
+    emit Borrow(params.asset, params.user, params.position, params.amount, reserve.currentVariableBorrowRate);
   }
 
   /**
@@ -143,15 +114,7 @@ library BorrowLogic {
 
     if (params.amount < paybackAmount) paybackAmount = params.amount;
 
-    reserve.updateInterestRates(
-      reserveCache,
-      params.asset,
-      IPool(params.pool).getReserveFactor(),
-      paybackAmount,
-      0,
-      params.position,
-      params.data.interestRateData
-    );
+    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData);
 
     b.burnDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextVariableBorrowIndex);
     reserveCache.nextScaledVariableDebt = totalSupplies[params.asset].debt;

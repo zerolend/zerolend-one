@@ -13,19 +13,19 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {BorrowLogic} from '../libraries/logic/BorrowLogic.sol';
-import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
-import {FlashLoanLogic} from '../libraries/logic/FlashLoanLogic.sol';
+import {BorrowLogic} from './logic/BorrowLogic.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
+import {Errors} from './utils/Errors.sol';
+import {FlashLoanLogic} from './logic/FlashLoanLogic.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {IPool, IHook, IPoolFactory} from '../../interfaces/IPool.sol';
-import {LiquidationLogic} from '../libraries/logic/LiquidationLogic.sol';
-import {PercentageMath} from '../libraries/math/PercentageMath.sol';
+import {LiquidationLogic} from './logic/LiquidationLogic.sol';
+import {PercentageMath} from './utils/PercentageMath.sol';
 import {PoolGetters} from './PoolGetters.sol';
-import {PoolLogic} from '../libraries/logic/PoolLogic.sol';
-import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
-import {SupplyLogic} from '../libraries/logic/SupplyLogic.sol';
-import {TokenConfiguration} from '../libraries/configuration/TokenConfiguration.sol';
+import {PoolLogic} from './logic/PoolLogic.sol';
+import {ReserveConfiguration} from './configuration/ReserveConfiguration.sol';
+import {SupplyLogic} from './logic/SupplyLogic.sol';
+import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 import {PoolRentrancyGuard} from './PoolRentrancyGuard.sol';
 
 abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
@@ -33,32 +33,19 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
   using PercentageMath for uint256;
   using TokenConfiguration for address;
 
-  function _supply(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) {
+  function _supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LENDING) {
     bytes32 pos = msg.sender.getPositionId(index);
-    if (address(_hook) != address(0))
-      _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     SupplyLogic.executeSupply(
       _reserves,
       _usersConfig[pos],
       _balances,
       _totalSupplies,
-      DataTypes.ExecuteSupplyParams({
-        asset: asset,
-        amount: amount,
-        data: data,
-        position: pos,
-        pool: address(this)
-      })
+      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, data: data, position: pos, pool: address(this)})
     );
 
-    if (address(_hook) != address(0))
-      _hook.afterSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.afterSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
   function _withdraw(
@@ -70,8 +57,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     bytes32 pos = msg.sender.getPositionId(index);
     require(amount <= _balances[asset][pos].scaledSupplyBalance, 'Insufficient Balance!');
 
-    if (address(_hook) != address(0))
-      _hook.beforeWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.beforeWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     withdrawalAmount = SupplyLogic.executeWithdraw(
       _reserves,
@@ -79,32 +65,17 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _usersConfig[pos],
       _balances,
       _totalSupplies,
-      DataTypes.ExecuteWithdrawParams({
-        destination: msg.sender,
-        asset: asset,
-        amount: amount,
-        position: pos,
-        data: data,
-        reservesCount: _reservesCount,
-        pool: address(this)
-      })
+      DataTypes.ExecuteWithdrawParams({destination: msg.sender, asset: asset, amount: amount, position: pos, data: data, reservesCount: _reservesCount, pool: address(this)})
     );
 
     PoolLogic.executeMintToTreasury(_reserves, asset);
 
-    if (address(_hook) != address(0))
-      _hook.afterWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.afterWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
-  function _borrow(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) {
+  function _borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LENDING) {
     bytes32 pos = msg.sender.getPositionId(index);
-    if (address(_hook) != address(0))
-      _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     BorrowLogic.executeBorrow(
       _reserves,
@@ -112,58 +83,28 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _usersConfig[pos],
       _balances,
       _totalSupplies,
-      DataTypes.ExecuteBorrowParams({
-        asset: asset,
-        user: msg.sender,
-        position: pos,
-        amount: amount,
-        data: data,
-        reservesCount: _reservesCount,
-        pool: address(this)
-      })
+      DataTypes.ExecuteBorrowParams({asset: asset, user: msg.sender, position: pos, amount: amount, data: data, reservesCount: _reservesCount, pool: address(this)})
     );
 
-    if (address(_hook) != address(0))
-      _hook.afterBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.afterBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
-  function _repay(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 paybackAmount) {
+  function _repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 paybackAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
-    if (address(_hook) != address(0))
-      _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     paybackAmount = BorrowLogic.executeRepay(
       _reserves,
       _balances,
       _totalSupplies,
-      DataTypes.ExecuteRepayParams({
-        asset: asset,
-        amount: amount,
-        user: msg.sender,
-        pool: address(this),
-        position: pos,
-        data: data
-      })
+      DataTypes.ExecuteRepayParams({asset: asset, amount: amount, user: msg.sender, pool: address(this), position: pos, data: data})
     );
 
-    if (address(_hook) != address(0))
-      _hook.afterRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.afterRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
-  function _liquidate(
-    address collat,
-    address debt,
-    bytes32 pos,
-    uint256 debtAmt,
-    DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LIQUIDATION) {
-    if (address(_hook) != address(0))
-      _hook.beforeLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
+  function _liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LIQUIDATION) {
+    if (address(_hook) != address(0)) _hook.beforeLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
 
     LiquidationLogic.executeLiquidationCall(
       _reserves,
@@ -182,8 +123,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       })
     );
 
-    if (address(_hook) != address(0))
-      _hook.afterLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
+    if (address(_hook) != address(0)) _hook.afterLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
   }
 
   function _flashLoan(

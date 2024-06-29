@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
+import {DataTypes} from '../protocol/pool/configuration/DataTypes.sol';
 import {IPoolFactory} from './IPoolFactory.sol';
 import {IHook} from './IHook.sol';
 
