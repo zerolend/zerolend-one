@@ -33,7 +33,7 @@ describe('NFT Position Manager', () => {
         asset: await tokenA.getAddress(),
         pool: ZeroAddress,
         amount: 10,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
       await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(manager, 'NotPool');
     });
@@ -42,7 +42,7 @@ describe('NFT Position Manager', () => {
         asset: ZeroAddress,
         pool,
         amount: 0,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
       await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(
         manager,
@@ -54,7 +54,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: 0,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
       await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(
         manager,
@@ -73,7 +73,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: supplyAmount,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
 
       // Approve the NFT Position Manager
@@ -95,7 +95,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: ethers.parseUnits('10', 'wei'),
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
 
       // Approve the NFT Position Manager
@@ -123,7 +123,7 @@ describe('NFT Position Manager', () => {
         asset: ZeroAddress,
         pool,
         amount: 0,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
       await expect(manager.mint(liquidityParams)).to.be.revertedWithCustomError(
         manager,
@@ -135,7 +135,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: 0,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
       await expect(manager.mint(liquidityParams)).to.be.revertedWithCustomError(
         manager,
@@ -151,7 +151,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: supplyAmount,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
 
       await tokenA.connect(alice).approve(manager.target, supplyAmount);
@@ -162,7 +162,7 @@ describe('NFT Position Manager', () => {
         pool,
         amount: supplyAmount,
         tokenId: 1,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
       await expect(
         manager.connect(bob).increaseLiquidity(liquidityParams)
@@ -178,7 +178,7 @@ describe('NFT Position Manager', () => {
         asset: tokenA,
         pool,
         amount: supplyAmount,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
 
       // Approve the NFT Position Manager
@@ -203,7 +203,7 @@ describe('NFT Position Manager', () => {
         pool,
         amount: supplyAmount,
         tokenId: 1,
-        data: { interestRateData: '', hookData: '' },
+        data: { interestRateData: '0x', hookData: '0x' },
       };
 
       await manager.connect(bob).increaseLiquidity(liquidityParams);
