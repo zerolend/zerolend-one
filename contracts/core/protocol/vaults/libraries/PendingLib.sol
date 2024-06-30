@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {PendingUint192, PendingAddress} from '../../../interfaces/ICuratedVault.sol';
+import {PendingAddress, PendingUint192} from '../../../interfaces/ICuratedVault.sol';
 
 /// @title PendingLib
 /// @author Morpho Labs

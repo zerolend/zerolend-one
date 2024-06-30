@@ -2,12 +2,7 @@
 pragma solidity ^0.8.12;
 
 interface ITransferStrategyBase {
-  event EmergencyWithdrawal(
-    address indexed caller,
-    address indexed token,
-    address indexed to,
-    uint256 amount
-  );
+  event EmergencyWithdrawal(address indexed caller, address indexed token, address indexed to, uint256 amount);
 
   /**
    * @dev Perform custom transfer logic via delegate call from source contract to a TransferStrategy implementation

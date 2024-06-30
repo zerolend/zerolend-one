@@ -24,38 +24,22 @@ library SharesMathLib {
   uint256 internal constant VIRTUAL_ASSETS = 1;
 
   /// @dev Calculates the value of `assets` quoted in shares, rounding down.
-  function toSharesDown(
-    uint256 assets,
-    uint256 totalAssets,
-    uint256 totalShares
-  ) internal pure returns (uint256) {
+  function toSharesDown(uint256 assets, uint256 totalAssets, uint256 totalShares) internal pure returns (uint256) {
     return assets.mulDivDown(totalShares + VIRTUAL_SHARES, totalAssets + VIRTUAL_ASSETS);
   }
 
   /// @dev Calculates the value of `shares` quoted in assets, rounding down.
-  function toAssetsDown(
-    uint256 shares,
-    uint256 totalAssets,
-    uint256 totalShares
-  ) internal pure returns (uint256) {
+  function toAssetsDown(uint256 shares, uint256 totalAssets, uint256 totalShares) internal pure returns (uint256) {
     return shares.mulDivDown(totalAssets + VIRTUAL_ASSETS, totalShares + VIRTUAL_SHARES);
   }
 
   /// @dev Calculates the value of `assets` quoted in shares, rounding up.
-  function toSharesUp(
-    uint256 assets,
-    uint256 totalAssets,
-    uint256 totalShares
-  ) internal pure returns (uint256) {
+  function toSharesUp(uint256 assets, uint256 totalAssets, uint256 totalShares) internal pure returns (uint256) {
     return assets.mulDivUp(totalShares + VIRTUAL_SHARES, totalAssets + VIRTUAL_ASSETS);
   }
 
   /// @dev Calculates the value of `shares` quoted in assets, rounding up.
-  function toAssetsUp(
-    uint256 shares,
-    uint256 totalAssets,
-    uint256 totalShares
-  ) internal pure returns (uint256) {
+  function toAssetsUp(uint256 shares, uint256 totalAssets, uint256 totalShares) internal pure returns (uint256) {
     return shares.mulDivUp(totalAssets + VIRTUAL_ASSETS, totalShares + VIRTUAL_SHARES);
   }
 }

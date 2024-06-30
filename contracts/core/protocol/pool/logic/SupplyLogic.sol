@@ -13,18 +13,21 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../configuration/DataTypes.sol';
-import {Errors} from '../utils/Errors.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
-import {PercentageMath} from '../utils/PercentageMath.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
+
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {ReserveLogic} from './ReserveLogic.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
-import {ValidationLogic} from './ValidationLogic.sol';
+import {Errors} from '../utils/Errors.sol';
+import {PercentageMath} from '../utils/PercentageMath.sol';
+
 import {WadRayMath} from '../utils/WadRayMath.sol';
+import {ReserveLogic} from './ReserveLogic.sol';
+import {ValidationLogic} from './ValidationLogic.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 /**
  * @title SupplyLogic library
@@ -63,12 +66,16 @@ library SupplyLogic {
     DataTypes.PositionBalance storage balance,
     DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteSupplyParams memory params
-  ) external {
+  )
+    external
+  {
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
 
     ValidationLogic.validateSupply(cache, reserve, params, params.pool);
-    reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), params.amount, 0, params.position, params.data.interestRateData);
+    reserve.updateInterestRates(
+      cache, params.asset, IPool(params.pool).getReserveFactor(), params.amount, 0, params.position, params.data.interestRateData
+    );
 
     // take the asset from the user and mint the shares
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
@@ -101,7 +108,10 @@ library SupplyLogic {
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
     mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     DataTypes.ExecuteWithdrawParams memory params
-  ) external returns (uint256) {
+  )
+    external
+    returns (uint256)
+  {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
     reserve.updateState(params.reserveFactor, cache);
@@ -113,7 +123,9 @@ library SupplyLogic {
 
     ValidationLogic.validateWithdraw(params.amount, balance);
 
-    reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
+    reserve.updateInterestRates(
+      cache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData
+    );
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
 
@@ -128,7 +140,9 @@ library SupplyLogic {
     IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
     // if the user is borrowing any asset, validate the HF and LTVs
-    if (isCollateral && userConfig.isBorrowingAny()) ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);
+    if (isCollateral && userConfig.isBorrowingAny()) {
+      ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);
+    }
 
     emit Withdraw(params.asset, params.position, params.destination, params.amount);
     return params.amount;

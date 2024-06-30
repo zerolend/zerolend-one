@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.12;
 
-import {RewardsDataTypes} from './RewardsDataTypes.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {IRewardsDistributor} from '../../core/interfaces/IRewardsDistributor.sol';
 import {IPool} from '../../core/interfaces/IPool.sol';
+import {IRewardsDistributor} from '../../core/interfaces/IRewardsDistributor.sol';
+import {RewardsDataTypes} from './RewardsDataTypes.sol';
+import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
  * @title RewardsDistributor
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
- **/
+ *
+ */
 abstract contract RewardsDistributor is IRewardsDistributor {
   using SafeCast for uint256;
 
@@ -111,7 +112,15 @@ abstract contract RewardsDistributor is IRewardsDistributor {
   }
 
   //// @inheritdoc IRewardsDistributor
-  function getAllUserRewards(address pool, address[] calldata assets, uint256 user) external view returns (address[] memory rewardsList, uint256[] memory unclaimedAmounts) {
+  function getAllUserRewards(
+    address pool,
+    address[] calldata assets,
+    uint256 user
+  )
+    external
+    view
+    returns (address[] memory rewardsList, uint256[] memory unclaimedAmounts)
+  {
     RewardsDataTypes.UserAssetBalance[] memory userAssetBalances = _getUserAssetBalances(pool, assets, user);
     rewardsList = new address[](_poolRewardsList[pool].length);
     unclaimedAmounts = new uint256[](rewardsList.length);
@@ -135,7 +144,8 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @dev Calculates the boosted balance for an account.
    * @param account The address of the account for which to calculate the boosted balance.
    * @return The boosted balance of the account.
-   **/
+   *
+   */
   function boostedBalance(address account, uint256 balance) public view returns (uint256) {
     uint256 _boosted = (balance * 20) / 100;
     uint256 _stake = _staking.getVotes(account);
@@ -150,7 +160,8 @@ abstract contract RewardsDistributor is IRewardsDistributor {
   /**
    * @dev Configure the _poolAssets for a specific emission
    * @param rewardsInput The array of each asset configuration
-   **/
+   *
+   */
   function _configureAssets(address pool, RewardsDataTypes.RewardsConfigInput[] memory rewardsInput) internal {
     for (uint256 i = 0; i < rewardsInput.length; i++) {
       if (_poolAssets[pool][rewardsInput[i].asset].decimals == 0) {
@@ -165,7 +176,8 @@ abstract contract RewardsDistributor is IRewardsDistributor {
 
       // Add reward address to asset available rewards if latestUpdateTimestamp is zero
       if (rewardConfig.lastUpdateTimestamp == 0) {
-        _poolAssets[pool][rewardsInput[i].asset].availableRewards[_poolAssets[pool][rewardsInput[i].asset].availableRewardsCount] = rewardsInput[i].reward;
+        _poolAssets[pool][rewardsInput[i].asset].availableRewards[_poolAssets[pool][rewardsInput[i].asset].availableRewardsCount] =
+          rewardsInput[i].reward;
         _poolAssets[pool][rewardsInput[i].asset].availableRewardsCount++;
       }
 
@@ -176,7 +188,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
       }
 
       // Due emissions is still zero, updates only latestUpdateTimestamp
-      (uint256 newIndex, ) = _updateRewardData(rewardConfig, rewardsInput[i].totalSupply, 10 ** decimals);
+      (uint256 newIndex,) = _updateRewardData(rewardConfig, rewardsInput[i].totalSupply, 10 ** decimals);
 
       // Configure emission and distribution end of the reward per asset
       uint88 oldEmissionsPerSecond = rewardConfig.emissionPerSecond;
@@ -203,8 +215,16 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @param assetUnit One unit of asset (10**decimals)
    * @return The new distribution index
    * @return True if the index was updated, false otherwise
-   **/
-  function _updateRewardData(RewardsDataTypes.RewardData storage rewardData, uint256 totalSupply, uint256 assetUnit) internal returns (uint256, bool) {
+   *
+   */
+  function _updateRewardData(
+    RewardsDataTypes.RewardData storage rewardData,
+    uint256 totalSupply,
+    uint256 assetUnit
+  )
+    internal
+    returns (uint256, bool)
+  {
     (uint256 oldIndex, uint256 newIndex) = _getAssetIndex(rewardData, totalSupply, assetUnit);
     bool indexUpdated;
     if (newIndex != oldIndex) {
@@ -229,14 +249,18 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @param newAssetIndex The new index of the asset distribution
    * @param assetUnit One unit of asset (10**decimals)
    * @return The rewards accrued since the last update
-   **/
+   *
+   */
   function _updateUserData(
     RewardsDataTypes.RewardData storage rewardData,
     uint256 user,
     uint256 userBalance,
     uint256 newAssetIndex,
     uint256 assetUnit
-  ) internal returns (uint256, bool) {
+  )
+    internal
+    returns (uint256, bool)
+  {
     // recalculate user balance based on boost
     // userBalance = boostedBalance(user, userBalance);
 
@@ -261,7 +285,8 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @param user The user address
    * @param userBalance The current user asset balance
    * @param totalSupply Total supply of the asset
-   **/
+   *
+   */
   function _updateData(address pool, address asset, uint256 user, uint256 userBalance, uint256 totalSupply) internal {
     uint256 assetUnit;
     uint256 numAvailableRewards = _poolAssets[pool][asset].availableRewardsCount;
@@ -293,7 +318,8 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @dev Accrues all the rewards of the assets specified in the userAssetBalances list
    * @param user The address of the user
    * @param userAssetBalances List of structs with the user balance and total supply of a set of assets
-   **/
+   *
+   */
   function _updateDataMultiple(address pool, uint256 user, RewardsDataTypes.UserAssetBalance[] memory userAssetBalances) internal {
     for (uint256 i = 0; i < userAssetBalances.length; i++) {
       _updateData(pool, userAssetBalances[i].asset, user, userAssetBalances[i].userBalance, userAssetBalances[i].totalSupply);
@@ -306,19 +332,25 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @param reward The address of the reward token
    * @param userAssetBalances List of structs with the user balance and total supply of a set of assets
    * @return unclaimedRewards The accrued rewards for the user until the moment
-   **/
+   *
+   */
   function _getUserReward(
     address pool,
     uint256 user,
     address reward,
     RewardsDataTypes.UserAssetBalance[] memory userAssetBalances
-  ) internal view returns (uint256 unclaimedRewards) {
+  )
+    internal
+    view
+    returns (uint256 unclaimedRewards)
+  {
     // Add unrealized rewards
     for (uint256 i = 0; i < userAssetBalances.length; i++) {
       if (userAssetBalances[i].userBalance == 0) {
         unclaimedRewards += _poolAssets[pool][userAssetBalances[i].asset].rewards[reward].usersData[user].accrued;
       } else {
-        unclaimedRewards += _getPendingRewards(pool, user, reward, userAssetBalances[i]) + _poolAssets[pool][userAssetBalances[i].asset].rewards[reward].usersData[user].accrued;
+        unclaimedRewards += _getPendingRewards(pool, user, reward, userAssetBalances[i])
+          + _poolAssets[pool][userAssetBalances[i].asset].rewards[reward].usersData[user].accrued;
       }
     }
 
@@ -331,8 +363,18 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @param reward The address of the reward token
    * @param userAssetBalance struct with the user balance and total supply of the incentivized asset
    * @return The pending rewards for the user since the last user action
-   **/
-  function _getPendingRewards(address pool, uint256 user, address reward, RewardsDataTypes.UserAssetBalance memory userAssetBalance) internal view returns (uint256) {
+   *
+   */
+  function _getPendingRewards(
+    address pool,
+    uint256 user,
+    address reward,
+    RewardsDataTypes.UserAssetBalance memory userAssetBalance
+  )
+    internal
+    view
+    returns (uint256)
+  {
     RewardsDataTypes.RewardData storage rewardData = _poolAssets[pool][userAssetBalance.asset].rewards[reward];
     uint256 assetUnit = 10 ** _poolAssets[pool][userAssetBalance.asset].decimals;
     (, uint256 nextIndex) = _getAssetIndex(rewardData, userAssetBalance.totalSupply, assetUnit);
@@ -347,7 +389,8 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @param userIndex Index stored for the user, representation his staking moment
    * @param assetUnit One unit of asset (10**decimals)
    * @return The rewards
-   **/
+   *
+   */
   function _getRewards(uint256 userBalance, uint256 reserveIndex, uint256 userIndex, uint256 assetUnit) internal pure returns (uint256) {
     uint256 result = userBalance * (reserveIndex - userIndex);
     assembly {
@@ -362,8 +405,17 @@ abstract contract RewardsDistributor is IRewardsDistributor {
    * @param totalSupply of the asset being rewarded
    * @param assetUnit One unit of asset (10**decimals)
    * @return The new index.
-   **/
-  function _getAssetIndex(RewardsDataTypes.RewardData storage rewardData, uint256 totalSupply, uint256 assetUnit) internal view returns (uint256, uint256) {
+   *
+   */
+  function _getAssetIndex(
+    RewardsDataTypes.RewardData storage rewardData,
+    uint256 totalSupply,
+    uint256 assetUnit
+  )
+    internal
+    view
+    returns (uint256, uint256)
+  {
     uint256 oldIndex = rewardData.index;
     uint256 distributionEnd = rewardData.distributionEnd;
     uint256 emissionPerSecond = rewardData.emissionPerSecond;
@@ -392,7 +444,11 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     address pool,
     address[] calldata assets,
     uint256 user
-  ) internal view virtual returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances);
+  )
+    internal
+    view
+    virtual
+    returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances);
 
   //// @inheritdoc IRewardsDistributor
   function getAssetDecimals(address pool, address asset) external view returns (uint8) {

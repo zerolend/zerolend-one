@@ -14,8 +14,9 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../protocol/pool/configuration/DataTypes.sol';
-import {IPoolFactory} from './IPoolFactory.sol';
+
 import {IHook} from './IHook.sol';
+import {IPoolFactory} from './IPoolFactory.sol';
 
 /**
  * @title IPool
@@ -114,7 +115,9 @@ interface IPool {
    * @param liquidityIndex The next liquidity index
    * @param borrowIndex The next variable borrow index
    */
-  event ReserveDataUpdated(address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex);
+  event ReserveDataUpdated(
+    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
+  );
 
   /**
    * @dev Emitted when the protocol treasury receives minted aTokens from the accrued interest.
@@ -235,7 +238,14 @@ interface IPool {
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
-  function liquidate(address collateralAsset, address debtAsset, bytes32 position, uint256 debtToCover, DataTypes.ExtraData memory data) external;
+  function liquidate(
+    address collateralAsset,
+    address debtAsset,
+    bytes32 position,
+    uint256 debtToCover,
+    DataTypes.ExtraData memory data
+  )
+    external;
 
   /**
    * @dev See [liquidate(...)](#liquidate) for the full documentation. This call executes the same function with
@@ -260,7 +270,14 @@ interface IPool {
    * @param params Variadic packed params to pass to the receiver as extra information
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
-  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) external;
+  function flashLoan(
+    address receiverAddress,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    DataTypes.ExtraData memory data
+  )
+    external;
 
   /**
    * @notice Get the balance of a specific asset in a specific position.
@@ -326,7 +343,14 @@ interface IPool {
   )
     external
     view
-    returns (uint256 totalCollateralBase, uint256 totalDebtBase, uint256 availableBorrowsBase, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor);
+    returns (
+      uint256 totalCollateralBase,
+      uint256 totalDebtBase,
+      uint256 availableBorrowsBase,
+      uint256 currentLiquidationThreshold,
+      uint256 ltv,
+      uint256 healthFactor
+    );
 
   /**
    * @notice Sets the configuration bitmap of the reserve as a whole
@@ -336,7 +360,13 @@ interface IPool {
    * @param source The address of the oracle for the reserve
    * @param configuration The new configuration bitmap
    */
-  function setReserveConfiguration(address asset, address rateStrategyAddress, address source, DataTypes.ReserveConfigurationMap calldata configuration) external;
+  function setReserveConfiguration(
+    address asset,
+    address rateStrategyAddress,
+    address source,
+    DataTypes.ReserveConfigurationMap calldata configuration
+  )
+    external;
 
   /**
    * @notice Returns the configuration of the reserve

@@ -2,20 +2,24 @@
 pragma solidity ^0.8.12;
 
 import {IAggregatorInterface} from '../../core/interfaces/IAggregatorInterface.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+
 import {IPool} from '../../core/interfaces/IPool.sol';
 import {IRewardsController} from '../../core/interfaces/IRewardsController.sol';
 import {ITransferStrategyBase} from '../../core/interfaces/ITransferStrategyBase.sol';
-import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
+
 import {RewardsDataTypes} from './RewardsDataTypes.sol';
 import {RewardsDistributor} from './RewardsDistributor.sol';
+import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
  * @title RewardsController
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
- **/
+ *
+ */
 abstract contract RewardsController is RewardsDistributor, IRewardsController {
   using SafeCast for uint256;
 
@@ -43,7 +47,8 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
   /**
    * @dev Initialize for RewardsController
    * @dev It expects an address as argument since its initialized via PoolAddressesProvider._updateImpl()
-   **/
+   *
+   */
   // function initialize(address) external initializer {}
 
   //// @inheritdoc IRewardsController
@@ -100,7 +105,11 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     uint256 user,
     address to,
     address reward
-  ) external onlyAuthorizedClaimers(msg.sender, user) returns (uint256) {
+  )
+    external
+    onlyAuthorizedClaimers(msg.sender, user)
+    returns (uint256)
+  {
     require(user != uint256(0), 'INVALID_USER_ADDRESS');
     require(to != address(0), 'INVALID_TO_ADDRESS');
     return _claimRewards(pool, assets, amount, msg.sender, user, to, reward);
@@ -112,7 +121,8 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
   // }
 
   //// @inheritdoc IRewardsController
-  // function claimAllRewards(address[] calldata assets, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
+  // function claimAllRewards(address[] calldata assets, address to) external returns (address[] memory rewardsList, uint256[] memory
+  // claimedAmounts) {
   //   require(to != address(0), 'INVALID_TO_ADDRESS');
   //   return _claimAllRewards(assets, msg.sender, msg.sender, to);
   // }
@@ -123,14 +133,19 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     address[] calldata assets,
     uint256 user,
     address to
-  ) external onlyAuthorizedClaimers(msg.sender, user) returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
+  )
+    external
+    onlyAuthorizedClaimers(msg.sender, user)
+    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
+  {
     require(user != uint256(0), 'INVALID_USER_ADDRESS');
     require(to != address(0), 'INVALID_TO_ADDRESS');
     return _claimAllRewards(pool, assets, msg.sender, user, to);
   }
 
   // //// @inheritdoc IRewardsController
-  // function claimAllRewardsToSelf(address[] calldata assets) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
+  // function claimAllRewardsToSelf(address[] calldata assets) external returns (address[] memory rewardsList, uint256[] memory
+  // claimedAmounts) {
   //   return _claimAllRewards(assets, msg.sender, msg.sender, msg.sender);
   // }
 
@@ -150,12 +165,18 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     address pool,
     address[] calldata assets,
     uint256 user
-  ) internal view override returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances) {
+  )
+    internal
+    view
+    override
+    returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances)
+  {
     userAssetBalances = new RewardsDataTypes.UserAssetBalance[](assets.length);
     for (uint256 i = 0; i < assets.length; i++) {
       userAssetBalances[i].asset = assets[i];
       // todo
-      // (userAssetBalances[i].userBalance, userAssetBalances[i].totalSupply) = IScaledBalanceToken(assets[i]).getScaledUserBalanceAndSupply(user);
+      // (userAssetBalances[i].userBalance, userAssetBalances[i].totalSupply) =
+      // IScaledBalanceToken(assets[i]).getScaledUserBalanceAndSupply(user);
     }
     return userAssetBalances;
   }
@@ -169,8 +190,20 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
    * @param to Address that will be receiving the rewards
    * @param reward Address of the reward token
    * @return Rewards claimed
-   **/
-  function _claimRewards(address pool, address[] calldata assets, uint256 amount, address claimer, uint256 user, address to, address reward) internal returns (uint256) {
+   *
+   */
+  function _claimRewards(
+    address pool,
+    address[] calldata assets,
+    uint256 amount,
+    address claimer,
+    uint256 user,
+    address to,
+    address reward
+  )
+    internal
+    returns (uint256)
+  {
     if (amount == 0) {
       return 0;
     }
@@ -208,14 +241,18 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
    * @return
    *   rewardsList List of reward addresses
    *   claimedAmount List of claimed amounts, follows "rewardsList" items order
-   **/
+   *
+   */
   function _claimAllRewards(
     address pool,
     address[] calldata assets,
     address claimer,
     uint256 user,
     address to
-  ) internal returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
+  )
+    internal
+    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
+  {
     uint256 rewardsListLength = _poolRewardsList[pool].length;
     rewardsList = new address[](rewardsListLength);
     claimedAmounts = new uint256[](rewardsListLength);
@@ -294,7 +331,6 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
    * @param reward The address of the reward token
    * @param rewardOracle The address of the price oracle
    */
-
   function _setRewardOracle(address pool, address reward, IAggregatorInterface rewardOracle) internal {
     require(rewardOracle.latestAnswer() > 0, 'ORACLE_MUST_RETURN_PRICE');
     _rewardOracle[pool][reward] = rewardOracle;
@@ -331,13 +367,42 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
 
   function claimRewards(address pool, address[] calldata assets, uint256 amount, address to, address reward) external returns (uint256) {}
 
-  function claimRewardsOnBehalf(address[] calldata assets, uint256 amount, address user, address to, address reward) external returns (uint256) {}
+  function claimRewardsOnBehalf(
+    address[] calldata assets,
+    uint256 amount,
+    address user,
+    address to,
+    address reward
+  )
+    external
+    returns (uint256)
+  {}
 
   function claimRewardsToSelf(address pool, address[] calldata assets, uint256 amount, address reward) external returns (uint256) {}
 
-  function claimAllRewards(address pool, address[] calldata assets, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
+  function claimAllRewards(
+    address pool,
+    address[] calldata assets,
+    address to
+  )
+    external
+    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
+  {}
 
-  function claimAllRewardsOnBehalf(address[] calldata assets, address user, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
+  function claimAllRewardsOnBehalf(
+    address[] calldata assets,
+    address user,
+    address to
+  )
+    external
+    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
+  {}
 
-  function claimAllRewardsToSelf(address pool, address[] calldata assets) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
+  function claimAllRewardsToSelf(
+    address pool,
+    address[] calldata assets
+  )
+    external
+    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
+  {}
 }

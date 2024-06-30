@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.12;
 
-import {ITransferStrategyBase} from '../../core/interfaces/ITransferStrategyBase.sol';
 import {IAggregatorInterface} from '../../core/interfaces/IAggregatorInterface.sol';
+import {ITransferStrategyBase} from '../../core/interfaces/ITransferStrategyBase.sol';
 
 library RewardsDataTypes {
   struct RewardsConfigInput {

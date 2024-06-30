@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {DataTypes} from '../configuration/DataTypes.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {ReserveLogic} from './ReserveLogic.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
+import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
  * @title BorrowLogic library
@@ -45,7 +46,9 @@ library BorrowLogic {
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     DataTypes.ExecuteBorrowParams memory params
-  ) public {
+  )
+    public
+  {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
 
@@ -68,12 +71,14 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    (bool isFirstBorrowing, ) = b.borrowDebt(totalSupplies[params.asset], params.amount, cache.nextBorrowIndex);
+    (bool isFirstBorrowing,) = b.borrowDebt(totalSupplies[params.asset], params.amount, cache.nextBorrowIndex);
 
     // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
-    reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
+    reserve.updateInterestRates(
+      cache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData
+    );
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
@@ -95,7 +100,10 @@ library BorrowLogic {
     DataTypes.PositionBalance storage balances,
     DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteRepayParams memory params
-  ) external returns (uint256 paybackAmount) {
+  )
+    external
+    returns (uint256 paybackAmount)
+  {
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
     paybackAmount = balances.debtShares;
@@ -112,7 +120,9 @@ library BorrowLogic {
     // user input (ie params.amount)
     if (params.amount < paybackAmount) paybackAmount = params.amount;
 
-    reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData);
+    reserve.updateInterestRates(
+      cache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData
+    );
 
     // update balances and total supplies
     balances.repayDebt(totalSupplies, paybackAmount, cache.nextBorrowIndex);

@@ -13,9 +13,9 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from './configuration/DataTypes.sol';
-import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IHook} from '../../interfaces/IHook.sol';
+import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
 
 /**
  * @title PoolStorage Child Contract

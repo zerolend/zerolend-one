@@ -13,13 +13,14 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from './configuration/DataTypes.sol';
-import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IHook} from '../../interfaces/IHook.sol';
 import {IPool} from '../../interfaces/IPool.sol';
+import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {PoolGetters} from './PoolGetters.sol';
-import {PoolLogic} from './logic/PoolLogic.sol';
+
 import {PoolSetters} from './PoolSetters.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
+import {PoolLogic} from './logic/PoolLogic.sol';
 
 contract Pool is PoolSetters {
   /**
@@ -32,7 +33,7 @@ contract Pool is PoolSetters {
 
     require(params.assets.length >= 2, 'not enough assets');
 
-    for (uint i = 0; i < params.assets.length; i++) {
+    for (uint256 i = 0; i < params.assets.length; i++) {
       PoolLogic.executeInitReserve(
         _reserves,
         _reservesList,
@@ -62,7 +63,17 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function withdraw(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public virtual override returns (uint256) {
+  function withdraw(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  )
+    public
+    virtual
+    override
+    returns (uint256)
+  {
     return _withdraw(asset, amount, index, data);
   }
 
@@ -102,7 +113,17 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) public virtual override {
+  function flashLoan(
+    address receiverAddress,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    DataTypes.ExtraData memory data
+  )
+    public
+    virtual
+    override
+  {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 
@@ -112,7 +133,15 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function setReserveConfiguration(address asset, address rateStrategy, address source, DataTypes.ReserveConfigurationMap calldata config) external virtual {
+  function setReserveConfiguration(
+    address asset,
+    address rateStrategy,
+    address source,
+    DataTypes.ReserveConfigurationMap calldata config
+  )
+    external
+    virtual
+  {
     require(msg.sender == address(_factory.configurator()), 'only configurator');
     PoolLogic.setReserveConfiguration(_reserves, asset, rateStrategy, source, config);
   }

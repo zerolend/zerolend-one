@@ -13,11 +13,12 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
-import {Proxy} from '@openzeppelin/contracts/proxy/Proxy.sol';
-import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
 import {IRevokableBeaconProxy} from '../../interfaces/IRevokableBeaconProxy.sol';
+import {Proxy} from '@openzeppelin/contracts/proxy/Proxy.sol';
+import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
+import {Address} from '@openzeppelin/contracts/utils/Address.sol';
+
+import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
 
 /**
  * @notice A beacon proxy with the ability to have it's upgradability revoked

@@ -13,9 +13,10 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IPoolFactory, IBeacon, IPoolConfigurator, DataTypes, IPool} from '../../interfaces/IPoolFactory.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {DataTypes, IBeacon, IPool, IPoolConfigurator, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+
 import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 contract PoolFactory is IPoolFactory, Ownable {
   /// @inheritdoc IBeacon

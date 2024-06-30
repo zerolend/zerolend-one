@@ -61,27 +61,12 @@ interface ITimelock {
   /**
    * @dev Emitted when a call is scheduled as part of operation `id`.
    */
-  event CallScheduled(
-    bytes32 indexed id,
-    uint256 indexed index,
-    address target,
-    uint256 value,
-    bytes data,
-    bytes32 salt,
-    uint256 delay
-  );
+  event CallScheduled(bytes32 indexed id, uint256 indexed index, address target, uint256 value, bytes data, bytes32 salt, uint256 delay);
 
   /**
    * @dev Emitted when a call is performed as part of operation `id`.
    */
-  event CallExecuted(
-    bytes32 indexed id,
-    uint256 indexed index,
-    address target,
-    uint256 value,
-    bytes32 salt,
-    bytes data
-  );
+  event CallExecuted(bytes32 indexed id, uint256 indexed index, address target, uint256 value, bytes32 salt, bytes data);
 
   /**
    * @dev Emitted when operation `id` is cancelled.

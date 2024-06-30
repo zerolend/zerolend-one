@@ -3,11 +3,11 @@
 
 pragma solidity 0.8.19;
 
-import {AccessControlEnumerable} from '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
-import {ERC721Holder} from '@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
-import {ERC1155Receiver, ERC1155Holder} from '@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol';
-import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {ITimelock} from '../../../interfaces/ITimelock.sol';
+import {AccessControlEnumerable} from '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
+import {ERC1155Holder, ERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol';
+import {ERC721Holder} from '@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
+import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 
 contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, ERC1155Holder {
   uint256 internal constant _DONE_TIMESTAMP = uint256(1);
@@ -21,9 +21,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
   /**
    * @dev See {IERC165-supportsInterface}.
    */
-  function supportsInterface(
-    bytes4 interfaceId
-  ) public view virtual override(AccessControlEnumerable, ERC1155Receiver) returns (bool) {
+  function supportsInterface(bytes4 interfaceId) public view virtual override (AccessControlEnumerable, ERC1155Receiver) returns (bool) {
     return super.supportsInterface(interfaceId);
   }
 
@@ -89,12 +87,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    * @dev Returns the identifier of an operation containing a single
    * transaction.
    */
-  function hashOperation(
-    address target,
-    uint256 value,
-    bytes calldata data,
-    bytes32 salt
-  ) public pure virtual returns (bytes32) {
+  function hashOperation(address target, uint256 value, bytes calldata data, bytes32 salt) public pure virtual returns (bytes32) {
     return keccak256(abi.encode(target, value, data, salt));
   }
 
@@ -107,13 +100,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    *
    * - the caller must have the 'proposer' role.
    */
-  function _schedule(
-    address target,
-    uint256 value,
-    bytes calldata data,
-    bytes32 salt,
-    uint256 delay
-  ) internal virtual {
+  function _schedule(address target, uint256 value, bytes calldata data, bytes32 salt, uint256 delay) internal virtual {
     bytes32 id = hashOperation(target, value, data, salt);
     _scheduleOp(id, delay);
     emit CallScheduled(id, 0, target, value, data, salt, delay);
@@ -138,10 +125,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
    */
   function _cancel(bytes32 id) internal {
     if (!isOperationPending(id)) {
-      revert TimelockUnexpectedOperationState(
-        id,
-        _encodeStateBitmap(OperationState.Waiting) | _encodeStateBitmap(OperationState.Ready)
-      );
+      revert TimelockUnexpectedOperationState(id, _encodeStateBitmap(OperationState.Waiting) | _encodeStateBitmap(OperationState.Ready));
     }
     delete _timestamps[id];
 
@@ -160,12 +144,7 @@ contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, 
   // This function can reenter, but it doesn't pose a risk because _afterCall checks that the proposal is pending,
   // thus any modifications to the operation during reentrancy should be caught.
   // slither-disable-next-line reentrancy-eth
-  function execute(
-    address target,
-    uint256 value,
-    bytes calldata payload,
-    bytes32 salt
-  ) public payable virtual {
+  function execute(address target, uint256 value, bytes calldata payload, bytes32 salt) public payable virtual {
     bytes32 id = hashOperation(target, value, payload, salt);
     _beforeCall(id);
     _execute(target, value, payload);

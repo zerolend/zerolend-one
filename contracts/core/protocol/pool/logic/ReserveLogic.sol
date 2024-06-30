@@ -13,16 +13,18 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
-import {MathUtils} from '../utils/MathUtils.sol';
+
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveSuppliesConfiguration} from '../configuration/ReserveSuppliesConfiguration.sol';
-import {WadRayMath} from '../utils/WadRayMath.sol';
-import {PercentageMath} from '../utils/PercentageMath.sol';
 import {Errors} from '../utils/Errors.sol';
-import {DataTypes} from '../configuration/DataTypes.sol';
+import {MathUtils} from '../utils/MathUtils.sol';
+import {PercentageMath} from '../utils/PercentageMath.sol';
+import {WadRayMath} from '../utils/WadRayMath.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
@@ -39,7 +41,9 @@ library ReserveLogic {
   using ReserveSuppliesConfiguration for DataTypes.ReserveSupplies;
 
   // See `IPool` for descriptions
-  event ReserveDataUpdated(address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex);
+  event ReserveDataUpdated(
+    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
+  );
 
   /**
    * @notice Returns the ongoing normalized income for the reserve.
@@ -103,7 +107,14 @@ library ReserveLogic {
    * @param amount The amount to accumulate
    * @return The next liquidity index of the reserve
    */
-  function cumulateToLiquidityIndex(DataTypes.ReserveData storage reserve, uint256 totalLiquidity, uint256 amount) internal returns (uint256) {
+  function cumulateToLiquidityIndex(
+    DataTypes.ReserveData storage reserve,
+    uint256 totalLiquidity,
+    uint256 amount
+  )
+    internal
+    returns (uint256)
+  {
     // next liquidity index is calculated this way: `((amount / totalLiquidity) + 1) * liquidityIndex`
     // division `amount / totalLiquidity` done in ray for precision
     uint256 result = (amount.wadToRay().rayDiv(totalLiquidity.wadToRay()) + WadRayMath.RAY).rayMul(reserve.liquidityIndex);
@@ -148,12 +159,15 @@ library ReserveLogic {
     uint256 _liquidityTaken,
     bytes32 _position,
     bytes memory _data
-  ) internal {
+  )
+    internal
+  {
     UpdateInterestRatesLocalVars memory vars;
 
     vars.totalVariableDebt = _cache.nextDebtShares.rayMul(_cache.nextBorrowIndex);
 
-    (vars.nextLiquidityRate, vars.nextVariableRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress).calculateInterestRates(
+    (vars.nextLiquidityRate, vars.nextVariableRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
+      .calculateInterestRates(
       _position,
       _data,
       DataTypes.CalculateInterestRatesParams({
@@ -168,7 +182,9 @@ library ReserveLogic {
     _reserve.currentLiquidityRate = vars.nextLiquidityRate.toUint128();
     _reserve.currentBorrowRate = vars.nextVariableRate.toUint128();
 
-    emit ReserveDataUpdated(_reserveAddress, vars.nextLiquidityRate, vars.nextVariableRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex);
+    emit ReserveDataUpdated(
+      _reserveAddress, vars.nextLiquidityRate, vars.nextVariableRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex
+    );
   }
 
   struct AccrueToTreasuryLocalVars {
@@ -222,7 +238,8 @@ library ReserveLogic {
     // because a positive base variable rate can be stored on
     // cache.currBorrowRate, but the index should not increase
     if (_cache.currDebtShares != 0) {
-      uint256 cumulatedVariableBorrowInterest = MathUtils.calculateCompoundedInterest(_cache.currBorrowRate, _cache.reserveLastUpdateTimestamp);
+      uint256 cumulatedVariableBorrowInterest =
+        MathUtils.calculateCompoundedInterest(_cache.currBorrowRate, _cache.reserveLastUpdateTimestamp);
       _cache.nextBorrowIndex = cumulatedVariableBorrowInterest.rayMul(_cache.currBorrowIndex).toUint128();
       _reserve.borrowIndex = _cache.nextBorrowIndex;
     }
@@ -235,7 +252,14 @@ library ReserveLogic {
    * @param supplies The total supply object for the reserve asset
    * @return The cache object
    */
-  function cache(DataTypes.ReserveData storage reserve, DataTypes.ReserveSupplies storage supplies) internal view returns (DataTypes.ReserveCache memory) {
+  function cache(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.ReserveSupplies storage supplies
+  )
+    internal
+    view
+    returns (DataTypes.ReserveCache memory)
+  {
     DataTypes.ReserveCache memory _cache;
 
     _cache.currLiquidityIndex = _cache.nextLiquidityIndex = reserve.liquidityIndex;

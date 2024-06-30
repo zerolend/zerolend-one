@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-import {IERC4626} from '@openzeppelin/contracts/interfaces/IERC4626.sol';
 import {IPool} from './IPool.sol';
+import {IERC4626} from '@openzeppelin/contracts/interfaces/IERC4626.sol';
 import {IERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol';
 
 struct MarketAllocation {
@@ -11,6 +11,7 @@ struct MarketAllocation {
   /// @notice The amount of assets to allocate.
   uint256 assets;
 }
+
 struct MarketConfig {
   /// @notice The maximum amount of assets that can be allocated to the market.
   uint184 cap;
@@ -188,23 +189,13 @@ interface ICuratedVaultBase {
   /// @param pool The id of the market.
   /// @param suppliedAssets The amount of assets supplied to the market.
   /// @param suppliedShares The amount of shares minted.
-  event ReallocateSupply(
-    address indexed caller,
-    address indexed pool,
-    uint256 suppliedAssets,
-    uint256 suppliedShares
-  );
+  event ReallocateSupply(address indexed caller, address indexed pool, uint256 suppliedAssets, uint256 suppliedShares);
 
   /// @notice Emitted when a reallocation withdraws assets from the market identified by `id`.
   /// @param pool The id of the market.
   /// @param withdrawnAssets The amount of assets withdrawn from the market.
   /// @param withdrawnShares The amount of shares burned.
-  event ReallocateWithdraw(
-    address indexed caller,
-    address indexed pool,
-    uint256 withdrawnAssets,
-    uint256 withdrawnShares
-  );
+  event ReallocateWithdraw(address indexed caller, address indexed pool, uint256 withdrawnAssets, uint256 withdrawnShares);
 
   /// @notice Emitted when interest are accrued.
   /// @param newTotalAssets The assets of the vault after accruing the interest but before the interaction.
@@ -413,11 +404,5 @@ interface ICuratedVault is ICuratedVaultBase, IERC4626, IERC20Permit {
   /// @notice Returns the pending timelock.
   function pendingTimelock() external view returns (PendingUint192 memory);
 
-  function initialize(
-    address initialOwner,
-    uint256 initialTimelock,
-    address asset,
-    string memory name,
-    string memory symbol
-  ) external;
+  function initialize(address initialOwner, uint256 initialTimelock, address asset, string memory name, string memory symbol) external;
 }

@@ -13,26 +13,37 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {BorrowLogic} from './logic/BorrowLogic.sol';
-import {DataTypes} from './configuration/DataTypes.sol';
-import {Errors} from './utils/Errors.sol';
-import {FlashLoanLogic} from './logic/FlashLoanLogic.sol';
 import {IPool} from '../../interfaces/IPool.sol';
-import {LiquidationLogic} from './logic/LiquidationLogic.sol';
-import {PercentageMath} from './utils/PercentageMath.sol';
+
 import {PoolGetters} from './PoolGetters.sol';
-import {PoolLogic} from './logic/PoolLogic.sol';
+
 import {PoolRentrancyGuard} from './PoolRentrancyGuard.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
 import {ReserveConfiguration} from './configuration/ReserveConfiguration.sol';
-import {SupplyLogic} from './logic/SupplyLogic.sol';
+
 import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
+import {BorrowLogic} from './logic/BorrowLogic.sol';
+import {FlashLoanLogic} from './logic/FlashLoanLogic.sol';
+import {LiquidationLogic} from './logic/LiquidationLogic.sol';
+import {PoolLogic} from './logic/PoolLogic.sol';
+import {SupplyLogic} from './logic/SupplyLogic.sol';
+import {Errors} from './utils/Errors.sol';
+import {PercentageMath} from './utils/PercentageMath.sol';
 
 abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using PercentageMath for uint256;
   using TokenConfiguration for address;
 
-  function _supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LENDING) {
+  function _supply(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  )
+    internal
+    nonReentrant(RentrancyKind.LENDING)
+  {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 
@@ -41,7 +52,14 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _usersConfig[pos],
       _balances[asset][pos],
       _totalSupplies[asset],
-      DataTypes.ExecuteSupplyParams({reserveFactor: _factory.reserveFactor(), asset: asset, amount: amount, data: data, position: pos, pool: address(this)})
+      DataTypes.ExecuteSupplyParams({
+        reserveFactor: _factory.reserveFactor(),
+        asset: asset,
+        amount: amount,
+        data: data,
+        position: pos,
+        pool: address(this)
+      })
     );
 
     if (address(_hook) != address(0)) _hook.afterSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -52,7 +70,11 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 withdrawalAmount) {
+  )
+    internal
+    nonReentrant(RentrancyKind.LENDING)
+    returns (uint256 withdrawalAmount)
+  {
     bytes32 pos = msg.sender.getPositionId(index);
     require(amount <= _balances[asset][pos].supplyShares, 'Insufficient Balance!');
 
@@ -81,7 +103,15 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     if (address(_hook) != address(0)) _hook.afterWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
-  function _borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LENDING) {
+  function _borrow(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  )
+    internal
+    nonReentrant(RentrancyKind.LENDING)
+  {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
 
@@ -106,7 +136,16 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     if (address(_hook) != address(0)) _hook.afterBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
-  function _repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 paybackAmount) {
+  function _repay(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  )
+    internal
+    nonReentrant(RentrancyKind.LENDING)
+    returns (uint256 paybackAmount)
+  {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
 
@@ -114,13 +153,30 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _reserves[asset],
       _balances[asset][pos],
       _totalSupplies[asset],
-      DataTypes.ExecuteRepayParams({reserveFactor: _factory.reserveFactor(), asset: asset, amount: amount, user: msg.sender, pool: address(this), position: pos, data: data})
+      DataTypes.ExecuteRepayParams({
+        reserveFactor: _factory.reserveFactor(),
+        asset: asset,
+        amount: amount,
+        user: msg.sender,
+        pool: address(this),
+        position: pos,
+        data: data
+      })
     );
 
     if (address(_hook) != address(0)) _hook.afterRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
   }
 
-  function _liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LIQUIDATION) {
+  function _liquidate(
+    address collat,
+    address debt,
+    bytes32 pos,
+    uint256 debtAmt,
+    DataTypes.ExtraData memory data
+  )
+    internal
+    nonReentrant(RentrancyKind.LIQUIDATION)
+  {
     if (address(_hook) != address(0)) _hook.beforeLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
 
     LiquidationLogic.executeLiquidationCall(
@@ -150,7 +206,11 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     bytes calldata params,
     DataTypes.ExtraData memory data
-  ) public virtual nonReentrant(RentrancyKind.FLASHLOAN) {
+  )
+    public
+    virtual
+    nonReentrant(RentrancyKind.FLASHLOAN)
+  {
     DataTypes.FlashloanSimpleParams memory flashParams = DataTypes.FlashloanSimpleParams({
       receiverAddress: receiverAddress,
       asset: asset,

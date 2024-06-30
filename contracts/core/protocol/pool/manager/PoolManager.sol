@@ -24,7 +24,7 @@ contract PoolManager is IPoolManager, TimelockedActions {
 
   address public governance;
 
-  constructor(address _governance) TimelockedActions(86400 * 3) {
+  constructor(address _governance) TimelockedActions(86_400 * 3) {
     governance = _governance;
     _setupRole(DEFAULT_ADMIN_ROLE, _governance);
   }
@@ -98,22 +98,29 @@ contract PoolManager is IPoolManager, TimelockedActions {
   }
 
   modifier onlyEmergencyAdmin(address pool) {
-    require(hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender) || hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender), 'not risk or pool admin');
+    require(
+      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender)
+        || hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender),
+      'not risk or pool admin'
+    );
     _;
   }
 
   modifier onlyEmergencyOrPoolAdmin(address pool) {
     require(
-      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender) ||
-        hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender) ||
-        hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
+      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender)
+        || hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender)
+        || hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
       'not emergency or pool admin'
     );
     _;
   }
 
   modifier onlyRiskOrPoolAdmins(address pool) {
-    require(hasRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), msg.sender) || hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender), 'not risk or pool admin');
+    require(
+      hasRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), msg.sender) || hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
+      'not risk or pool admin'
+    );
     _;
   }
 

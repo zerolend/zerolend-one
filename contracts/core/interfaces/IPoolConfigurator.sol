@@ -38,11 +38,7 @@ interface IPoolConfigurator {
    * @param oldReserveFactor The old reserve factor, expressed in bps
    * @param newReserveFactor The new reserve factor, expressed in bps
    */
-  event ReserveFactorChanged(
-    address indexed asset,
-    uint256 oldReserveFactor,
-    uint256 newReserveFactor
-  );
+  event ReserveFactorChanged(address indexed asset, uint256 oldReserveFactor, uint256 newReserveFactor);
 
   /**
    * @dev Emitted when the borrow cap of a reserve is updated.
@@ -66,11 +62,7 @@ interface IPoolConfigurator {
    * @param oldStrategy The address of the old interest strategy contract
    * @param newStrategy The address of the new interest strategy contract
    */
-  event ReserveInterestRateStrategyChanged(
-    address indexed asset,
-    address oldStrategy,
-    address newStrategy
-  );
+  event ReserveInterestRateStrategyChanged(address indexed asset, address oldStrategy, address newStrategy);
 
   /**
    * @notice Configures borrowing on a reserve.
@@ -94,11 +86,7 @@ interface IPoolConfigurator {
    * @param asset The address of the underlying asset of the reserve
    * @param newRateStrategyAddress The address of the new interest strategy contract
    */
-  function setReserveInterestRateStrategyAddress(
-    address pool,
-    address asset,
-    address newRateStrategyAddress
-  ) external;
+  function setReserveInterestRateStrategyAddress(address pool, address asset, address newRateStrategyAddress) external;
 
   /**
    * @notice Freezes the pool reserves. In the frozen state only withdraw and repay can be done

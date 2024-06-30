@@ -13,28 +13,50 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {ConstantsLib} from './libraries/ConstantsLib.sol';
-import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
-import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
-import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import {IERC4626Upgradeable, ERC20Upgradeable, MathUpgradeable, ERC4626Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {
+  ICuratedVaultBase,
+  ICuratedVaultStaticTyping,
+  MarketAllocation,
+  MarketConfig,
+  PendingAddress,
+  PendingUint192
+} from '../../interfaces/ICuratedVault.sol';
 import {IPool} from '../../interfaces/IPool.sol';
-import {MarketConfig, PendingUint192, PendingAddress, MarketAllocation, ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/ICuratedVault.sol';
-import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
-import {Ownable2StepUpgradeable, OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol';
+import {ConstantsLib} from './libraries/ConstantsLib.sol';
+
 import {PendingLib} from './libraries/PendingLib.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
+import {Ownable2StepUpgradeable, OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol';
+import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
+import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
+
+import {
+  ERC20Upgradeable,
+  ERC4626Upgradeable,
+  IERC4626Upgradeable,
+  MathUpgradeable
+} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /// @title CuratedVault
 /// @author Morpho Labs
 /// @custom:contact security@morpho.org
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
-contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2StepUpgradeable, MulticallUpgradeable, ICuratedVaultStaticTyping {
+contract CuratedVault is
+  ERC4626Upgradeable,
+  ERC20PermitUpgradeable,
+  Ownable2StepUpgradeable,
+  MulticallUpgradeable,
+  ICuratedVaultStaticTyping
+{
   using MathUpgradeable for uint256;
   using UtilsLib for uint256;
   using SafeCast for uint256;
@@ -99,7 +121,16 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2Ste
   /// @param _asset The address of the underlying asset.
   /// @param _name The name of the vault.
   /// @param _symbol The symbol of the vault.
-  function initialize(address owner, uint256 initialTimelock, address _asset, string memory _name, string memory _symbol) external initializer {
+  function initialize(
+    address owner,
+    uint256 initialTimelock,
+    address _asset,
+    string memory _name,
+    string memory _symbol
+  )
+    external
+    initializer
+  {
     __ERC20_init(_name, _symbol);
     __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
@@ -250,8 +281,9 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2Ste
     uint256 supplyCap = config[id].cap;
     if (newSupplyCap == supplyCap) revert AlreadySet();
 
-    if (newSupplyCap < supplyCap) _setCap(id, newSupplyCap.toUint184());
-    else {
+    if (newSupplyCap < supplyCap) {
+      _setCap(id, newSupplyCap.toUint184());
+    } else {
       pendingCap[id].update(newSupplyCap.toUint184(), timelock);
       emit SubmitCap(_msgSender(), id, newSupplyCap);
     }
@@ -358,7 +390,8 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2Ste
 
         totalWithdrawn += withdrawnAssets;
       } else {
-        uint256 suppliedAssets = allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets =
+          allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
@@ -450,7 +483,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2Ste
   /* ERC4626Upgradeable (PUBLIC) */
 
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override(ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
+  function decimals() public view override (ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
@@ -472,7 +505,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2Ste
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets, , ) = _maxWithdraw(owner);
+    (assets,,) = _maxWithdraw(owner);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -591,13 +624,31 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2Ste
 
   /// @dev Returns the amount of shares that the vault would exchange for the amount of `assets` provided.
   /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
-  function _convertToSharesWithTotals(uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets, MathUpgradeable.Rounding rounding) internal view returns (uint256) {
+  function _convertToSharesWithTotals(
+    uint256 assets,
+    uint256 newTotalSupply,
+    uint256 newTotalAssets,
+    MathUpgradeable.Rounding rounding
+  )
+    internal
+    view
+    returns (uint256)
+  {
     return assets.mulDiv(newTotalSupply + 10 ** _decimalsOffset(), newTotalAssets + 1, rounding);
   }
 
   /// @dev Returns the amount of assets that the vault would exchange for the amount of `shares` provided.
   /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
-  function _convertToAssetsWithTotals(uint256 shares, uint256 newTotalSupply, uint256 newTotalAssets, MathUpgradeable.Rounding rounding) internal view returns (uint256) {
+  function _convertToAssetsWithTotals(
+    uint256 shares,
+    uint256 newTotalSupply,
+    uint256 newTotalAssets,
+    MathUpgradeable.Rounding rounding
+  )
+    internal
+    view
+    returns (uint256)
+  {
     return shares.mulDiv(newTotalAssets + 1, newTotalSupply + 10 ** _decimalsOffset(), rounding);
   }
 
@@ -726,7 +777,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2Ste
   function _withdrawPool(uint256 assets) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool id = withdrawQueue[i];
-      (uint256 supplyAssets, ) = _accruedSupplyBalance(id);
+      (uint256 supplyAssets,) = _accruedSupplyBalance(id);
       // uint256 toWithdraw = UtilsLib.min(
       //   _withdrawable(id, market.totalSupplyAssets, market.totalBorrowAssets, supplyAssets),
       //   assets
@@ -777,7 +828,16 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, Ownable2Ste
 
   /// @dev Returns the withdrawable amount of assets from the market defined by `marketParams`, given the market's
   /// total supply and borrow assets and the vault's assets supplied.
-  function _withdrawable(IPool marketParams, uint256 totalSupplyAssets, uint256 totalBorrowAssets, uint256 supplyAssets) internal view returns (uint256) {
+  function _withdrawable(
+    IPool marketParams,
+    uint256 totalSupplyAssets,
+    uint256 totalBorrowAssets,
+    uint256 supplyAssets
+  )
+    internal
+    view
+    returns (uint256)
+  {
     // todo
     // // Inside a flashloan callback, liquidity on Morpho Blue may be limited to the singleton's balance.
     // uint256 availableLiquidity = UtilsLib.min(

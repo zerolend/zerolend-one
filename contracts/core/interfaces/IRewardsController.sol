@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.12;
 
+import {RewardsDataTypes} from '../../periphery/positions/RewardsDataTypes.sol';
+import {IAggregatorInterface} from './IAggregatorInterface.sol';
 import {IRewardsDistributor} from './IRewardsDistributor.sol';
 import {ITransferStrategyBase} from './ITransferStrategyBase.sol';
-import {IAggregatorInterface} from './IAggregatorInterface.sol';
-import {RewardsDataTypes} from '../../periphery/positions/RewardsDataTypes.sol';
 
 /**
  * @title IRewardsController
@@ -93,7 +93,8 @@ interface IRewardsController is IRewardsDistributor {
    * @param user The address of the user whose asset balance has changed
    * @param totalSupply The total supply of the asset prior to user balance change
    * @param userBalance The previous user balance prior to balance change
-   **/
+   *
+   */
   // function handleAction(uint256 user, uint256 totalSupply, uint256 userBalance) external;
 
   /**
@@ -103,7 +104,8 @@ interface IRewardsController is IRewardsDistributor {
    * @param to The address that will be receiving the rewards
    * @param reward The address of the reward token
    * @return The amount of rewards claimed
-   **/
+   *
+   */
   function claimRewards(address pool, address[] calldata assets, uint256 amount, address to, address reward) external returns (uint256);
 
   /**
@@ -115,8 +117,18 @@ interface IRewardsController is IRewardsDistributor {
    * @param to The address that will be receiving the rewards
    * @param reward The address of the reward token
    * @return The amount of rewards claimed
-   **/
-  function claimRewardsOnBehalf(address pool, address[] calldata assets, uint256 amount, uint256 user, address to, address reward) external returns (uint256);
+   *
+   */
+  function claimRewardsOnBehalf(
+    address pool,
+    address[] calldata assets,
+    uint256 amount,
+    uint256 user,
+    address to,
+    address reward
+  )
+    external
+    returns (uint256);
 
   /**
    * @dev Claims reward for msg.sender, on all the assets of the pool, accumulating the pending rewards
@@ -124,7 +136,8 @@ interface IRewardsController is IRewardsDistributor {
    * @param amount The amount of rewards to claim
    * @param reward The address of the reward token
    * @return The amount of rewards claimed
-   **/
+   *
+   */
   function claimRewardsToSelf(address pool, address[] calldata assets, uint256 amount, address reward) external returns (uint256);
 
   /**
@@ -133,8 +146,15 @@ interface IRewardsController is IRewardsDistributor {
    * @param to The address that will be receiving the rewards
    * @return rewardsList List of addresses of the reward tokens
    * @return claimedAmounts List that contains the claimed amount per reward, following same order as "rewardList"
-   **/
-  function claimAllRewards(address pool, address[] calldata assets, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+   *
+   */
+  function claimAllRewards(
+    address pool,
+    address[] calldata assets,
+    address to
+  )
+    external
+    returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 
   /**
    * @dev Claims all rewards for a user on behalf, on all the assets of the pool, accumulating the pending rewards. The caller must
@@ -144,19 +164,28 @@ interface IRewardsController is IRewardsDistributor {
    * @param to The address that will be receiving the rewards
    * @return rewardsList List of addresses of the reward tokens
    * @return claimedAmounts List that contains the claimed amount per reward, following same order as "rewardsList"
-   **/
+   *
+   */
   function claimAllRewardsOnBehalf(
     address pool,
     address[] calldata assets,
     uint256 user,
     address to
-  ) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+  )
+    external
+    returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 
   /**
    * @dev Claims all reward for msg.sender, on all the assets of the pool, accumulating the pending rewards
    * @param assets The list of assets to check eligible distributions before claiming rewards
    * @return rewardsList List of addresses of the reward tokens
    * @return claimedAmounts List that contains the claimed amount per reward, following same order as "rewardsList"
-   **/
-  function claimAllRewardsToSelf(address pool, address[] calldata assets) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+   *
+   */
+  function claimAllRewardsToSelf(
+    address pool,
+    address[] calldata assets
+  )
+    external
+    returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 }

@@ -13,15 +13,16 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
+
+import {DataTypes} from '../configuration/DataTypes.sol';
+import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
-import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
-import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 
 /**
  * @title GenericLogic library
@@ -76,7 +77,11 @@ library GenericLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.CalculateUserAccountDataParams memory params
-  ) internal view returns (uint256, uint256, uint256, uint256, uint256, bool) {
+  )
+    internal
+    view
+    returns (uint256, uint256, uint256, uint256, uint256, bool)
+  {
     if (params.userConfig.isEmpty()) {
       return (0, 0, 0, 0, type(uint256).max, false);
     }
@@ -102,7 +107,7 @@ library GenericLogic {
 
       DataTypes.ReserveData storage currentReserve = reservesData[vars.currentReserveAddress];
 
-      (vars.ltv, vars.liquidationThreshold, , vars.decimals, ) = currentReserve.configuration.getParams();
+      (vars.ltv, vars.liquidationThreshold,, vars.decimals,) = currentReserve.configuration.getParams();
 
       unchecked {
         vars.assetUnit = 10 ** vars.decimals;
@@ -112,10 +117,7 @@ library GenericLogic {
 
       if (vars.liquidationThreshold != 0 && params.userConfig.isUsingAsCollateral(vars.i)) {
         vars.PositionBalanceInBaseCurrency = _getPositionBalanceInBaseCurrency(
-          _balances[vars.currentReserveAddress][params.position],
-          currentReserve,
-          vars.assetPrice,
-          vars.assetUnit
+          _balances[vars.currentReserveAddress][params.position], currentReserve, vars.assetPrice, vars.assetUnit
         );
 
         vars.totalCollateralInBaseCurrency += vars.PositionBalanceInBaseCurrency;
@@ -126,11 +128,14 @@ library GenericLogic {
           vars.hasZeroLtvCollateral = true;
         }
 
-        vars.avgLiquidationThreshold += vars.PositionBalanceInBaseCurrency * (vars.isInEModeCategory ? vars.eModeLiqThreshold : vars.liquidationThreshold);
+        vars.avgLiquidationThreshold +=
+          vars.PositionBalanceInBaseCurrency * (vars.isInEModeCategory ? vars.eModeLiqThreshold : vars.liquidationThreshold);
       }
 
       if (params.userConfig.isBorrowing(vars.i)) {
-        vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(_balances[vars.currentReserveAddress][params.position], currentReserve, vars.assetPrice, vars.assetUnit);
+        vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(
+          _balances[vars.currentReserveAddress][params.position], currentReserve, vars.assetPrice, vars.assetUnit
+        );
       }
 
       unchecked {
@@ -140,13 +145,21 @@ library GenericLogic {
 
     unchecked {
       vars.avgLtv = vars.totalCollateralInBaseCurrency != 0 ? vars.avgLtv / vars.totalCollateralInBaseCurrency : 0;
-      vars.avgLiquidationThreshold = vars.totalCollateralInBaseCurrency != 0 ? vars.avgLiquidationThreshold / vars.totalCollateralInBaseCurrency : 0;
+      vars.avgLiquidationThreshold =
+        vars.totalCollateralInBaseCurrency != 0 ? vars.avgLiquidationThreshold / vars.totalCollateralInBaseCurrency : 0;
     }
 
     vars.healthFactor = (vars.totalDebtInBaseCurrency == 0)
       ? type(uint256).max
       : (vars.totalCollateralInBaseCurrency.percentMul(vars.avgLiquidationThreshold)).wadDiv(vars.totalDebtInBaseCurrency);
-    return (vars.totalCollateralInBaseCurrency, vars.totalDebtInBaseCurrency, vars.avgLtv, vars.avgLiquidationThreshold, vars.healthFactor, vars.hasZeroLtvCollateral);
+    return (
+      vars.totalCollateralInBaseCurrency,
+      vars.totalDebtInBaseCurrency,
+      vars.avgLtv,
+      vars.avgLiquidationThreshold,
+      vars.healthFactor,
+      vars.hasZeroLtvCollateral
+    );
   }
 
   /**
@@ -157,7 +170,15 @@ library GenericLogic {
    * @param ltv The average loan to value
    * @return The amount available to borrow in the base currency of the used by the price feed
    */
-  function calculateAvailableBorrows(uint256 totalCollateralInBaseCurrency, uint256 totalDebtInBaseCurrency, uint256 ltv) internal pure returns (uint256) {
+  function calculateAvailableBorrows(
+    uint256 totalCollateralInBaseCurrency,
+    uint256 totalDebtInBaseCurrency,
+    uint256 ltv
+  )
+    internal
+    pure
+    returns (uint256)
+  {
     uint256 availableBorrowsInBaseCurrency = totalCollateralInBaseCurrency.percentMul(ltv);
 
     if (availableBorrowsInBaseCurrency < totalDebtInBaseCurrency) {
@@ -180,7 +201,11 @@ library GenericLogic {
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
-  ) private view returns (uint256) {
+  )
+    private
+    view
+    returns (uint256)
+  {
     // fetching variable debt
     uint256 userTotalDebt = balance.debtShares;
     if (userTotalDebt != 0) userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
@@ -203,7 +228,11 @@ library GenericLogic {
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
-  ) private view returns (uint256) {
+  )
+    private
+    view
+    returns (uint256)
+  {
     uint256 normalizedIncome = reserve.getNormalizedIncome();
     uint256 balance = (_balance.supplyShares.rayMul(normalizedIncome)) * assetPrice;
 

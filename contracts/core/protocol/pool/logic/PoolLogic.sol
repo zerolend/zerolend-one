@@ -13,17 +13,18 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {Errors} from '../utils/Errors.sol';
+
+import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
-import {DataTypes} from '../configuration/DataTypes.sol';
+import {GenericLogic} from './GenericLogic.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
-import {GenericLogic} from './GenericLogic.sol';
-import {PercentageMath} from '../utils/PercentageMath.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 
 /**
  * @title PoolLogic library
@@ -51,7 +52,9 @@ library PoolLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.InitReserveParams memory params
-  ) external {
+  )
+    external
+  {
     require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
     require(Address.isContract(params.interestRateStrategyAddress), Errors.NOT_CONTRACT);
     require(Address.isContract(params.oracle), Errors.NOT_CONTRACT);
@@ -121,9 +124,17 @@ library PoolLogic {
   )
     external
     view
-    returns (uint256 totalCollateralBase, uint256 totalDebtBase, uint256 availableBorrowsBase, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor)
+    returns (
+      uint256 totalCollateralBase,
+      uint256 totalDebtBase,
+      uint256 availableBorrowsBase,
+      uint256 currentLiquidationThreshold,
+      uint256 ltv,
+      uint256 healthFactor
+    )
   {
-    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor, ) = GenericLogic.calculateUserAccountData(_balances, reservesData, reservesList, params);
+    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor,) =
+      GenericLogic.calculateUserAccountData(_balances, reservesData, reservesList, params);
     availableBorrowsBase = GenericLogic.calculateAvailableBorrows(totalCollateralBase, totalDebtBase, ltv);
   }
 
@@ -133,7 +144,9 @@ library PoolLogic {
     address rateStrategyAddress,
     address source,
     DataTypes.ReserveConfigurationMap memory config
-  ) public {
+  )
+    public
+  {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
     _reserves[asset].configuration = config;
 
@@ -155,7 +168,10 @@ library PoolLogic {
 
       // if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
       // a loan is taken there is enough collateral available to cover the liquidation bonus
-      require(config.getLiquidationThreshold().percentMul(config.getLiquidationBonus()) <= PercentageMath.PERCENTAGE_FACTOR, Errors.INVALID_RESERVE_PARAMS);
+      require(
+        config.getLiquidationThreshold().percentMul(config.getLiquidationBonus()) <= PercentageMath.PERCENTAGE_FACTOR,
+        Errors.INVALID_RESERVE_PARAMS
+      );
 
       emit CollateralConfigurationChanged(asset, config.getLtv(), config.getLiquidationThreshold(), config.getLiquidationThreshold());
     }

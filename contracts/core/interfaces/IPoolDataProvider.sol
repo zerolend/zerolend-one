@@ -128,7 +128,16 @@ interface IPoolDataProvider {
     address pool,
     address asset,
     address user
-  ) external view returns (uint256 currentATokenBalance, uint256 currentVariableDebt, uint256 scaledVariableDebt, uint256 liquidityRate, bool usageAsCollateralEnabled);
+  )
+    external
+    view
+    returns (
+      uint256 currentATokenBalance,
+      uint256 currentVariableDebt,
+      uint256 scaledVariableDebt,
+      uint256 liquidityRate,
+      bool usageAsCollateralEnabled
+    );
 
   /**
    * @notice Returns the address of the Interest Rate strategy

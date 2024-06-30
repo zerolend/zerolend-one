@@ -61,7 +61,6 @@ interface INFTPositionManager {
    * @param tokenId The ID of the NFT.
    *
    */
-
   event Withdrawal(address indexed asset, uint256 indexed amount, uint256 tokenId);
 
   /**

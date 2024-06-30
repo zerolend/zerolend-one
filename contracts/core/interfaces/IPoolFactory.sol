@@ -13,10 +13,10 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
-import {IPool} from './IPool.sol';
 import {DataTypes} from '../protocol/pool/configuration/DataTypes.sol';
+import {IPool} from './IPool.sol';
 import {IPoolConfigurator} from './IPoolConfigurator.sol';
+import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 
 interface IPoolFactory is IBeacon {
   event PoolCreated(IPool indexed pool, uint256 indexed index, address creator);

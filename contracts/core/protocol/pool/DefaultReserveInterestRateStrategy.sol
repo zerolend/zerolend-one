@@ -13,13 +13,13 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {WadRayMath} from './utils/WadRayMath.sol';
-import {PercentageMath} from './utils/PercentageMath.sol';
-import {DataTypes} from './configuration/DataTypes.sol';
-import {Errors} from './utils/Errors.sol';
 import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
 import {IReserveInterestRateStrategy} from '../../interfaces/IReserveInterestRateStrategy.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
+import {Errors} from './utils/Errors.sol';
+import {PercentageMath} from './utils/PercentageMath.sol';
+import {WadRayMath} from './utils/WadRayMath.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 
 /**
  * @title DefaultReserveInterestRateStrategy contract
@@ -96,7 +96,16 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   }
 
   /// @inheritdoc IReserveInterestRateStrategy
-  function calculateInterestRates(bytes32, bytes memory, DataTypes.CalculateInterestRatesParams memory params) public view override returns (uint256, uint256) {
+  function calculateInterestRates(
+    bytes32,
+    bytes memory,
+    DataTypes.CalculateInterestRatesParams memory params
+  )
+    public
+    view
+    override
+    returns (uint256, uint256)
+  {
     CalcInterestRatesLocalVars memory vars;
 
     vars.totalDebt = params.totalVariableDebt;
@@ -120,9 +129,8 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
       vars.currentBorrowRate += _variableRateSlope1.rayMul(vars.borrowUsageRatio).rayDiv(OPTIMAL_USAGE_RATIO);
     }
 
-    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalVariableDebt, vars.currentBorrowRate).rayMul(vars.supplyUsageRatio).percentMul(
-      PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor
-    );
+    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalVariableDebt, vars.currentBorrowRate).rayMul(vars.supplyUsageRatio)
+      .percentMul(PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor);
 
     return (vars.currentLiquidityRate, vars.currentBorrowRate);
   }

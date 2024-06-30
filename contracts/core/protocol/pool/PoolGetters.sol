@@ -13,15 +13,17 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from './configuration/DataTypes.sol';
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
-import {IHook, IPoolFactory, IPool} from '../../interfaces/IPool.sol';
-import {PoolLogic} from './logic/PoolLogic.sol';
+import {IHook, IPool, IPoolFactory} from '../../interfaces/IPool.sol';
+
 import {PoolStorage} from './PoolStorage.sol';
+import {DataTypes} from './configuration/DataTypes.sol';
 import {PositionBalanceConfiguration} from './configuration/PositionBalanceConfiguration.sol';
 import {ReserveSuppliesConfiguration} from './configuration/ReserveSuppliesConfiguration.sol';
-import {ReserveLogic} from './logic/ReserveLogic.sol';
+
 import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
+import {PoolLogic} from './logic/PoolLogic.sol';
+import {ReserveLogic} from './logic/ReserveLogic.sol';
 
 abstract contract PoolGetters is PoolStorage, IPool {
   using ReserveLogic for DataTypes.ReserveData;
@@ -88,15 +90,28 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPool
-  function getUserAccountData(address user, uint256 index) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
+  function getUserAccountData(
+    address user,
+    uint256 index
+  )
+    external
+    view
+    virtual
+    override
+    returns (uint256, uint256, uint256, uint256, uint256, uint256)
+  {
     bytes32 positionId = user.getPositionId(index);
-    return
-      PoolLogic.executeGetUserAccountData(
-        _balances,
-        _reserves,
-        _reservesList,
-        DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], reservesCount: _reservesCount, position: positionId, pool: address(this)})
-      );
+    return PoolLogic.executeGetUserAccountData(
+      _balances,
+      _reserves,
+      _reservesList,
+      DataTypes.CalculateUserAccountDataParams({
+        userConfig: _usersConfig[positionId],
+        reservesCount: _reservesCount,
+        position: positionId,
+        pool: address(this)
+      })
+    );
   }
 
   /// @inheritdoc IPool
@@ -122,7 +137,9 @@ abstract contract PoolGetters is PoolStorage, IPool {
   /// @inheritdoc IPool
   function getReservesList() external view virtual override returns (address[] memory) {
     address[] memory reservesList = new address[](_reservesCount);
-    for (uint256 i = 0; i < _reservesCount; i++) reservesList[i] = _reservesList[i];
+    for (uint256 i = 0; i < _reservesCount; i++) {
+      reservesList[i] = _reservesList[i];
+    }
     return reservesList;
   }
 

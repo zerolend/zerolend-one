@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IPool} from '../../../interfaces/IPool.sol';
 import {IFlashLoanSimpleReceiver} from '../../../interfaces/IFlashLoanSimpleReceiver.sol';
+import {IPool} from '../../../interfaces/IPool.sol';
+
+import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {Errors} from '../utils/Errors.sol';
-import {WadRayMath} from '../utils/WadRayMath.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
-import {DataTypes} from '../configuration/DataTypes.sol';
-import {ValidationLogic} from './ValidationLogic.sol';
+import {WadRayMath} from '../utils/WadRayMath.sol';
+
 import {ReserveLogic} from './ReserveLogic.sol';
+import {ValidationLogic} from './ValidationLogic.sol';
+import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
  * @title FlashLoanLogic library
@@ -55,7 +57,9 @@ library FlashLoanLogic {
     DataTypes.ReserveData storage _reserve,
     DataTypes.ReserveSupplies storage _totalSupplies,
     DataTypes.FlashloanSimpleParams memory _params
-  ) external {
+  )
+    external
+  {
     // The usual action flow (cache -> updateState -> validation -> changeState -> updateRates)
     // is altered to (validation -> user payload -> cache -> updateState -> changeState -> updateRates) for flashloans.
     // This is done to protect against reentrance and rate manipulation within the user specified payload.
@@ -66,7 +70,10 @@ library FlashLoanLogic {
     uint256 totalPremium = _params.amount.percentMul(_params.flashLoanPremiumTotal);
     IERC20(_params.asset).transfer(_params.receiverAddress, _params.amount);
 
-    require(receiver.executeOperation(_params.asset, _params.amount, totalPremium, msg.sender, _params.params), Errors.INVALID_FLASHLOAN_EXECUTOR_RETURN);
+    require(
+      receiver.executeOperation(_params.asset, _params.amount, totalPremium, msg.sender, _params.params),
+      Errors.INVALID_FLASHLOAN_EXECUTOR_RETURN
+    );
 
     _handleFlashLoanRepayment(
       _reserve,
@@ -92,7 +99,9 @@ library FlashLoanLogic {
     DataTypes.ReserveData storage _reserve,
     DataTypes.ReserveSupplies storage _totalSupplies,
     DataTypes.FlashLoanRepaymentParams memory _params
-  ) internal {
+  )
+    internal
+  {
     uint256 amountPlusPremium = _params.amount + _params.totalPremium;
 
     DataTypes.ReserveCache memory cache = _reserve.cache(_totalSupplies);

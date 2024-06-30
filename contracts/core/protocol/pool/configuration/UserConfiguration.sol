@@ -13,13 +13,13 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {Errors} from '../utils/Errors.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
+import {Errors} from '../utils/Errors.sol';
 import {ReserveConfiguration} from './ReserveConfiguration.sol';
 
 /**
  * @title UserConfiguration library
-
+ *
  * @notice Implements the bitmap logic to handle the user configuration
  */
 library UserConfiguration {

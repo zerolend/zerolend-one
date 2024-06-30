@@ -14,8 +14,9 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IDefaultInterestRateStrategy} from '../../core/interfaces/IDefaultInterestRateStrategy.sol';
-import {WadRayMath} from '../../core/protocol/pool/utils/WadRayMath.sol';
+
 import {DataTypes} from '../../core/protocol/pool/configuration/DataTypes.sol';
+import {WadRayMath} from '../../core/protocol/pool/utils/WadRayMath.sol';
 
 abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   uint256 public OPTIMAL_USAGE_RATIO;
@@ -57,7 +58,12 @@ abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrateg
     bytes32,
     bytes memory,
     DataTypes.CalculateInterestRatesParams memory
-  ) external view override returns (uint256 liquidityRate, uint256 variableBorrowRate) {
+  )
+    external
+    view
+    override
+    returns (uint256 liquidityRate, uint256 variableBorrowRate)
+  {
     return (_liquidityRate, _variableBorrowRate);
   }
 

@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 import {ICuratedVault} from './ICuratedVault.sol';
+import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 
 interface ICuratedVaultFactory is IBeacon {
   event VaultCreated(ICuratedVault indexed vault, uint256 indexed index, address creator);
@@ -39,7 +39,9 @@ interface ICuratedVaultFactory is IBeacon {
     string memory name,
     string memory symbol,
     bytes32 salt
-  ) external returns (ICuratedVault pool);
+  )
+    external
+    returns (ICuratedVault pool);
 
   function vaults(uint256 index) external view returns (ICuratedVault);
 
