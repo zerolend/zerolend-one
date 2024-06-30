@@ -97,8 +97,8 @@ library DataTypes {
   }
 
   struct ReserveSupplies {
-    uint256 collateral;
-    uint256 debt;
+    uint256 supplyShares;
+    uint256 debtShares;
   }
 
   struct ExecuteLiquidationCallParams {

@@ -62,7 +62,7 @@ library SupplyLogic {
     DataTypes.ExecuteSupplyParams memory params
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory cache = reserve.cache();
+    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
     reserve.updateState(cache);
 
     ValidationLogic.validateSupply(cache, reserve, params, params.pool);
@@ -101,10 +101,10 @@ library SupplyLogic {
     DataTypes.ExecuteWithdrawParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory cache = reserve.cache();
+    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
     reserve.updateState(cache);
 
-    uint256 balance = balances[params.asset][params.position].getCollateralBalance(cache.nextLiquidityIndex);
+    uint256 balance = balances[params.asset][params.position].getSupplyBalance(cache.nextLiquidityIndex);
 
     // repay with max amount should clear off all debt
     if (params.amount == type(uint256).max) params.amount = balance;

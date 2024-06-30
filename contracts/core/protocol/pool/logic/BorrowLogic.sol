@@ -47,7 +47,7 @@ library BorrowLogic {
     DataTypes.ExecuteBorrowParams memory params
   ) public {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory reserveCache = reserve.cache();
+    DataTypes.ReserveCache memory reserveCache = reserve.cache(totalSupplies[params.asset]);
 
     reserve.updateState(reserveCache);
 
@@ -97,7 +97,7 @@ library BorrowLogic {
     DataTypes.ExecuteRepayParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory reserveCache = reserve.cache();
+    DataTypes.ReserveCache memory reserveCache = reserve.cache(totalSupplies[params.asset]);
     reserve.updateState(reserveCache);
 
     DataTypes.PositionBalance storage b = balances[params.asset][params.position];
@@ -117,7 +117,7 @@ library BorrowLogic {
     reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData);
 
     b.repayDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextBorrowIndex);
-    reserveCache.nextDebtShares = totalSupplies[params.asset].debt;
+    reserveCache.nextDebtShares = totalSupplies[params.asset].debtShares;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
     emit Repay(params.asset, params.position, msg.sender, paybackAmount);

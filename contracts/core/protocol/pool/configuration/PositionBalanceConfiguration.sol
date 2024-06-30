@@ -29,7 +29,7 @@ library PositionBalanceConfiguration {
    * @notice Deposits `amount` units of an asset as collateral for a position
    * @dev Converts `amount` into `shares` and `index` so that rebase values can be tracked properly.
    * @param self The position to update
-   * @param supply The total supply information of the asset
+   * @param totalSupply The total supply information of the asset
    * @param amount The amount to deposit
    * @param index The current liquidity index
    * @return isFirst True if this is the first supply for the position
@@ -37,7 +37,7 @@ library PositionBalanceConfiguration {
    */
   function depositCollateral(
     DataTypes.PositionBalance storage self,
-    DataTypes.ReserveSupplies storage supply,
+    DataTypes.ReserveSupplies storage totalSupply,
     uint256 amount,
     uint128 index
   ) internal returns (bool isFirst, uint256 sharesMinted) {
@@ -46,7 +46,7 @@ library PositionBalanceConfiguration {
     uint256 shares = self.supplyShares;
     self.lastSupplyLiquidtyIndex = index;
     self.supplyShares += sharesMinted;
-    supply.collateral += sharesMinted;
+    totalSupply.supplyShares += sharesMinted;
     isFirst = shares == 0;
   }
 
@@ -54,7 +54,7 @@ library PositionBalanceConfiguration {
    * @notice Borrows `amount` units of an asset as debt for a position
    * @dev Converts `amount` into `shares` and `index` so that rebase values can be tracked properly.
    * @param self The position to update
-   * @param supply The total supply information of the asset
+   * @param totalSupply The total supply information of the asset
    * @param amount The amount to borrow
    * @param index The current liquidity index
    * @return isFirst True if this is the first borrow for the position
@@ -62,7 +62,7 @@ library PositionBalanceConfiguration {
    */
   function borrowDebt(
     DataTypes.PositionBalance storage self,
-    DataTypes.ReserveSupplies storage supply,
+    DataTypes.ReserveSupplies storage totalSupply,
     uint256 amount,
     uint128 index
   ) internal returns (bool isFirst, uint256 sharesMinted) {
@@ -71,7 +71,7 @@ library PositionBalanceConfiguration {
     uint256 shares = self.debtShares;
     self.lastDebtLiquidtyIndex = index;
     self.debtShares += sharesMinted;
-    supply.debt += sharesMinted;
+    totalSupply.debtShares += sharesMinted;
     isFirst = shares == 0;
   }
 
@@ -94,7 +94,7 @@ library PositionBalanceConfiguration {
     require(sharesBurnt != 0, Errors.INVALID_BURN_AMOUNT);
     self.lastSupplyLiquidtyIndex = index;
     self.supplyShares -= sharesBurnt;
-    supply.collateral -= sharesBurnt;
+    supply.supplyShares -= sharesBurnt;
   }
 
   /**
@@ -111,7 +111,7 @@ library PositionBalanceConfiguration {
     require(sharesBurnt != 0, Errors.INVALID_BURN_AMOUNT);
     self.lastDebtLiquidtyIndex = index;
     self.debtShares -= sharesBurnt;
-    supply.debt -= sharesBurnt;
+    supply.debtShares -= sharesBurnt;
   }
 
   /**
@@ -120,7 +120,7 @@ library PositionBalanceConfiguration {
    * @param self The position to fetch the value for
    * @param index The current liquidity index
    */
-  function getCollateralBalance(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 supply) {
+  function getSupplyBalance(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 supply) {
     uint256 increase = self.supplyShares.rayMul(index) - self.supplyShares.rayMul(self.lastSupplyLiquidtyIndex);
     return self.supplyShares + increase;
   }

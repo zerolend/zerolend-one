@@ -50,7 +50,12 @@ library FlashLoanLogic {
    * @param reserve The state of the flashloaned reserve
    * @param params The additional parameters needed to execute the simple flashloan function
    */
-  function executeFlashLoanSimple(address pool, DataTypes.ReserveData storage reserve, DataTypes.FlashloanSimpleParams memory params) external {
+  function executeFlashLoanSimple(
+    address pool,
+    DataTypes.ReserveData storage reserve,
+    DataTypes.ReserveSupplies storage totalSupplies,
+    DataTypes.FlashloanSimpleParams memory params
+  ) external {
     // The usual action flow (cache -> updateState -> validation -> changeState -> updateRates)
     // is altered to (validation -> user payload -> cache -> updateState -> changeState -> updateRates) for flashloans.
     // This is done to protect against reentrance and rate manipulation within the user specified payload.
@@ -65,6 +70,7 @@ library FlashLoanLogic {
 
     _handleFlashLoanRepayment(
       reserve,
+      totalSupplies,
       DataTypes.FlashLoanRepaymentParams({pool: pool, asset: params.asset, receiverAddress: params.receiverAddress, amount: params.amount, totalPremium: totalPremium})
     );
   }
@@ -75,10 +81,14 @@ library FlashLoanLogic {
    * @param reserve The state of the flashloaned reserve
    * @param params The additional parameters needed to execute the repayment function
    */
-  function _handleFlashLoanRepayment(DataTypes.ReserveData storage reserve, DataTypes.FlashLoanRepaymentParams memory params) internal {
+  function _handleFlashLoanRepayment(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.ReserveSupplies storage totalSupplies,
+    DataTypes.FlashLoanRepaymentParams memory params
+  ) internal {
     uint256 amountPlusPremium = params.amount + params.totalPremium;
 
-    DataTypes.ReserveCache memory reserveCache = reserve.cache();
+    DataTypes.ReserveCache memory reserveCache = reserve.cache(totalSupplies);
     reserve.updateState(reserveCache);
 
     reserve.accruedToTreasuryShares += params.totalPremium.rayDiv(reserveCache.nextLiquidityIndex).toUint128();

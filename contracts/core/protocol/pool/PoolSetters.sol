@@ -140,6 +140,6 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       params: params,
       flashLoanPremiumTotal: _factory.flashLoanPremiumToProtocol()
     });
-    FlashLoanLogic.executeFlashLoanSimple(address(this), _reserves[asset], flashParams);
+    FlashLoanLogic.executeFlashLoanSimple(address(this), _reserves[asset], _totalSupplies[asset], flashParams);
   }
 }

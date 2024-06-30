@@ -112,7 +112,7 @@ library LiquidationLogic {
     DataTypes.ReserveData storage collateralReserve = reservesData[params.collateralAsset];
     DataTypes.ReserveData storage debtReserve = reservesData[params.debtAsset];
     DataTypes.UserConfigurationMap storage userConfig = usersConfig[params.position];
-    vars.debtReserveCache = debtReserve.cache();
+    vars.debtReserveCache = debtReserve.cache(totalSupplies[params.debtAsset]);
     debtReserve.updateState(vars.debtReserveCache);
 
     (, , , , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
@@ -207,7 +207,7 @@ library LiquidationLogic {
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
     mapping(address => DataTypes.ReserveSupplies) storage totalSupplies
   ) internal {
-    DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache();
+    DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache(totalSupplies[params.collateralAsset]);
     collateralReserve.updateState(collateralReserveCache);
     collateralReserve.updateInterestRates(
       collateralReserveCache,

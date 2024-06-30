@@ -16,8 +16,9 @@ pragma solidity 0.8.19;
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
-import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {MathUtils} from '../utils/MathUtils.sol';
+import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
+import {ReserveSuppliesConfiguration} from '../configuration/ReserveSuppliesConfiguration.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {Errors} from '../utils/Errors.sol';
@@ -35,6 +36,7 @@ library ReserveLogic {
   using SafeERC20 for IERC20;
   using ReserveLogic for DataTypes.ReserveData;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using ReserveSuppliesConfiguration for DataTypes.ReserveSupplies;
 
   // See `IPool` for descriptions
   event ReserveDataUpdated(address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex);
@@ -228,6 +230,7 @@ library ReserveLogic {
    * @notice Creates a cache object to avoid repeated storage reads and external contract calls when updating state and
    * interest rates.
    * @param reserve The reserve object for which the cache will be filled
+   * @param supplies The total supply object for the reserve asset
    * @return The cache object
    */
   function cache(DataTypes.ReserveData storage reserve, DataTypes.ReserveSupplies storage supplies) internal view returns (DataTypes.ReserveCache memory) {
@@ -239,8 +242,7 @@ library ReserveLogic {
     _cache.currBorrowRate = reserve.currentBorrowRate;
     _cache.reserveConfiguration = reserve.configuration;
     _cache.reserveLastUpdateTimestamp = reserve.lastUpdateTimestamp;
-
-    // _cache.currDebtShares = _cache.nextDebtShares = supplies.debtShares;
+    _cache.currDebtShares = _cache.nextDebtShares = supplies.debtShares;
 
     return _cache;
   }

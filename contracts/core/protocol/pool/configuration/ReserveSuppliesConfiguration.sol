@@ -30,8 +30,8 @@ library ReserveSuppliesConfiguration {
    * @param self The position to fetch the value for
    * @param index The current liquidity index
    */
-  function getCollateralBalance(DataTypes.ReserveSupplies storage self, uint256 index) internal view returns (uint256 supply) {
-    supply = self.collateral.rayMul(index);
+  function getSupplyBalance(DataTypes.ReserveSupplies storage self, uint256 index) internal view returns (uint256 supply) {
+    supply = self.supplyShares.rayMul(index);
   }
 
   /**
@@ -41,6 +41,6 @@ library ReserveSuppliesConfiguration {
    * @param index The current liquidity index
    */
   function getDebtBalance(DataTypes.ReserveSupplies storage self, uint256 index) internal view returns (uint256 debt) {
-    debt = self.debt.rayMul(index);
+    debt = self.debtShares.rayMul(index);
   }
 }
