@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import {PendingAddress, PendingUint192} from '../../../interfaces/ICuratedVault.sol';
 
 /// @title PendingLib
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @author ZeroLend
+/// @custom:contact contact@zerolend.xyz
 /// @notice Library to manage pending values and their validity timestamp.
 library PendingLib {
   /// @dev Updates `pending`'s value to `newValue` and its corresponding `validAt` timestamp.

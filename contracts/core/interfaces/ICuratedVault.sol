@@ -388,8 +388,8 @@ interface ICuratedVaultStaticTyping is ICuratedVaultBase {
 }
 
 /// @title ICuratedVault
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @author ZeroLend
+/// @custom:contact contact@zerolend.xyz
 /// @dev Use this interface for MetaMorpho to have access to all the functions with the appropriate function signatures.
 interface ICuratedVault is ICuratedVaultBase, IERC4626, IERC20Permit {
   /// @notice Returns the current configuration of each market.

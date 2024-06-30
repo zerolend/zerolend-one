@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 uint256 constant WAD = 1e18;
 
 /// @title MathLib
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @author ZeroLend
+/// @custom:contact contact@zerolend.xyz
 /// @notice Library to manage fixed-point arithmetic.
 library MathLib {
   /// @dev Returns (`x` * `y`) / `WAD` rounded down.

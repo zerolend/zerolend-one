@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 /// @title UtilsLib
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @author ZeroLend
+/// @custom:contact contact@zerolend.xyz
 /// @notice Library exposing helpers.
 /// @dev Inspired by https://github.com/morpho-org/morpho-utils.
 library UtilsLib {

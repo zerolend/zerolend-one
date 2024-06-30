@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import {MathLib} from './MathLib.sol';
 
 /// @title SharesMathLib
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @author ZeroLend
+/// @custom:contact contact@zerolend.xyz
 /// @notice Shares management library.
 /// @dev This implementation mitigates share price manipulations, using OpenZeppelin's method of virtual shares:
 /// https://docs.openzeppelin.com/contracts/4.x/erc4626#inflation-attack.
