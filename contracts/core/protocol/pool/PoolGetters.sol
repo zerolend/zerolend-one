@@ -19,12 +19,14 @@ import {IHook, IPoolFactory, IPool} from '../../interfaces/IPool.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 import {PoolStorage} from './PoolStorage.sol';
 import {PositionBalanceConfiguration} from './configuration/PositionBalanceConfiguration.sol';
+import {ReserveSuppliesConfiguration} from './configuration/ReserveSuppliesConfiguration.sol';
 import {ReserveLogic} from './logic/ReserveLogic.sol';
 import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 
 abstract contract PoolGetters is PoolStorage, IPool {
   using ReserveLogic for DataTypes.ReserveData;
   using TokenConfiguration for address;
+  using ReserveSuppliesConfiguration for DataTypes.ReserveSupplies;
   using PositionBalanceConfiguration for DataTypes.PositionBalance;
 
   /// @inheritdoc IPool
@@ -62,6 +64,16 @@ abstract contract PoolGetters is PoolStorage, IPool {
   /// @inheritdoc IPool
   function getTotalSupplyRaw(address asset) external view returns (DataTypes.ReserveSupplies memory) {
     return _totalSupplies[asset];
+  }
+
+  //// @inheritdoc IPool
+  function totalAssets(address asset) external view returns (uint256 balance) {
+    balance = _totalSupplies[asset].getCollateralBalance(_reserves[asset].liquidityIndex);
+  }
+
+  //// @inheritdoc IPool
+  function totalDebt(address asset) external view returns (uint256 balance) {
+    balance = _totalSupplies[asset].getDebtBalance(_reserves[asset].borrowIndex);
   }
 
   /// @inheritdoc IPool

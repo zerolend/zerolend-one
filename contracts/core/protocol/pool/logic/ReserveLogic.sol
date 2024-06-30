@@ -230,7 +230,7 @@ library ReserveLogic {
    * @param reserve The reserve object for which the cache will be filled
    * @return The cache object
    */
-  function cache(DataTypes.ReserveData storage reserve) internal view returns (DataTypes.ReserveCache memory) {
+  function cache(DataTypes.ReserveData storage reserve, DataTypes.ReserveSupplies storage supplies) internal view returns (DataTypes.ReserveCache memory) {
     DataTypes.ReserveCache memory _cache;
 
     _cache.currLiquidityIndex = _cache.nextLiquidityIndex = reserve.liquidityIndex;
@@ -240,9 +240,7 @@ library ReserveLogic {
     _cache.reserveConfiguration = reserve.configuration;
     _cache.reserveLastUpdateTimestamp = reserve.lastUpdateTimestamp;
 
-    // _cache.currDebtShares = _cache.nextDebtShares = IVariableDebtToken(
-    //   _cache.variableDebtTokenAddress
-    // ).scaledTotalSupply();
+    // _cache.currDebtShares = _cache.nextDebtShares = supplies.debtShares;
 
     return _cache;
   }
