@@ -102,7 +102,7 @@ abstract contract PoolDataProvider is IPoolDataProvider {
   //   view
   //   override
   //   returns (
-  //     uint256 accruedToTreasuryScaled,
+  //     uint256 accruedToTreasuryShares,
   //     uint256 totalAToken,
   //     uint256 totalVariableDebt,
   //     uint256 liquidityRate,
@@ -117,7 +117,7 @@ abstract contract PoolDataProvider is IPoolDataProvider {
   //   );
 
   //   return (
-  //     reserve.accruedToTreasury,
+  //     reserve.accruedToTreasuryShares,
   //     IERC20Metadata(reserve.aTokenAddress).totalSupply(),
   //     IERC20Metadata(reserve.variableDebtTokenAddress).totalSupply(),
   //     reserve.currentLiquidityRate,

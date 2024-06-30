@@ -15,26 +15,26 @@ pragma solidity 0.8.19;
 
 library DataTypes {
   struct ReserveData {
-    //stores the reserve configuration
+    // stores the reserve configuration
     ReserveConfigurationMap configuration;
-    //the liquidity index. Expressed in ray
+    // the liquidity index. Expressed in ray
     uint128 liquidityIndex;
-    //the current supply rate. Expressed in ray
+    // the current supply rate. Expressed in ray
     uint128 currentLiquidityRate;
-    //variable borrow index. Expressed in ray
+    // variable borrow index. Expressed in ray
     uint128 variableBorrowIndex;
-    //the current variable borrow rate. Expressed in ray
+    // the current variable borrow rate. Expressed in ray
     uint128 currentVariableBorrowRate;
-    //timestamp of last update
+    // timestamp of last update
     uint40 lastUpdateTimestamp;
-    //the id of the reserve. Represents the position in the list of the active reserves
+    // the id of the reserve. Represents the position in the list of the active reserves
     uint16 id;
-    //address of the interest rate strategy
+    // address of the interest rate strategy
     address interestRateStrategyAddress;
-    //address of the oracle
+    // address of the oracle
     address oracle;
-    //the current treasury balance, scaled
-    uint256 accruedToTreasury;
+    // the current treasury balance in shares
+    uint256 accruedToTreasuryShares;
   }
 
   struct ReserveConfigurationMap {

@@ -81,7 +81,7 @@ library FlashLoanLogic {
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
 
-    reserve.accruedToTreasury += params.totalPremium.rayDiv(reserveCache.nextLiquidityIndex).toUint128();
+    reserve.accruedToTreasuryShares += params.totalPremium.rayDiv(reserveCache.nextLiquidityIndex).toUint128();
 
     reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), amountPlusPremium, 0, '', '');
 

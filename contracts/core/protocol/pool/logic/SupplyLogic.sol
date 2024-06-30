@@ -62,25 +62,23 @@ library SupplyLogic {
     DataTypes.ExecuteSupplyParams memory params
   ) external {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory reserveCache = reserve.cache();
+    DataTypes.ReserveCache memory cache = reserve.cache();
+    reserve.updateState(cache);
 
-    reserve.updateState(reserveCache);
-    ValidationLogic.validateSupply(reserveCache, reserve, params, params.pool);
-    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), params.amount, 0, params.position, params.data.interestRateData);
+    ValidationLogic.validateSupply(cache, reserve, params, params.pool);
+    reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), params.amount, 0, params.position, params.data.interestRateData);
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
 
     DataTypes.PositionBalance storage bal = balances[params.asset][params.position];
-    (bool isFirst, uint256 minted) = bal.depositCollateral(totalSupplies[params.asset], params.amount, reserveCache.nextLiquidityIndex);
+    (bool isFirst, uint256 sharesMinted) = bal.depositCollateral(totalSupplies[params.asset], params.amount, cache.nextLiquidityIndex);
 
-    if (isFirst) {
-      if (ValidationLogic.validateUseAsCollateral(userConfig, reserveCache.reserveConfiguration)) {
-        userConfig.setUsingAsCollateral(reserve.id, true);
-        emit ReserveUsedAsCollateralEnabled(params.asset, params.position);
-      }
+    if (isFirst && ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration)) {
+      userConfig.setUsingAsCollateral(reserve.id, true);
+      emit ReserveUsedAsCollateralEnabled(params.asset, params.position);
     }
 
-    emit Supply(params.asset, params.position, minted);
+    emit Supply(params.asset, params.position, sharesMinted);
   }
 
   /**
@@ -103,32 +101,34 @@ library SupplyLogic {
     DataTypes.ExecuteWithdrawParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory reserveCache = reserve.cache();
+    DataTypes.ReserveCache memory cache = reserve.cache();
+    reserve.updateState(cache);
 
-    reserve.updateState(reserveCache);
+    uint256 balance = balances[params.asset][params.position].getCollateralBalance(cache.nextLiquidityIndex);
 
-    uint256 userBalance = balances[params.asset][params.position].supplyShares.rayMul(reserveCache.nextLiquidityIndex);
+    // repay with max amount should clear off all debt
+    if (params.amount == type(uint256).max) params.amount = balance;
 
-    if (params.amount == type(uint256).max) params.amount = userBalance;
+    ValidationLogic.validateWithdraw(params.amount, balance);
 
-    ValidationLogic.validateWithdraw(params.amount, userBalance);
-    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
+    reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
 
-    if (isCollateral && params.amount == userBalance) {
+    // if the user is withdrawing everything then disable usage as collateral
+    if (isCollateral && params.amount == balance) {
       userConfig.setUsingAsCollateral(reserve.id, false);
       emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }
 
     // Burn debt. Which is burn supply, update total supply and send tokens to the user
-    balances[params.asset][params.position].withdrawCollateral(totalSupplies[params.asset], params.amount, reserveCache.nextLiquidityIndex);
+    balances[params.asset][params.position].withdrawCollateral(totalSupplies[params.asset], params.amount, cache.nextLiquidityIndex);
     IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
+    // if the user is borrowing any asset, validate the HF and LTVs
     if (isCollateral && userConfig.isBorrowingAny()) ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);
 
     emit Withdraw(params.asset, params.position, params.destination, params.amount);
-
     return params.amount;
   }
 }

@@ -67,7 +67,7 @@ library Errors {
   string public constant SUPPLY_CAP_EXCEEDED = 'SUPPLY_CAP_EXCEEDED'; // 'Supply cap is exceeded'
   string public constant UNBACKED_MINT_CAP_EXCEEDED = 'UNBACKED_MINT_CAP_EXCEEDED'; // 'Unbacked mint cap is exceeded'
   string public constant DEBT_CEILING_EXCEEDED = 'DEBT_CEILING_EXCEEDED'; // 'Debt ceiling is exceeded'
-  string public constant UNDERLYING_CLAIMABLE_RIGHTS_NOT_ZERO = 'UNDERLYING_CLAIMABLE_RIGHTS_NOT_ZERO'; // 'Claimable rights over underlying not zero (aToken supply or accruedToTreasury)'
+  string public constant UNDERLYING_CLAIMABLE_RIGHTS_NOT_ZERO = 'UNDERLYING_CLAIMABLE_RIGHTS_NOT_ZERO'; // 'Claimable rights over underlying not zero (aToken supply or accruedToTreasuryShares)'
   string public constant STABLE_DEBT_NOT_ZERO = 'STABLE_DEBT_NOT_ZERO'; // 'Stable debt supply is not zero'
   string public constant VARIABLE_DEBT_SUPPLY_NOT_ZERO = 'VARIABLE_DEBT_SUPPLY_NOT_ZERO'; // 'Variable debt supply is not zero'
   string public constant LTV_VALIDATION_FAILED = 'LTV_VALIDATION_FAILED'; // 'Ltv validation failed'

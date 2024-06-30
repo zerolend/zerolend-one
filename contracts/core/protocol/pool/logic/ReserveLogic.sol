@@ -194,7 +194,7 @@ library ReserveLogic {
     vars.amountToMint = vars.totalDebtAccrued.percentMul(reserveFactor);
 
     if (vars.amountToMint != 0) {
-      reserve.accruedToTreasury += vars.amountToMint.rayDiv(reserveCache.nextLiquidityIndex).toUint128();
+      reserve.accruedToTreasuryShares += vars.amountToMint.rayDiv(reserveCache.nextLiquidityIndex).toUint128();
     }
   }
 

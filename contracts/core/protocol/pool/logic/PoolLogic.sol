@@ -87,12 +87,12 @@ library PoolLogic {
   function executeMintToTreasury(mapping(address => DataTypes.ReserveData) storage reservesData, address asset) external {
     DataTypes.ReserveData storage reserve = reservesData[asset];
 
-    uint256 accruedToTreasury = reserve.accruedToTreasury;
+    uint256 accruedToTreasuryShares = reserve.accruedToTreasuryShares;
 
-    if (accruedToTreasury != 0) {
-      reserve.accruedToTreasury = 0;
+    if (accruedToTreasuryShares != 0) {
+      reserve.accruedToTreasuryShares = 0;
       uint256 normalizedIncome = reserve.getNormalizedIncome();
-      uint256 amountToMint = accruedToTreasury.rayMul(normalizedIncome);
+      uint256 amountToMint = accruedToTreasuryShares.rayMul(normalizedIncome);
 
       // todo mint and unwrap to treasury
       // IAToken(reserve.aTokenAddress).mintToTreasury(amountToMint, normalizedIncome);

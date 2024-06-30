@@ -80,7 +80,7 @@ library ValidationLogic {
     // todo
     require(
       supplyCap == 0 ||
-        ((IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasury)).rayMul(reserveCache.nextLiquidityIndex) + params.amount) <=
+        ((IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasuryShares)).rayMul(reserveCache.nextLiquidityIndex) + params.amount) <=
         supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
       Errors.SUPPLY_CAP_EXCEEDED
     );

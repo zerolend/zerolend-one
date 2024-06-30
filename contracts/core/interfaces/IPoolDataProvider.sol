@@ -72,7 +72,7 @@ interface IPoolDataProvider {
    * @notice Returns the reserve data
    * @param asset The address of the underlying asset of the reserve
    * @return unbacked The amount of unbacked tokens
-   * @return accruedToTreasuryScaled The scaled amount of tokens accrued to treasury that is to be minted
+   * @return accruedToTreasuryShares The scaled amount of tokens accrued to treasury that is to be minted
    * @return totalAToken The total supply of the aToken
    * @return totalVariableDebt The total variable debt of the reserve
    * @return liquidityRate The liquidity rate of the reserve
@@ -89,7 +89,7 @@ interface IPoolDataProvider {
     view
     returns (
       uint256 unbacked,
-      uint256 accruedToTreasuryScaled,
+      uint256 accruedToTreasuryShares,
       uint256 totalAToken,
       uint256 totalVariableDebt,
       uint256 liquidityRate,
