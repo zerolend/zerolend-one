@@ -81,17 +81,18 @@ library ReserveLogic {
 
   /**
    * @notice Updates the liquidity cumulative index and the variable borrow index.
-   * @param reserve The reserve object
-   * @param reserveCache The caching layer for the reserve data
+   * @param self The reserve object
+   * @param _cache The caching layer for the reserve data
+   * @param _reserveFactor The reserve factor that is used to calculate how much revenue gets shared
    */
-  function updateState(DataTypes.ReserveData storage reserve, DataTypes.ReserveCache memory reserveCache) internal {
+  function updateState(DataTypes.ReserveData storage self, uint256 _reserveFactor, DataTypes.ReserveCache memory _cache) internal {
     // If time didn't pass since last stored timestamp, skip state update
-    if (reserve.lastUpdateTimestamp == uint40(block.timestamp)) return;
+    if (self.lastUpdateTimestamp == uint40(block.timestamp)) return;
 
-    _updateIndexes(reserve, reserveCache);
-    _accrueToTreasury(0, reserve, reserveCache);
+    _updateIndexes(self, _cache);
+    _accrueToTreasury(_reserveFactor, self, _cache);
 
-    reserve.lastUpdateTimestamp = uint40(block.timestamp);
+    self.lastUpdateTimestamp = uint40(block.timestamp);
   }
 
   /**
@@ -129,42 +130,45 @@ library ReserveLogic {
 
   /**
    * @notice Updates the current variable borrow rate and the current liquidity rate.
-   * @param reserve The reserve reserve to be updated
-   * @param reserveCache The caching layer for the reserve data
-   * @param reserveAddress The address of the reserve to be updated
-   * @param liquidityAdded The amount of liquidity added to the protocol (supply or repay) in the previous action
-   * @param liquidityTaken The amount of liquidity taken from the protocol (redeem or borrow)
+   * @param _reserve The reserve reserve to be updated
+   * @param _cache The caching layer for the reserve data
+   * @param _reserveAddress The address of the reserve to be updated
+   * @param _reserveFactor How much % of the interest goes to the treasury
+   * @param _liquidityAdded The amount of liquidity added to the protocol (supply or repay) in the previous action
+   * @param _liquidityTaken The amount of liquidity taken from the protocol (redeem or borrow)
+   * @param _position The position of the user executing the interest rate updates
+   * @param _data Any extra data to be passed to the interest rate strategy
    */
   function updateInterestRates(
-    DataTypes.ReserveData storage reserve,
-    DataTypes.ReserveCache memory reserveCache,
-    address reserveAddress,
-    uint256 reserveFactor,
-    uint256 liquidityAdded,
-    uint256 liquidityTaken,
-    bytes32 position,
-    bytes memory data
+    DataTypes.ReserveData storage _reserve,
+    DataTypes.ReserveCache memory _cache,
+    address _reserveAddress,
+    uint256 _reserveFactor,
+    uint256 _liquidityAdded,
+    uint256 _liquidityTaken,
+    bytes32 _position,
+    bytes memory _data
   ) internal {
     UpdateInterestRatesLocalVars memory vars;
 
-    vars.totalVariableDebt = reserveCache.nextDebtShares.rayMul(reserveCache.nextBorrowIndex);
+    vars.totalVariableDebt = _cache.nextDebtShares.rayMul(_cache.nextBorrowIndex);
 
-    (vars.nextLiquidityRate, vars.nextVariableRate) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress).calculateInterestRates(
-      position,
-      data,
+    (vars.nextLiquidityRate, vars.nextVariableRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress).calculateInterestRates(
+      _position,
+      _data,
       DataTypes.CalculateInterestRatesParams({
-        liquidityAdded: liquidityAdded,
-        liquidityTaken: liquidityTaken,
+        liquidityAdded: _liquidityAdded,
+        liquidityTaken: _liquidityTaken,
         totalVariableDebt: vars.totalVariableDebt,
-        reserveFactor: reserveFactor,
-        reserve: reserveAddress
+        reserveFactor: _reserveFactor,
+        reserve: _reserveAddress
       })
     );
 
-    reserve.currentLiquidityRate = vars.nextLiquidityRate.toUint128();
-    reserve.currentBorrowRate = vars.nextVariableRate.toUint128();
+    _reserve.currentLiquidityRate = vars.nextLiquidityRate.toUint128();
+    _reserve.currentBorrowRate = vars.nextVariableRate.toUint128();
 
-    emit ReserveDataUpdated(reserveAddress, vars.nextLiquidityRate, vars.nextVariableRate, reserveCache.nextLiquidityIndex, reserveCache.nextBorrowIndex);
+    emit ReserveDataUpdated(_reserveAddress, vars.nextLiquidityRate, vars.nextVariableRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex);
   }
 
   struct AccrueToTreasuryLocalVars {
@@ -177,52 +181,50 @@ library ReserveLogic {
   /**
    * @notice Mints part of the repaid interest to the reserve treasury as a function of the reserve factor for the
    * specific asset.
-   * @param reserve The reserve to be updated
-   * @param reserveCache The caching layer for the reserve data
+   * @param _reserve The reserve to be updated
+   * @param _cache The caching layer for the reserve data
    */
-  function _accrueToTreasury(uint256 reserveFactor, DataTypes.ReserveData storage reserve, DataTypes.ReserveCache memory reserveCache) internal {
+  function _accrueToTreasury(uint256 reserveFactor, DataTypes.ReserveData storage _reserve, DataTypes.ReserveCache memory _cache) internal {
     if (reserveFactor == 0) return;
     AccrueToTreasuryLocalVars memory vars;
 
     // calculate the total variable debt at moment of the last interaction
-    vars.prevTotalVariableDebt = reserveCache.currDebtShares.rayMul(reserveCache.currBorrowIndex);
+    vars.prevTotalVariableDebt = _cache.currDebtShares.rayMul(_cache.currBorrowIndex);
 
     // calculate the new total variable debt after accumulation of the interest on the index
-    vars.currTotalVariableDebt = reserveCache.currDebtShares.rayMul(reserveCache.nextBorrowIndex);
+    vars.currTotalVariableDebt = _cache.currDebtShares.rayMul(_cache.nextBorrowIndex);
 
     // debt accrued is the sum of the current debt minus the sum of the debt at the last update
     vars.totalDebtAccrued = vars.currTotalVariableDebt - vars.prevTotalVariableDebt;
 
     vars.amountToMint = vars.totalDebtAccrued.percentMul(reserveFactor);
 
-    if (vars.amountToMint != 0) {
-      reserve.accruedToTreasuryShares += vars.amountToMint.rayDiv(reserveCache.nextLiquidityIndex).toUint128();
-    }
+    if (vars.amountToMint != 0) _reserve.accruedToTreasuryShares += vars.amountToMint.rayDiv(_cache.nextLiquidityIndex).toUint128();
   }
 
   /**
    * @notice Updates the reserve indexes and the timestamp of the update.
-   * @param reserve The reserve reserve to be updated
-   * @param reserveCache The cache layer holding the cached protocol data
+   * @param _reserve The reserve reserve to be updated
+   * @param _cache The cache layer holding the cached protocol data
    */
-  function _updateIndexes(DataTypes.ReserveData storage reserve, DataTypes.ReserveCache memory reserveCache) internal {
+  function _updateIndexes(DataTypes.ReserveData storage _reserve, DataTypes.ReserveCache memory _cache) internal {
     // Only cumulating on the supply side if there is any income being produced
     // The case of Reserve Factor 100% is not a problem (currentLiquidityRate == 0),
     // as liquidity index should not be updated
-    if (reserveCache.currLiquidityRate != 0) {
-      uint256 cumulatedLiquidityInterest = MathUtils.calculateLinearInterest(reserveCache.currLiquidityRate, reserveCache.reserveLastUpdateTimestamp);
-      reserveCache.nextLiquidityIndex = cumulatedLiquidityInterest.rayMul(reserveCache.currLiquidityIndex).toUint128();
-      reserve.liquidityIndex = reserveCache.nextLiquidityIndex;
+    if (_cache.currLiquidityRate != 0) {
+      uint256 cumulatedLiquidityInterest = MathUtils.calculateLinearInterest(_cache.currLiquidityRate, _cache.reserveLastUpdateTimestamp);
+      _cache.nextLiquidityIndex = cumulatedLiquidityInterest.rayMul(_cache.currLiquidityIndex).toUint128();
+      _reserve.liquidityIndex = _cache.nextLiquidityIndex;
     }
 
     // Variable borrow index only gets updated if there is any variable debt.
-    // reserveCache.currBorrowRate != 0 is not a correct validation,
+    // cache.currBorrowRate != 0 is not a correct validation,
     // because a positive base variable rate can be stored on
-    // reserveCache.currBorrowRate, but the index should not increase
-    if (reserveCache.currDebtShares != 0) {
-      uint256 cumulatedVariableBorrowInterest = MathUtils.calculateCompoundedInterest(reserveCache.currBorrowRate, reserveCache.reserveLastUpdateTimestamp);
-      reserveCache.nextBorrowIndex = cumulatedVariableBorrowInterest.rayMul(reserveCache.currBorrowIndex).toUint128();
-      reserve.borrowIndex = reserveCache.nextBorrowIndex;
+    // cache.currBorrowRate, but the index should not increase
+    if (_cache.currDebtShares != 0) {
+      uint256 cumulatedVariableBorrowInterest = MathUtils.calculateCompoundedInterest(_cache.currBorrowRate, _cache.reserveLastUpdateTimestamp);
+      _cache.nextBorrowIndex = cumulatedVariableBorrowInterest.rayMul(_cache.currBorrowIndex).toUint128();
+      _reserve.borrowIndex = _cache.nextBorrowIndex;
     }
   }
 

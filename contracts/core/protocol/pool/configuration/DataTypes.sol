@@ -101,27 +101,29 @@ library DataTypes {
     uint256 debtShares;
   }
 
+  struct ExtraData {
+    bytes interestRateData;
+    bytes hookData;
+  }
+
   struct ExecuteLiquidationCallParams {
     address collateralAsset;
     address debtAsset;
     address pool;
     bytes32 position;
-    uint256 debtToCover;
-    uint256 reservesCount;
     ExtraData data;
+    uint256 debtToCover;
+    uint256 reserveFactor;
+    uint256 reservesCount;
   }
 
   struct ExecuteSupplyParams {
     address asset;
     address pool;
     bytes32 position;
-    uint256 amount;
     ExtraData data;
-  }
-
-  struct ExtraData {
-    bytes interestRateData;
-    bytes hookData;
+    uint256 amount;
+    uint256 reserveFactor;
   }
 
   struct ExecuteBorrowParams {
@@ -129,9 +131,10 @@ library DataTypes {
     address pool;
     address user;
     bytes32 position;
-    uint256 amount;
-    uint256 reservesCount;
     ExtraData data;
+    uint256 amount;
+    uint256 reserveFactor;
+    uint256 reservesCount;
   }
 
   struct ExecuteRepayParams {
@@ -139,35 +142,39 @@ library DataTypes {
     address pool;
     address user;
     bytes32 position;
-    uint256 amount;
     ExtraData data;
+    uint256 amount;
+    uint256 reserveFactor;
   }
 
   struct ExecuteWithdrawParams {
     address asset;
     address destination;
-    uint256 amount;
-    bytes32 position;
-    uint256 reservesCount;
     address pool;
+    bytes32 position;
     ExtraData data;
+    uint256 amount;
+    uint256 reserveFactor;
+    uint256 reservesCount;
   }
 
   struct FlashloanSimpleParams {
-    address receiverAddress;
     address asset;
-    uint256 amount;
+    address receiverAddress;
     bytes params;
-    uint256 flashLoanPremiumTotal;
     ExtraData data;
+    uint256 amount;
+    uint256 flashLoanPremiumTotal;
+    uint256 reserveFactor;
   }
 
   struct FlashLoanRepaymentParams {
-    uint256 amount;
-    uint256 totalPremium;
     address asset;
-    address receiverAddress;
     address pool;
+    address receiverAddress;
+    uint256 amount;
+    uint256 reserveFactor;
+    uint256 totalPremium;
   }
 
   struct CalculateUserAccountDataParams {
@@ -178,7 +185,7 @@ library DataTypes {
   }
 
   struct ValidateBorrowParams {
-    ReserveCache reserveCache;
+    ReserveCache cache;
     UserConfigurationMap userConfig;
     address asset;
     bytes32 position;

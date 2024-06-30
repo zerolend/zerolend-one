@@ -47,16 +47,16 @@ library BorrowLogic {
     DataTypes.ExecuteBorrowParams memory params
   ) public {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory reserveCache = reserve.cache(totalSupplies[params.asset]);
+    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
 
-    reserve.updateState(reserveCache);
+    reserve.updateState(params.reserveFactor, cache);
 
     ValidationLogic.validateBorrow(
       _balances,
       reservesData,
       reservesList,
       DataTypes.ValidateBorrowParams({
-        reserveCache: reserveCache,
+        cache: cache,
         userConfig: userConfig,
         asset: params.asset,
         position: params.position,
@@ -68,14 +68,12 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    (bool isFirstBorrowing, ) = b.borrowDebt(totalSupplies[params.asset], params.amount, reserveCache.nextBorrowIndex);
+    (bool isFirstBorrowing, ) = b.borrowDebt(totalSupplies[params.asset], params.amount, cache.nextBorrowIndex);
 
     // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
-    // todo; update reserveCache.nextDebtShares
-
-    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
+    reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
@@ -86,42 +84,41 @@ library BorrowLogic {
    * @notice Implements the repay feature. Repaying transfers the underlying back to the aToken and clears the
    * equivalent amount of debt for the user by burning the corresponding debt token.
    * @dev  Emits the `Repay()` event
-   * @param reservesData The state of all the reserves
+   * @param reserve The state of the reserve
+   * @param balances The balance of the position
+   * @param totalSupplies The total supply of the reserve
    * @param params The additional parameters needed to execute the repay function
-   * @return The actual amount being repaid
+   * @return paybackAmount The actual amount being repaid
    */
   function executeRepay(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
-    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
+    DataTypes.ReserveData storage reserve,
+    DataTypes.PositionBalance storage balances,
+    DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteRepayParams memory params
-  ) external returns (uint256) {
-    DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory reserveCache = reserve.cache(totalSupplies[params.asset]);
-    reserve.updateState(reserveCache);
-
-    DataTypes.PositionBalance storage b = balances[params.asset][params.position];
-
-    uint256 paybackAmount = b.debtShares;
+  ) external returns (uint256 paybackAmount) {
+    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
+    reserve.updateState(params.reserveFactor, cache);
+    paybackAmount = balances.debtShares;
 
     // Allows a user to max repay without leaving dust from interest.
     if (params.amount == type(uint256).max) {
-      params.amount = b.getDebtBalance(reserveCache.nextBorrowIndex);
+      params.amount = balances.getDebtBalance(cache.nextBorrowIndex);
       paybackAmount = params.amount;
     }
 
     ValidationLogic.validateRepay(params.amount, paybackAmount);
 
+    // If paybackAmount is more than what the user wants to payback, the set it to the
+    // user input (ie params.amount)
     if (params.amount < paybackAmount) paybackAmount = params.amount;
 
-    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData);
+    reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData);
 
-    b.repayDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextBorrowIndex);
-    reserveCache.nextDebtShares = totalSupplies[params.asset].debtShares;
+    // update balances and total supplies
+    balances.repayDebt(totalSupplies, paybackAmount, cache.nextBorrowIndex);
+    cache.nextDebtShares = totalSupplies.debtShares;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
     emit Repay(params.asset, params.position, msg.sender, paybackAmount);
-
-    return paybackAmount;
   }
 }

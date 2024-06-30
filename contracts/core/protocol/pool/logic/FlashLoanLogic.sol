@@ -47,63 +47,70 @@ library FlashLoanLogic {
    * @dev At the end of the transaction the pool will pull amount borrowed + fee from the receiver,
    * if the receiver have not approved the pool the transaction will revert.
    * @dev Emits the `FlashLoan()` event
-   * @param reserve The state of the flashloaned reserve
-   * @param params The additional parameters needed to execute the simple flashloan function
+   * @param _reserve The state of the flashloaned reserve
+   * @param _params The additional parameters needed to execute the simple flashloan function
    */
   function executeFlashLoanSimple(
-    address pool,
-    DataTypes.ReserveData storage reserve,
-    DataTypes.ReserveSupplies storage totalSupplies,
-    DataTypes.FlashloanSimpleParams memory params
+    address _pool,
+    DataTypes.ReserveData storage _reserve,
+    DataTypes.ReserveSupplies storage _totalSupplies,
+    DataTypes.FlashloanSimpleParams memory _params
   ) external {
     // The usual action flow (cache -> updateState -> validation -> changeState -> updateRates)
     // is altered to (validation -> user payload -> cache -> updateState -> changeState -> updateRates) for flashloans.
     // This is done to protect against reentrance and rate manipulation within the user specified payload.
 
-    ValidationLogic.validateFlashloanSimple(reserve);
+    ValidationLogic.validateFlashloanSimple(_reserve);
 
-    IFlashLoanSimpleReceiver receiver = IFlashLoanSimpleReceiver(params.receiverAddress);
-    uint256 totalPremium = params.amount.percentMul(params.flashLoanPremiumTotal);
-    IERC20(params.asset).transfer(params.receiverAddress, params.amount);
+    IFlashLoanSimpleReceiver receiver = IFlashLoanSimpleReceiver(_params.receiverAddress);
+    uint256 totalPremium = _params.amount.percentMul(_params.flashLoanPremiumTotal);
+    IERC20(_params.asset).transfer(_params.receiverAddress, _params.amount);
 
-    require(receiver.executeOperation(params.asset, params.amount, totalPremium, msg.sender, params.params), Errors.INVALID_FLASHLOAN_EXECUTOR_RETURN);
+    require(receiver.executeOperation(_params.asset, _params.amount, totalPremium, msg.sender, _params.params), Errors.INVALID_FLASHLOAN_EXECUTOR_RETURN);
 
     _handleFlashLoanRepayment(
-      reserve,
-      totalSupplies,
-      DataTypes.FlashLoanRepaymentParams({pool: pool, asset: params.asset, receiverAddress: params.receiverAddress, amount: params.amount, totalPremium: totalPremium})
+      _reserve,
+      _totalSupplies,
+      DataTypes.FlashLoanRepaymentParams({
+        reserveFactor: _params.reserveFactor,
+        pool: _pool,
+        asset: _params.asset,
+        receiverAddress: _params.receiverAddress,
+        amount: _params.amount,
+        totalPremium: totalPremium
+      })
     );
   }
 
   /**
    * @notice Handles repayment of flashloaned assets + premium
    * @dev Will pull the amount + premium from the receiver, so must have approved pool
-   * @param reserve The state of the flashloaned reserve
-   * @param params The additional parameters needed to execute the repayment function
+   * @param _reserve The state of the flashloaned reserve
+   * @param _params The additional parameters needed to execute the repayment function
    */
   function _handleFlashLoanRepayment(
-    DataTypes.ReserveData storage reserve,
-    DataTypes.ReserveSupplies storage totalSupplies,
-    DataTypes.FlashLoanRepaymentParams memory params
+    DataTypes.ReserveData storage _reserve,
+    DataTypes.ReserveSupplies storage _totalSupplies,
+    DataTypes.FlashLoanRepaymentParams memory _params
   ) internal {
-    uint256 amountPlusPremium = params.amount + params.totalPremium;
+    uint256 amountPlusPremium = _params.amount + _params.totalPremium;
 
-    DataTypes.ReserveCache memory reserveCache = reserve.cache(totalSupplies);
-    reserve.updateState(reserveCache);
+    DataTypes.ReserveCache memory cache = _reserve.cache(_totalSupplies);
+    _reserve.updateState(_params.reserveFactor, cache);
 
-    reserve.accruedToTreasuryShares += params.totalPremium.rayDiv(reserveCache.nextLiquidityIndex).toUint128();
+    _reserve.accruedToTreasuryShares += _params.totalPremium.rayDiv(cache.nextLiquidityIndex).toUint128();
 
-    reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), amountPlusPremium, 0, '', '');
+    _reserve.updateInterestRates(cache, _params.asset, IPool(_params.pool).getReserveFactor(), amountPlusPremium, 0, '', '');
 
-    IERC20(params.asset).safeTransferFrom(params.receiverAddress, address(params.pool), amountPlusPremium);
+    IERC20(_params.asset).safeTransferFrom(_params.receiverAddress, address(_params.pool), amountPlusPremium);
 
     // todo
-    // IAToken(reserveCache.aTokenAddress).handleRepayment(
+    // IAToken(cache.aTokenAddress).handleRepayment(
     //   params.receiverAddress,
     //   params.receiverAddress,
     //   amountPlusPremium
     // );
 
-    emit FlashLoan(params.receiverAddress, msg.sender, params.asset, params.amount, params.totalPremium);
+    emit FlashLoan(_params.receiverAddress, msg.sender, _params.asset, _params.amount, _params.totalPremium);
   }
 }

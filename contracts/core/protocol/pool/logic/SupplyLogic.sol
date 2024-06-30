@@ -51,28 +51,30 @@ library SupplyLogic {
    * @dev Emits the `Supply()` event.
    * @dev In the first supply action, `ReserveUsedAsCollateralEnabled()` is emitted, if the asset can be enabled as
    * collateral.
-   * @param reservesData The state of all the reserves
+   * @param reserve The state of the reserves
+   * @param userConfig The state of the position
+   * @param balance The balance of the position
+   * @param totalSupplies The total supplies of the reserve
    * @param params The additional parameters needed to execute the supply function
    */
   function executeSupply(
-    mapping(address => DataTypes.ReserveData) storage reservesData,
+    DataTypes.ReserveData storage reserve,
     DataTypes.UserConfigurationMap storage userConfig,
-    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
-    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
+    DataTypes.PositionBalance storage balance,
+    DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteSupplyParams memory params
   ) external {
-    DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
-    reserve.updateState(cache);
+    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
+    reserve.updateState(params.reserveFactor, cache);
 
     ValidationLogic.validateSupply(cache, reserve, params, params.pool);
     reserve.updateInterestRates(cache, params.asset, IPool(params.pool).getReserveFactor(), params.amount, 0, params.position, params.data.interestRateData);
 
+    // take the asset from the user and mint the shares
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
+    (bool isFirst, uint256 sharesMinted) = balance.depositCollateral(totalSupplies, params.amount, cache.nextLiquidityIndex);
 
-    DataTypes.PositionBalance storage bal = balances[params.asset][params.position];
-    (bool isFirst, uint256 sharesMinted) = bal.depositCollateral(totalSupplies[params.asset], params.amount, cache.nextLiquidityIndex);
-
+    // if this is the user's first deposit, enable the reserve as collateral
     if (isFirst && ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration)) {
       userConfig.setUsingAsCollateral(reserve.id, true);
       emit ReserveUsedAsCollateralEnabled(params.asset, params.position);
@@ -102,7 +104,7 @@ library SupplyLogic {
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
-    reserve.updateState(cache);
+    reserve.updateState(params.reserveFactor, cache);
 
     uint256 balance = balances[params.asset][params.position].getSupplyBalance(cache.nextLiquidityIndex);
 

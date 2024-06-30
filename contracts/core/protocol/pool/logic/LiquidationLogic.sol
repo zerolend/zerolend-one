@@ -113,7 +113,7 @@ library LiquidationLogic {
     DataTypes.ReserveData storage debtReserve = reservesData[params.debtAsset];
     DataTypes.UserConfigurationMap storage userConfig = usersConfig[params.position];
     vars.debtReserveCache = debtReserve.cache(totalSupplies[params.debtAsset]);
-    debtReserve.updateState(vars.debtReserveCache);
+    debtReserve.updateState(params.reserveFactor, vars.debtReserveCache);
 
     (, , , , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
       balances,
@@ -165,7 +165,7 @@ library LiquidationLogic {
 
     debtReserve.updateInterestRates(vars.debtReserveCache, params.debtAsset, IPool(params.pool).getReserveFactor(), vars.actualDebtToLiquidate, 0, '', '');
 
-    _burnCollateralTokens(collateralReserve, params, vars, balances, totalSupplies);
+    _burnCollateralTokens(collateralReserve, params, vars, balances[params.collateralAsset][params.position], totalSupplies[params.collateralAsset]);
 
     // Transfer fee to treasury if it is non-zero
     if (vars.liquidationProtocolFeeAmount != 0) {
@@ -204,11 +204,11 @@ library LiquidationLogic {
     DataTypes.ReserveData storage collateralReserve,
     DataTypes.ExecuteLiquidationCallParams memory params,
     LiquidationCallLocalVars memory vars,
-    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
-    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies
+    DataTypes.PositionBalance storage balances,
+    DataTypes.ReserveSupplies storage totalSupplies
   ) internal {
-    DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache(totalSupplies[params.collateralAsset]);
-    collateralReserve.updateState(collateralReserveCache);
+    DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache(totalSupplies);
+    collateralReserve.updateState(params.reserveFactor, collateralReserveCache);
     collateralReserve.updateInterestRates(
       collateralReserveCache,
       params.collateralAsset,
@@ -220,11 +220,7 @@ library LiquidationLogic {
     );
 
     // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-    balances[params.collateralAsset][params.position].withdrawCollateral(
-      totalSupplies[params.collateralAsset],
-      vars.actualCollateralToLiquidate,
-      collateralReserveCache.nextLiquidityIndex
-    );
+    balances.withdrawCollateral(totalSupplies, vars.actualCollateralToLiquidate, collateralReserveCache.nextLiquidityIndex);
     IERC20(params.collateralAsset).transfer(msg.sender, vars.actualCollateralToLiquidate);
   }
 

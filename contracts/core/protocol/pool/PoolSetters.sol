@@ -37,11 +37,11 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     if (address(_hook) != address(0)) _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     SupplyLogic.executeSupply(
-      _reserves,
+      _reserves[asset],
       _usersConfig[pos],
-      _balances,
-      _totalSupplies,
-      DataTypes.ExecuteSupplyParams({asset: asset, amount: amount, data: data, position: pos, pool: address(this)})
+      _balances[asset][pos],
+      _totalSupplies[asset],
+      DataTypes.ExecuteSupplyParams({reserveFactor: _factory.reserveFactor(), asset: asset, amount: amount, data: data, position: pos, pool: address(this)})
     );
 
     if (address(_hook) != address(0)) _hook.afterSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -64,7 +64,16 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _usersConfig[pos],
       _balances,
       _totalSupplies,
-      DataTypes.ExecuteWithdrawParams({destination: msg.sender, asset: asset, amount: amount, position: pos, data: data, reservesCount: _reservesCount, pool: address(this)})
+      DataTypes.ExecuteWithdrawParams({
+        reserveFactor: _factory.reserveFactor(),
+        destination: msg.sender,
+        asset: asset,
+        amount: amount,
+        position: pos,
+        data: data,
+        reservesCount: _reservesCount,
+        pool: address(this)
+      })
     );
 
     PoolLogic.executeMintToTreasury(_reserves, asset);
@@ -82,7 +91,16 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _usersConfig[pos],
       _balances,
       _totalSupplies,
-      DataTypes.ExecuteBorrowParams({asset: asset, user: msg.sender, position: pos, amount: amount, data: data, reservesCount: _reservesCount, pool: address(this)})
+      DataTypes.ExecuteBorrowParams({
+        reserveFactor: _factory.reserveFactor(),
+        asset: asset,
+        user: msg.sender,
+        position: pos,
+        amount: amount,
+        data: data,
+        reservesCount: _reservesCount,
+        pool: address(this)
+      })
     );
 
     if (address(_hook) != address(0)) _hook.afterBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -93,10 +111,10 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     if (address(_hook) != address(0)) _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     paybackAmount = BorrowLogic.executeRepay(
-      _reserves,
-      _balances,
-      _totalSupplies,
-      DataTypes.ExecuteRepayParams({asset: asset, amount: amount, user: msg.sender, pool: address(this), position: pos, data: data})
+      _reserves[asset],
+      _balances[asset][pos],
+      _totalSupplies[asset],
+      DataTypes.ExecuteRepayParams({reserveFactor: _factory.reserveFactor(), asset: asset, amount: amount, user: msg.sender, pool: address(this), position: pos, data: data})
     );
 
     if (address(_hook) != address(0)) _hook.afterRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
@@ -112,6 +130,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _totalSupplies,
       _usersConfig,
       DataTypes.ExecuteLiquidationCallParams({
+        reserveFactor: _factory.reserveFactor(),
         reservesCount: _reservesCount,
         debtToCover: debtAmt,
         collateralAsset: collat,
@@ -137,6 +156,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       asset: asset,
       amount: amount,
       data: data,
+      reserveFactor: _factory.reserveFactor(),
       params: params,
       flashLoanPremiumTotal: _factory.flashLoanPremiumToProtocol()
     });

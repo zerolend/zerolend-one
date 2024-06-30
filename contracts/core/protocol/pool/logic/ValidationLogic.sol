@@ -62,26 +62,21 @@ library ValidationLogic {
 
   /**
    * @notice Validates a supply action.
-   * @param reserveCache The cached data of the reserve
+   * @param cache The cached data of the reserve
    * @param params The amount to be supplied
    */
-  function validateSupply(
-    DataTypes.ReserveCache memory reserveCache,
-    DataTypes.ReserveData storage reserve,
-    DataTypes.ExecuteSupplyParams memory params,
-    address pool
-  ) internal view {
+  function validateSupply(DataTypes.ReserveCache memory cache, DataTypes.ReserveData storage reserve, DataTypes.ExecuteSupplyParams memory params, address pool) internal view {
     require(params.amount != 0, Errors.INVALID_AMOUNT);
 
-    (bool isFrozen, ) = reserveCache.reserveConfiguration.getFlags();
+    (bool isFrozen, ) = cache.reserveConfiguration.getFlags();
     require(!isFrozen, Errors.RESERVE_FROZEN);
 
-    uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
+    uint256 supplyCap = cache.reserveConfiguration.getSupplyCap();
     // todo
     require(
       supplyCap == 0 ||
-        ((IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasuryShares)).rayMul(reserveCache.nextLiquidityIndex) + params.amount) <=
-        supplyCap * (10 ** reserveCache.reserveConfiguration.getDecimals()),
+        ((IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasuryShares)).rayMul(cache.nextLiquidityIndex) + params.amount) <=
+        supplyCap * (10 ** cache.reserveConfiguration.getDecimals()),
       Errors.SUPPLY_CAP_EXCEEDED
     );
   }
@@ -129,19 +124,19 @@ library ValidationLogic {
 
     ValidateBorrowLocalVars memory vars;
 
-    (vars.isFrozen, vars.borrowingEnabled) = params.reserveCache.reserveConfiguration.getFlags();
+    (vars.isFrozen, vars.borrowingEnabled) = params.cache.reserveConfiguration.getFlags();
 
     require(!vars.isFrozen, Errors.RESERVE_FROZEN);
     require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);
 
-    vars.reserveDecimals = params.reserveCache.reserveConfiguration.getDecimals();
-    vars.borrowCap = params.reserveCache.reserveConfiguration.getBorrowCap();
+    vars.reserveDecimals = params.cache.reserveConfiguration.getDecimals();
+    vars.borrowCap = params.cache.reserveConfiguration.getBorrowCap();
     unchecked {
       vars.assetUnit = 10 ** vars.reserveDecimals;
     }
 
     if (vars.borrowCap != 0) {
-      vars.totalSupplyVariableDebt = params.reserveCache.currDebtShares.rayMul(params.reserveCache.nextBorrowIndex);
+      vars.totalSupplyVariableDebt = params.cache.currDebtShares.rayMul(params.cache.nextBorrowIndex);
 
       vars.totalDebt = vars.totalSupplyVariableDebt + params.amount;
 
