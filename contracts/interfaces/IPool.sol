@@ -115,11 +115,7 @@ interface IPool {
    * @param borrowIndex The next variable borrow index
    */
   event ReserveDataUpdated(
-    address indexed reserve,
-    uint256 liquidityRate,
-    uint256 variableBorrowRate,
-    uint256 liquidityIndex,
-    uint256 borrowIndex
+    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
   );
 
   /**

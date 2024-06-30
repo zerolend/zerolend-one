@@ -13,7 +13,14 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {ICuratedVaultBase, ICuratedVaultStaticTyping, MarketAllocation, MarketConfig, PendingAddress, PendingUint192} from '../../interfaces/ICuratedVault.sol';
+import {
+  ICuratedVaultBase,
+  ICuratedVaultStaticTyping,
+  MarketAllocation,
+  MarketConfig,
+  PendingAddress,
+  PendingUint192
+} from '../../interfaces/ICuratedVault.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {ConstantsLib} from './libraries/ConstantsLib.sol';
 
@@ -25,7 +32,12 @@ import {Ownable2StepUpgradeable, OwnableUpgradeable} from '@openzeppelin/contrac
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 
-import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {
+  ERC20Upgradeable,
+  ERC4626Upgradeable,
+  IERC4626Upgradeable,
+  MathUpgradeable
+} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
@@ -375,9 +387,8 @@ contract CuratedVault is
 
         totalWithdrawn += withdrawnAssets;
       } else {
-        uint256 suppliedAssets = allocation.assets == type(uint256).max
-          ? totalWithdrawn.zeroFloorSub(totalSupplied)
-          : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets =
+          allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
@@ -469,7 +480,7 @@ contract CuratedVault is
   /* ERC4626Upgradeable (PUBLIC) */
 
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override(ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
+  function decimals() public view override (ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
@@ -491,7 +502,7 @@ contract CuratedVault is
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets, , ) = _maxWithdraw(owner);
+    (assets,,) = _maxWithdraw(owner);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -755,7 +766,7 @@ contract CuratedVault is
   function _withdrawPool(uint256 assets) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool id = withdrawQueue[i];
-      (uint256 supplyAssets, ) = _accruedSupplyBalance(id);
+      (uint256 supplyAssets,) = _accruedSupplyBalance(id);
       // uint256 toWithdraw = UtilsLib.min(
       //   _withdrawable(id, market.totalSupplyAssets, market.totalBorrowAssets, supplyAssets),
       //   assets

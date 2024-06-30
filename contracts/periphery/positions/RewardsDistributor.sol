@@ -172,9 +172,8 @@ abstract contract RewardsDistributor is IRewardsDistributor {
 
       // Add reward address to asset available rewards if latestUpdateTimestamp is zero
       if (rewardConfig.lastUpdateTimestamp == 0) {
-        _poolAssets[pool][rewardsInput[i].asset].availableRewards[
-          _poolAssets[pool][rewardsInput[i].asset].availableRewardsCount
-        ] = rewardsInput[i].reward;
+        _poolAssets[pool][rewardsInput[i].asset].availableRewards[_poolAssets[pool][rewardsInput[i].asset].availableRewardsCount] =
+          rewardsInput[i].reward;
         _poolAssets[pool][rewardsInput[i].asset].availableRewardsCount++;
       }
 
@@ -185,7 +184,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
       }
 
       // Due emissions is still zero, updates only latestUpdateTimestamp
-      (uint256 newIndex, ) = _updateRewardData(rewardConfig, rewardsInput[i].totalSupply, 10 ** decimals);
+      (uint256 newIndex,) = _updateRewardData(rewardConfig, rewardsInput[i].totalSupply, 10 ** decimals);
 
       // Configure emission and distribution end of the reward per asset
       uint88 oldEmissionsPerSecond = rewardConfig.emissionPerSecond;
@@ -336,9 +335,8 @@ abstract contract RewardsDistributor is IRewardsDistributor {
       if (userAssetBalances[i].userBalance == 0) {
         unclaimedRewards += _poolAssets[pool][userAssetBalances[i].asset].rewards[reward].usersData[user].accrued;
       } else {
-        unclaimedRewards +=
-          _getPendingRewards(pool, user, reward, userAssetBalances[i]) +
-          _poolAssets[pool][userAssetBalances[i].asset].rewards[reward].usersData[user].accrued;
+        unclaimedRewards += _getPendingRewards(pool, user, reward, userAssetBalances[i])
+          + _poolAssets[pool][userAssetBalances[i].asset].rewards[reward].usersData[user].accrued;
       }
     }
 
