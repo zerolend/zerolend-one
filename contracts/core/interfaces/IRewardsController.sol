@@ -48,7 +48,7 @@ interface IRewardsController is IRewardsDistributor {
    * @param user The address of the user
    * @param claimer The address of the claimer
    */
-  function setClaimer(address user, address claimer) external;
+  function setClaimer(uint256 user, address claimer) external;
 
   /**
    * @dev Sets a TransferStrategy logic contract that determines the logic of the rewards transfer
@@ -80,7 +80,7 @@ interface IRewardsController is IRewardsDistributor {
    * @param user The address of the user
    * @return The claimer address
    */
-  function getClaimer(address user) external view returns (address);
+  function getClaimer(uint256 user) external view returns (address);
 
   /**
    * @dev Returns the Transfer Strategy implementation contract address being used for a reward address
@@ -110,7 +110,7 @@ interface IRewardsController is IRewardsDistributor {
    * @param totalSupply The total supply of the asset prior to user balance change
    * @param userBalance The previous user balance prior to balance change
    **/
-  function handleAction(address user, uint256 totalSupply, uint256 userBalance) external;
+  // function handleAction(uint256 user, uint256 totalSupply, uint256 userBalance) external;
 
   /**
    * @dev Claims reward for a user to the desired address, on all the assets of the pool, accumulating the pending rewards
@@ -120,7 +120,7 @@ interface IRewardsController is IRewardsDistributor {
    * @param reward The address of the reward token
    * @return The amount of rewards claimed
    **/
-  function claimRewards(address[] calldata assets, uint256 amount, address to, address reward) external returns (uint256);
+  function claimRewards(address pool, address[] calldata assets, uint256 amount, address to, address reward) external returns (uint256);
 
   /**
    * @dev Claims reward for a user on behalf, on all the assets of the pool, accumulating the pending rewards. The
@@ -132,7 +132,7 @@ interface IRewardsController is IRewardsDistributor {
    * @param reward The address of the reward token
    * @return The amount of rewards claimed
    **/
-  function claimRewardsOnBehalf(address[] calldata assets, uint256 amount, address user, address to, address reward) external returns (uint256);
+  function claimRewardsOnBehalf(address pool, address[] calldata assets, uint256 amount, uint256 user, address to, address reward) external returns (uint256);
 
   /**
    * @dev Claims reward for msg.sender, on all the assets of the pool, accumulating the pending rewards
@@ -141,7 +141,7 @@ interface IRewardsController is IRewardsDistributor {
    * @param reward The address of the reward token
    * @return The amount of rewards claimed
    **/
-  function claimRewardsToSelf(address[] calldata assets, uint256 amount, address reward) external returns (uint256);
+  function claimRewardsToSelf(address pool, address[] calldata assets, uint256 amount, address reward) external returns (uint256);
 
   /**
    * @dev Claims all rewards for a user to the desired address, on all the assets of the pool, accumulating the pending rewards
@@ -150,7 +150,7 @@ interface IRewardsController is IRewardsDistributor {
    * @return rewardsList List of addresses of the reward tokens
    * @return claimedAmounts List that contains the claimed amount per reward, following same order as "rewardList"
    **/
-  function claimAllRewards(address[] calldata assets, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+  function claimAllRewards(address pool, address[] calldata assets, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 
   /**
    * @dev Claims all rewards for a user on behalf, on all the assets of the pool, accumulating the pending rewards. The caller must
@@ -161,7 +161,12 @@ interface IRewardsController is IRewardsDistributor {
    * @return rewardsList List of addresses of the reward tokens
    * @return claimedAmounts List that contains the claimed amount per reward, following same order as "rewardsList"
    **/
-  function claimAllRewardsOnBehalf(address[] calldata assets, address user, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+  function claimAllRewardsOnBehalf(
+    address pool,
+    address[] calldata assets,
+    uint256 user,
+    address to
+  ) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 
   /**
    * @dev Claims all reward for msg.sender, on all the assets of the pool, accumulating the pending rewards
@@ -169,5 +174,5 @@ interface IRewardsController is IRewardsDistributor {
    * @return rewardsList List of addresses of the reward tokens
    * @return claimedAmounts List that contains the claimed amount per reward, following same order as "rewardsList"
    **/
-  function claimAllRewardsToSelf(address[] calldata assets) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+  function claimAllRewardsToSelf(address pool, address[] calldata assets) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 }

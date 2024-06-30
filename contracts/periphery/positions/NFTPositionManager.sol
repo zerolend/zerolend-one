@@ -135,8 +135,7 @@ contract NFTPositionManager is IncentivesController, MulticallUpgradeable, ERC72
     emit BorrowIncreased(params.asset, params.amount, params.tokenId);
 
     // update incentives
-    bytes32 positionId = _getPositionId(params.tokenId);
-    _handleDebt(params.tokenId, pool.getTotalSupplyRaw(params.asset).debt, pool.getDebtByPosition(params.asset, positionId));
+    _handleDebt(address(pool), params.asset, params.tokenId);
   }
 
   /**
@@ -160,8 +159,7 @@ contract NFTPositionManager is IncentivesController, MulticallUpgradeable, ERC72
     emit Withdrawal(params.asset, params.amount, params.tokenId);
 
     // update incentives
-    bytes32 pos = _getPositionId(params.tokenId);
-    _handleSupplies(params.tokenId, pool.getTotalSupplyRaw(params.asset).collateral, pool.getBalanceByPosition(params.asset, pos));
+    _handleSupplies(address(pool), params.asset, params.tokenId);
   }
 
   /**
@@ -202,8 +200,7 @@ contract NFTPositionManager is IncentivesController, MulticallUpgradeable, ERC72
     asset.safeTransfer(msg.sender, finalRepayAmout);
 
     // update incentives
-    bytes32 pos = _getPositionId(params.tokenId);
-    _handleDebt(params.tokenId, pool.getTotalSupplyRaw(params.asset).debt, pool.getDebtByPosition(params.asset, pos));
+    _handleDebt(address(pool), params.asset, params.tokenId);
 
     emit Repay(params.asset, params.amount, params.tokenId);
   }
@@ -236,16 +233,7 @@ contract NFTPositionManager is IncentivesController, MulticallUpgradeable, ERC72
     emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
 
     // update incentives
-    bytes32 pos = _getPositionId(params.tokenId);
-    _handleSupplies(params.tokenId, pool.getTotalSupplyRaw(params.asset).collateral, pool.getBalanceByPosition(params.asset, pos));
-  }
-
-  /**
-   * @dev Get the Postion Id based on tokenID and Contract address.
-   * @param index NFT token ID.
-   */
-  function _getPositionId(uint256 index) private view returns (bytes32) {
-    return keccak256(abi.encodePacked(address(this), 'index', index));
+    _handleSupplies(params.pool, params.asset, params.tokenId);
   }
 
   /**
@@ -277,22 +265,4 @@ contract NFTPositionManager is IncentivesController, MulticallUpgradeable, ERC72
 
     return (assets, isBurnAllowed);
   }
-
-  function setClaimer(address user, address claimer) external override {}
-
-  function getClaimer(address user) external view override returns (address) {}
-
-  function handleAction(address user, uint256 totalSupply, uint256 userBalance) external override {}
-
-  function claimRewards(address[] calldata assets, uint256 amount, address to, address reward) external override returns (uint256) {}
-
-  function claimRewardsOnBehalf(address[] calldata assets, uint256 amount, address user, address to, address reward) external override returns (uint256) {}
-
-  function claimRewardsToSelf(address[] calldata assets, uint256 amount, address reward) external override returns (uint256) {}
-
-  function claimAllRewards(address[] calldata assets, address to) external override returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
-
-  function claimAllRewardsOnBehalf(address[] calldata assets, address user, address to) external override returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
-
-  function claimAllRewardsToSelf(address[] calldata assets) external override returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
 }

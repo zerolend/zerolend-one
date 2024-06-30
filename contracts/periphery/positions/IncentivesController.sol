@@ -79,7 +79,7 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
   }
 
   //// @inheritdoc IRewardsController
-  function configureAssets(RewardsDataTypes.RewardsConfigInput[] memory config) external onlyEmissionManager {
+  function configureAssets(address pool, RewardsDataTypes.RewardsConfigInput[] memory config) external onlyEmissionManager(pool) {
     for (uint256 i = 0; i < config.length; i++) {
       // Get the current Scaled Total Supply of AToken or Debt token
       // todo
@@ -91,26 +91,16 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
       // Set reward oracle, enforces input oracle to have latestPrice function
       _setRewardOracle(config[i].reward, config[i].rewardOracle);
     }
-    _configureAssets(config);
+    _configureAssets(pool, config);
   }
 
   //// @inheritdoc IRewardsController
-  function setTransferStrategy(address reward, ITransferStrategyBase transferStrategy) external onlyEmissionManager {
-    _installTransferStrategy(reward, transferStrategy);
+  function _handleSupplies(address pool, address asset, uint256 id) internal {
+    _updateData(pool, asset, id, 0, 0);
   }
 
-  //// @inheritdoc IRewardsController
-  function setRewardOracle(address reward, IAggregatorInterface rewardOracle) external onlyEmissionManager {
-    _setRewardOracle(reward, rewardOracle);
-  }
-
-  //// @inheritdoc IRewardsController
-  function _handleSupplies(uint256 user, uint256 totalSupply, uint256 userBalance) internal {
-    _updateData(msg.sender, user, userBalance, totalSupply);
-  }
-
-  function _handleDebt(uint256 user, uint256 totalSupply, uint256 userBalance) internal {
-    _updateData(msg.sender, user, userBalance, totalSupply);
+  function _handleDebt(address pool, address asset, uint256 id) internal {
+    _updateData(pool, asset, id, 0, 0); // todo seperate debt and supply
   }
 
   // //// @inheritdoc IRewardsController
@@ -121,6 +111,7 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
 
   //// @inheritdoc IRewardsController
   function claimRewardsOnBehalf(
+    address pool,
     address[] calldata assets,
     uint256 amount,
     uint256 user,
@@ -129,7 +120,7 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
   ) external onlyAuthorizedClaimers(msg.sender, user) returns (uint256) {
     require(user != uint256(0), 'INVALID_USER_ADDRESS');
     require(to != address(0), 'INVALID_TO_ADDRESS');
-    return _claimRewards(assets, amount, msg.sender, user, to, reward);
+    return _claimRewards(pool, assets, amount, msg.sender, user, to, reward);
   }
 
   // //// @inheritdoc IRewardsController
@@ -145,13 +136,14 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
 
   //// @inheritdoc IRewardsController
   function claimAllRewardsOnBehalf(
+    address pool,
     address[] calldata assets,
     uint256 user,
     address to
   ) external onlyAuthorizedClaimers(msg.sender, user) returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
     require(user != uint256(0), 'INVALID_USER_ADDRESS');
     require(to != address(0), 'INVALID_TO_ADDRESS');
-    return _claimAllRewards(assets, msg.sender, user, to);
+    return _claimAllRewards(pool, assets, msg.sender, user, to);
   }
 
   // //// @inheritdoc IRewardsController
@@ -160,7 +152,7 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
   // }
 
   //// @inheritdoc IRewardsController
-  function setClaimer(uint256 user, address caller) external onlyEmissionManager {
+  function setClaimer(address pool, uint256 user, address caller) external onlyEmissionManager(pool) {
     _authorizedClaimers[user] = caller;
     emit ClaimerSet(user, caller);
   }
@@ -171,7 +163,11 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
    * @param user Address of the user
    * @return userAssetBalances contains a list of structs with user balance and total supply of the given assets
    */
-  function _getUserAssetBalances(address[] calldata assets, uint256 user) internal view override returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances) {
+  function _getUserAssetBalances(
+    address pool,
+    address[] calldata assets,
+    uint256 user
+  ) internal view override returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances) {
     userAssetBalances = new RewardsDataTypes.UserAssetBalance[](assets.length);
     for (uint256 i = 0; i < assets.length; i++) {
       userAssetBalances[i].asset = assets[i];
@@ -191,23 +187,23 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
    * @param reward Address of the reward token
    * @return Rewards claimed
    **/
-  function _claimRewards(address[] calldata assets, uint256 amount, address claimer, uint256 user, address to, address reward) internal returns (uint256) {
+  function _claimRewards(address pool, address[] calldata assets, uint256 amount, address claimer, uint256 user, address to, address reward) internal returns (uint256) {
     if (amount == 0) {
       return 0;
     }
     uint256 totalRewards;
 
-    _updateDataMultiple(user, _getUserAssetBalances(assets, user));
+    _updateDataMultiple(pool, user, _getUserAssetBalances(pool, assets, user));
     for (uint256 i = 0; i < assets.length; i++) {
       address asset = assets[i];
-      totalRewards += _assets[asset].rewards[reward].usersData[user].accrued;
+      totalRewards += _poolAssets[pool][asset].rewards[reward].usersData[user].accrued;
 
       if (totalRewards <= amount) {
-        _assets[asset].rewards[reward].usersData[user].accrued = 0;
+        _poolAssets[pool][asset].rewards[reward].usersData[user].accrued = 0;
       } else {
         uint256 difference = totalRewards - amount;
         totalRewards -= difference;
-        _assets[asset].rewards[reward].usersData[user].accrued = difference.toUint128();
+        _poolAssets[pool][asset].rewards[reward].usersData[user].accrued = difference.toUint128();
         break;
       }
     }
@@ -232,23 +228,29 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
    *   rewardsList List of reward addresses
    *   claimedAmount List of claimed amounts, follows "rewardsList" items order
    **/
-  function _claimAllRewards(address[] calldata assets, address claimer, uint256 user, address to) internal returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
-    uint256 rewardsListLength = _rewardsList.length;
+  function _claimAllRewards(
+    address pool,
+    address[] calldata assets,
+    address claimer,
+    uint256 user,
+    address to
+  ) internal returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
+    uint256 rewardsListLength = _poolRewardsList[pool].length;
     rewardsList = new address[](rewardsListLength);
     claimedAmounts = new uint256[](rewardsListLength);
 
-    _updateDataMultiple(user, _getUserAssetBalances(assets, user));
+    _updateDataMultiple(pool, user, _getUserAssetBalances(pool, assets, user));
 
     for (uint256 i = 0; i < assets.length; i++) {
       address asset = assets[i];
       for (uint256 j = 0; j < rewardsListLength; j++) {
         if (rewardsList[j] == address(0)) {
-          rewardsList[j] = _rewardsList[j];
+          rewardsList[j] = _poolRewardsList[pool][j];
         }
-        uint256 rewardAmount = _assets[asset].rewards[rewardsList[j]].usersData[user].accrued;
+        uint256 rewardAmount = _poolAssets[pool][asset].rewards[rewardsList[j]].usersData[user].accrued;
         if (rewardAmount != 0) {
           claimedAmounts[j] += rewardAmount;
-          _assets[asset].rewards[rewardsList[j]].usersData[user].accrued = 0;
+          _poolAssets[pool][asset].rewards[rewardsList[j]].usersData[user].accrued = 0;
         }
       }
     }
@@ -317,4 +319,52 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
     _rewardOracle[reward] = rewardOracle;
     emit RewardOracleUpdated(reward, address(rewardOracle));
   }
+
+  function setDistributionEnd(address asset, address reward, uint32 newDistributionEnd) external {}
+
+  function setEmissionPerSecond(address asset, address[] calldata rewards, uint88[] calldata newEmissionsPerSecond) external {}
+
+  function getDistributionEnd(address asset, address reward) external view returns (uint256) {}
+
+  function getUserAssetIndex(uint256 user, address asset, address reward) external view returns (uint256) {}
+
+  function getRewardsData(address asset, address reward) external view returns (uint256, uint256, uint256, uint256) {}
+
+  function getAssetIndex(address asset, address reward) external view returns (uint256, uint256) {}
+
+  function getRewardsByAsset(address asset) external view returns (address[] memory) {}
+
+  function getRewardsList() external view returns (address[] memory) {}
+
+  function getUserAccruedRewards(uint256 user, address reward) external view returns (uint256) {}
+
+  function getUserRewards(address[] calldata assets, uint256 user, address reward) external view returns (uint256) {}
+
+  function getAllUserRewards(address[] calldata assets, uint256 user) external view returns (address[] memory, uint256[] memory) {}
+
+  function getAssetDecimals(address asset) external view returns (uint8) {}
+
+  function setTransferStrategy(address reward, ITransferStrategyBase transferStrategy) external {}
+
+  function setRewardOracle(address reward, IAggregatorInterface rewardOracle) external {}
+
+  function configureAssets(RewardsDataTypes.RewardsConfigInput[] memory config) external {}
+
+  function setClaimer(uint256 user, address claimer) external {}
+
+  function getClaimer(address user) external view returns (address) {}
+
+  function handleAction(address user, uint256 totalSupply, uint256 userBalance) external {}
+
+  function claimRewards(address pool, address[] calldata assets, uint256 amount, address to, address reward) external returns (uint256) {}
+
+  function claimRewardsOnBehalf(address[] calldata assets, uint256 amount, address user, address to, address reward) external returns (uint256) {}
+
+  function claimRewardsToSelf(address pool, address[] calldata assets, uint256 amount, address reward) external returns (uint256) {}
+
+  function claimAllRewards(address pool, address[] calldata assets, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
+
+  function claimAllRewardsOnBehalf(address[] calldata assets, address user, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
+
+  function claimAllRewardsToSelf(address pool, address[] calldata assets) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
 }
