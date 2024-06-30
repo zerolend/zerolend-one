@@ -107,7 +107,7 @@ library SupplyLogic {
 
     reserve.updateState(reserveCache);
 
-    uint256 userBalance = balances[params.asset][params.position].scaledSupplyBalance.rayMul(reserveCache.nextLiquidityIndex);
+    uint256 userBalance = balances[params.asset][params.position].supplyShares.rayMul(reserveCache.nextLiquidityIndex);
 
     if (params.amount == type(uint256).max) params.amount = userBalance;
 

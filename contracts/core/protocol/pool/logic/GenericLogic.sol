@@ -185,7 +185,7 @@ library GenericLogic {
     uint256 assetUnit
   ) private view returns (uint256) {
     // fetching variable debt
-    uint256 userTotalDebt = balance.scaledDebtBalance;
+    uint256 userTotalDebt = balance.debtShares;
     if (userTotalDebt != 0) userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
     userTotalDebt = assetPrice * userTotalDebt;
 
@@ -210,7 +210,7 @@ library GenericLogic {
     uint256 assetUnit
   ) private view returns (uint256) {
     uint256 normalizedIncome = reserve.getNormalizedIncome();
-    uint256 balance = (_balance.scaledSupplyBalance.rayMul(normalizedIncome)) * assetPrice;
+    uint256 balance = (_balance.supplyShares.rayMul(normalizedIncome)) * assetPrice;
 
     unchecked {
       return balance / assetUnit;

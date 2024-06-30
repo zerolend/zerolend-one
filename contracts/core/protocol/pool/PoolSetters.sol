@@ -54,7 +54,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     DataTypes.ExtraData memory data
   ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 withdrawalAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
-    require(amount <= _balances[asset][pos].scaledSupplyBalance, 'Insufficient Balance!');
+    require(amount <= _balances[asset][pos].supplyShares, 'Insufficient Balance!');
 
     if (address(_hook) != address(0)) _hook.beforeWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
 

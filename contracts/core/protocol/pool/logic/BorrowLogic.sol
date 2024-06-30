@@ -102,7 +102,7 @@ library BorrowLogic {
 
     DataTypes.PositionBalance storage b = balances[params.asset][params.position];
 
-    uint256 paybackAmount = b.scaledDebtBalance;
+    uint256 paybackAmount = b.debtShares;
 
     // Allows a user to max repay without leaving dust from interest.
     if (params.amount == type(uint256).max) {

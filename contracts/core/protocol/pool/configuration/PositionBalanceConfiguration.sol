@@ -29,10 +29,10 @@ library PositionBalanceConfiguration {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
 
-    uint256 scaledBalance = self.scaledSupplyBalance;
+    uint256 scaledBalance = self.supplyShares;
 
     self.lastSupplyLiquidtyIndex = index;
-    self.scaledSupplyBalance += amountScaled;
+    self.supplyShares += amountScaled;
 
     supply.collateral += amountScaled;
 
@@ -48,10 +48,10 @@ library PositionBalanceConfiguration {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
 
-    uint256 scaledBalance = self.scaledDebtBalance;
+    uint256 scaledBalance = self.debtShares;
 
     self.lastDebtLiquidtyIndex = index;
-    self.scaledDebtBalance += amountScaled;
+    self.debtShares += amountScaled;
 
     supply.debt += amountScaled;
 
@@ -63,7 +63,7 @@ library PositionBalanceConfiguration {
     require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
 
     self.lastSupplyLiquidtyIndex = index;
-    self.scaledSupplyBalance -= amountScaled;
+    self.supplyShares -= amountScaled;
 
     supply.collateral -= amountScaled;
 
@@ -75,7 +75,7 @@ library PositionBalanceConfiguration {
     require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
 
     self.lastDebtLiquidtyIndex = index;
-    self.scaledDebtBalance -= amountScaled;
+    self.debtShares -= amountScaled;
 
     supply.debt -= amountScaled;
 
@@ -83,12 +83,12 @@ library PositionBalanceConfiguration {
   }
 
   function getSupply(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 supply) {
-    uint256 increase = self.scaledSupplyBalance.rayMul(index) - self.scaledSupplyBalance.rayMul(self.lastSupplyLiquidtyIndex);
-    return self.scaledSupplyBalance + increase;
+    uint256 increase = self.supplyShares.rayMul(index) - self.supplyShares.rayMul(self.lastSupplyLiquidtyIndex);
+    return self.supplyShares + increase;
   }
 
   function getDebt(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 debt) {
-    uint256 increase = self.scaledDebtBalance.rayMul(index) - self.scaledDebtBalance.rayMul(self.lastDebtLiquidtyIndex);
-    return self.scaledDebtBalance + increase;
+    uint256 increase = self.debtShares.rayMul(index) - self.debtShares.rayMul(self.lastDebtLiquidtyIndex);
+    return self.debtShares + increase;
   }
 }

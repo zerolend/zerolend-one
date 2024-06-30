@@ -137,7 +137,7 @@ library LiquidationLogic {
 
     (vars.collateralPriceSource, vars.debtPriceSource, vars.liquidationBonus) = _getConfigurationData(collateralReserve, params);
 
-    vars.userCollateralBalance = balances[vars.asset][params.position].scaledSupplyBalance;
+    vars.userCollateralBalance = balances[vars.asset][params.position].supplyShares;
 
     (vars.actualCollateralToLiquidate, vars.actualDebtToLiquidate, vars.liquidationProtocolFeeAmount) = _calculateAvailableCollateralToLiquidate(
       collateralReserve,
@@ -172,7 +172,7 @@ library LiquidationLogic {
       uint256 liquidityIndex = collateralReserve.getNormalizedIncome();
       uint256 scaledDownLiquidationProtocolFee = vars.liquidationProtocolFeeAmount.rayDiv(liquidityIndex);
       // todo
-      uint256 scaledDownUserBalance = balances[params.collateralAsset][params.position].scaledSupplyBalance;
+      uint256 scaledDownUserBalance = balances[params.collateralAsset][params.position].supplyShares;
       // To avoid trying to send more aTokens than available on balance, due to 1 wei imprecision
       if (scaledDownLiquidationProtocolFee > scaledDownUserBalance) {
         vars.liquidationProtocolFeeAmount = scaledDownUserBalance.rayMul(liquidityIndex);
@@ -260,7 +260,7 @@ library LiquidationLogic {
     uint256 healthFactor,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances
   ) internal view returns (uint256, uint256) {
-    uint256 userDebt = balances[params.debtAsset][params.position].scaledDebtBalance;
+    uint256 userDebt = balances[params.debtAsset][params.position].debtShares;
 
     uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD ? DEFAULT_LIQUIDATION_CLOSE_FACTOR : MAX_LIQUIDATION_CLOSE_FACTOR;
 

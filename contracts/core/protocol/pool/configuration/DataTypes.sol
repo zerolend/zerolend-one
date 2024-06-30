@@ -91,9 +91,9 @@ library DataTypes {
   }
 
   struct PositionBalance {
-    uint256 scaledSupplyBalance;
+    uint256 supplyShares;
     uint128 lastSupplyLiquidtyIndex;
-    uint256 scaledDebtBalance;
+    uint256 debtShares;
     uint128 lastDebtLiquidtyIndex;
   }
 
