@@ -12,6 +12,8 @@ import {RewardsDataTypes} from '../../periphery/positions/RewardsDataTypes.sol';
  * @notice Defines the basic interface for a Rewards Controller.
  */
 interface IRewardsController is IRewardsDistributor {
+  // TODO events need to have the pool address also
+
   /**
    * @dev Emitted when a new address is whitelisted as claimer of rewards on behalf of a user
    * @param user The address of the user
@@ -45,35 +47,17 @@ interface IRewardsController is IRewardsDistributor {
 
   /**
    * @dev Whitelists an address to claim the rewards on behalf of another address
-   * @param user The address of the user
+   * @param id The nft id
    * @param claimer The address of the claimer
    */
-  function setClaimer(uint256 user, address claimer) external;
-
-  /**
-   * @dev Sets a TransferStrategy logic contract that determines the logic of the rewards transfer
-   * @param reward The address of the reward token
-   * @param transferStrategy The address of the TransferStrategy logic contract
-   */
-  function setTransferStrategy(address reward, ITransferStrategyBase transferStrategy) external;
-
-  /**
-   * @dev Sets an Aave Oracle contract to enforce rewards with a source of value.
-   * @notice At the moment of reward configuration, the Incentives Controller performs
-   * a check to see if the reward asset oracle is compatible with IAggregatorInterface proxy.
-   * This check is enforced for integrators to be able to show incentives at
-   * the current Aave UI without the need to setup an external price registry
-   * @param reward The address of the reward to set the price aggregator
-   * @param rewardOracle The address of price aggregator that follows IAggregatorInterface interface
-   */
-  function setRewardOracle(address reward, IAggregatorInterface rewardOracle) external;
+  function setClaimer(address pool, uint256 id, address claimer) external;
 
   /**
    * @dev Get the price aggregator oracle address
    * @param reward The address of the reward
    * @return The price oracle of the reward
    */
-  function getRewardOracle(address reward) external view returns (address);
+  function getRewardOracle(address pool, address reward) external view returns (address);
 
   /**
    * @dev Returns the whitelisted claimer for a certain address (0x0 if not set)
@@ -87,7 +71,7 @@ interface IRewardsController is IRewardsDistributor {
    * @param reward The address of the reward
    * @return The address of the TransferStrategy contract
    */
-  function getTransferStrategy(address reward) external view returns (address);
+  function getTransferStrategy(address pool, address reward) external view returns (address);
 
   /**
    * @dev Configure assets to incentivize with an emission of rewards per second until the end of distribution.
@@ -101,7 +85,7 @@ interface IRewardsController is IRewardsDistributor {
    *   IAggregatorInterface rewardOracle: The Price Oracle of a reward to visualize the incentives at the UI Frontend.
    *                                     Must follow Chainlink Aggregator IAggregatorInterface interface to be compatible.
    */
-  function configureAssets(RewardsDataTypes.RewardsConfigInput[] memory config) external;
+  function configureAssets(address pool, RewardsDataTypes.RewardsConfigInput[] memory config) external;
 
   /**
    * @dev Called by the corresponding asset on transfer hook in order to update the rewards distribution.

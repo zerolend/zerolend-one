@@ -47,7 +47,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     _;
   }
 
-  function __IncentivesController_init(uint256 maxBoostRequirement_, address staking_) internal {
+  function __RewardsDistributor_init(uint256 maxBoostRequirement_, address staking_) internal {
     _maxBoostRequirement = maxBoostRequirement_;
     _staking = IVotes(staking_);
   }

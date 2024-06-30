@@ -1,53 +1,44 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.12;
 
-import {RewardsDataTypes} from './RewardsDataTypes.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {IRewardsController} from '../../core/interfaces/IRewardsController.sol';
-import {IPool} from '../../core/interfaces/IPool.sol';
-import {ITransferStrategyBase} from '../../core/interfaces/ITransferStrategyBase.sol';
 import {IAggregatorInterface} from '../../core/interfaces/IAggregatorInterface.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IPool} from '../../core/interfaces/IPool.sol';
+import {IRewardsController} from '../../core/interfaces/IRewardsController.sol';
+import {ITransferStrategyBase} from '../../core/interfaces/ITransferStrategyBase.sol';
+import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
+import {RewardsDataTypes} from './RewardsDataTypes.sol';
 import {RewardsDistributor} from './RewardsDistributor.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
- * @title IncentivesController
+ * @title RewardsController
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
  **/
-abstract contract IncentivesController is RewardsDistributor, IRewardsController {
+abstract contract RewardsController is RewardsDistributor, IRewardsController {
   using SafeCast for uint256;
 
-  uint256 public constant REVISION = 3;
-
-  // This mapping allows whitelisted addresses to claim on behalf of others
-  // useful for contracts that hold tokens to be rewarded but don't have any native logic to claim Liquidity Mining rewards
+  /// @notice This mapping allows whitelisted addresses to claim on behalf of others
+  /// useful for contracts that hold tokens to be rewarded but don't have any native logic to claim Liquidity Mining rewards
   mapping(uint256 => address) internal _authorizedClaimers;
 
-  // reward => transfer strategy implementation contract
-  // The TransferStrategy contract abstracts the logic regarding
-  // the source of the reward and how to transfer it to the user.
-  mapping(address => ITransferStrategyBase) internal _transferStrategy;
+  /// @notice reward => transfer strategy implementation contract
+  /// @dev The TransferStrategy contract abstracts the logic regarding
+  /// the source of the reward and how to transfer it to the user.
+  mapping(address pool => mapping(address asset => ITransferStrategyBase strategy)) internal _transferStrategy;
 
-  // This mapping contains the price oracle per reward.
-  // A price oracle is enforced for integrators to be able to show incentives at
-  // the current Aave UI without the need to setup an external price registry
-  // At the moment of reward configuration, the Incentives Controller performs
-  // a check to see if the provided reward oracle contains `latestAnswer`.
-  mapping(address => IAggregatorInterface) internal _rewardOracle;
+  /// @notice This mapping contains the price oracle per reward.
+  /// @dev A price oracle is enforced for integrators to be able to show incentives at
+  /// the current Aave UI without the need to setup an external price registry
+  /// At the moment of reward configuration, the Incentives Controller performs
+  /// a check to see if the provided reward oracle contains `latestAnswer`.
+  mapping(address pool => mapping(address asset => IAggregatorInterface oracle)) internal _rewardOracle;
 
   modifier onlyAuthorizedClaimers(address claimer, uint256 user) {
     require(_authorizedClaimers[user] == claimer, 'CLAIMER_UNAUTHORIZED');
     _;
   }
-
-  // modifier onlyEmissionManager() {
-  //   // todo
-  //   _;
-  // }
-
-  // constructor(address _emissionManager, address _staking) RewardsDistributor(_emissionManager, _staking) {}
 
   /**
    * @dev Initialize for RewardsController
@@ -60,22 +51,14 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
     return _authorizedClaimers[user];
   }
 
-  /**
-   * @dev Returns the revision of the implementation contract
-   * @return uint256, current revision version
-   */
-  function getRevision() internal pure returns (uint256) {
-    return REVISION;
+  //// @inheritdoc IRewardsController
+  function getRewardOracle(address pool, address reward) external view returns (address) {
+    return address(_rewardOracle[pool][reward]);
   }
 
   //// @inheritdoc IRewardsController
-  function getRewardOracle(address reward) external view returns (address) {
-    return address(_rewardOracle[reward]);
-  }
-
-  //// @inheritdoc IRewardsController
-  function getTransferStrategy(address reward) external view returns (address) {
-    return address(_transferStrategy[reward]);
+  function getTransferStrategy(address pool, address reward) external view returns (address) {
+    return address(_transferStrategy[pool][reward]);
   }
 
   //// @inheritdoc IRewardsController
@@ -86,10 +69,10 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
       // config[i].totalSupply = IScaledBalanceToken(config[i].asset).scaledTotalSupply();
 
       // Install TransferStrategy logic at IncentivesController
-      _installTransferStrategy(config[i].reward, config[i].transferStrategy);
+      _installTransferStrategy(pool, config[i].reward, config[i].transferStrategy);
 
       // Set reward oracle, enforces input oracle to have latestPrice function
-      _setRewardOracle(config[i].reward, config[i].rewardOracle);
+      _setRewardOracle(pool, config[i].reward, config[i].rewardOracle);
     }
     _configureAssets(pool, config);
   }
@@ -152,9 +135,9 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
   // }
 
   //// @inheritdoc IRewardsController
-  function setClaimer(address pool, uint256 user, address caller) external onlyEmissionManager(pool) {
-    _authorizedClaimers[user] = caller;
-    emit ClaimerSet(user, caller);
+  function setClaimer(address pool, uint256 id, address caller) external onlyEmissionManager(pool) {
+    _authorizedClaimers[id] = caller;
+    emit ClaimerSet(id, caller);
   }
 
   /**
@@ -212,7 +195,7 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
       return 0;
     }
 
-    _transferRewards(to, reward, totalRewards);
+    _transferRewards(pool, to, reward, totalRewards);
     emit RewardsClaimed(user, reward, to, claimer, totalRewards);
 
     return totalRewards;
@@ -255,7 +238,7 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
       }
     }
     for (uint256 i = 0; i < rewardsListLength; i++) {
-      _transferRewards(to, rewardsList[i], claimedAmounts[i]);
+      _transferRewards(pool, to, rewardsList[i], claimedAmounts[i]);
       emit RewardsClaimed(user, rewardsList[i], to, claimer, claimedAmounts[i]);
     }
     return (rewardsList, claimedAmounts);
@@ -267,8 +250,8 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
    * @param reward Address of the reward token
    * @param amount Amount of rewards to transfer
    */
-  function _transferRewards(address to, address reward, uint256 amount) internal {
-    ITransferStrategyBase transferStrategy = _transferStrategy[reward];
+  function _transferRewards(address pool, address to, address reward, uint256 amount) internal {
+    ITransferStrategyBase transferStrategy = _transferStrategy[pool][reward];
 
     bool success = transferStrategy.performTransfer(to, reward, amount);
 
@@ -298,11 +281,11 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
    * @param reward The address of the reward token
    * @param transferStrategy The address of the reward TransferStrategy
    */
-  function _installTransferStrategy(address reward, ITransferStrategyBase transferStrategy) internal {
+  function _installTransferStrategy(address pool, address reward, ITransferStrategyBase transferStrategy) internal {
     require(address(transferStrategy) != address(0), 'STRATEGY_CAN_NOT_BE_ZERO');
     require(_isContract(address(transferStrategy)) == true, 'STRATEGY_MUST_BE_CONTRACT');
 
-    _transferStrategy[reward] = transferStrategy;
+    _transferStrategy[pool][reward] = transferStrategy;
 
     emit TransferStrategyInstalled(reward, address(transferStrategy));
   }
@@ -314,9 +297,9 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
    * @param rewardOracle The address of the price oracle
    */
 
-  function _setRewardOracle(address reward, IAggregatorInterface rewardOracle) internal {
+  function _setRewardOracle(address pool, address reward, IAggregatorInterface rewardOracle) internal {
     require(rewardOracle.latestAnswer() > 0, 'ORACLE_MUST_RETURN_PRICE');
-    _rewardOracle[reward] = rewardOracle;
+    _rewardOracle[pool][reward] = rewardOracle;
     emit RewardOracleUpdated(reward, address(rewardOracle));
   }
 
@@ -343,14 +326,6 @@ abstract contract IncentivesController is RewardsDistributor, IRewardsController
   function getAllUserRewards(address[] calldata assets, uint256 user) external view returns (address[] memory, uint256[] memory) {}
 
   function getAssetDecimals(address asset) external view returns (uint8) {}
-
-  function setTransferStrategy(address reward, ITransferStrategyBase transferStrategy) external {}
-
-  function setRewardOracle(address reward, IAggregatorInterface rewardOracle) external {}
-
-  function configureAssets(RewardsDataTypes.RewardsConfigInput[] memory config) external {}
-
-  function setClaimer(uint256 user, address claimer) external {}
 
   function getClaimer(address user) external view returns (address) {}
 
