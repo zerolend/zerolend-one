@@ -55,8 +55,8 @@ contract NFTPositionManager is IncentivesController, MulticallUpgradeable, ERC72
   }
 
   /**
-   *  @dev Modifier to check if the caller is pool or not.
-   *  @param pool Address of the pool.
+   * @dev Modifier to check if the caller is pool or not.
+   * @param pool Address of the pool.
    */
   modifier isPool(address pool) {
     if (!factory.isPool(pool)) {

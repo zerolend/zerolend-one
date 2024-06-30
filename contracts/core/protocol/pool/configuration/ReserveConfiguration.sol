@@ -72,11 +72,13 @@ library ReserveConfiguration {
 
   /**
    * @notice Gets the Loan to Value of the reserve
+   * @dev If the asset is frozen, then the LTV is set to 0
    * @param self The reserve configuration
    * @return The loan to value
    */
   function getLtv(DataTypes.ReserveConfigurationMap memory self) internal pure returns (uint256) {
-    return self.data & ~LTV_MASK;
+    bool frozen = (self.data & ~FROZEN_MASK) != 0;
+    return frozen ? 0 : self.data & ~LTV_MASK;
   }
 
   /**
