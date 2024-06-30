@@ -8,7 +8,7 @@ import {RewardsDataTypes} from '../../periphery/positions/RewardsDataTypes.sol';
 
 /**
  * @title IRewardsController
- * @author Aave
+ * @author ZeroLend
  * @notice Defines the basic interface for a Rewards Controller.
  */
 interface IRewardsController is IRewardsDistributor {

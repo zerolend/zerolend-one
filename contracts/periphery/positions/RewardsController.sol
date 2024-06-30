@@ -191,9 +191,7 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
       }
     }
 
-    if (totalRewards == 0) {
-      return 0;
-    }
+    if (totalRewards == 0) return 0;
 
     _transferRewards(pool, to, reward, totalRewards);
     emit RewardsClaimed(user, reward, to, claimer, totalRewards);

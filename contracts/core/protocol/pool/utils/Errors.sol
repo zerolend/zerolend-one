@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title Errors library
- * @notice Defines the error messages emitted by the different contracts of the Aave protocol
+ * @notice Defines the error messages emitted by the different contracts of the ZeroLend protocol
  */
 library Errors {
   string public constant CALLER_NOT_POOL_ADMIN = 'CALLER_NOT_POOL_ADMIN'; // 'The caller of the function is not a pool admin'

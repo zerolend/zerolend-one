@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 /**
  * @title IRewardsDistributor
- * @author Aave
+ * @author ZeroLend
  * @notice Defines the basic interface for a Rewards Distributor.
  */
 interface IRewardsDistributor {
