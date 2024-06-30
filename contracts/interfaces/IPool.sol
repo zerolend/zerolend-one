@@ -13,8 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../protocol/pool/configuration/DataTypes.sol';
-
+import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
 import {IHook} from './IHook.sol';
 import {IPoolFactory} from './IPoolFactory.sol';
 
@@ -116,7 +115,11 @@ interface IPool {
    * @param borrowIndex The next variable borrow index
    */
   event ReserveDataUpdated(
-    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
+    address indexed reserve,
+    uint256 liquidityRate,
+    uint256 variableBorrowRate,
+    uint256 liquidityIndex,
+    uint256 borrowIndex
   );
 
   /**

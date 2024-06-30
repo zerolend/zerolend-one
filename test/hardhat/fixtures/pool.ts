@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { deployCore } from './core';
 import { ZeroAddress, parseEther } from 'ethers';
-import { DataTypes } from '../../../types/contracts/core/protocol/pool/Pool';
+import { DataTypes } from '../../../types/contracts/core/pool/Pool';
 
 export const basicConfig: DataTypes.InitReserveConfigStruct = {
   ltv: 7500,

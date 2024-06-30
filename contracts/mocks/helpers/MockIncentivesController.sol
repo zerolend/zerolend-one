@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IIncentivesController} from '../../core/interfaces/IIncentivesController.sol';
+import {IIncentivesController} from '../../interfaces/IIncentivesController.sol';
 
 contract MockIncentivesController is IIncentivesController {
   function handleAction(address, uint256, uint256) external override {}

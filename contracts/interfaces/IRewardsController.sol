@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.12;
 
-import {RewardsDataTypes} from '../../periphery/positions/RewardsDataTypes.sol';
+import {RewardsDataTypes} from '../periphery/positions/RewardsDataTypes.sol';
 import {IAggregatorInterface} from './IAggregatorInterface.sol';
 import {IRewardsDistributor} from './IRewardsDistributor.sol';
 import {ITransferStrategyBase} from './ITransferStrategyBase.sol';

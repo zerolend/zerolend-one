@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../protocol/pool/configuration/DataTypes.sol';
+import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
 import {IPool} from './IPool.sol';
 import {IPoolConfigurator} from './IPoolConfigurator.sol';
 import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';

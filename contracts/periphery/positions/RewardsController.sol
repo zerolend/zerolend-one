@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.12;
 
-import {IAggregatorInterface} from '../../core/interfaces/IAggregatorInterface.sol';
+import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 
-import {IPool} from '../../core/interfaces/IPool.sol';
-import {IRewardsController} from '../../core/interfaces/IRewardsController.sol';
-import {ITransferStrategyBase} from '../../core/interfaces/ITransferStrategyBase.sol';
+import {IPool} from '../../interfaces/IPool.sol';
+import {IRewardsController} from '../../interfaces/IRewardsController.sol';
+import {ITransferStrategyBase} from '../../interfaces/ITransferStrategyBase.sol';
 
 import {RewardsDataTypes} from './RewardsDataTypes.sol';
 import {RewardsDistributor} from './RewardsDistributor.sol';

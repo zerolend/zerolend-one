@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../../core/protocol/pool/configuration/DataTypes.sol';
+import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
 
 interface INFTPositionManager {
   /**

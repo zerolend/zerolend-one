@@ -55,7 +55,7 @@ const config: HardhatUserConfig = {
   },
   docgen: {
     pages: 'files',
-    exclude: ['core/interfaces', 'periphery/interfaces', 'governance', 'mocks'],
+    exclude: ['interfaces', 'periphery/interfaces', 'governance', 'mocks'],
   },
   typechain: {
     outDir: 'types',

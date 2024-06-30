@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {WadRayMath} from '../../core/protocol/pool/utils/WadRayMath.sol';
+import {WadRayMath} from '../../core/pool/utils/WadRayMath.sol';
 
 contract WadRayMathWrapper {
   function wad() public pure returns (uint256) {

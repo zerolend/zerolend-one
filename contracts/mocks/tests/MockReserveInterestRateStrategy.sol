@@ -13,10 +13,10 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IDefaultInterestRateStrategy} from '../../core/interfaces/IDefaultInterestRateStrategy.sol';
+import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
 
-import {DataTypes} from '../../core/protocol/pool/configuration/DataTypes.sol';
-import {WadRayMath} from '../../core/protocol/pool/utils/WadRayMath.sol';
+import {DataTypes} from '../../core/pool/configuration/DataTypes.sol';
+import {WadRayMath} from '../../core/pool/utils/WadRayMath.sol';
 
 abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   uint256 public OPTIMAL_USAGE_RATIO;

@@ -1,6 +1,6 @@
 import { parseEther } from 'ethers';
 import { MintableERC20 } from '../../../types';
-import { Pool } from '../../../types/contracts/core/protocol/pool';
+import { Pool } from '../../../types/contracts/core/pool';
 import { deployPool, RAY } from '../fixtures/pool';
 import { expect } from 'chai';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
