@@ -40,8 +40,7 @@ interface IHook {
     uint256 debtToCover,
     address pool,
     bytes calldata hookData
-  )
-    external;
+  ) external;
 
   function afterLiquidate(
     address liquidator,
@@ -51,6 +50,5 @@ interface IHook {
     uint256 debtToCover,
     address pool,
     bytes calldata hookData
-  )
-    external;
+  ) external;
 }

@@ -66,9 +66,7 @@ library SupplyLogic {
     DataTypes.PositionBalance storage balance,
     DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteSupplyParams memory params
-  )
-    external
-  {
+  ) external {
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
 
@@ -108,10 +106,7 @@ library SupplyLogic {
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
     mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     DataTypes.ExecuteWithdrawParams memory params
-  )
-    external
-    returns (uint256)
-  {
+  ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
     reserve.updateState(params.reserveFactor, cache);

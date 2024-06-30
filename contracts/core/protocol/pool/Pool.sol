@@ -68,12 +68,7 @@ contract Pool is PoolSetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  )
-    public
-    virtual
-    override
-    returns (uint256)
-  {
+  ) public virtual override returns (uint256) {
     return _withdraw(asset, amount, index, data);
   }
 
@@ -119,11 +114,7 @@ contract Pool is PoolSetters {
     uint256 amount,
     bytes calldata params,
     DataTypes.ExtraData memory data
-  )
-    public
-    virtual
-    override
-  {
+  ) public virtual override {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 
@@ -138,10 +129,7 @@ contract Pool is PoolSetters {
     address rateStrategy,
     address source,
     DataTypes.ReserveConfigurationMap calldata config
-  )
-    external
-    virtual
-  {
+  ) external virtual {
     require(msg.sender == address(_factory.configurator()), 'only configurator');
     PoolLogic.setReserveConfiguration(_reserves, asset, rateStrategy, source, config);
   }

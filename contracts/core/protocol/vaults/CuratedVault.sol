@@ -127,10 +127,7 @@ contract CuratedVault is
     address _asset,
     string memory _name,
     string memory _symbol
-  )
-    external
-    initializer
-  {
+  ) external initializer {
     __ERC20_init(_name, _symbol);
     __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
@@ -629,11 +626,7 @@ contract CuratedVault is
     uint256 newTotalSupply,
     uint256 newTotalAssets,
     MathUpgradeable.Rounding rounding
-  )
-    internal
-    view
-    returns (uint256)
-  {
+  ) internal view returns (uint256) {
     return assets.mulDiv(newTotalSupply + 10 ** _decimalsOffset(), newTotalAssets + 1, rounding);
   }
 
@@ -644,11 +637,7 @@ contract CuratedVault is
     uint256 newTotalSupply,
     uint256 newTotalAssets,
     MathUpgradeable.Rounding rounding
-  )
-    internal
-    view
-    returns (uint256)
-  {
+  ) internal view returns (uint256) {
     return shares.mulDiv(newTotalAssets + 1, newTotalSupply + 10 ** _decimalsOffset(), rounding);
   }
 
@@ -833,11 +822,7 @@ contract CuratedVault is
     uint256 totalSupplyAssets,
     uint256 totalBorrowAssets,
     uint256 supplyAssets
-  )
-    internal
-    view
-    returns (uint256)
-  {
+  ) internal view returns (uint256) {
     // todo
     // // Inside a flashloan callback, liquidity on Morpho Blue may be limited to the singleton's balance.
     // uint256 availableLiquidity = UtilsLib.min(

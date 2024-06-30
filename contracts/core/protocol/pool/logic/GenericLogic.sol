@@ -77,11 +77,7 @@ library GenericLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.CalculateUserAccountDataParams memory params
-  )
-    internal
-    view
-    returns (uint256, uint256, uint256, uint256, uint256, bool)
-  {
+  ) internal view returns (uint256, uint256, uint256, uint256, uint256, bool) {
     if (params.userConfig.isEmpty()) {
       return (0, 0, 0, 0, type(uint256).max, false);
     }
@@ -174,11 +170,7 @@ library GenericLogic {
     uint256 totalCollateralInBaseCurrency,
     uint256 totalDebtInBaseCurrency,
     uint256 ltv
-  )
-    internal
-    pure
-    returns (uint256)
-  {
+  ) internal pure returns (uint256) {
     uint256 availableBorrowsInBaseCurrency = totalCollateralInBaseCurrency.percentMul(ltv);
 
     if (availableBorrowsInBaseCurrency < totalDebtInBaseCurrency) {
@@ -201,11 +193,7 @@ library GenericLogic {
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
-  )
-    private
-    view
-    returns (uint256)
-  {
+  ) private view returns (uint256) {
     // fetching variable debt
     uint256 userTotalDebt = balance.debtShares;
     if (userTotalDebt != 0) userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
@@ -228,11 +216,7 @@ library GenericLogic {
     DataTypes.ReserveData storage reserve,
     uint256 assetPrice,
     uint256 assetUnit
-  )
-    private
-    view
-    returns (uint256)
-  {
+  ) private view returns (uint256) {
     uint256 normalizedIncome = reserve.getNormalizedIncome();
     uint256 balance = (_balance.supplyShares.rayMul(normalizedIncome)) * assetPrice;
 

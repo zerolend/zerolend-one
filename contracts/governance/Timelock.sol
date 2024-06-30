@@ -25,9 +25,7 @@ contract TimelockControllerEnumerable is TimelockController, AccessControlEnumer
     address[] memory proposers,
     address[] memory executors,
     address admin
-  )
-    TimelockController(minDelay, proposers, executors, admin)
-  {
+  ) TimelockController(minDelay, proposers, executors, admin) {
     // nothing
   }
 

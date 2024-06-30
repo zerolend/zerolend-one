@@ -40,10 +40,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  )
-    internal
-    nonReentrant(RentrancyKind.LENDING)
-  {
+  ) internal nonReentrant(RentrancyKind.LENDING) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 
@@ -70,11 +67,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  )
-    internal
-    nonReentrant(RentrancyKind.LENDING)
-    returns (uint256 withdrawalAmount)
-  {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 withdrawalAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
     require(amount <= _balances[asset][pos].supplyShares, 'Insufficient Balance!');
 
@@ -108,10 +101,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  )
-    internal
-    nonReentrant(RentrancyKind.LENDING)
-  {
+  ) internal nonReentrant(RentrancyKind.LENDING) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
 
@@ -141,11 +131,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  )
-    internal
-    nonReentrant(RentrancyKind.LENDING)
-    returns (uint256 paybackAmount)
-  {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 paybackAmount) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
 
@@ -173,10 +159,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     bytes32 pos,
     uint256 debtAmt,
     DataTypes.ExtraData memory data
-  )
-    internal
-    nonReentrant(RentrancyKind.LIQUIDATION)
-  {
+  ) internal nonReentrant(RentrancyKind.LIQUIDATION) {
     if (address(_hook) != address(0)) _hook.beforeLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
 
     LiquidationLogic.executeLiquidationCall(
@@ -206,11 +189,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     bytes calldata params,
     DataTypes.ExtraData memory data
-  )
-    public
-    virtual
-    nonReentrant(RentrancyKind.FLASHLOAN)
-  {
+  ) public virtual nonReentrant(RentrancyKind.FLASHLOAN) {
     DataTypes.FlashloanSimpleParams memory flashParams = DataTypes.FlashloanSimpleParams({
       receiverAddress: receiverAddress,
       asset: asset,

@@ -116,11 +116,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     address pool,
     address[] calldata assets,
     uint256 user
-  )
-    external
-    view
-    returns (address[] memory rewardsList, uint256[] memory unclaimedAmounts)
-  {
+  ) external view returns (address[] memory rewardsList, uint256[] memory unclaimedAmounts) {
     RewardsDataTypes.UserAssetBalance[] memory userAssetBalances = _getUserAssetBalances(pool, assets, user);
     rewardsList = new address[](_poolRewardsList[pool].length);
     unclaimedAmounts = new uint256[](rewardsList.length);
@@ -221,10 +217,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     RewardsDataTypes.RewardData storage rewardData,
     uint256 totalSupply,
     uint256 assetUnit
-  )
-    internal
-    returns (uint256, bool)
-  {
+  ) internal returns (uint256, bool) {
     (uint256 oldIndex, uint256 newIndex) = _getAssetIndex(rewardData, totalSupply, assetUnit);
     bool indexUpdated;
     if (newIndex != oldIndex) {
@@ -257,10 +250,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     uint256 userBalance,
     uint256 newAssetIndex,
     uint256 assetUnit
-  )
-    internal
-    returns (uint256, bool)
-  {
+  ) internal returns (uint256, bool) {
     // recalculate user balance based on boost
     // userBalance = boostedBalance(user, userBalance);
 
@@ -339,11 +329,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     uint256 user,
     address reward,
     RewardsDataTypes.UserAssetBalance[] memory userAssetBalances
-  )
-    internal
-    view
-    returns (uint256 unclaimedRewards)
-  {
+  ) internal view returns (uint256 unclaimedRewards) {
     // Add unrealized rewards
     for (uint256 i = 0; i < userAssetBalances.length; i++) {
       if (userAssetBalances[i].userBalance == 0) {
@@ -370,11 +356,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     uint256 user,
     address reward,
     RewardsDataTypes.UserAssetBalance memory userAssetBalance
-  )
-    internal
-    view
-    returns (uint256)
-  {
+  ) internal view returns (uint256) {
     RewardsDataTypes.RewardData storage rewardData = _poolAssets[pool][userAssetBalance.asset].rewards[reward];
     uint256 assetUnit = 10 ** _poolAssets[pool][userAssetBalance.asset].decimals;
     (, uint256 nextIndex) = _getAssetIndex(rewardData, userAssetBalance.totalSupply, assetUnit);
@@ -411,11 +393,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     RewardsDataTypes.RewardData storage rewardData,
     uint256 totalSupply,
     uint256 assetUnit
-  )
-    internal
-    view
-    returns (uint256, uint256)
-  {
+  ) internal view returns (uint256, uint256) {
     uint256 oldIndex = rewardData.index;
     uint256 distributionEnd = rewardData.distributionEnd;
     uint256 emissionPerSecond = rewardData.emissionPerSecond;
@@ -444,11 +422,7 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     address pool,
     address[] calldata assets,
     uint256 user
-  )
-    internal
-    view
-    virtual
-    returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances);
+  ) internal view virtual returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances);
 
   //// @inheritdoc IRewardsDistributor
   function getAssetDecimals(address pool, address asset) external view returns (uint8) {

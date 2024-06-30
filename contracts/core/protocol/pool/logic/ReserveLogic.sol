@@ -111,10 +111,7 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     uint256 totalLiquidity,
     uint256 amount
-  )
-    internal
-    returns (uint256)
-  {
+  ) internal returns (uint256) {
     // next liquidity index is calculated this way: `((amount / totalLiquidity) + 1) * liquidityIndex`
     // division `amount / totalLiquidity` done in ray for precision
     uint256 result = (amount.wadToRay().rayDiv(totalLiquidity.wadToRay()) + WadRayMath.RAY).rayMul(reserve.liquidityIndex);
@@ -159,9 +156,7 @@ library ReserveLogic {
     uint256 _liquidityTaken,
     bytes32 _position,
     bytes memory _data
-  )
-    internal
-  {
+  ) internal {
     UpdateInterestRatesLocalVars memory vars;
 
     vars.totalVariableDebt = _cache.nextDebtShares.rayMul(_cache.nextBorrowIndex);
@@ -255,11 +250,7 @@ library ReserveLogic {
   function cache(
     DataTypes.ReserveData storage reserve,
     DataTypes.ReserveSupplies storage supplies
-  )
-    internal
-    view
-    returns (DataTypes.ReserveCache memory)
-  {
+  ) internal view returns (DataTypes.ReserveCache memory) {
     DataTypes.ReserveCache memory _cache;
 
     _cache.currLiquidityIndex = _cache.nextLiquidityIndex = reserve.liquidityIndex;

@@ -109,9 +109,7 @@ library LiquidationLogic {
     mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     mapping(bytes32 => DataTypes.UserConfigurationMap) storage usersConfig,
     DataTypes.ExecuteLiquidationCallParams memory params
-  )
-    external
-  {
+  ) external {
     LiquidationCallLocalVars memory vars;
 
     DataTypes.ReserveData storage collateralReserve = reservesData[params.collateralAsset];
@@ -227,9 +225,7 @@ library LiquidationLogic {
     LiquidationCallLocalVars memory vars,
     DataTypes.PositionBalance storage balances,
     DataTypes.ReserveSupplies storage totalSupplies
-  )
-    internal
-  {
+  ) internal {
     DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache(totalSupplies);
     collateralReserve.updateState(params.reserveFactor, collateralReserveCache);
     collateralReserve.updateInterestRates(
@@ -259,9 +255,7 @@ library LiquidationLogic {
     LiquidationCallLocalVars memory vars,
     mapping(bytes32 => DataTypes.PositionBalance) storage balances,
     DataTypes.ReserveSupplies storage totalSupplies
-  )
-    internal
-  {
+  ) internal {
     uint256 burnt = balances[params.position].repayDebt(totalSupplies, vars.actualDebtToLiquidate, vars.debtReserveCache.nextBorrowIndex);
     vars.debtReserveCache.nextDebtShares = burnt;
   }
@@ -280,11 +274,7 @@ library LiquidationLogic {
     DataTypes.ExecuteLiquidationCallParams memory params,
     uint256 healthFactor,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances
-  )
-    internal
-    view
-    returns (uint256, uint256)
-  {
+  ) internal view returns (uint256, uint256) {
     uint256 userDebt = balances[params.debtAsset][params.position].debtShares;
 
     uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD ? DEFAULT_LIQUIDATION_CLOSE_FACTOR : MAX_LIQUIDATION_CLOSE_FACTOR;
@@ -308,11 +298,7 @@ library LiquidationLogic {
   function _getConfigurationData(
     DataTypes.ReserveData storage collateralReserve,
     DataTypes.ExecuteLiquidationCallParams memory params
-  )
-    internal
-    view
-    returns (address, address, uint256)
-  {
+  ) internal view returns (address, address, uint256) {
     uint256 liquidationBonus = collateralReserve.configuration.getLiquidationBonus();
 
     address collateralPriceSource = params.collateralAsset;
@@ -361,11 +347,7 @@ library LiquidationLogic {
     uint256 collateralPrice,
     uint256 debtAssetPrice,
     uint256 liquidationProtocolFeePercentage
-  )
-    internal
-    view
-    returns (uint256, uint256, uint256)
-  {
+  ) internal view returns (uint256, uint256, uint256) {
     AvailableCollateralToLiquidateLocalVars memory vars;
 
     vars.collateralPrice = collateralPrice; // oracle.getAssetPrice(collateralAsset);

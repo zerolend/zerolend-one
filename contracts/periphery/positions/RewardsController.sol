@@ -105,11 +105,7 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     uint256 user,
     address to,
     address reward
-  )
-    external
-    onlyAuthorizedClaimers(msg.sender, user)
-    returns (uint256)
-  {
+  ) external onlyAuthorizedClaimers(msg.sender, user) returns (uint256) {
     require(user != uint256(0), 'INVALID_USER_ADDRESS');
     require(to != address(0), 'INVALID_TO_ADDRESS');
     return _claimRewards(pool, assets, amount, msg.sender, user, to, reward);
@@ -133,11 +129,7 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     address[] calldata assets,
     uint256 user,
     address to
-  )
-    external
-    onlyAuthorizedClaimers(msg.sender, user)
-    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
-  {
+  ) external onlyAuthorizedClaimers(msg.sender, user) returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
     require(user != uint256(0), 'INVALID_USER_ADDRESS');
     require(to != address(0), 'INVALID_TO_ADDRESS');
     return _claimAllRewards(pool, assets, msg.sender, user, to);
@@ -165,12 +157,7 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     address pool,
     address[] calldata assets,
     uint256 user
-  )
-    internal
-    view
-    override
-    returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances)
-  {
+  ) internal view override returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances) {
     userAssetBalances = new RewardsDataTypes.UserAssetBalance[](assets.length);
     for (uint256 i = 0; i < assets.length; i++) {
       userAssetBalances[i].asset = assets[i];
@@ -200,10 +187,7 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     uint256 user,
     address to,
     address reward
-  )
-    internal
-    returns (uint256)
-  {
+  ) internal returns (uint256) {
     if (amount == 0) {
       return 0;
     }
@@ -249,10 +233,7 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     address claimer,
     uint256 user,
     address to
-  )
-    internal
-    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
-  {
+  ) internal returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
     uint256 rewardsListLength = _poolRewardsList[pool].length;
     rewardsList = new address[](rewardsListLength);
     claimedAmounts = new uint256[](rewardsListLength);
@@ -373,10 +354,7 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     address user,
     address to,
     address reward
-  )
-    external
-    returns (uint256)
-  {}
+  ) external returns (uint256) {}
 
   function claimRewardsToSelf(address pool, address[] calldata assets, uint256 amount, address reward) external returns (uint256) {}
 
@@ -384,25 +362,16 @@ abstract contract RewardsController is RewardsDistributor, IRewardsController {
     address pool,
     address[] calldata assets,
     address to
-  )
-    external
-    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
-  {}
+  ) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
 
   function claimAllRewardsOnBehalf(
     address[] calldata assets,
     address user,
     address to
-  )
-    external
-    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
-  {}
+  ) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
 
   function claimAllRewardsToSelf(
     address pool,
     address[] calldata assets
-  )
-    external
-    returns (address[] memory rewardsList, uint256[] memory claimedAmounts)
-  {}
+  ) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
 }

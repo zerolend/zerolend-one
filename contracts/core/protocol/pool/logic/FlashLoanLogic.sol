@@ -57,9 +57,7 @@ library FlashLoanLogic {
     DataTypes.ReserveData storage _reserve,
     DataTypes.ReserveSupplies storage _totalSupplies,
     DataTypes.FlashloanSimpleParams memory _params
-  )
-    external
-  {
+  ) external {
     // The usual action flow (cache -> updateState -> validation -> changeState -> updateRates)
     // is altered to (validation -> user payload -> cache -> updateState -> changeState -> updateRates) for flashloans.
     // This is done to protect against reentrance and rate manipulation within the user specified payload.
@@ -99,9 +97,7 @@ library FlashLoanLogic {
     DataTypes.ReserveData storage _reserve,
     DataTypes.ReserveSupplies storage _totalSupplies,
     DataTypes.FlashLoanRepaymentParams memory _params
-  )
-    internal
-  {
+  ) internal {
     uint256 amountPlusPremium = _params.amount + _params.totalPremium;
 
     DataTypes.ReserveCache memory cache = _reserve.cache(_totalSupplies);

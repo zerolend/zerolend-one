@@ -126,9 +126,7 @@ interface IRewardsController is IRewardsDistributor {
     uint256 user,
     address to,
     address reward
-  )
-    external
-    returns (uint256);
+  ) external returns (uint256);
 
   /**
    * @dev Claims reward for msg.sender, on all the assets of the pool, accumulating the pending rewards
@@ -152,9 +150,7 @@ interface IRewardsController is IRewardsDistributor {
     address pool,
     address[] calldata assets,
     address to
-  )
-    external
-    returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+  ) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 
   /**
    * @dev Claims all rewards for a user on behalf, on all the assets of the pool, accumulating the pending rewards. The caller must
@@ -171,9 +167,7 @@ interface IRewardsController is IRewardsDistributor {
     address[] calldata assets,
     uint256 user,
     address to
-  )
-    external
-    returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+  ) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 
   /**
    * @dev Claims all reward for msg.sender, on all the assets of the pool, accumulating the pending rewards
@@ -185,7 +179,5 @@ interface IRewardsController is IRewardsDistributor {
   function claimAllRewardsToSelf(
     address pool,
     address[] calldata assets
-  )
-    external
-    returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
+  ) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 }

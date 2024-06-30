@@ -100,12 +100,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
     bytes32,
     bytes memory,
     DataTypes.CalculateInterestRatesParams memory params
-  )
-    public
-    view
-    override
-    returns (uint256, uint256)
-  {
+  ) public view override returns (uint256, uint256) {
     CalcInterestRatesLocalVars memory vars;
 
     vars.totalDebt = params.totalVariableDebt;

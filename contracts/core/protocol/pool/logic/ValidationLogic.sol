@@ -74,10 +74,7 @@ library ValidationLogic {
     DataTypes.ReserveData storage reserve,
     DataTypes.ExecuteSupplyParams memory params,
     address pool
-  )
-    internal
-    view
-  {
+  ) internal view {
     require(params.amount != 0, Errors.INVALID_AMOUNT);
 
     (bool isFrozen,) = cache.reserveConfiguration.getFlags();
@@ -132,10 +129,7 @@ library ValidationLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.ValidateBorrowParams memory params
-  )
-    internal
-    view
-  {
+  ) internal view {
     require(params.amount != 0, Errors.INVALID_AMOUNT);
 
     ValidateBorrowLocalVars memory vars;
@@ -229,10 +223,7 @@ library ValidationLogic {
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ReserveData storage collateralReserve,
     DataTypes.ValidateLiquidationCallParams memory params
-  )
-    internal
-    view
-  {
+  ) internal view {
     ValidateLiquidationCallLocalVars memory vars;
 
     require(params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD, Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
@@ -262,11 +253,7 @@ library ValidationLogic {
     bytes32 position,
     uint256 reservesCount,
     address oracle
-  )
-    internal
-    view
-    returns (uint256, bool)
-  {
+  ) internal view returns (uint256, bool) {
     (,,,, uint256 healthFactor, bool hasZeroLtvCollateral) = GenericLogic.calculateUserAccountData(
       _balances,
       reservesData,
@@ -292,10 +279,7 @@ library ValidationLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap memory userConfig,
     DataTypes.ExecuteWithdrawParams memory params
-  )
-    internal
-    view
-  {
+  ) internal view {
     DataTypes.ReserveData memory reserve = reservesData[params.asset];
 
     (, bool hasZeroLtvCollateral) =
@@ -314,11 +298,7 @@ library ValidationLogic {
   function validateUseAsCollateral(
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ReserveConfigurationMap memory reserveConfig
-  )
-    internal
-    view
-    returns (bool)
-  {
+  ) internal view returns (bool) {
     if (reserveConfig.getLtv() == 0) return false;
     if (!userConfig.isUsingAsCollateralAny()) return true;
     return false;

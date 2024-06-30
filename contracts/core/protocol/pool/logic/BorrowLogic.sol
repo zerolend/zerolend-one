@@ -46,9 +46,7 @@ library BorrowLogic {
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
     DataTypes.ExecuteBorrowParams memory params
-  )
-    public
-  {
+  ) public {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
 
@@ -100,10 +98,7 @@ library BorrowLogic {
     DataTypes.PositionBalance storage balances,
     DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteRepayParams memory params
-  )
-    external
-    returns (uint256 paybackAmount)
-  {
+  ) external returns (uint256 paybackAmount) {
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
     paybackAmount = balances.debtShares;

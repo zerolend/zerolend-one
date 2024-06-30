@@ -58,10 +58,7 @@ contract MockFlashLoanSimpleReceiver is FlashLoanReceiverBase {
     uint256 premium,
     address, // initiator
     bytes memory // params
-  )
-    public
-    returns (bool)
-  {
+  ) public returns (bool) {
     if (_failExecution) {
       emit ExecutedWithFail(asset, amount, premium);
       return !_simulateEOA;

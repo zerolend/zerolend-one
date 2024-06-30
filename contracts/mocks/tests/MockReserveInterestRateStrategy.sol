@@ -58,12 +58,7 @@ abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrateg
     bytes32,
     bytes memory,
     DataTypes.CalculateInterestRatesParams memory
-  )
-    external
-    view
-    override
-    returns (uint256 liquidityRate, uint256 variableBorrowRate)
-  {
+  ) external view override returns (uint256 liquidityRate, uint256 variableBorrowRate) {
     return (_liquidityRate, _variableBorrowRate);
   }
 

@@ -38,9 +38,7 @@ interface IFlashLoanSimpleReceiver {
     uint256 premium,
     address initiator,
     bytes calldata params
-  )
-    external
-    returns (bool);
+  ) external returns (bool);
 
   function POOL() external view returns (IPool);
 }

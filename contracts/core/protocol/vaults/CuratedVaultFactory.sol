@@ -45,10 +45,7 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
     string memory name,
     string memory symbol,
     bytes32 salt
-  )
-    external
-    returns (ICuratedVault pool)
-  {
+  ) external returns (ICuratedVault pool) {
     // create the pool
     pool = ICuratedVault(address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner)));
     pool.initialize(initialOwner, initialTimelock, asset, name, symbol);

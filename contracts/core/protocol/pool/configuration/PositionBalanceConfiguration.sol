@@ -40,10 +40,7 @@ library PositionBalanceConfiguration {
     DataTypes.ReserveSupplies storage totalSupply,
     uint256 amount,
     uint128 index
-  )
-    internal
-    returns (bool isFirst, uint256 sharesMinted)
-  {
+  ) internal returns (bool isFirst, uint256 sharesMinted) {
     sharesMinted = amount.rayDiv(index);
     require(sharesMinted != 0, Errors.INVALID_MINT_AMOUNT);
     uint256 shares = self.supplyShares;
@@ -68,10 +65,7 @@ library PositionBalanceConfiguration {
     DataTypes.ReserveSupplies storage totalSupply,
     uint256 amount,
     uint128 index
-  )
-    internal
-    returns (bool isFirst, uint256 sharesMinted)
-  {
+  ) internal returns (bool isFirst, uint256 sharesMinted) {
     sharesMinted = amount.rayDiv(index);
     require(sharesMinted != 0, Errors.INVALID_MINT_AMOUNT);
     uint256 shares = self.debtShares;
@@ -95,10 +89,7 @@ library PositionBalanceConfiguration {
     DataTypes.ReserveSupplies storage supply,
     uint256 amount,
     uint128 index
-  )
-    internal
-    returns (uint256 sharesBurnt)
-  {
+  ) internal returns (uint256 sharesBurnt) {
     sharesBurnt = amount.rayDiv(index);
     require(sharesBurnt != 0, Errors.INVALID_BURN_AMOUNT);
     self.lastSupplyLiquidtyIndex = index;
@@ -120,10 +111,7 @@ library PositionBalanceConfiguration {
     DataTypes.ReserveSupplies storage supply,
     uint256 amount,
     uint128 index
-  )
-    internal
-    returns (uint256 sharesBurnt)
-  {
+  ) internal returns (uint256 sharesBurnt) {
     sharesBurnt = amount.rayDiv(index);
     require(sharesBurnt != 0, Errors.INVALID_BURN_AMOUNT);
     self.lastDebtLiquidtyIndex = index;

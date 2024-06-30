@@ -30,8 +30,5 @@ interface IReserveInterestRateStrategy {
     bytes32 position,
     bytes memory extraData,
     DataTypes.CalculateInterestRatesParams memory params
-  )
-    external
-    view
-    returns (uint256, uint256);
+  ) external view returns (uint256, uint256);
 }

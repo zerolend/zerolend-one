@@ -244,8 +244,7 @@ interface IPool {
     bytes32 position,
     uint256 debtToCover,
     DataTypes.ExtraData memory data
-  )
-    external;
+  ) external;
 
   /**
    * @dev See [liquidate(...)](#liquidate) for the full documentation. This call executes the same function with
@@ -276,8 +275,7 @@ interface IPool {
     uint256 amount,
     bytes calldata params,
     DataTypes.ExtraData memory data
-  )
-    external;
+  ) external;
 
   /**
    * @notice Get the balance of a specific asset in a specific position.
@@ -365,8 +363,7 @@ interface IPool {
     address rateStrategyAddress,
     address source,
     DataTypes.ReserveConfigurationMap calldata configuration
-  )
-    external;
+  ) external;
 
   /**
    * @notice Returns the configuration of the reserve

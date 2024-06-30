@@ -52,9 +52,7 @@ library PoolLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     DataTypes.InitReserveParams memory params
-  )
-    external
-  {
+  ) external {
     require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
     require(Address.isContract(params.interestRateStrategyAddress), Errors.NOT_CONTRACT);
     require(Address.isContract(params.oracle), Errors.NOT_CONTRACT);
@@ -144,9 +142,7 @@ library PoolLogic {
     address rateStrategyAddress,
     address source,
     DataTypes.ReserveConfigurationMap memory config
-  )
-    public
-  {
+  ) public {
     require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
     _reserves[asset].configuration = config;
 

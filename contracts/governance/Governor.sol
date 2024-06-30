@@ -71,11 +71,7 @@ contract ZeroLendGovernor is
     uint256[] memory values,
     bytes[] memory calldatas,
     bytes32 descriptionHash
-  )
-    internal
-    override (Governor, GovernorTimelockControl)
-    returns (uint256)
-  {
+  ) internal override (Governor, GovernorTimelockControl) returns (uint256) {
     return super._cancel(targets, values, calldatas, descriptionHash);
   }
 
@@ -89,11 +85,7 @@ contract ZeroLendGovernor is
     uint256[] memory values,
     bytes[] memory calldatas,
     bytes32 descriptionHash
-  )
-    internal
-    virtual
-    override (Governor, GovernorTimelockControl)
-  {
+  ) internal virtual override (Governor, GovernorTimelockControl) {
     super._execute(id, targets, values, calldatas, descriptionHash);
   }
 }

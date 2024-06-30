@@ -35,7 +35,7 @@
   bracket_spacing = false
   int_types = "long"
   line_length = 140
-  multiline_func_header = "all"
+  multiline_func_header = "params_first"
   number_underscore = "thousands"
   sort_imports = true
   quote_style = "single"

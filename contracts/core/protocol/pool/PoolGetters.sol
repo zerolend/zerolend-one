@@ -93,13 +93,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
   function getUserAccountData(
     address user,
     uint256 index
-  )
-    external
-    view
-    virtual
-    override
-    returns (uint256, uint256, uint256, uint256, uint256, uint256)
-  {
+  ) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
     bytes32 positionId = user.getPositionId(index);
     return PoolLogic.executeGetUserAccountData(
       _balances,

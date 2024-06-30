@@ -39,9 +39,7 @@ interface ICuratedVaultFactory is IBeacon {
     string memory name,
     string memory symbol,
     bytes32 salt
-  )
-    external
-    returns (ICuratedVault pool);
+  ) external returns (ICuratedVault pool);
 
   function vaults(uint256 index) external view returns (ICuratedVault);
 
