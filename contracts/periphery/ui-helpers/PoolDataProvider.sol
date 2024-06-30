@@ -108,7 +108,7 @@ abstract contract PoolDataProvider is IPoolDataProvider {
   //     uint256 liquidityRate,
   //     uint256 variableBorrowRate,
   //     uint256 liquidityIndex,
-  //     uint256 variableBorrowIndex,
+  //     uint256 borrowIndex,
   //     uint40 lastUpdateTimestamp
   //   )
   // {
@@ -121,9 +121,9 @@ abstract contract PoolDataProvider is IPoolDataProvider {
   //     IERC20Metadata(reserve.aTokenAddress).totalSupply(),
   //     IERC20Metadata(reserve.variableDebtTokenAddress).totalSupply(),
   //     reserve.currentLiquidityRate,
-  //     reserve.currentVariableBorrowRate,
+  //     reserve.currentBorrowRate,
   //     reserve.liquidityIndex,
-  //     reserve.variableBorrowIndex,
+  //     reserve.borrowIndex,
   //     reserve.lastUpdateTimestamp
   //   );
   // }

@@ -241,8 +241,8 @@ library LiquidationLogic {
     mapping(bytes32 => DataTypes.PositionBalance) storage balances,
     DataTypes.ReserveSupplies storage totalSupplies
   ) internal {
-    uint256 burnt = balances[params.position].repayDebt(totalSupplies, vars.actualDebtToLiquidate, vars.debtReserveCache.nextVariableBorrowIndex);
-    vars.debtReserveCache.nextScaledVariableDebt = burnt;
+    uint256 burnt = balances[params.position].repayDebt(totalSupplies, vars.actualDebtToLiquidate, vars.debtReserveCache.nextBorrowIndex);
+    vars.debtReserveCache.nextDebtShares = burnt;
   }
 
   /**

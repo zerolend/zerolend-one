@@ -141,7 +141,7 @@ library ValidationLogic {
     }
 
     if (vars.borrowCap != 0) {
-      vars.totalSupplyVariableDebt = params.reserveCache.currScaledVariableDebt.rayMul(params.reserveCache.nextVariableBorrowIndex);
+      vars.totalSupplyVariableDebt = params.reserveCache.currDebtShares.rayMul(params.reserveCache.nextBorrowIndex);
 
       vars.totalDebt = vars.totalSupplyVariableDebt + params.amount;
 

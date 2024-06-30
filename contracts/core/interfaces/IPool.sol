@@ -113,9 +113,9 @@ interface IPool {
    * @param liquidityRate The next liquidity rate
    * @param variableBorrowRate The next variable borrow rate
    * @param liquidityIndex The next liquidity index
-   * @param variableBorrowIndex The next variable borrow index
+   * @param borrowIndex The next variable borrow index
    */
-  event ReserveDataUpdated(address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 variableBorrowIndex);
+  event ReserveDataUpdated(address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex);
 
   /**
    * @dev Emitted when the protocol treasury receives minted aTokens from the accrued interest.

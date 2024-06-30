@@ -170,9 +170,6 @@ library GenericLogic {
 
   /**
    * @notice Calculates total debt of the user in the based currency used to normalize the values of the assets
-   * @dev This fetches the `balanceOf` of the stable and variable debt tokens for the user. For gas reasons, the
-   * variable debt balance is calculated by fetching `scaledBalancesOf` normalized debt, which is cheaper than
-   * fetching `balanceOf`
    * @param reserve The data of the reserve for which the total debt of the user is being calculated
    * @param assetPrice The price of the asset for which the total debt of the user is being calculated
    * @param assetUnit The value representing one full unit of the asset (10^decimals)
@@ -195,13 +192,11 @@ library GenericLogic {
   }
 
   /**
-   * @notice Calculates total aToken balance of the user in the based currency used by the price oracle
-   * @dev For gas reasons, the aToken balance is calculated by fetching `scaledBalancesOf` normalized debt, which
-   * is cheaper than fetching `balanceOf`
-   * @param reserve The data of the reserve for which the total aToken balance of the user is being calculated
-   * @param assetPrice The price of the asset for which the total aToken balance of the user is being calculated
+   * @notice Calculates total balance of the user in the based currency used by the price oracle
+   * @param reserve The data of the reserve for which the total balance of the user is being calculated
+   * @param assetPrice The price of the asset for which the total balance of the user is being calculated
    * @param assetUnit The value representing one full unit of the asset (10^decimals)
-   * @return The total aToken balance of the user normalized to the base currency of the price oracle
+   * @return The total balance of the user normalized to the base currency of the price oracle
    */
   function _getPositionBalanceInBaseCurrency(
     DataTypes.PositionBalance storage _balance,

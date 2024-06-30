@@ -22,9 +22,9 @@ library DataTypes {
     // the current supply rate. Expressed in ray
     uint128 currentLiquidityRate;
     // variable borrow index. Expressed in ray
-    uint128 variableBorrowIndex;
+    uint128 borrowIndex;
     // the current variable borrow rate. Expressed in ray
-    uint128 currentVariableBorrowRate;
+    uint128 currentBorrowRate;
     // timestamp of last update
     uint40 lastUpdateTimestamp;
     // the id of the reserve. Represents the position in the list of the active reserves
@@ -77,15 +77,14 @@ library DataTypes {
   }
 
   struct ReserveCache {
-    uint256 currScaledVariableDebt;
-    uint256 nextScaledVariableDebt;
+    uint256 currDebtShares;
+    uint256 nextDebtShares;
     uint128 currLiquidityIndex;
     uint128 nextLiquidityIndex;
-    uint128 currVariableBorrowIndex;
-    uint128 nextVariableBorrowIndex;
+    uint128 currBorrowIndex;
+    uint128 nextBorrowIndex;
     uint256 currLiquidityRate;
-    uint256 currVariableBorrowRate;
-    // address asset;
+    uint256 currBorrowRate;
     ReserveConfigurationMap reserveConfiguration;
     uint40 reserveLastUpdateTimestamp;
   }

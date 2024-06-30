@@ -43,11 +43,11 @@ library PositionBalanceConfiguration {
   ) internal returns (bool isFirst, uint256 sharesMinted) {
     sharesMinted = amount.rayDiv(index);
     require(sharesMinted != 0, Errors.INVALID_MINT_AMOUNT);
-    uint256 scaledBalance = self.supplyShares;
+    uint256 shares = self.supplyShares;
     self.lastSupplyLiquidtyIndex = index;
     self.supplyShares += sharesMinted;
     supply.collateral += sharesMinted;
-    isFirst = scaledBalance == 0;
+    isFirst = shares == 0;
   }
 
   /**
@@ -68,11 +68,11 @@ library PositionBalanceConfiguration {
   ) internal returns (bool isFirst, uint256 sharesMinted) {
     sharesMinted = amount.rayDiv(index);
     require(sharesMinted != 0, Errors.INVALID_MINT_AMOUNT);
-    uint256 scaledBalance = self.debtShares;
+    uint256 shares = self.debtShares;
     self.lastDebtLiquidtyIndex = index;
     self.debtShares += sharesMinted;
     supply.debt += sharesMinted;
-    isFirst = scaledBalance == 0;
+    isFirst = shares == 0;
   }
 
   /**

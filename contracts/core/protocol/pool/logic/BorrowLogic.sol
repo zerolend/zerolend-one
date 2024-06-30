@@ -68,18 +68,18 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    (bool isFirstBorrowing, ) = b.borrowDebt(totalSupplies[params.asset], params.amount, reserveCache.nextVariableBorrowIndex);
+    (bool isFirstBorrowing, ) = b.borrowDebt(totalSupplies[params.asset], params.amount, reserveCache.nextBorrowIndex);
 
     // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
-    // todo; update reserveCache.nextScaledVariableDebt
+    // todo; update reserveCache.nextDebtShares
 
     reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData);
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
-    emit Borrow(params.asset, params.user, params.position, params.amount, reserve.currentVariableBorrowRate);
+    emit Borrow(params.asset, params.user, params.position, params.amount, reserve.currentBorrowRate);
   }
 
   /**
@@ -106,7 +106,7 @@ library BorrowLogic {
 
     // Allows a user to max repay without leaving dust from interest.
     if (params.amount == type(uint256).max) {
-      params.amount = b.getDebtBalance(reserveCache.nextVariableBorrowIndex);
+      params.amount = b.getDebtBalance(reserveCache.nextBorrowIndex);
       paybackAmount = params.amount;
     }
 
@@ -116,8 +116,8 @@ library BorrowLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData);
 
-    b.repayDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextVariableBorrowIndex);
-    reserveCache.nextScaledVariableDebt = totalSupplies[params.asset].debt;
+    b.repayDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextBorrowIndex);
+    reserveCache.nextDebtShares = totalSupplies[params.asset].debt;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
     emit Repay(params.asset, params.position, msg.sender, paybackAmount);

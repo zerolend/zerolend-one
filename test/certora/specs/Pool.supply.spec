@@ -56,7 +56,7 @@ rule withdrawShouldExecuteAfterValidSupply(address asset, uint256 index1, uint25
     // ensure liquidity index is initialized at least 1 ray
     DataTypes.ReserveData d = getReserveData(asset);
     require d.liquidityIndex == RAY();
-    require d.variableBorrowIndex == RAY();
+    require d.borrowIndex == RAY();
 
     // ensure that user liquidity index is set to the reserve liquidity index
     DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e1.msg.sender, 0);
@@ -102,7 +102,7 @@ rule withdrawShouldReduceBalanceProperly(address asset, uint256 amountWithdraw) 
     // ensure liquidity index is initialized at least 1 ray
     DataTypes.ReserveData d1 = getReserveData(asset);
     require d1.liquidityIndex >= RAY();
-    require d1.variableBorrowIndex >= RAY();
+    require d1.borrowIndex >= RAY();
 
     // ensure that user liquidity index is set to the reserve liquidity index
     DataTypes.PositionBalance balanceBeforeRaw = getBalanceRaw(asset, e.msg.sender, 0);
@@ -117,7 +117,7 @@ rule withdrawShouldReduceBalanceProperly(address asset, uint256 amountWithdraw) 
     // ensure liquidity index is still the same
     DataTypes.ReserveData d2 = getReserveData(asset);
     require d2.liquidityIndex == d1.liquidityIndex;
-    require d2.variableBorrowIndex == d1.variableBorrowIndex;
+    require d2.borrowIndex == d1.borrowIndex;
 
     // check the balance after
     mathint balanceAfter = getBalance(asset, e.msg.sender, 0);
