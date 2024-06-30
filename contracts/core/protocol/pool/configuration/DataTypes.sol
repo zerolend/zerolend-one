@@ -71,39 +71,34 @@ library DataTypes {
     uint256 data;
   }
 
-  enum InterestRateMode {
-    NONE,
-    VARIABLE
-  }
-
   struct ReserveCache {
-    uint256 currDebtShares;
-    uint256 nextDebtShares;
-    uint128 currLiquidityIndex;
-    uint128 nextLiquidityIndex;
-    uint128 currBorrowIndex;
-    uint128 nextBorrowIndex;
-    uint256 currLiquidityRate;
-    uint256 currBorrowRate;
     ReserveConfigurationMap reserveConfiguration;
+    uint128 currBorrowIndex;
+    uint128 currLiquidityIndex;
+    uint128 nextBorrowIndex;
+    uint128 nextLiquidityIndex;
+    uint256 currBorrowRate;
+    uint256 currDebtShares;
+    uint256 currLiquidityRate;
+    uint256 nextDebtShares;
     uint40 reserveLastUpdateTimestamp;
   }
 
   struct PositionBalance {
-    uint256 supplyShares;
+    uint128 lastDebtLiquidtyIndex;
     uint128 lastSupplyLiquidtyIndex;
     uint256 debtShares;
-    uint128 lastDebtLiquidtyIndex;
+    uint256 supplyShares;
   }
 
   struct ReserveSupplies {
-    uint256 supplyShares;
     uint256 debtShares;
+    uint256 supplyShares;
   }
 
   struct ExtraData {
-    bytes interestRateData;
     bytes hookData;
+    bytes interestRateData;
   }
 
   struct ExecuteLiquidationCallParams {
@@ -178,53 +173,53 @@ library DataTypes {
   }
 
   struct CalculateUserAccountDataParams {
-    UserConfigurationMap userConfig;
-    uint256 reservesCount;
-    bytes32 position;
     address pool;
+    bytes32 position;
+    uint256 reservesCount;
+    UserConfigurationMap userConfig;
   }
 
   struct ValidateBorrowParams {
-    ReserveCache cache;
-    UserConfigurationMap userConfig;
     address asset;
+    address pool;
     bytes32 position;
+    ReserveCache cache;
     uint256 amount;
     uint256 reservesCount;
-    address pool;
+    UserConfigurationMap userConfig;
   }
 
   struct ValidateLiquidationCallParams {
     ReserveCache debtReserveCache;
-    uint256 totalDebt;
     uint256 healthFactor;
+    uint256 totalDebt;
   }
 
   struct CalculateInterestRatesParams {
+    address reserve;
     uint256 liquidityAdded;
     uint256 liquidityTaken;
-    uint256 totalVariableDebt;
     uint256 reserveFactor;
-    address reserve;
+    uint256 totalVariableDebt;
   }
 
   struct InitReserveConfig {
-    uint256 ltv;
-    uint256 liquidationThreshold;
-    uint256 liquidationBonus;
-    uint256 decimals;
-    bool frozen;
     bool borrowable;
+    bool frozen;
     uint256 borrowCap;
+    uint256 decimals;
+    uint256 liquidationBonus;
+    uint256 liquidationThreshold;
+    uint256 ltv;
     uint256 supplyCap;
   }
 
   struct InitReserveParams {
     address asset;
-    address oracle;
     address interestRateStrategyAddress;
-    uint16 reservesCount;
+    address oracle;
     InitReserveConfig configuration;
+    uint16 reservesCount;
   }
 
   struct InitPoolParams {
