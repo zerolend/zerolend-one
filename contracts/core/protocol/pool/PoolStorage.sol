@@ -14,10 +14,15 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from './configuration/DataTypes.sol';
-import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IHook} from '../../interfaces/IHook.sol';
 
+/**
+ * @title PoolStorage Child Contract
+ * @author ZeroLend
+ * @notice Contract used as storage of the Pool contract.
+ * @dev It defines the storage layout of the Pool contract.
+ */
 contract PoolStorage {
   /// @notice Map of reserves and their data (underlyingAssetOfReserve => reserveData)
   mapping(address asset => DataTypes.ReserveData data) internal _reserves;

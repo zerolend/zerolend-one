@@ -14,23 +14,27 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {ERC721EnumerableUpgradeable, ERC721Upgradeable, IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
-import {INFTPositionManager} from './INFTPositionManager.sol';
-import {IPool, IPoolFactory} from './../../core/interfaces/IPoolFactory.sol';
+import {INFTPositionManager} from '../../core/interfaces/INFTPositionManager.sol';
+import {IPool, IPoolFactory} from '../../core/interfaces/IPoolFactory.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
+import {RewardsDataTypes, IncentivesController} from './IncentivesController.sol';
 
 /**
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable, INFTPositionManager {
+contract NFTPositionManager is IncentivesController, MulticallUpgradeable, ERC721EnumerableUpgradeable, INFTPositionManager {
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
+  /**
+   * @notice The pool factory contract that is used to create pools.
+   */
   IPoolFactory factory;
 
   /**
-   * @dev The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
+   * @notice The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
    */
   uint256 private _nextId;
 
@@ -69,10 +73,11 @@ contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable
   /**
    * @notice Initializes the NFTPositionManager contract.
    */
-  function initialize(address _factory) external initializer {
+  function initialize(address _factory, address _staking) external initializer {
     factory = IPoolFactory(_factory);
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
+    __IncentivesController_init(50000000, _staking);
     _nextId = 1;
   }
 
@@ -125,16 +130,13 @@ contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable
     IPool pool = IPool(positions[params.tokenId].pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
-    uint256 previousContractBalance = asset.balanceOf(address(this));
     pool.borrow(params.asset, params.amount, params.tokenId, params.data);
-    uint256 currentContractBalance = asset.balanceOf(address(this));
-
-    if (currentContractBalance - previousContractBalance != params.amount) {
-      revert BalanceMisMatch();
-    }
-
     asset.safeTransfer(msg.sender, params.amount);
     emit BorrowIncreased(params.asset, params.amount, params.tokenId);
+
+    // update incentives
+    bytes32 positionId = _getPositionId(params.tokenId);
+    _handleDebt(params.tokenId, pool.getTotalSupplyRaw(params.asset).debt, pool.getDebtByPosition(params.asset, positionId));
   }
 
   /**
@@ -153,15 +155,13 @@ contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable
     IPool pool = IPool(positions[params.tokenId].pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
-    uint256 previousContractBalance = asset.balanceOf(address(this));
     pool.withdraw(params.asset, params.amount, params.tokenId, params.data);
-    uint256 currentContractBalance = asset.balanceOf(address(this));
-
-    if (currentContractBalance - previousContractBalance != params.amount) {
-      revert BalanceMisMatch();
-    }
     asset.safeTransfer(msg.sender, params.amount);
     emit Withdrawal(params.asset, params.amount, params.tokenId);
+
+    // update incentives
+    bytes32 pos = _getPositionId(params.tokenId);
+    _handleSupplies(params.tokenId, pool.getTotalSupplyRaw(params.asset).collateral, pool.getBalanceByPosition(params.asset, pos));
   }
 
   /**
@@ -196,20 +196,14 @@ contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable
     asset.safeTransferFrom(msg.sender, address(this), params.amount);
     asset.forceApprove(userPosition.pool, params.amount);
 
-    bytes32 positionId = _getPositionId(params.tokenId);
-
-    uint256 previousDebtBalance = pool.getDebtByPosition(params.asset, positionId);
     uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId, params.data);
-    uint256 currentDebtBalance = pool.getDebtByPosition(params.asset, positionId);
-
-    if (previousDebtBalance - currentDebtBalance != finalRepayAmout) {
-      revert BalanceMisMatch();
-    }
 
     // Send back the extra tokens user send
-    if (currentDebtBalance == 0 && finalRepayAmout < params.amount) {
-      asset.safeTransfer(msg.sender, params.amount - finalRepayAmout);
-    }
+    asset.safeTransfer(msg.sender, finalRepayAmout);
+
+    // update incentives
+    bytes32 pos = _getPositionId(params.tokenId);
+    _handleDebt(params.tokenId, pool.getTotalSupplyRaw(params.asset).debt, pool.getDebtByPosition(params.asset, pos));
 
     emit Repay(params.asset, params.amount, params.tokenId);
   }
@@ -240,6 +234,10 @@ contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable
 
     pool.supply(params.asset, params.amount, params.tokenId, params.data);
     emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
+
+    // update incentives
+    bytes32 pos = _getPositionId(params.tokenId);
+    _handleSupplies(params.tokenId, pool.getTotalSupplyRaw(params.asset).collateral, pool.getBalanceByPosition(params.asset, pos));
   }
 
   /**
@@ -279,4 +277,22 @@ contract NFTPositionManager is MulticallUpgradeable, ERC721EnumerableUpgradeable
 
     return (assets, isBurnAllowed);
   }
+
+  function setClaimer(address user, address claimer) external override {}
+
+  function getClaimer(address user) external view override returns (address) {}
+
+  function handleAction(address user, uint256 totalSupply, uint256 userBalance) external override {}
+
+  function claimRewards(address[] calldata assets, uint256 amount, address to, address reward) external override returns (uint256) {}
+
+  function claimRewardsOnBehalf(address[] calldata assets, uint256 amount, address user, address to, address reward) external override returns (uint256) {}
+
+  function claimRewardsToSelf(address[] calldata assets, uint256 amount, address reward) external override returns (uint256) {}
+
+  function claimAllRewards(address[] calldata assets, address to) external override returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
+
+  function claimAllRewardsOnBehalf(address[] calldata assets, address user, address to) external override returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
+
+  function claimAllRewardsToSelf(address[] calldata assets) external override returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {}
 }

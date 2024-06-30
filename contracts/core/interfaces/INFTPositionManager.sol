@@ -108,6 +108,7 @@ interface INFTPositionManager {
     address pool;
     uint256 amount;
     uint256 tokenId;
+    // bytes32 positionId;
     DataTypes.ExtraData data;
   }
 

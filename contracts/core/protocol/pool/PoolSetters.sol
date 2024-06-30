@@ -20,14 +20,14 @@ import {FlashLoanLogic} from './logic/FlashLoanLogic.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {LiquidationLogic} from './logic/LiquidationLogic.sol';
 import {PercentageMath} from './utils/PercentageMath.sol';
-import {PoolIncentives} from './PoolIncentives.sol';
+import {PoolGetters} from './PoolGetters.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 import {PoolRentrancyGuard} from './PoolRentrancyGuard.sol';
 import {ReserveConfiguration} from './configuration/ReserveConfiguration.sol';
 import {SupplyLogic} from './logic/SupplyLogic.sol';
 import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 
-abstract contract PoolSetters is PoolRentrancyGuard, PoolIncentives {
+abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using PercentageMath for uint256;
   using TokenConfiguration for address;
@@ -45,10 +45,6 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolIncentives {
     );
 
     if (address(_hook) != address(0)) _hook.afterSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
-
-    // track incentives.
-    // TODO: capture balances
-    _updateIncentives(asset, pos, 0);
   }
 
   function _withdraw(
@@ -74,10 +70,6 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolIncentives {
     PoolLogic.executeMintToTreasury(_reserves, asset);
 
     if (address(_hook) != address(0)) _hook.afterWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
-
-    // track incentives.
-    // TODO: capture balances
-    _updateIncentives(asset, pos, 0);
   }
 
   function _borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LENDING) {
@@ -94,10 +86,6 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolIncentives {
     );
 
     if (address(_hook) != address(0)) _hook.afterBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
-
-    // track incentives.
-    // TODO: capture balances
-    _updateIncentives(asset, pos, 0);
   }
 
   function _repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 paybackAmount) {
@@ -112,10 +100,6 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolIncentives {
     );
 
     if (address(_hook) != address(0)) _hook.afterRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
-
-    // track incentives.
-    // TODO: capture balances
-    _updateIncentives(asset, pos, 0);
   }
 
   function _liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt, DataTypes.ExtraData memory data) internal nonReentrant(RentrancyKind.LIQUIDATION) {
@@ -139,11 +123,6 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolIncentives {
     );
 
     if (address(_hook) != address(0)) _hook.afterLiquidate(msg.sender, pos, collat, debt, debtAmt, address(this), data.hookData);
-
-    // track incentives.
-    // TODO: capture balances
-    _updateIncentives(collat, pos, 0);
-    _updateIncentives(debt, pos, 0);
   }
 
   function _flashLoan(
