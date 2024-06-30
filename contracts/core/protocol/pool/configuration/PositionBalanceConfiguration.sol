@@ -17,77 +17,121 @@ import {Errors} from '../utils/Errors.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 
+/**
+ * @title PositionBalanceConfiguration
+ * @author ZeroLend
+ * @notice Used to do math between the supply/debt shares variables
+ */
 library PositionBalanceConfiguration {
   using WadRayMath for uint256;
 
-  function mintSupply(
+  /**
+   * @notice Deposits `amount` units of an asset as collateral for a position
+   * @dev Converts `amount` into `shares` and `index` so that rebase values can be tracked properly.
+   * @param self The position to update
+   * @param supply The total supply information of the asset
+   * @param amount The amount to deposit
+   * @param index The current liquidity index
+   * @return isFirst True if this is the first supply for the position
+   * @return sharesMinted How much shares was minted in this operation
+   */
+  function depositCollateral(
     DataTypes.PositionBalance storage self,
     DataTypes.ReserveSupplies storage supply,
     uint256 amount,
     uint128 index
-  ) internal returns (bool isFirst, uint256 supplyMinted) {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
-
+  ) internal returns (bool isFirst, uint256 sharesMinted) {
+    sharesMinted = amount.rayDiv(index);
+    require(sharesMinted != 0, Errors.INVALID_MINT_AMOUNT);
     uint256 scaledBalance = self.supplyShares;
-
     self.lastSupplyLiquidtyIndex = index;
-    self.supplyShares += amountScaled;
-
-    supply.collateral += amountScaled;
-
-    return (scaledBalance == 0, amountScaled);
+    self.supplyShares += sharesMinted;
+    supply.collateral += sharesMinted;
+    isFirst = scaledBalance == 0;
   }
 
-  function mintDebt(
+  /**
+   * @notice Borrows `amount` units of an asset as debt for a position
+   * @dev Converts `amount` into `shares` and `index` so that rebase values can be tracked properly.
+   * @param self The position to update
+   * @param supply The total supply information of the asset
+   * @param amount The amount to borrow
+   * @param index The current liquidity index
+   * @return isFirst True if this is the first borrow for the position
+   * @return sharesMinted How much shares was minted in this operation
+   */
+  function borrowDebt(
     DataTypes.PositionBalance storage self,
     DataTypes.ReserveSupplies storage supply,
     uint256 amount,
     uint128 index
-  ) internal returns (bool isFirst, uint256 supplyMinted) {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
-
+  ) internal returns (bool isFirst, uint256 sharesMinted) {
+    sharesMinted = amount.rayDiv(index);
+    require(sharesMinted != 0, Errors.INVALID_MINT_AMOUNT);
     uint256 scaledBalance = self.debtShares;
-
     self.lastDebtLiquidtyIndex = index;
-    self.debtShares += amountScaled;
-
-    supply.debt += amountScaled;
-
-    return (scaledBalance == 0, amountScaled);
+    self.debtShares += sharesMinted;
+    supply.debt += sharesMinted;
+    isFirst = scaledBalance == 0;
   }
 
-  function burnSupply(DataTypes.PositionBalance storage self, DataTypes.ReserveSupplies storage supply, uint256 amount, uint128 index) internal returns (uint256 supplyBurnt) {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
-
+  /**
+   * @notice Withdraws `amount` units of an asset as collateral for a position
+   * @dev Converts `amount` into `shares` and `index` so that rebase values can be tracked properly.
+   * @param self The position to update
+   * @param supply The total supply information of the asset
+   * @param amount The amount to withdraw
+   * @param index The current liquidity index
+   * @return sharesBurnt How much shares was burnt
+   */
+  function withdrawCollateral(
+    DataTypes.PositionBalance storage self,
+    DataTypes.ReserveSupplies storage supply,
+    uint256 amount,
+    uint128 index
+  ) internal returns (uint256 sharesBurnt) {
+    sharesBurnt = amount.rayDiv(index);
+    require(sharesBurnt != 0, Errors.INVALID_BURN_AMOUNT);
     self.lastSupplyLiquidtyIndex = index;
-    self.supplyShares -= amountScaled;
-
-    supply.collateral -= amountScaled;
-
-    return amountScaled;
+    self.supplyShares -= sharesBurnt;
+    supply.collateral -= sharesBurnt;
   }
 
-  function burnDebt(DataTypes.PositionBalance storage self, DataTypes.ReserveSupplies storage supply, uint256 amount, uint128 index) internal returns (uint256 supplyBurnt) {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
-
+  /**
+   * @notice Repays `amount` units of an asset as debt for a position
+   * @dev Converts `amount` into `shares` and `index` so that rebase values can be tracked properly.
+   * @param self The position to update
+   * @param supply The total supply information of the asset
+   * @param amount The amount to repay
+   * @param index The current liquidity index
+   * @return sharesBurnt How much shares was burnt
+   */
+  function repayDebt(DataTypes.PositionBalance storage self, DataTypes.ReserveSupplies storage supply, uint256 amount, uint128 index) internal returns (uint256 sharesBurnt) {
+    sharesBurnt = amount.rayDiv(index);
+    require(sharesBurnt != 0, Errors.INVALID_BURN_AMOUNT);
     self.lastDebtLiquidtyIndex = index;
-    self.debtShares -= amountScaled;
-
-    supply.debt -= amountScaled;
-
-    return amountScaled;
+    self.debtShares -= sharesBurnt;
+    supply.debt -= sharesBurnt;
   }
 
-  function getSupply(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 supply) {
+  /**
+   * @notice Get the rebased assets worth of collateral the position has
+   * @dev Converts `shares` into `amount` and returns the rebased value
+   * @param self The position to fetch the value for
+   * @param index The current liquidity index
+   */
+  function getCollateralBalance(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 supply) {
     uint256 increase = self.supplyShares.rayMul(index) - self.supplyShares.rayMul(self.lastSupplyLiquidtyIndex);
     return self.supplyShares + increase;
   }
 
-  function getDebt(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 debt) {
+  /**
+   * @notice Get the rebased assets worth of debt the position has
+   * @dev Converts `shares` into `amount` and returns the rebased value
+   * @param self The position to fetch the value for
+   * @param index The current liquidity index
+   */
+  function getDebtBalance(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 debt) {
     uint256 increase = self.debtShares.rayMul(index) - self.debtShares.rayMul(self.lastDebtLiquidtyIndex);
     return self.debtShares + increase;
   }

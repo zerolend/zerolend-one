@@ -71,7 +71,7 @@ library SupplyLogic {
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
 
     DataTypes.PositionBalance storage bal = balances[params.asset][params.position];
-    (bool isFirst, uint256 minted) = bal.mintSupply(totalSupplies[params.asset], params.amount, reserveCache.nextLiquidityIndex);
+    (bool isFirst, uint256 minted) = bal.depositCollateral(totalSupplies[params.asset], params.amount, reserveCache.nextLiquidityIndex);
 
     if (isFirst) {
       if (ValidationLogic.validateUseAsCollateral(userConfig, reserveCache.reserveConfiguration)) {
@@ -122,7 +122,7 @@ library SupplyLogic {
     }
 
     // Burn debt. Which is burn supply, update total supply and send tokens to the user
-    balances[params.asset][params.position].burnSupply(totalSupplies[params.asset], params.amount, reserveCache.nextLiquidityIndex);
+    balances[params.asset][params.position].withdrawCollateral(totalSupplies[params.asset], params.amount, reserveCache.nextLiquidityIndex);
     IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
     if (isCollateral && userConfig.isBorrowingAny()) ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);

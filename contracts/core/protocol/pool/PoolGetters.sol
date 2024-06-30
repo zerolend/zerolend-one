@@ -34,7 +34,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
 
   /// @inheritdoc IPool
   function getBalanceByPosition(address asset, bytes32 positionId) external view returns (uint256 balance) {
-    return _balances[asset][positionId].getSupply(_reserves[asset].liquidityIndex);
+    return _balances[asset][positionId].getCollateralBalance(_reserves[asset].liquidityIndex);
   }
 
   /// @inheritdoc IPool
@@ -45,7 +45,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
   /// @inheritdoc IPool
   function getBalance(address asset, address who, uint256 index) external view returns (uint256 balance) {
     bytes32 positionId = who.getPositionId(index);
-    return _balances[asset][positionId].getSupply(_reserves[asset].liquidityIndex);
+    return _balances[asset][positionId].getCollateralBalance(_reserves[asset].liquidityIndex);
   }
 
   /// @inheritdoc IPool
@@ -66,13 +66,13 @@ abstract contract PoolGetters is PoolStorage, IPool {
 
   /// @inheritdoc IPool
   function getDebtByPosition(address asset, bytes32 positionId) external view returns (uint256 debt) {
-    return _balances[asset][positionId].getDebt(_reserves[asset].variableBorrowIndex);
+    return _balances[asset][positionId].getDebtBalance(_reserves[asset].variableBorrowIndex);
   }
 
   /// @inheritdoc IPool
   function getDebt(address asset, address who, uint256 index) external view returns (uint256 debt) {
     bytes32 positionId = who.getPositionId(index);
-    return _balances[asset][positionId].getDebt(_reserves[asset].variableBorrowIndex);
+    return _balances[asset][positionId].getDebtBalance(_reserves[asset].variableBorrowIndex);
   }
 
   /// @inheritdoc IPool

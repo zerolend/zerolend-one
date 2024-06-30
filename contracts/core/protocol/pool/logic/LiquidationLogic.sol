@@ -161,7 +161,7 @@ library LiquidationLogic {
       emit ReserveUsedAsCollateralDisabled(params.collateralAsset, params.position);
     }
 
-    _burnDebtTokens(params, vars, balances[params.debtAsset], totalSupplies[params.debtAsset]);
+    _repayDebtTokens(params, vars, balances[params.debtAsset], totalSupplies[params.debtAsset]);
 
     debtReserve.updateInterestRates(vars.debtReserveCache, params.debtAsset, IPool(params.pool).getReserveFactor(), vars.actualDebtToLiquidate, 0, '', '');
 
@@ -220,7 +220,7 @@ library LiquidationLogic {
     );
 
     // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-    balances[params.collateralAsset][params.position].burnSupply(
+    balances[params.collateralAsset][params.position].withdrawCollateral(
       totalSupplies[params.collateralAsset],
       vars.actualCollateralToLiquidate,
       collateralReserveCache.nextLiquidityIndex
@@ -235,13 +235,13 @@ library LiquidationLogic {
    * @param params The additional parameters needed to execute the liquidation function
    * @param vars the executeLiquidationCall() function local vars
    */
-  function _burnDebtTokens(
+  function _repayDebtTokens(
     DataTypes.ExecuteLiquidationCallParams memory params,
     LiquidationCallLocalVars memory vars,
     mapping(bytes32 => DataTypes.PositionBalance) storage balances,
     DataTypes.ReserveSupplies storage totalSupplies
   ) internal {
-    uint256 burnt = balances[params.position].burnDebt(totalSupplies, vars.actualDebtToLiquidate, vars.debtReserveCache.nextVariableBorrowIndex);
+    uint256 burnt = balances[params.position].repayDebt(totalSupplies, vars.actualDebtToLiquidate, vars.debtReserveCache.nextVariableBorrowIndex);
     vars.debtReserveCache.nextScaledVariableDebt = burnt;
   }
 

@@ -68,7 +68,7 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    (bool isFirstBorrowing, ) = b.mintDebt(totalSupplies[params.asset], params.amount, reserveCache.nextVariableBorrowIndex);
+    (bool isFirstBorrowing, ) = b.borrowDebt(totalSupplies[params.asset], params.amount, reserveCache.nextVariableBorrowIndex);
 
     // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
@@ -106,7 +106,7 @@ library BorrowLogic {
 
     // Allows a user to max repay without leaving dust from interest.
     if (params.amount == type(uint256).max) {
-      params.amount = b.getDebt(reserveCache.nextVariableBorrowIndex);
+      params.amount = b.getDebtBalance(reserveCache.nextVariableBorrowIndex);
       paybackAmount = params.amount;
     }
 
@@ -116,7 +116,7 @@ library BorrowLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData);
 
-    b.burnDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextVariableBorrowIndex);
+    b.repayDebt(totalSupplies[params.asset], paybackAmount, reserveCache.nextVariableBorrowIndex);
     reserveCache.nextScaledVariableDebt = totalSupplies[params.asset].debt;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
