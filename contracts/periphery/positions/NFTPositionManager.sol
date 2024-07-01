@@ -198,10 +198,17 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
     asset.safeTransferFrom(msg.sender, address(this), params.amount);
     asset.forceApprove(userPosition.pool, params.amount);
 
+    uint256 previousDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
     uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId, params.data);
+    uint256 currentDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
 
-    // Send back the extra tokens user send
-    asset.safeTransfer(msg.sender, finalRepayAmout);
+    if (previousDebtBalance - currentDebtBalance != finalRepayAmout) {
+      revert BalanceMisMatch();
+    }
+
+    if (currentDebtBalance == 0 && finalRepayAmout < params.amount) {
+      asset.safeTransfer(msg.sender, params.amount - finalRepayAmout);
+    }
 
     // update incentives
     _handleDebt(address(pool), params.asset, params.tokenId);
