@@ -31,7 +31,7 @@ describe('Pool', () => {
       await pool.withdrawSimple(tokenA.target, eth('1'), 0);
     });
 
-    it('should give right balances for supploed positions', async () => {
+    it('should give right balances for supplied positions', async () => {
       await pool.supplySimple(tokenA.target, eth('1'), 0);
       await pool.supplySimple(tokenA.target, eth('2'), 1);
 
