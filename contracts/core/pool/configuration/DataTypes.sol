@@ -20,11 +20,11 @@ library DataTypes {
     // the liquidity index. Expressed in ray
     uint128 liquidityIndex;
     // the current supply rate. Expressed in ray
-    uint128 currentLiquidityRate;
+    uint128 liquidityRate;
     // variable borrow index. Expressed in ray
     uint128 borrowIndex;
-    // the current variable borrow rate. Expressed in ray
-    uint128 currentBorrowRate;
+    // the current borrow rate. Expressed in ray
+    uint128 borrowRate;
     // timestamp of last update
     uint40 lastUpdateTimestamp;
     // the id of the reserve. Represents the position in the list of the active reserves

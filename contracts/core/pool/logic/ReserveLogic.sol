@@ -60,7 +60,7 @@ library ReserveLogic {
       //if the index was updated in the same block, no need to perform any calculation
       return reserve.liquidityIndex;
     } else {
-      return MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(reserve.liquidityIndex);
+      return MathUtils.calculateLinearInterest(reserve.liquidityRate, timestamp).rayMul(reserve.liquidityIndex);
     }
   }
 
@@ -79,7 +79,7 @@ library ReserveLogic {
       //if the index was updated in the same block, no need to perform any calculation
       return reserve.borrowIndex;
     } else {
-      return MathUtils.calculateCompoundedInterest(reserve.currentBorrowRate, timestamp).rayMul(reserve.borrowIndex);
+      return MathUtils.calculateCompoundedInterest(reserve.borrowRate, timestamp).rayMul(reserve.borrowIndex);
     }
   }
 
@@ -132,7 +132,7 @@ library ReserveLogic {
 
   struct UpdateInterestRatesLocalVars {
     uint256 nextLiquidityRate;
-    uint256 nextVariableRate;
+    uint256 nextBorrowRate;
     uint256 totalVariableDebt;
   }
 
@@ -162,7 +162,7 @@ library ReserveLogic {
 
     vars.totalVariableDebt = _cache.nextDebtShares.rayMul(_cache.nextBorrowIndex);
 
-    (vars.nextLiquidityRate, vars.nextVariableRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
+    (vars.nextLiquidityRate, vars.nextBorrowRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
       .calculateInterestRates(
       _position,
       _data,
@@ -175,15 +175,13 @@ library ReserveLogic {
       })
     );
 
-    _reserve.currentLiquidityRate = vars.nextLiquidityRate.toUint128();
-    _reserve.currentBorrowRate = vars.nextVariableRate.toUint128();
+    _reserve.liquidityRate = vars.nextLiquidityRate.toUint128();
+    _reserve.borrowRate = vars.nextBorrowRate.toUint128();
 
     if (_liquidityAdded > 0) totalSupplies.underlyingBalance += _liquidityAdded.toUint128();
     else if (_liquidityTaken > 0) totalSupplies.underlyingBalance -= _liquidityTaken.toUint128();
 
-    emit ReserveDataUpdated(
-      _reserveAddress, vars.nextLiquidityRate, vars.nextVariableRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex
-    );
+    emit ReserveDataUpdated(_reserveAddress, vars.nextLiquidityRate, vars.nextBorrowRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex);
   }
 
   struct AccrueToTreasuryLocalVars {
@@ -224,7 +222,7 @@ library ReserveLogic {
    */
   function _updateIndexes(DataTypes.ReserveData storage _reserve, DataTypes.ReserveCache memory _cache) internal {
     // Only cumulating on the supply side if there is any income being produced
-    // The case of Reserve Factor 100% is not a problem (currentLiquidityRate == 0),
+    // The case of Reserve Factor 100% is not a problem (liquidityRate == 0),
     // as liquidity index should not be updated
     if (_cache.currLiquidityRate != 0) {
       uint256 cumulatedLiquidityInterest = MathUtils.calculateLinearInterest(_cache.currLiquidityRate, _cache.reserveLastUpdateTimestamp);
@@ -257,9 +255,9 @@ library ReserveLogic {
     DataTypes.ReserveCache memory _cache;
 
     _cache.currLiquidityIndex = _cache.nextLiquidityIndex = reserve.liquidityIndex;
-    _cache.currLiquidityRate = reserve.currentLiquidityRate;
+    _cache.currLiquidityRate = reserve.liquidityRate;
     _cache.currBorrowIndex = _cache.nextBorrowIndex = reserve.borrowIndex;
-    _cache.currBorrowRate = reserve.currentBorrowRate;
+    _cache.currBorrowRate = reserve.borrowRate;
     _cache.reserveConfiguration = reserve.configuration;
     _cache.reserveLastUpdateTimestamp = reserve.lastUpdateTimestamp;
     _cache.currDebtShares = _cache.nextDebtShares = supplies.debtShares;

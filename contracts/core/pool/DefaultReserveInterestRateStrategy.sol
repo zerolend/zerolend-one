@@ -124,8 +124,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
       vars.currentBorrowRate += _variableRateSlope1.rayMul(vars.borrowUsageRatio).rayDiv(OPTIMAL_USAGE_RATIO);
     }
 
-    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalVariableDebt, vars.currentBorrowRate)
-      .rayMul(vars.supplyUsageRatio)
+    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalVariableDebt, vars.currentBorrowRate).rayMul(vars.supplyUsageRatio)
       .percentMul(PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor);
 
     return (vars.currentLiquidityRate, vars.currentBorrowRate);
