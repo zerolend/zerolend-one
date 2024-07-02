@@ -12,7 +12,6 @@ The ZeroLend protocol allows users to take out over-collateralized loans for ERC
 
 Here we test invariant checks on the supply and withdraw functions of the Pool contract. Whenever a user supplies an asset, we ensure that we are crediting the user properly. And at the same time whenever a user tries to withdraw a certain number of assets, they have enough supply to do so.
 
-
 # Getting started
 
 Install `certora-cli` package with `pip install certora-cli`. We recommend using a python virtual environment such as `virtualenv`.
@@ -34,4 +33,7 @@ certoraMutate --prover_conf test/certora/confs/ERC20.conf --mutation_conf test/c
 ```
 
 # todo
+
 check if there's any way where pool can have it's liquidity index less than 1 ray
+ensure that indexes and rates are always increasing
+ensure that total virtual supply is always equal to erc20 token supply

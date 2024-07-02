@@ -97,7 +97,7 @@ library BorrowLogic {
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
-    emit Borrow(params.asset, params.user, params.position, params.amount, reserve.currentBorrowRate);
+    emit Borrow(params.asset, params.user, params.position, params.amount, reserve.borrowRate);
   }
 
   /**

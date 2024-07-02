@@ -25,7 +25,7 @@ export async function deployCore() {
   const poolLogic = await PoolLogic.deploy();
   const supplyLogic = await SupplyLogic.deploy();
 
-  const Pool = await ethers.getContractFactory('Pool', {
+  const Pool = await ethers.getContractFactory('MockPool', {
     libraries: {
       BorrowLogic: borrowLogic.target,
       FlashLoanLogic: flashLoanLogic.target,
