@@ -53,6 +53,11 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
+  function revision() external pure virtual returns (uint256) {
+    return 1;
+  }
+
+  /// @inheritdoc IPool
   function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public virtual override {
     _supply(asset, amount, index, data);
   }

@@ -19,12 +19,15 @@ import {IHook, IPool, IPoolFactory} from '../../interfaces/IPool.sol';
 import {PoolStorage} from './PoolStorage.sol';
 import {DataTypes} from './configuration/DataTypes.sol';
 import {PositionBalanceConfiguration} from './configuration/PositionBalanceConfiguration.sol';
-import {ReserveSuppliesConfiguration} from './configuration/ReserveSuppliesConfiguration.sol';
 
+import {ReserveSuppliesConfiguration} from './configuration/ReserveSuppliesConfiguration.sol';
 import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 import {ReserveLogic} from './logic/ReserveLogic.sol';
 
+/**
+ * @notice Provides all the getters and the view functions for the pool
+ */
 abstract contract PoolGetters is PoolStorage, IPool {
   using ReserveLogic for DataTypes.ReserveData;
   using TokenConfiguration for address;

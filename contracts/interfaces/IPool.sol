@@ -143,6 +143,12 @@ interface IPool {
   event ReserveInitialized(address indexed asset, address oracle, address interestRateStrategyAddress);
 
   /**
+   * Returns the version of the pool implementation
+   * @return version The version of this pool's implementation
+   */
+  function revision() external view returns (uint256 version);
+
+  /**
    * @notice Initializes the pool with the given parameters. This call sets all the assets and their configs (LTV/LT/Oracle etc..)
    * in one call. Since assets once created cannot be changed, this has to be done within the initialize call itself.
    * @dev This is function is called by the factory contract.

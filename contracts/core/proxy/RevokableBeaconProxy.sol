@@ -111,18 +111,6 @@ contract RevokableBeaconProxy is IRevokableBeaconProxy, Proxy {
     revoked = _getBeacon() == address(0);
   }
 
-  function _getBeacon() private view returns (address) {
-    return StorageSlot.getAddressSlot(_BEACON_SLOT).value;
-  }
-
-  function _getAdmin() private view returns (address) {
-    return StorageSlot.getAddressSlot(_ADMIN_SLOT).value;
-  }
-
-  function _getFrozenImpl() private view returns (address) {
-    return StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value;
-  }
-
   /**
    * @notice Stores a new beacon in the EIP1967 beacon slot.
    */
@@ -141,5 +129,17 @@ contract RevokableBeaconProxy is IRevokableBeaconProxy, Proxy {
     StorageSlot.getAddressSlot(_BEACON_SLOT).value = address(0);
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = address(0);
     StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = impl;
+  }
+
+  function _getBeacon() private view returns (address) {
+    return StorageSlot.getAddressSlot(_BEACON_SLOT).value;
+  }
+
+  function _getAdmin() private view returns (address) {
+    return StorageSlot.getAddressSlot(_ADMIN_SLOT).value;
+  }
+
+  function _getFrozenImpl() private view returns (address) {
+    return StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value;
   }
 }
