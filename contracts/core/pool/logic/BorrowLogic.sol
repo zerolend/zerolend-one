@@ -70,6 +70,7 @@ library BorrowLogic {
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
     (bool isFirstBorrowing,) = b.borrowDebt(totalSupplies, params.amount, cache.nextBorrowIndex);
+    cache.nextDebtShares = totalSupplies.debtShares;
 
     // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
