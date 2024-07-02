@@ -18,6 +18,13 @@ import {DataTypes, IBeacon, IPool, IPoolConfigurator, IPoolFactory} from '../../
 import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
+/**
+ * @title Pool Factory Contract
+ * @author ZeroLend
+ * @notice Creates new instances of a Pool
+ * @dev This is a beacon contract that holds the latest implementation of a pool. Pools once created need to also
+ * have some deposit added into it else it will be vulnerable to a liquidity index manipulation attack.
+ */
 contract PoolFactory is IPoolFactory, Ownable {
   /// @inheritdoc IBeacon
   address public implementation;
@@ -46,6 +53,11 @@ contract PoolFactory is IPoolFactory, Ownable {
   /// @inheritdoc IPoolFactory
   uint256 public liquidationProtocolFeePercentage;
 
+  /**
+   * Inits the factory with an implementation of the pool.
+   * @param _implementation The latest implementation of the pool.
+   * @dev Sets the treasury as the `msg.sender`
+   */
   constructor(address _implementation) {
     implementation = _implementation;
     treasury = msg.sender;

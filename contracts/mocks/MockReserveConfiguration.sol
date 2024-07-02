@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../../core/pool/configuration/DataTypes.sol';
-import {ReserveConfiguration} from '../../core/pool/configuration/ReserveConfiguration.sol';
+import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
+import {ReserveConfiguration} from '../core/pool/configuration/ReserveConfiguration.sol';
 
 contract MockReserveConfiguration {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;

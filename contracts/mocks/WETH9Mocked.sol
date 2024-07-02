@@ -13,8 +13,16 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IIncentivesController} from '../../interfaces/IIncentivesController.sol';
+import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
-contract MockIncentivesController is IIncentivesController {
-  function handleAction(address, uint256, uint256) external override {}
+abstract contract WETH9Mocked is ERC20 {
+  function mint(uint256 value) public returns (bool) {
+    _mint(msg.sender, value);
+    return true;
+  }
+
+  function mint(address account, uint256 value) public returns (bool) {
+    _mint(account, value);
+    return true;
+  }
 }

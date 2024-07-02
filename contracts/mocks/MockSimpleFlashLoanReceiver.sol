@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {FlashLoanReceiverBase, IPool} from '../../core/flashloan/FlashLoanReceiverBase.sol';
-import {MintableERC20} from '../tokens/MintableERC20.sol';
+import {FlashLoanReceiverBase, IPool} from '../core/flashloan/FlashLoanReceiverBase.sol';
+import {MintableERC20} from './MintableERC20.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';

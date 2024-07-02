@@ -40,4 +40,21 @@ describe('Pool Factory', () => {
 
     expect(await poolFactory.poolsLength()).eq(1);
   });
+
+  it('should update pool implementation properly', async () => {
+    const input: DataTypes.InitPoolParamsStruct = {
+      hook: ZeroAddress,
+      assets: [tokenA.target, tokenB.target, tokenC.target],
+      rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
+      sources: [oracleA.target, oracleB.target, oracleC.target],
+      configurations: [basicConfig, basicConfig, basicConfig],
+    };
+
+    expect(await poolFactory.poolsLength()).eq(0);
+
+    const tx = await poolFactory.createPool(input);
+    await expect(tx).to.emit(poolFactory, 'PoolCreated');
+
+    expect(await poolFactory.poolsLength()).eq(1);
+  });
 });

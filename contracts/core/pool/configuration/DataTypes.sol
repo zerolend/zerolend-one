@@ -228,4 +228,10 @@ library DataTypes {
     address[] sources;
     DataTypes.InitReserveConfig[] configurations;
   }
+
+  struct SeedPoolParams {
+    address pool;
+    address[] assets;
+    uint256[] amounts;
+  }
 }
