@@ -6,8 +6,8 @@ import { PoolFactory } from '../../../types/contracts/core/pool/PoolFactory';
 import { Addressable, ZeroAddress } from 'ethers';
 import { basicConfig } from '../fixtures/pool';
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
+import { ethers } from 'hardhat';
 
 describe.only('Pool Factory', () => {
   let poolFactory: PoolFactory;
@@ -35,15 +35,11 @@ describe.only('Pool Factory', () => {
     PoolLogic: string | Addressable;
     SupplyLogic: string | Addressable;
   }
-  before(async () => {
-    const fixture = await deployCore();
-    [,,,,,,,,addr1, addr2] = await ethers.getSigners();
-    ({owner, poolImpl,governance, poolFactory, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } = fixture);
-  });
 
   before(async () => {
     const fixture = await deployCore();
-    ({ poolFactory, libraries, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } =
+    [,,,,,,,,addr1, addr2] = await ethers.getSigners();
+    ({owner, poolImpl,governance, poolFactory, libraries, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } =
       fixture);
   });
 
