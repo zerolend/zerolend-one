@@ -1,4 +1,4 @@
-import { parseEther as eth } from 'ethers';
+import { parseEther as eth, MaxUint256 } from 'ethers';
 import { MintableERC20 } from '../../../types';
 import { Pool } from '../../../types/contracts/core/pool';
 import { deployPool, RAY } from '../fixtures/pool';
@@ -71,17 +71,55 @@ describe.only('Pool - Liquidity Index', () => {
     expect(state.currentBorrowRate).approximately('62222222222222222222222222', '10000000');
   });
 
-  // it('after supplying and some borrowing, liquidity index should increase after some time', async () => {
-  //   await pool.supplySimple(tokenA.target, eth('1'), 0);
-  //   await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+  it.only('after supplying and some borrowing, liquidity index should increase after some time', async () => {
+    await pool.supplySimple(tokenA.target, eth('1'), 0);
+    await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
 
-  //   const reserveBefore = await pool.getReserveData(tokenA.target);
-  //   await time.increase(86400 * 2000); // 2000 days
+    const reserveBefore = await pool.getReserveData(tokenA.target);
+    await time.increase(86400 * 2000); // 2000 days
 
-  //   await pool.repaySimple(tokenA.target, eth('0.01'), 0);
-  //   const reserveAfter = await pool.getReserveData(tokenA.target);
+    await pool.repaySimple(tokenA.target, eth('0.01'), 0);
+    const reserveAfter = await pool.getReserveData(tokenA.target);
 
-  //   expect(reserveBefore.liquidityIndex).eq(RAY);
-  //   expect(reserveAfter.liquidityIndex).gt(RAY);
-  // });
+    expect(reserveBefore.liquidityIndex).eq(RAY);
+    expect(reserveAfter.liquidityIndex).approximately(RAY, '200000000000000000000000000');
+  });
+
+  it.only('after supplying, borrowing and a full repay. The liquidity rate should be 0', async () => {
+    await pool.supplySimple(tokenA.target, eth('1'), 0);
+    await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+
+    const reserveBefore = await pool.getReserveData(tokenA.target);
+    await time.increase(86400 * 2000); // 2000 days
+
+    await pool.repaySimple(tokenA.target, MaxUint256, 0);
+    const reserveAfter = await pool.getReserveData(tokenA.target);
+
+    console.log(
+      'currentLiquidityRate',
+      reserveBefore.currentLiquidityRate,
+      reserveAfter.currentLiquidityRate
+    );
+    console.log(
+      'currentBorrowRate',
+      reserveBefore.currentBorrowRate,
+      reserveAfter.currentBorrowRate
+    );
+    console.log(
+      'accruedToTreasuryShares',
+      reserveBefore.accruedToTreasuryShares,
+      reserveAfter.accruedToTreasuryShares
+    );
+
+    expect(reserveBefore.currentLiquidityRate).eq(RAY);
+    expect(reserveAfter.currentLiquidityRate).approximately(RAY, '200000000000000000000000000');
+  });
+
+  describe('- currentLiquidityRate', () => {
+    // todo
+  });
+
+  describe('- accruedToTreasuryShares', () => {
+    // todo
+  });
 });
