@@ -180,7 +180,7 @@ library ValidationLogic {
 
     //add the current already borrowed amount to the amount requested to calculate the total collateral needed.
     vars.collateralNeededInBaseCurrency = (vars.userDebtInBaseCurrency + vars.amountInBaseCurrency).percentDiv(vars.currentLtv); //LTV is
-      // calculated in percentage
+    // calculated in percentage
 
     require(vars.collateralNeededInBaseCurrency <= vars.userCollateralInBaseCurrency, Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
   }
