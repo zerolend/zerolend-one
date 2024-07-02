@@ -44,11 +44,11 @@ library BorrowLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
-    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
+    DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteBorrowParams memory params
   ) public {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
+    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
 
     reserve.updateState(params.reserveFactor, cache);
 
@@ -69,14 +69,30 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    (bool isFirstBorrowing,) = b.borrowDebt(totalSupplies[params.asset], params.amount, cache.nextBorrowIndex);
+    (bool isFirstBorrowing,) = b.borrowDebt(totalSupplies, params.amount, cache.nextBorrowIndex);
 
     // if first borrowing, flag that
     if (isFirstBorrowing) userConfig.setBorrowing(reserve.id, true);
 
     reserve.updateInterestRates(
-      cache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData
+      totalSupplies,
+      cache,
+      params.asset,
+      IPool(params.pool).getReserveFactor(),
+      0,
+      params.amount,
+      params.position,
+      params.data.interestRateData
     );
+
+    // DataTypes.ReserveData storage _reserve,
+    // DataTypes.ReserveCache memory _cache,
+    // address _reserveAddress,
+    // uint256 _reserveFactor,
+    // uint256 _liquidityAdded,
+    // uint256 _liquidityTaken,
+    // bytes32 _position,
+    // bytes memory _data
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
@@ -116,7 +132,14 @@ library BorrowLogic {
     if (params.amount < paybackAmount) paybackAmount = params.amount;
 
     reserve.updateInterestRates(
-      cache, params.asset, IPool(params.pool).getReserveFactor(), paybackAmount, 0, params.position, params.data.interestRateData
+      totalSupplies,
+      cache,
+      params.asset,
+      IPool(params.pool).getReserveFactor(),
+      paybackAmount,
+      0,
+      params.position,
+      params.data.interestRateData
     );
 
     // update balances and total supplies
