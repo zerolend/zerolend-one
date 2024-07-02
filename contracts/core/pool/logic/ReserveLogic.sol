@@ -149,6 +149,7 @@ library ReserveLogic {
    */
   function updateInterestRates(
     DataTypes.ReserveData storage _reserve,
+    DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ReserveCache memory _cache,
     address _reserveAddress,
     uint256 _reserveFactor,
@@ -176,6 +177,9 @@ library ReserveLogic {
 
     _reserve.currentLiquidityRate = vars.nextLiquidityRate.toUint128();
     _reserve.currentBorrowRate = vars.nextVariableRate.toUint128();
+
+    if (_liquidityAdded > 0) totalSupplies.underlyingBalance += _liquidityAdded.toUint128();
+    else if (_liquidityTaken > 0) totalSupplies.underlyingBalance -= _liquidityTaken.toUint128();
 
     emit ReserveDataUpdated(
       _reserveAddress, vars.nextLiquidityRate, vars.nextVariableRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex

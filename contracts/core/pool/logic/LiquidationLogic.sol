@@ -177,7 +177,14 @@ library LiquidationLogic {
     _repayDebtTokens(params, vars, balances[params.debtAsset], totalSupplies[params.debtAsset]);
 
     debtReserve.updateInterestRates(
-      vars.debtReserveCache, params.debtAsset, IPool(params.pool).getReserveFactor(), vars.actualDebtToLiquidate, 0, '', ''
+      totalSupplies[params.debtAsset],
+      vars.debtReserveCache,
+      params.debtAsset,
+      IPool(params.pool).getReserveFactor(),
+      vars.actualDebtToLiquidate,
+      0,
+      '',
+      ''
     );
 
     _burnCollateralTokens(
@@ -229,6 +236,7 @@ library LiquidationLogic {
     DataTypes.ReserveCache memory collateralReserveCache = collateralReserve.cache(totalSupplies);
     collateralReserve.updateState(params.reserveFactor, collateralReserveCache);
     collateralReserve.updateInterestRates(
+      totalSupplies,
       collateralReserveCache,
       params.collateralAsset,
       0,

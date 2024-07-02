@@ -93,6 +93,7 @@ library DataTypes {
   struct ReserveSupplies {
     uint256 debtShares;
     uint256 supplyShares;
+    uint128 underlyingBalance;
   }
 
   struct ExtraData {

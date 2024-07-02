@@ -72,7 +72,14 @@ library SupplyLogic {
 
     ValidationLogic.validateSupply(cache, reserve, params, params.pool);
     reserve.updateInterestRates(
-      cache, params.asset, IPool(params.pool).getReserveFactor(), params.amount, 0, params.position, params.data.interestRateData
+      totalSupplies,
+      cache,
+      params.asset,
+      IPool(params.pool).getReserveFactor(),
+      params.amount,
+      0,
+      params.position,
+      params.data.interestRateData
     );
 
     // take the asset from the user and mint the shares
@@ -104,11 +111,11 @@ library SupplyLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
-    mapping(address => DataTypes.ReserveSupplies) storage totalSupplies,
+    DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteWithdrawParams memory params
   ) external returns (uint256) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
-    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies[params.asset]);
+    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
 
     uint256 balance = balances[params.asset][params.position].getSupplyBalance(cache.nextLiquidityIndex);
@@ -119,7 +126,14 @@ library SupplyLogic {
     ValidationLogic.validateWithdraw(params.amount, balance);
 
     reserve.updateInterestRates(
-      cache, params.asset, IPool(params.pool).getReserveFactor(), 0, params.amount, params.position, params.data.interestRateData
+      totalSupplies,
+      cache,
+      params.asset,
+      IPool(params.pool).getReserveFactor(),
+      0,
+      params.amount,
+      params.position,
+      params.data.interestRateData
     );
 
     bool isCollateral = userConfig.isUsingAsCollateral(reserve.id);
@@ -131,7 +145,7 @@ library SupplyLogic {
     }
 
     // Burn debt. Which is burn supply, update total supply and send tokens to the user
-    balances[params.asset][params.position].withdrawCollateral(totalSupplies[params.asset], params.amount, cache.nextLiquidityIndex);
+    balances[params.asset][params.position].withdrawCollateral(totalSupplies, params.amount, cache.nextLiquidityIndex);
     IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
     // if the user is borrowing any asset, validate the HF and LTVs

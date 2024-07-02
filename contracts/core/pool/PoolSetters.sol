@@ -78,7 +78,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _reservesList,
       _usersConfig[pos],
       _balances,
-      _totalSupplies,
+      _totalSupplies[asset],
       DataTypes.ExecuteWithdrawParams({
         reserveFactor: _factory.reserveFactor(),
         destination: msg.sender,
@@ -110,7 +110,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _reservesList,
       _usersConfig[pos],
       _balances,
-      _totalSupplies,
+      _totalSupplies[asset],
       DataTypes.ExecuteBorrowParams({
         reserveFactor: _factory.reserveFactor(),
         asset: asset,
