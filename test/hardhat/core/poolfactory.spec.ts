@@ -1,10 +1,16 @@
 import { DataTypes } from '../../../types/IPool';
-import { DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator } from '../../../types';
+import {
+  BorrowLogic__factory,
+  DefaultReserveInterestRateStrategy,
+  MintableERC20,
+  MockAggregator,
+} from '../../../types';
 import { deployCore } from '../fixtures/core';
 import { PoolFactory } from '../../../types/contracts/core/pool/PoolFactory';
-import { ZeroAddress } from 'ethers';
+import { Addressable, ZeroAddress } from 'ethers';
 import { basicConfig } from '../fixtures/pool';
 import { expect } from 'chai';
+import { ethers } from 'hardhat';
 
 describe('Pool Factory', () => {
   let poolFactory: PoolFactory;
@@ -19,9 +25,18 @@ describe('Pool Factory', () => {
 
   let irStrategy: DefaultReserveInterestRateStrategy;
 
+  let libraries: {
+    BorrowLogic: string | Addressable;
+    FlashLoanLogic: string | Addressable;
+    LiquidationLogic: string | Addressable;
+    PoolLogic: string | Addressable;
+    SupplyLogic: string | Addressable;
+  };
+
   before(async () => {
     const fixture = await deployCore();
-    ({ poolFactory, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } = fixture);
+    ({ poolFactory, libraries, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } =
+      fixture);
   });
 
   it('should create a new pool', async () => {
@@ -41,7 +56,7 @@ describe('Pool Factory', () => {
     expect(await poolFactory.poolsLength()).eq(1);
   });
 
-  it('should update pool implementation properly', async () => {
+  it('should update pool implementation properly and not allow re-init(..)', async () => {
     const input: DataTypes.InitPoolParamsStruct = {
       hook: ZeroAddress,
       assets: [tokenA.target, tokenB.target, tokenC.target],
@@ -50,11 +65,25 @@ describe('Pool Factory', () => {
       configurations: [basicConfig, basicConfig, basicConfig],
     };
 
-    expect(await poolFactory.poolsLength()).eq(0);
-
+    // should deploy pool
     const tx = await poolFactory.createPool(input);
     await expect(tx).to.emit(poolFactory, 'PoolCreated');
-
     expect(await poolFactory.poolsLength()).eq(1);
+    const poolAddr = await poolFactory.pools(0);
+
+    const pool = await ethers.getContractAt('Pool', poolAddr);
+    expect(await pool.revision()).eq('1');
+
+    // now try to upgrade the beacon
+    const UpgradedPool = await ethers.getContractFactory('UpgradedPool', { libraries });
+    const upgradedPool = await UpgradedPool.deploy();
+    const tx2 = await poolFactory.setImplementation(upgradedPool.target);
+    await expect(tx2).to.emit(poolFactory, 'ImplementationUpdated');
+
+    // check if the pool upgraded properly
+    expect(await pool.revision()).eq('1000');
+    await expect(pool.initialize(input)).to.revertedWith(
+      'Initializable: contract is already initialized'
+    );
   });
 });

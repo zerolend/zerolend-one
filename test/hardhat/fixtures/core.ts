@@ -68,5 +68,12 @@ export async function deployCore() {
     oracleA,
     oracleB,
     oracleC,
+    libraries: {
+      BorrowLogic: borrowLogic.target,
+      FlashLoanLogic: flashLoanLogic.target,
+      LiquidationLogic: liquidationLogic.target,
+      PoolLogic: poolLogic.target,
+      SupplyLogic: supplyLogic.target,
+    },
   };
 }
