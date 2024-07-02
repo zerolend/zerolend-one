@@ -237,9 +237,8 @@ library ReserveLogic {
     // because a positive base variable rate can be stored on
     // cache.currBorrowRate, but the index should not increase
     if (_cache.currDebtShares != 0) {
-      uint256 cumulatedVariableBorrowInterest =
-        MathUtils.calculateCompoundedInterest(_cache.currBorrowRate, _cache.reserveLastUpdateTimestamp);
-      _cache.nextBorrowIndex = cumulatedVariableBorrowInterest.rayMul(_cache.currBorrowIndex).toUint128();
+      uint256 cumulatedBorrowInterest = MathUtils.calculateCompoundedInterest(_cache.currBorrowRate, _cache.reserveLastUpdateTimestamp);
+      _cache.nextBorrowIndex = cumulatedBorrowInterest.rayMul(_cache.currBorrowIndex).toUint128();
       _reserve.borrowIndex = _cache.nextBorrowIndex;
     }
   }

@@ -1,3 +1,4 @@
+import { parseUnits } from 'ethers';
 import { ethers } from 'hardhat';
 
 export async function deployCore() {
@@ -51,7 +52,12 @@ export async function deployCore() {
   const oracleB = await MockAggregator.deploy(2 * 1e8);
   const oracleC = await MockAggregator.deploy(100 * 1e8);
 
-  const irStrategy = await DefaultReserveInterestRateStrategy.deploy(1, 1, 1, 1);
+  const irStrategy = await DefaultReserveInterestRateStrategy.deploy(
+    parseUnits('0.45', 27).toString(),
+    '0',
+    parseUnits('0.07', 27).toString(),
+    parseUnits('0.3', 27).toString()
+  );
 
   return {
     owner,
