@@ -3,7 +3,7 @@ import { DataTypes } from '../../../types/contracts/core/pool/Pool';
 import { DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator, PoolConfigurator } from '../../../types';
 import { deployCore } from '../fixtures/core';
 import { PoolFactory } from '../../../types/contracts/core/pool/PoolFactory';
-import { ZeroAddress } from 'ethers';
+import { Addressable, ZeroAddress } from 'ethers';
 import { basicConfig } from '../fixtures/pool';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
@@ -28,10 +28,23 @@ describe.only('Pool Factory', () => {
   let addr2: SignerWithAddress;
   let governance: SignerWithAddress;
 
+  let libraries: {
+    BorrowLogic: string | Addressable;
+    FlashLoanLogic: string | Addressable;
+    LiquidationLogic: string | Addressable;
+    PoolLogic: string | Addressable;
+    SupplyLogic: string | Addressable;
+  }
   before(async () => {
     const fixture = await deployCore();
     [,,,,,,,,addr1, addr2] = await ethers.getSigners();
     ({owner, poolImpl,governance, poolFactory, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } = fixture);
+  });
+
+  before(async () => {
+    const fixture = await deployCore();
+    ({ poolFactory, libraries, tokenA, tokenB, tokenC, oracleA, oracleC, oracleB, irStrategy } =
+      fixture);
   });
 
   it('should create a new pool', async () => {
