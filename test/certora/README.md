@@ -37,3 +37,4 @@ certoraMutate --prover_conf test/certora/confs/ERC20.conf --mutation_conf test/c
 check if there's any way where pool can have it's liquidity index less than 1 ray
 ensure that indexes and rates are always increasing
 ensure that total virtual supply is always equal to erc20 token supply
+a full repay should incur no interest (debt rate is 0)

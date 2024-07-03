@@ -6,7 +6,7 @@ import { time } from '@nomicfoundation/hardhat-network-helpers';
 
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
-describe.only('Pool - Liquidity Index', () => {
+describe('Pool - Liquidity Index', () => {
   let pool: MockPool;
   let tokenA: MintableERC20;
   let deployer: SignerWithAddress;
