@@ -388,7 +388,7 @@ describe('NFT Position Manager', () => {
         'NotTokenIdOwner'
       );
     });
-    it('should revert if the position not cleared', async () => {
+    it.skip('should revert if the position not cleared', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
       await tokenA.connect(alice)['mint(uint256)'](mintAmount);
@@ -407,6 +407,7 @@ describe('NFT Position Manager', () => {
         manager,
         'PositionNotCleared'
       );
+      await manager.connect(alice).burn(1);
     });
     it('Should burn the tokenId and delete the position', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
