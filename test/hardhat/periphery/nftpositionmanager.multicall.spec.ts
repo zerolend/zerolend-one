@@ -5,7 +5,7 @@ import { MaxUint256, Signer, parseEther as e18 } from 'ethers';
 import { MintableERC20, NFTPositionManager, Pool } from '../../../types';
 import { deployNftPositionManager } from '../fixtures/periphery';
 
-describe.only('NFT position manager - multicall', () => {
+describe('NFT position manager - multicall', () => {
   let manager: NFTPositionManager;
   let poolFactory;
   let pool: Pool;
