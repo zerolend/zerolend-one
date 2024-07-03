@@ -388,7 +388,7 @@ describe('NFT Position Manager', () => {
         'NotTokenIdOwner'
       );
     });
-    it.skip('should revert if the position not cleared', async () => {
+    it('should revert if the position not cleared', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
       await tokenA.connect(alice)['mint(uint256)'](mintAmount);
@@ -403,7 +403,10 @@ describe('NFT Position Manager', () => {
       await tokenA.connect(alice).approve(manager.target, supplyAmount);
       await manager.connect(alice).mint(mintParams);
 
-      await manager.connect(alice).burn(1);
+      await expect(manager.connect(alice).burn(1)).to.be.revertedWithCustomError(
+        manager,
+        'PositionNotCleared'
+      );
     });
     it('Should burn the tokenId and delete the position', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
@@ -704,6 +707,116 @@ describe('NFT Position Manager', () => {
         amount: repayAmount2,
       };
       await manager.connect(bob).repay(repayParams);
+    });
+  });
+
+  describe('MultiCall', () => {
+    it('Should be able to query multiple function using multicall', async () => {
+      let mintAmount = ethers.parseUnits('100', 18);
+      let supplyAmount = ethers.parseUnits('50', 18);
+      let increaseLiquidityAmount = ethers.parseUnits('20', 18);
+      let borrowAmount = ethers.parseUnits('20', 18);
+      let repayAmount = ethers.parseUnits('20', 18);
+      let withdrawAmount = ethers.parseUnits('70', 18);
+      let multiCallData;
+      const mintParams = {
+        asset: tokenA.target,
+        pool: pool.target,
+        amount: supplyAmount,
+        data: { interestRateData: '0x', hookData: '0x' },
+      };
+
+      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.connect(alice).approve(manager.target, supplyAmount);
+      const mintSupplyCall = await manager
+        .connect(alice)
+        .interface.encodeFunctionData('mint', [mintParams]);
+
+      multiCallData = [mintSupplyCall];
+      await manager.connect(alice).multicall(multiCallData);
+
+      let supplyBalanceAlice = await manager.getPosition(1);
+      expect(supplyBalanceAlice[0][0][1]).to.be.equals(supplyAmount);
+      expect(await manager.ownerOf(1)).to.be.equals(await alice.getAddress());
+
+      const liquidityParams = {
+        asset: tokenA.target,
+        pool: pool.target,
+        amount: increaseLiquidityAmount,
+        tokenId: 1,
+        data: { interestRateData: '0x', hookData: '0x' },
+      };
+
+      await tokenA.connect(alice).approve(manager.target, increaseLiquidityAmount);
+
+      const liqiuidityIncreaseCall = manager.interface.encodeFunctionData('increaseLiquidity', [
+        liquidityParams,
+      ]);
+
+      multiCallData = [liqiuidityIncreaseCall];
+      await manager.connect(alice).multicall(multiCallData);
+
+      supplyBalanceAlice = await manager.getPosition(1);
+      expect(supplyBalanceAlice[0][0][1]).to.be.equals(supplyAmount + increaseLiquidityAmount);
+      expect(await tokenA.balanceOf(pool.target)).to.be.equals(
+        supplyAmount + increaseLiquidityAmount
+      );
+
+      const borrowParams = {
+        asset: await tokenA.getAddress(),
+        amount: borrowAmount,
+        tokenId: 1,
+        data: { interestRateData: '0x', hookData: '0x' },
+      };
+
+      const borrowCall = manager.interface.encodeFunctionData('borrow', [borrowParams]);
+
+      multiCallData = [borrowCall];
+      await manager.connect(alice).multicall(multiCallData);
+
+      let borrowBalanceAlice = await manager.getPosition(1);
+      expect(borrowBalanceAlice[0][0][2]).to.be.equals(borrowAmount);
+      expect(await tokenA.balanceOf(pool.target)).to.be.equals(
+        supplyAmount + increaseLiquidityAmount - borrowAmount
+      );
+
+      let repayParams = {
+        asset: await tokenA.getAddress(),
+        amount: repayAmount,
+        tokenId: 1,
+        data: { interestRateData: '0x', hookData: '0x' },
+      };
+
+      await tokenA.connect(alice).approve(manager.target, repayAmount);
+
+      let repayCall = manager.interface.encodeFunctionData('repay', [repayParams]);
+      multiCallData = [repayCall];
+      await manager.connect(alice).multicall(multiCallData);
+
+      borrowBalanceAlice = await manager.getPosition(1);
+      expect(borrowBalanceAlice[0][0][2]).to.be.equals(0);
+
+      let withdrawParams = {
+        asset: await tokenA.getAddress(),
+        amount: withdrawAmount,
+        tokenId: 1,
+        data: { interestRateData: '0x', hookData: '0x' },
+      };
+
+      const withdrawCall = manager.interface.encodeFunctionData('withdraw', [withdrawParams]);
+      multiCallData = [withdrawCall];
+      await manager.connect(alice).multicall(multiCallData);
+
+      supplyBalanceAlice = await manager.getPosition(1);
+      expect(supplyBalanceAlice[0][0][1]).to.be.equals(0);
+      expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
+
+      const burnCall = manager.interface.encodeFunctionData('burn', ['1']);
+      multiCallData = [burnCall];
+
+      await manager.connect(alice).multicall(multiCallData);
+
+      expect(await manager.balanceOf(await alice.getAddress())).to.be.equals(0);
     });
   });
 });
