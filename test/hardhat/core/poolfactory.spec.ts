@@ -14,7 +14,7 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 
-describe.only('Pool Factory', () => {
+describe('Pool Factory', () => {
   let poolFactory: PoolFactory;
 
   let tokenA: MintableERC20;
@@ -53,7 +53,6 @@ describe.only('Pool Factory', () => {
       irStrategy,
       ant,
       owner,
-      whale,
       governance,
     } = fixture);
   });
