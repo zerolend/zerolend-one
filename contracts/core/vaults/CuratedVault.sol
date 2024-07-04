@@ -13,14 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {
-  ICuratedVaultBase,
-  ICuratedVaultStaticTyping,
-  MarketAllocation,
-  MarketConfig,
-  PendingAddress,
-  PendingUint192
-} from '../../interfaces/ICuratedVault.sol';
+import {ICuratedVaultBase, ICuratedVaultStaticTyping, MarketAllocation, MarketConfig, PendingAddress, PendingUint192} from '../../interfaces/vaults/ICuratedVault.sol';
 import {IPool} from '../../interfaces/IPool.sol';
 import {ConstantsLib} from './libraries/ConstantsLib.sol';
 
@@ -32,12 +25,7 @@ import {Ownable2StepUpgradeable, OwnableUpgradeable} from '@openzeppelin/contrac
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 
-import {
-  ERC20Upgradeable,
-  ERC4626Upgradeable,
-  IERC4626Upgradeable,
-  MathUpgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
@@ -383,12 +371,13 @@ contract CuratedVault is
 
         uint256 withdrawnAssets = pool.withdrawSimple(asset(), withdrawn, 0);
 
-        // emit ReallocateWithdraw(_msgSender(), id, withdrawnAssets, withdrawnShares);
+        emit ReallocateWithdraw(_msgSender(), address(pool), withdrawnAssets, withdrawnShares);
 
         totalWithdrawn += withdrawnAssets;
       } else {
-        uint256 suppliedAssets =
-          allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets = allocation.assets == type(uint256).max
+          ? totalWithdrawn.zeroFloorSub(totalSupplied)
+          : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
@@ -480,7 +469,7 @@ contract CuratedVault is
   /* ERC4626Upgradeable (PUBLIC) */
 
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override (ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
+  function decimals() public view override(ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
@@ -502,7 +491,7 @@ contract CuratedVault is
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets,,) = _maxWithdraw(owner);
+    (assets, , ) = _maxWithdraw(owner);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -582,10 +571,10 @@ contract CuratedVault is
     newTotalSupply = totalSupply() + feeShares;
 
     assets = _convertToAssetsWithTotals(balanceOf(owner), newTotalSupply, newTotalAssets, MathUpgradeable.Rounding.Down);
-    assets -= _simulateWithdrawMorpho(assets);
+    assets -= _simulateWithdrawZeroLend(assets);
   }
 
-  /// @dev Returns the maximum amount of assets that the vault can supply on Morpho.
+  /// @dev Returns the maximum amount of assets that the vault can supply on ZeroLend.
   function _maxDeposit() internal view returns (uint256 totalSuppliable) {
     for (uint256 i; i < supplyQueue.length; ++i) {
       IPool id = supplyQueue[i];
@@ -594,14 +583,12 @@ contract CuratedVault is
       if (supplyCap == 0) continue;
 
       // todo
-      // uint256 supplyShares = MORPHO.supplyShares(id, address(this));
-      // (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = MORPHO.expectedMarketBalances(
-      //   _marketParams(id)
-      // );
-      // // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
-      // uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+      uint256 supplyShares = MORPHO.supplyShares(id, address(this));
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = MORPHO.expectedMarketBalances(_marketParams(id));
+      // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
+      uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
-      // totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
+      totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
     }
   }
 
@@ -642,7 +629,7 @@ contract CuratedVault is
   }
 
   /// @inheritdoc ERC4626Upgradeable
-  /// @dev Used in mint or deposit to deposit the underlying asset to Morpho markets.
+  /// @dev Used in mint or deposit to deposit the underlying asset to ZeroLend markets.
   function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
     super._deposit(caller, receiver, assets, shares);
 
@@ -653,7 +640,7 @@ contract CuratedVault is
   }
 
   /// @inheritdoc ERC4626Upgradeable
-  /// @dev Used in redeem or withdraw to withdraw the underlying asset from Morpho markets.
+  /// @dev Used in redeem or withdraw to withdraw the underlying asset from ZeroLend markets.
   /// @dev Depending on 3 cases, reverts when withdrawing "too much" with:
   /// 1. NotEnoughLiquidity when withdrawing more than available liquidity.
   /// 2. ERC20InsufficientAllowance when withdrawing more than `caller`'s allowance.
@@ -665,7 +652,7 @@ contract CuratedVault is
 
   /* INTERNAL */
 
-  /// @dev Accrues interest on Morpho Blue and returns the vault's assets & corresponding shares supplied on the
+  /// @dev Accrues interest on ZeroLend Blue and returns the vault's assets & corresponding shares supplied on the
   /// market defined by `marketParams`, as well as the market's state.
   /// @dev Assumes that the inputs `marketParams` and `id` match.
   function _accruedSupplyBalance(IPool pool) internal returns (uint256 assets, uint256 shares) {
@@ -727,7 +714,7 @@ contract CuratedVault is
 
   /* LIQUIDITY ALLOCATION */
 
-  /// @dev Supplies `assets` to Morpho.
+  /// @dev Supplies `assets` to ZeroLend.
   function _supplyPool(uint256 assets) internal {
     for (uint256 i; i < supplyQueue.length; ++i) {
       IPool id = supplyQueue[i];
@@ -762,11 +749,11 @@ contract CuratedVault is
     if (assets != 0) revert AllCapsReached();
   }
 
-  /// @dev Withdraws `assets` from Morpho.
+  /// @dev Withdraws `assets` from ZeroLend.
   function _withdrawPool(uint256 assets) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool id = withdrawQueue[i];
-      (uint256 supplyAssets,) = _accruedSupplyBalance(id);
+      (uint256 supplyAssets, ) = _accruedSupplyBalance(id);
       // uint256 toWithdraw = UtilsLib.min(
       //   _withdrawable(id, market.totalSupplyAssets, market.totalBorrowAssets, supplyAssets),
       //   assets
@@ -784,9 +771,9 @@ contract CuratedVault is
     if (assets != 0) revert NotEnoughLiquidity();
   }
 
-  /// @dev Simulates a withdraw of `assets` from Morpho.
+  /// @dev Simulates a withdraw of `assets` from ZeroLend.
   /// @return The remaining assets to be withdrawn.
-  function _simulateWithdrawMorpho(uint256 assets) internal view returns (uint256) {
+  function _simulateWithdrawZeroLend(uint256 assets) internal view returns (uint256) {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool id = withdrawQueue[i];
       // MarketConfig marketParams = _marketParams(id);
@@ -796,9 +783,9 @@ contract CuratedVault is
       // (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = MORPHO
       //   .expectedMarketBalances(id);
 
-      // // The vault withdrawing from Morpho cannot fail because:
+      // // The vault withdrawing from ZeroLend cannot fail because:
       // // 1. oracle.price() is never called (the vault doesn't borrow)
-      // // 2. the amount is capped to the liquidity available on Morpho
+      // // 2. the amount is capped to the liquidity available on ZeroLend
       // // 3. virtually accruing interest didn't fail
       // assets = assets.zeroFloorSub(
       //   _withdrawable(
@@ -824,7 +811,7 @@ contract CuratedVault is
     uint256 supplyAssets
   ) internal view returns (uint256) {
     // todo
-    // // Inside a flashloan callback, liquidity on Morpho Blue may be limited to the singleton's balance.
+    // // Inside a flashloan callback, liquidity on ZeroLend Blue may be limited to the singleton's balance.
     // uint256 availableLiquidity = UtilsLib.min(
     //   totalSupplyAssets - totalBorrowAssets,
     //   ERC20(marketParams.loanToken).balanceOf(address(MORPHO))

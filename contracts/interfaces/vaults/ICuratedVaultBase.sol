@@ -1,7 +1,19 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.5.0;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import {IPool} from './IPool.sol';
+// ███████╗███████╗██████╗  ██████╗
+// ╚══███╔╝██╔════╝██╔══██╗██╔═══██╗
+//   ███╔╝ █████╗  ██████╔╝██║   ██║
+//  ███╔╝  ██╔══╝  ██╔══██╗██║   ██║
+// ███████╗███████╗██║  ██║╚██████╔╝
+// ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝
+
+// Website: https://zerolend.xyz
+// Discord: https://discord.gg/zerolend
+// Twitter: https://twitter.com/zerolendxyz
+// Telegram: https://t.me/zerolendxyz
+
+import {IPool} from '../IPool.sol';
 import {IERC4626} from '@openzeppelin/contracts/interfaces/IERC4626.sol';
 import {IERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol';
 
@@ -98,7 +110,7 @@ interface ICuratedVaultBase {
   /// @notice Thrown when there's no pending value to set.
   error NoPendingValue();
 
-  /// @notice Thrown when the requested liquidity cannot be withdrawn from Morpho.
+  /// @notice Thrown when the requested liquidity cannot be withdrawn from ZeroLend.
   error NotEnoughLiquidity();
 
   /// @notice Thrown when submitting a cap for a market which does not exist.
@@ -205,17 +217,17 @@ interface ICuratedVaultBase {
   /// @notice Emitted when an `amount` of `token` is transferred to the skim recipient by `caller`.
   event Skim(address indexed caller, address indexed token, uint256 amount);
 
-  /// @notice Emitted when a new MetaMorpho vault is created.
-  /// @param metaMorpho The address of the MetaMorpho vault.
+  /// @notice Emitted when a new vault is created.
+  /// @param vault The address of the vault.
   /// @param caller The caller of the function.
-  /// @param initialOwner The initial owner of the MetaMorpho vault.
-  /// @param initialTimelock The initial timelock of the MetaMorpho vault.
+  /// @param initialOwner The initial owner of the vault.
+  /// @param initialTimelock The initial timelock of the vault.
   /// @param asset The address of the underlying asset.
-  /// @param name The name of the MetaMorpho vault.
-  /// @param symbol The symbol of the MetaMorpho vault.
-  /// @param salt The salt used for the MetaMorpho vault's CREATE2 address.
-  event CreateMetaMorpho(
-    address indexed metaMorpho,
+  /// @param name The name of the vault.
+  /// @param symbol The symbol of the vault.
+  /// @param salt The salt used for the vault's CREATE2 address.
+  event CreateVault(
+    address indexed vault,
     address indexed caller,
     address initialOwner,
     uint256 initialTimelock,
@@ -369,40 +381,4 @@ interface ICuratedVaultBase {
   /// @dev Sender is expected to pass `assets = type(uint256).max` with the last MarketAllocation of `allocations` to
   /// supply all the remaining withdrawn liquidity, which would ensure that `totalWithdrawn` = `totalSupplied`.
   function reallocate(MarketAllocation[] calldata allocations) external;
-}
-
-/// @dev This interface is inherited by MetaMorpho so that function signatures are checked by the compiler.
-/// @dev Consider using the ICuratedVault interface instead of this one.
-interface ICuratedVaultStaticTyping is ICuratedVaultBase {
-  /// @notice Returns the current configuration of each market.
-  function config(IPool) external view returns (uint184 cap, bool enabled, uint64 removableAt);
-
-  /// @notice Returns the pending guardian.
-  function pendingGuardian() external view returns (address guardian, uint64 validAt);
-
-  /// @notice Returns the pending cap for each market.
-  function pendingCap(IPool) external view returns (uint192 value, uint64 validAt);
-
-  /// @notice Returns the pending timelock.
-  function pendingTimelock() external view returns (uint192 value, uint64 validAt);
-}
-
-/// @title ICuratedVault
-/// @author ZeroLend
-/// @custom:contact contact@zerolend.xyz
-/// @dev Use this interface for MetaMorpho to have access to all the functions with the appropriate function signatures.
-interface ICuratedVault is ICuratedVaultBase, IERC4626, IERC20Permit {
-  /// @notice Returns the current configuration of each market.
-  function config(IPool) external view returns (MarketConfig memory);
-
-  /// @notice Returns the pending guardian.
-  function pendingGuardian() external view returns (PendingAddress memory);
-
-  /// @notice Returns the pending cap for each market.
-  function pendingCap(IPool) external view returns (PendingUint192 memory);
-
-  /// @notice Returns the pending timelock.
-  function pendingTimelock() external view returns (PendingUint192 memory);
-
-  function initialize(address initialOwner, uint256 initialTimelock, address asset, string memory name, string memory symbol) external;
 }
