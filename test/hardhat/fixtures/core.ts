@@ -25,15 +25,15 @@ export async function deployCore() {
   const poolLogic = await PoolLogic.deploy();
   const supplyLogic = await SupplyLogic.deploy();
 
-  const Pool = await ethers.getContractFactory('MockPool', {
-    libraries: {
-      BorrowLogic: borrowLogic.target,
-      FlashLoanLogic: flashLoanLogic.target,
-      LiquidationLogic: liquidationLogic.target,
-      PoolLogic: poolLogic.target,
-      SupplyLogic: supplyLogic.target,
-    },
-  });
+  const libraries = {
+    BorrowLogic: borrowLogic.target,
+    FlashLoanLogic: flashLoanLogic.target,
+    LiquidationLogic: liquidationLogic.target,
+    PoolLogic: poolLogic.target,
+    SupplyLogic: supplyLogic.target,
+  }
+
+  const Pool = await ethers.getContractFactory('MockPool', {libraries});
 
   // deploy pool
   const poolImpl = await Pool.deploy();
@@ -74,12 +74,6 @@ export async function deployCore() {
     oracleA,
     oracleB,
     oracleC,
-    libraries: {
-      BorrowLogic: borrowLogic.target,
-      FlashLoanLogic: flashLoanLogic.target,
-      LiquidationLogic: liquidationLogic.target,
-      PoolLogic: poolLogic.target,
-      SupplyLogic: supplyLogic.target,
-    },
+    libraries,
   };
 }

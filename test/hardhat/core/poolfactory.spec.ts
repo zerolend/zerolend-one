@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 
-describe.only('Pool Factory', () => {
+describe('Pool Factory', () => {
   let poolFactory: PoolFactory;
   let poolImpl: any;
 
