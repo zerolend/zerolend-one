@@ -31,9 +31,9 @@ export async function deployCore() {
     LiquidationLogic: liquidationLogic.target,
     PoolLogic: poolLogic.target,
     SupplyLogic: supplyLogic.target,
-  }
+  };
 
-  const Pool = await ethers.getContractFactory('MockPool', {libraries});
+  const Pool = await ethers.getContractFactory('MockPool', { libraries });
 
   // deploy pool
   const poolImpl = await Pool.deploy();

@@ -13,7 +13,7 @@ describe('Pool', () => {
 
   let tokenA: MintableERC20;
   let tokenB: MintableERC20;
-  
+
   let deployer: SignerWithAddress;
 
   beforeEach(async () => {
@@ -102,7 +102,10 @@ describe('Pool', () => {
 
     describe('getBalanceByPosition', function () {
       it('should return balance for a given position', async function () {
-        const balance = await pool.getBalanceByPosition(tokenA.target, getPositionId(deployer.address, 0));
+        const balance = await pool.getBalanceByPosition(
+          tokenA.target,
+          getPositionId(deployer.address, 0)
+        );
         expect(balance).to.equal(0);
       });
     });
@@ -123,10 +126,7 @@ describe('Pool', () => {
 
     describe('getBalanceRawByPositionId', function () {
       it('should return raw balance for a given position ID', async function () {
-        const balance = await pool.getBalanceRawByPositionId(
-          tokenA.target,
-          ZeroHash
-        );
+        const balance = await pool.getBalanceRawByPositionId(tokenA.target, ZeroHash);
         expect(balance.supplyShares).to.equal(0);
         expect(balance.debtShares).to.equal(0);
       });
@@ -164,10 +164,7 @@ describe('Pool', () => {
 
     describe('getDebtByPosition', function () {
       it('should return debt for a given position', async function () {
-        const debt = await pool.getDebtByPosition(
-          tokenA.target,
-          ZeroHash
-        );
+        const debt = await pool.getDebtByPosition(tokenA.target, ZeroHash);
         expect(debt).to.equal(0);
       });
     });
@@ -206,7 +203,7 @@ describe('Pool', () => {
         expect(income).to.equal(eth('1000000000'));
       });
     });
-    
+
     describe('getReserveNormalizedVariableDebt', function () {
       it('should return normalized variable debt for a given reserve', async function () {
         const debt = await pool.getReserveNormalizedVariableDebt(tokenA.target);
