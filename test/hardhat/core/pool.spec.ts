@@ -1,15 +1,17 @@
-import { MaxUint256, ZeroAddress, ZeroHash, parseEther as eth } from 'ethers';
+import { MaxUint256, ZeroAddress, ZeroHash, parseEther as eth, parseUnits } from 'ethers';
 import { MintableERC20, PoolConfigurator } from '../../../types';
 import { Pool, PoolFactory } from '../../../types/contracts/core/pool';
 import { deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { getPositionId } from '../utils/helpers';
+import { DefaultReserveInterestRateStrategy } from '../../../types/contracts/core/protocol/pool';
 
 describe('Pool', () => {
   let pool: Pool;
   let poolFactory: PoolFactory;
   let configurator: PoolConfigurator;
+  let irStrategy: DefaultReserveInterestRateStrategy;
 
   let tokenA: MintableERC20;
   let tokenB: MintableERC20;
@@ -18,7 +20,7 @@ describe('Pool', () => {
 
   beforeEach(async () => {
     const fixture = await deployPool();
-    ({ tokenA, tokenB, pool, owner: deployer, poolFactory, configurator } = fixture);
+    ({ tokenA, tokenB, pool, owner: deployer, poolFactory, configurator, irStrategy } = fixture);
   });
 
   describe('Supply / Withdraw functions', () => {
@@ -227,8 +229,8 @@ describe('Pool', () => {
 
     describe('getConfigurator', function () {
       it('should return configurator address', async function () {
-        const configurator = await pool.getConfigurator();
-        expect(configurator).to.equal(configurator);
+        const poolConfigurator = await pool.getConfigurator();
+        expect(poolConfigurator).to.equal(configurator);
       });
     });
 
@@ -258,6 +260,37 @@ describe('Pool', () => {
         const reserveFactor = await pool.getReserveFactor();
         expect(reserveFactor).to.equal(0);
       });
+    });
+  });
+
+  describe("DefaultReserveInterestRateStrategy", function () {
+    const BASE_VARIABLE_BORROW_RATE = BigInt(0);
+    const VARIABLE_RATE_SLOPE_1 = parseUnits("0.07", 27);
+    const VARIABLE_RATE_SLOPE_2 = parseUnits("0.3", 27);
+    it("should return the correct optimal usage ratio", async function () {
+      expect(await irStrategy.OPTIMAL_USAGE_RATIO()).to.equal(parseUnits('0.45', 27));
+    });
+  
+    it("should return the correct max excess usage ratio", async function () {
+      const MAX_EXCESS_USAGE_RATIO = parseUnits("0.55", 27);
+      expect(await irStrategy.MAX_EXCESS_USAGE_RATIO()).to.equal(MAX_EXCESS_USAGE_RATIO);
+    });
+  
+    it("should return the correct base variable borrow rate", async function () {
+      expect(await irStrategy.getBaseVariableBorrowRate()).to.equal(BASE_VARIABLE_BORROW_RATE);
+    });
+  
+    it("should return the correct variable rate slope 1", async function () {
+      expect(await irStrategy.getVariableRateSlope1()).to.equal(VARIABLE_RATE_SLOPE_1);
+    });
+  
+    it("should return the correct variable rate slope 2", async function () {
+      expect(await irStrategy.getVariableRateSlope2()).to.equal(VARIABLE_RATE_SLOPE_2);
+    });
+  
+    it("should return the correct max variable borrow rate", async function () {
+      const MAX_VARIABLE_BORROW_RATE = BASE_VARIABLE_BORROW_RATE + VARIABLE_RATE_SLOPE_1 + VARIABLE_RATE_SLOPE_2;
+      expect(await irStrategy.getMaxVariableBorrowRate()).to.equal(MAX_VARIABLE_BORROW_RATE);
     });
   });
 });
