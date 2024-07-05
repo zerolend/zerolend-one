@@ -12,7 +12,7 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 
-describe.only('Curated Vault Factory', () => {
+describe('Curated Vault Factory', () => {
   let curatedVaultFactory: CuratedVaultFactory;
 
   let tokenA: MintableERC20;
