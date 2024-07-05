@@ -159,7 +159,7 @@ contract CuratedVault is
   }
 
   /// @dev Reverts if the caller doesn't have the allocator role.
-  modifier onlyAllocatorRole() {
+  modifier onlyAllocator() {
     address sender = _msgSender();
     if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(ALLOCATOR_ROLE, _msgSender())) {
       revert NotAllocatorRole();
@@ -168,18 +168,19 @@ contract CuratedVault is
   }
 
   /// @dev Reverts if the caller doesn't have the guardian role.
-  modifier onlyGuardianRole() {
+  modifier onlyGuardian() {
     if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(GUARDIAN_ROLE, _msgSender())) revert NotGuardianRole();
     _;
   }
 
+  /// @dev Reverts if the caller is not eh default admin
   modifier onlyOwner() {
     if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) revert NotOwnerRole();
     _;
   }
 
   /// @dev Reverts if the caller doesn't have the curator nor the guardian role.
-  modifier onlyCuratorOrGuardianRole() {
+  modifier onlyCuratorOrGuardian() {
     if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(CURATOR_ROLE, _msgSender()) && !hasRole(GUARDIAN_ROLE, _msgSender())) {
       revert NotCuratorNorGuardianRole();
     }
@@ -280,7 +281,7 @@ contract CuratedVault is
   /* ONLY ALLOCATOR FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
-  function setSupplyQueue(IPool[] calldata newSupplyQueue) external onlyAllocatorRole {
+  function setSupplyQueue(IPool[] calldata newSupplyQueue) external onlyAllocator {
     uint256 length = newSupplyQueue.length;
 
     if (length > MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
@@ -290,12 +291,11 @@ contract CuratedVault is
     }
 
     supplyQueue = newSupplyQueue;
-
     emit SetSupplyQueue(_msgSender(), newSupplyQueue);
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function updateWithdrawQueue(uint256[] calldata indexes) external onlyAllocatorRole {
+  function updateWithdrawQueue(uint256[] calldata indexes) external onlyAllocator {
     uint256 newLength = indexes.length;
     uint256 currLength = withdrawQueue.length;
 
@@ -331,12 +331,11 @@ contract CuratedVault is
     }
 
     withdrawQueue = newWithdrawQueue;
-
     emit SetWithdrawQueue(_msgSender(), newWithdrawQueue);
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function reallocate(MarketAllocation[] calldata allocations) external onlyAllocatorRole {
+  function reallocate(MarketAllocation[] calldata allocations) external onlyAllocator {
     uint256 totalSupplied;
     uint256 totalWithdrawn;
 
@@ -345,19 +344,19 @@ contract CuratedVault is
       IPool pool = allocation.market;
 
       (uint256 supplyAssets, uint256 supplyShares) = _accruedSupplyBalance(pool);
-      uint256 withdrawn = supplyAssets.zeroFloorSub(allocation.assets);
+      uint256 toWithdraw = supplyAssets.zeroFloorSub(allocation.assets);
 
-      if (withdrawn > 0) {
+      if (toWithdraw > 0) {
         if (!config[pool].enabled) revert MarketNotEnabled(pool);
 
         // Guarantees that unknown frontrunning donations can be withdrawn, in order to disable a market.
         uint256 shares;
         if (allocation.assets == 0) {
           shares = supplyShares;
-          withdrawn = 0;
+          toWithdraw = 0;
         }
 
-        DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), withdrawn, 0);
+        DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), toWithdraw, 0);
         emit ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
         totalWithdrawn += burnt.assets;
       } else {
@@ -375,7 +374,7 @@ contract CuratedVault is
         // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
         IERC20(asset()).forceApprove(address(pool), type(uint256).max);
         DataTypes.SharesType memory minted = pool.supplySimple(asset(), suppliedAssets, 0);
-        emit ReallocateSupply(_msgSender(), pool, suppliedAssets, minted.shares);
+        emit ReallocateSupply(_msgSender(), pool, minted.assets, minted.shares);
         totalSupplied += suppliedAssets;
       }
     }
@@ -386,19 +385,19 @@ contract CuratedVault is
   /* REVOKE FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingTimelock() external onlyGuardianRole {
+  function revokePendingTimelock() external onlyGuardian {
     delete pendingTimelock;
     emit RevokePendingTimelock(_msgSender());
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingCap(IPool pool) external onlyCuratorOrGuardianRole {
+  function revokePendingCap(IPool pool) external onlyCuratorOrGuardian {
     delete pendingCap[pool];
     emit RevokePendingCap(_msgSender(), pool);
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingMarketRemoval(IPool pool) external onlyCuratorOrGuardianRole {
+  function revokePendingMarketRemoval(IPool pool) external onlyCuratorOrGuardian {
     delete config[pool].removableAt;
     emit RevokePendingMarketRemoval(_msgSender(), pool);
   }
@@ -451,7 +450,6 @@ contract CuratedVault is
   /// @dev Warning: May be higher than the actual max mint due to duplicate markets in the supplyQueue.
   function maxMint(address) public view override returns (uint256) {
     uint256 suppliable = _maxDeposit();
-
     return _convertToShares(suppliable, MathUpgradeable.Rounding.Down);
   }
 
