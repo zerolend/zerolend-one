@@ -353,7 +353,7 @@ contract CuratedVault is
 
         // todo
 
-        uint256 withdrawnAssets = pool.withdrawSimple(asset(), withdrawn, 0);
+        (, uint256 withdrawnAssets) = pool.withdrawSimple(asset(), withdrawn, 0);
 
         // emit ReallocateWithdraw(_msgSender(), address(pool), withdrawnAssets, withdrawnShares);
 

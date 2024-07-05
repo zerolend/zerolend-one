@@ -63,62 +63,52 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function supply(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) public virtual override returns (uint256 shares, uint256 assets) {
+  function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public returns (uint256, uint256) {
     return _supply(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function supplySimple(address asset, uint256 amount, uint256 index) public virtual override returns (uint256 shares, uint256 assets) {
+  function supplySimple(address asset, uint256 amount, uint256 index) public returns (uint256, uint256) {
     return _supply(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPool
-  function withdraw(
-    address asset,
-    uint256 amount,
-    uint256 index,
-    DataTypes.ExtraData memory data
-  ) public virtual override returns (uint256) {
+  function withdraw(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public returns (uint256, uint256) {
     return _withdraw(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function withdrawSimple(address asset, uint256 amount, uint256 index) public virtual override returns (uint256) {
+  function withdrawSimple(address asset, uint256 amount, uint256 index) public returns (uint256, uint256) {
     return _withdraw(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPool
-  function borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public virtual override {
-    _borrow(asset, amount, index, data);
+  function borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public returns (uint256, uint256) {
+    return _borrow(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function borrowSimple(address asset, uint256 amount, uint256 index) public virtual override {
-    _borrow(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
+  function borrowSimple(address asset, uint256 amount, uint256 index) public returns (uint256, uint256) {
+    return _borrow(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPool
-  function repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public virtual returns (uint256) {
+  function repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public returns (uint256, uint256) {
     return _repay(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function repaySimple(address asset, uint256 amount, uint256 index) public virtual returns (uint256) {
+  function repaySimple(address asset, uint256 amount, uint256 index) public returns (uint256, uint256) {
     return _repay(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPool
-  function liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt, DataTypes.ExtraData memory data) public virtual override {
+  function liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt, DataTypes.ExtraData memory data) public {
     _liquidate(collat, debt, pos, debtAmt, data);
   }
 
   /// @inheritdoc IPool
-  function liquidateSimple(address collat, address debt, bytes32 pos, uint256 debtAmt) public virtual override {
+  function liquidateSimple(address collat, address debt, bytes32 pos, uint256 debtAmt) public {
     _liquidate(collat, debt, pos, debtAmt, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
@@ -129,12 +119,12 @@ contract Pool is PoolSetters {
     uint256 amount,
     bytes calldata params,
     DataTypes.ExtraData memory data
-  ) public virtual override {
+  ) public {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 
   /// @inheritdoc IPool
-  function flashLoanSimple(address receiverAddress, address asset, uint256 amount, bytes calldata params) public virtual override {
+  function flashLoanSimple(address receiverAddress, address asset, uint256 amount, bytes calldata params) public {
     _flashLoan(receiverAddress, asset, amount, params, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
@@ -161,5 +151,9 @@ contract Pool is PoolSetters {
     for (uint256 i = 0; i < _reservesCount; i++) {
       forceUpdateReserve(_reservesList[i]);
     }
+  }
+
+  function setUserUseReserveAsCollateral(address asset, uint256 index, bool useAsCollateral) external {
+    // todo
   }
 }
