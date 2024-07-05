@@ -13,10 +13,17 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes, Pool} from '../core/pool/Pool.sol';
-import {ReserveLogic} from '../core/pool/logic/ReserveLogic.sol';
+import {IPool} from '../IPool.sol';
 
-contract MockPool is Pool {
-  using ReserveLogic for DataTypes.ReserveCache;
-  using ReserveLogic for DataTypes.ReserveData;
+import {ICuratedVaultBase, MarketConfig, PendingAddress, PendingUint192} from './ICuratedVaultBase.sol';
+import {ICuratedVaultStaticTyping} from './ICuratedVaultStaticTyping.sol';
+import {IERC4626} from '@openzeppelin/contracts/interfaces/IERC4626.sol';
+import {IERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol';
+
+/// @title ICuratedVault
+/// @author ZeroLend
+/// @custom:contact contact@zerolend.xyz
+/// @dev Use this interface for a vault to have access to all the functions with the appropriate function signatures.
+interface ICuratedVault is ICuratedVaultStaticTyping, IERC4626, IERC20Permit {
+// Blank
 }

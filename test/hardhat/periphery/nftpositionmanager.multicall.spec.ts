@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import { MaxUint256, Signer, parseEther as e18 } from 'ethers';
 import { MintableERC20, NFTPositionManager, Pool } from '../../../types';
 import { deployNftPositionManager } from '../fixtures/periphery';
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('NFT position manager - multicall', () => {
   let manager: NFTPositionManager;
@@ -11,18 +12,21 @@ describe('NFT position manager - multicall', () => {
   let pool: Pool;
   let tokenA: MintableERC20;
   let tokenB: MintableERC20;
-  let governance: Signer, ant: Signer, whale: Signer, owner: Signer;
+  let governance: SignerWithAddress,
+    ant: SignerWithAddress,
+    whale: SignerWithAddress,
+    owner: SignerWithAddress;
 
   beforeEach(async () => {
     ({ poolFactory, pool, tokenA, tokenB, governance, ant, whale, owner } = await deployPool());
     manager = await deployNftPositionManager(poolFactory, await governance.getAddress());
 
     await tokenA.connect(ant).approve(manager.target, MaxUint256);
-    await tokenA.connect(ant)['mint(uint256)'](e18('100'));
+    await tokenA.mint(ant.getAddress(), e18('100'));
     await tokenA.connect(whale).approve(manager.target, MaxUint256);
-    await tokenA.connect(whale)['mint(uint256)'](e18('100'));
+    await tokenA.mint(whale.getAddress(), e18('100'));
     await tokenB.connect(ant).approve(manager.target, MaxUint256);
-    await tokenB.connect(ant)['mint(uint256)'](e18('100'));
+    await tokenB.mint(ant.getAddress(), e18('100'));
 
     // seed some liquidity into the pool
     const mintSupplyCall = await manager.interface.encodeFunctionData('mint', [

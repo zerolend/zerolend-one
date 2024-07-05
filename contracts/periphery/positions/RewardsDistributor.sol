@@ -12,7 +12,6 @@ import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
  * @title RewardsDistributor
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
- *
  */
 abstract contract RewardsDistributor is IRewardsDistributor {
   using SafeCast for uint256;

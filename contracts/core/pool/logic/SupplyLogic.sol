@@ -66,7 +66,7 @@ library SupplyLogic {
     DataTypes.PositionBalance storage balance,
     DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteSupplyParams memory params
-  ) external {
+  ) external returns (DataTypes.SharesType memory minted) {
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
 
@@ -84,7 +84,8 @@ library SupplyLogic {
 
     // take the asset from the user and mint the shares
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
-    (bool isFirst, uint256 sharesMinted) = balance.depositCollateral(totalSupplies, params.amount, cache.nextLiquidityIndex);
+    bool isFirst;
+    (isFirst, minted.shares) = balance.depositCollateral(totalSupplies, params.amount, cache.nextLiquidityIndex);
 
     // if this is the user's first deposit, enable the reserve as collateral
     if (isFirst && ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration)) {
@@ -92,7 +93,9 @@ library SupplyLogic {
       emit ReserveUsedAsCollateralEnabled(params.asset, params.position);
     }
 
-    emit Supply(params.asset, params.position, sharesMinted);
+    emit Supply(params.asset, params.position, minted.shares);
+
+    minted.assets = params.amount;
   }
 
   /**
@@ -104,7 +107,6 @@ library SupplyLogic {
    * @param reservesList The addresses of all the active reserves
    * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
    * @param params The additional parameters needed to execute the withdraw function
-   * @return The actual amount withdrawn
    */
   function executeWithdraw(
     mapping(address => DataTypes.ReserveData) storage reservesData,
@@ -113,7 +115,7 @@ library SupplyLogic {
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
     DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteWithdrawParams memory params
-  ) external returns (uint256) {
+  ) external returns (DataTypes.SharesType memory burnt) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
@@ -145,7 +147,7 @@ library SupplyLogic {
     }
 
     // Burn debt. Which is burn supply, update total supply and send tokens to the user
-    balances[params.asset][params.position].withdrawCollateral(totalSupplies, params.amount, cache.nextLiquidityIndex);
+    burnt.shares = balances[params.asset][params.position].withdrawCollateral(totalSupplies, params.amount, cache.nextLiquidityIndex);
     IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
     // if the user is borrowing any asset, validate the HF and LTVs
@@ -154,6 +156,7 @@ library SupplyLogic {
     }
 
     emit Withdraw(params.asset, params.position, params.destination, params.amount);
-    return params.amount;
+
+    burnt.assets = params.amount;
   }
 }

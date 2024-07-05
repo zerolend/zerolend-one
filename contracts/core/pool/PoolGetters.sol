@@ -33,6 +33,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
   using TokenConfiguration for address;
   using ReserveSuppliesConfiguration for DataTypes.ReserveSupplies;
   using PositionBalanceConfiguration for DataTypes.PositionBalance;
+  using ReserveLogic for DataTypes.ReserveCache;
 
   /// @inheritdoc IPool
   function getReserveData(address asset) external view virtual override returns (DataTypes.ReserveData memory) {
@@ -168,5 +169,24 @@ abstract contract PoolGetters is PoolStorage, IPool {
   /// @inheritdoc IPool
   function getReserveFactor() external view returns (uint256 reseveFactor) {
     return _factory.reserveFactor();
+  }
+
+  function supplyShares(address asset, bytes32 positionId) external view returns (uint256 shares) {
+    return _balances[asset][positionId].supplyShares;
+  }
+
+  function marketBalances(address asset) public view returns (uint256, uint256, uint256, uint256) {
+    DataTypes.ReserveSupplies storage supplies = _totalSupplies[asset];
+
+    return (
+      supplies.getSupplyBalance(_reserves[asset].liquidityIndex),
+      supplies.supplyShares,
+      supplies.getDebtBalance(_reserves[asset].borrowIndex),
+      supplies.debtShares
+    );
+  }
+
+  function supplyAssets(address asset, bytes32 positionId) external view returns (uint256) {
+    return _balances[asset][positionId].getSupplyBalance(_reserves[asset].liquidityIndex);
   }
 }
