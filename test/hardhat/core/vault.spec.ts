@@ -179,7 +179,7 @@ describe('Curated Vault', () => {
     hre.tracer.enabled = true;
   });
 
-  it.only('should simulate gas cost [main]', async () => {
+  it('should simulate gas cost [main]', async () => {
     const nbSuppliers = suppliers.length;
     const nbDeposits = nbSuppliers * 2;
 
