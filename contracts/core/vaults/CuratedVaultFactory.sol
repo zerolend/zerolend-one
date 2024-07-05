@@ -45,18 +45,15 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
     string memory name,
     string memory symbol,
     bytes32 salt
-  ) external returns (ICuratedVault pool) {
-    // create the pool
-    pool = ICuratedVault(address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner)));
-    pool.initialize(initialOwner, initialTimelock, asset, name, symbol);
+  ) external returns (ICuratedVault vault) {
+    // create the vault
+    vault = ICuratedVault(address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner)));
+    vault.initialize(initialOwner, initialTimelock, asset, name, symbol);
 
-    // track the pool
-    vaults.push(pool);
-    isVault[address(pool)] = true;
-    emit VaultCreated(pool, vaults.length, msg.sender);
-
-    // TODO: once pool is created ask users to deposit some funds into it
-    // set the liquidity index properly
+    // track the vault
+    vaults.push(vault);
+    isVault[address(vault)] = true;
+    emit VaultCreated(vault, vaults.length, msg.sender);
   }
 
   /// @inheritdoc ICuratedVaultFactory

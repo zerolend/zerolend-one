@@ -14,15 +14,16 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes, IPool} from '../../interfaces/IPool.sol';
-import {ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVault.sol';
-import {MarketAllocation, MarketConfig, PendingAddress, PendingUint192} from '../../interfaces/vaults/ICuratedVaultBase.sol';
+
+import {
+  ICuratedVaultBase, MarketAllocation, MarketConfig, PendingAddress, PendingUint192
+} from '../../interfaces/vaults/ICuratedVaultBase.sol';
+import {ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
 
 import {PendingLib} from './libraries/PendingLib.sol';
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
-import {Ownable2StepUpgradeable, OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
-import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
@@ -34,8 +35,7 @@ import {
   MathUpgradeable
 } from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IERC20, IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
@@ -44,6 +44,7 @@ import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 /// @author ZeroLend
 /// @custom:contact contact@zerolend.xyz
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
+/// @dev This is a proxy contract and is not meant to be deployed directly.
 contract CuratedVault is
   ERC4626Upgradeable,
   ERC20PermitUpgradeable,
@@ -628,10 +629,14 @@ contract CuratedVault is
   /// market defined by `pool`, as well as the market's state.
   /// @dev Assumes that the inputs `marketParams` and `pool` match.
   function _accruedSupplyBalance(IPool pool) internal returns (uint256 assets, uint256 shares) {
+    // force update the rates and liquidity indexes
     pool.forceUpdateReserve(asset());
-    DataTypes.ReserveSupplies memory reserveInfo = pool.getTotalSupplyRaw(asset());
-    shares = reserveInfo.supplyShares;
-    assets = pool.totalAssets(asset()); // todo take care of percision
+
+    shares = pool.supplyShares(asset(), positionId);
+
+    // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+    assets = shares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
   }
 
   /// @dev Reverts if `newTimelock` is not within the bounds.
