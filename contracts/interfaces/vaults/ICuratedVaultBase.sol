@@ -202,13 +202,13 @@ interface ICuratedVaultBase {
   /// @param pool The id of the market.
   /// @param suppliedAssets The amount of assets supplied to the market.
   /// @param suppliedShares The amount of shares minted.
-  event ReallocateSupply(address indexed caller, address indexed pool, uint256 suppliedAssets, uint256 suppliedShares);
+  event ReallocateSupply(address indexed caller, IPool indexed pool, uint256 suppliedAssets, uint256 suppliedShares);
 
   /// @notice Emitted when a reallocation withdraws assets from the market identified by `id`.
   /// @param pool The id of the market.
   /// @param withdrawnAssets The amount of assets withdrawn from the market.
   /// @param withdrawnShares The amount of shares burned.
-  event ReallocateWithdraw(address indexed caller, address indexed pool, uint256 withdrawnAssets, uint256 withdrawnShares);
+  event ReallocateWithdraw(address indexed caller, IPool indexed pool, uint256 withdrawnAssets, uint256 withdrawnShares);
 
   /// @notice Emitted when interest are accrued.
   /// @param newTotalAssets The assets of the vault after accruing the interest but before the interaction.

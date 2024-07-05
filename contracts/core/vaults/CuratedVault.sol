@@ -16,10 +16,8 @@ pragma solidity 0.8.19;
 import {DataTypes, IPool} from '../../interfaces/IPool.sol';
 import {ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVault.sol';
 import {MarketAllocation, MarketConfig, PendingAddress, PendingUint192} from '../../interfaces/vaults/ICuratedVaultBase.sol';
-import {ConstantsLib} from './libraries/ConstantsLib.sol';
 
 import {PendingLib} from './libraries/PendingLib.sol';
-
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
 import {Ownable2StepUpgradeable, OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol';
@@ -27,10 +25,11 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
 import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
+
+import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
@@ -56,8 +55,13 @@ contract CuratedVault is
   using PendingLib for PendingUint192;
   using PendingLib for PendingAddress;
 
+  /// @dev the keccak256 hash of the guardian role.
   bytes32 public immutable GUARDIAN_ROLE = keccak256('GUARDIAN_ROLE');
+
+  /// @dev the keccak256 hash of the curator role.
   bytes32 public immutable CURATOR_ROLE = keccak256('GUARDIAN_ROLE');
+
+  /// @dev the keccak256 hash of the allocator role.
   bytes32 public immutable ALLOCATOR_ROLE = keccak256('GUARDIAN_ROLE');
 
   /// @notice OpenZeppelin decimals offset used by the ERC4626Upgradeable implementation.
@@ -98,6 +102,18 @@ contract CuratedVault is
   /// @inheritdoc ICuratedVaultBase
   bytes32 public positionId;
 
+  /// @dev The maximum delay of a timelock.
+  uint256 internal immutable MAX_TIMELOCK = 2 weeks;
+
+  /// @dev The minimum delay of a timelock.
+  uint256 internal immutable MIN_TIMELOCK = 1 days;
+
+  /// @dev The maximum number of markets in the supply/withdraw queue.
+  uint256 internal immutable MAX_QUEUE_LENGTH = 30;
+
+  /// @dev The maximum fee the vault can have (50%).
+  uint256 internal immutable MAX_FEE = 0.5e18;
+
   /// @dev Initializes the contract.
   /// @param owner The owner of the contract.
   /// @param initialTimelock The initial timelock.
@@ -122,9 +138,6 @@ contract CuratedVault is
     _setTimelock(initialTimelock);
 
     _setupRole(DEFAULT_ADMIN_ROLE, owner);
-    _setupRole(GUARDIAN_ROLE, owner);
-    _setupRole(CURATOR_ROLE, owner);
-    _setupRole(ALLOCATOR_ROLE, owner);
 
     positionId = keccak256(abi.encodePacked(address(this), 'index', uint256(0)));
   }
@@ -191,8 +204,9 @@ contract CuratedVault is
     if (pendingTimelock.validAt != 0) revert AlreadyPending();
     _checkTimelockBounds(newTimelock);
 
-    if (newTimelock > timelock) _setTimelock(newTimelock);
-    else {
+    if (newTimelock > timelock) {
+      _setTimelock(newTimelock);
+    } else {
       // Safe "unchecked" cast because newTimelock <= MAX_TIMELOCK.
       pendingTimelock.update(uint184(newTimelock), timelock);
       emit SubmitTimelock(newTimelock);
@@ -202,7 +216,7 @@ contract CuratedVault is
   /// @inheritdoc ICuratedVaultBase
   function setFee(uint256 newFee) external onlyOwner {
     if (newFee == fee) revert AlreadySet();
-    if (newFee > ConstantsLib.MAX_FEE) revert MaxFeeExceeded();
+    if (newFee > MAX_FEE) revert MaxFeeExceeded();
     if (newFee != 0 && feeRecipient == address(0)) revert ZeroFeeRecipient();
 
     // Accrue fee using the previous fee set before changing it.
@@ -231,8 +245,6 @@ contract CuratedVault is
 
   /// @inheritdoc ICuratedVaultBase
   function submitCap(IPool pool, uint256 newSupplyCap) external onlyCuratorRole {
-    // if (marketParams.loanToken != asset()) revert InconsistentAsset(pool);
-    // if (MORPHO.lastUpdate(pool) == 0) revert MarketNotCreated();
     if (pendingCap[pool].validAt != 0) revert AlreadyPending();
     if (config[pool].removableAt != 0) revert PendingRemoval();
     uint256 supplyCap = config[pool].cap;
@@ -264,7 +276,7 @@ contract CuratedVault is
   function setSupplyQueue(IPool[] calldata newSupplyQueue) external onlyAllocatorRole {
     uint256 length = newSupplyQueue.length;
 
-    if (length > ConstantsLib.MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
+    if (length > MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
 
     for (uint256 i; i < length; ++i) {
       if (config[newSupplyQueue[i]].cap == 0) revert UnauthorizedMarket(newSupplyQueue[i]);
@@ -301,13 +313,12 @@ contract CuratedVault is
         if (config[pool].cap != 0) revert InvalidMarketRemovalNonZeroCap(pool);
         if (pendingCap[pool].validAt != 0) revert PendingCap(pool);
 
-        // todo
-        // if (MORPHO.supplyShares(pool, address(this)) != 0) {
-        //   if (config[pool].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(pool);
-        //   if (block.timestamp < config[pool].removableAt) {
-        //     revert InvalidMarketRemovalTimelockNotElapsed(pool);
-        //   }
-        // }
+        if (pool.supplyShares(asset(), positionId) != 0) {
+          if (config[pool].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(pool);
+          if (block.timestamp < config[pool].removableAt) {
+            revert InvalidMarketRemovalTimelockNotElapsed(pool);
+          }
+        }
 
         delete config[pool];
       }
@@ -359,18 +370,11 @@ contract CuratedVault is
 
         if (supplyAssets + suppliedAssets > supplyCap) revert SupplyCapExceeded(pool);
 
-        // todo
-        // // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
-        // // IERC20(_asset).forceApprove(morpho, type(uint256).max);
-        // (, uint256 suppliedShares) = MORPHO.supply(
-        //   allocation.marketParams,
-        //   suppliedAssets,
-        //   0,
-        //   address(this),
-        //   hex''
-        // );
-        // emit ReallocateSupply(_msgSender(), pool, suppliedAssets, suppliedShares);
-        // totalSupplied += suppliedAssets;
+        // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
+        IERC20(asset()).forceApprove(address(pool), type(uint256).max);
+        (, uint256 suppliedShares) = pool.supplySimple(asset(), suppliedAssets, 0);
+        emit ReallocateSupply(_msgSender(), pool, suppliedAssets, suppliedShares);
+        totalSupplied += suppliedAssets;
       }
     }
 
@@ -630,8 +634,8 @@ contract CuratedVault is
 
   /// @dev Reverts if `newTimelock` is not within the bounds.
   function _checkTimelockBounds(uint256 newTimelock) internal pure {
-    if (newTimelock > ConstantsLib.MAX_TIMELOCK) revert AboveMaxTimelock();
-    if (newTimelock < ConstantsLib.MIN_TIMELOCK) revert BelowMinTimelock();
+    if (newTimelock > MAX_TIMELOCK) revert AboveMaxTimelock();
+    if (newTimelock < MIN_TIMELOCK) revert BelowMinTimelock();
   }
 
   /// @dev Sets `timelock` to `newTimelock`.
@@ -649,7 +653,7 @@ contract CuratedVault is
       if (!marketConfig.enabled) {
         withdrawQueue.push(pool);
 
-        if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
+        if (withdrawQueue.length > MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
 
         marketConfig.enabled = true;
 
