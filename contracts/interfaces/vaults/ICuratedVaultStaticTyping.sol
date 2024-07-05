@@ -30,4 +30,8 @@ interface ICuratedVaultStaticTyping is ICuratedVaultBase {
 
   /// @notice Returns the pending timelock.
   function pendingTimelock() external view returns (uint192 value, uint64 validAt);
+
+  /// @notice Initializes the vault with the initial owner and timelock.
+  /// @dev Called only by the factory contract
+  function initialize(address initialOwner, uint256 initialTimelock, address asset, string memory name, string memory symbol) external;
 }

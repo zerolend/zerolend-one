@@ -115,7 +115,11 @@ interface IPool {
    * @param borrowIndex The next variable borrow index
    */
   event ReserveDataUpdated(
-    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
+    address indexed reserve,
+    uint256 liquidityRate,
+    uint256 variableBorrowRate,
+    uint256 liquidityIndex,
+    uint256 borrowIndex
   );
 
   /**
@@ -471,4 +475,16 @@ interface IPool {
    * @return The address of the Pool Configurator
    */
   function getConfigurator() external view returns (address);
+
+  function totalAssets(address asset) external view returns (uint256 balance);
+
+  function totalDebt(address asset) external view returns (uint256 balance);
+
+  // function forceUpdateReserve() external;
+
+  // function forceUpdateReserves(address asset) external;
+
+  function marketBalances(
+    address asset
+  ) external view returns (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, uint256 totalBorrowShares);
 }

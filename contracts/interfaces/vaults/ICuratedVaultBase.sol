@@ -14,8 +14,6 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IPool} from '../IPool.sol';
-import {IERC4626} from '@openzeppelin/contracts/interfaces/IERC4626.sol';
-import {IERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol';
 
 struct MarketAllocation {
   /// @notice The market to allocate.
