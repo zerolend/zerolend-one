@@ -13,10 +13,13 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IBeacon, ICuratedVault, ICuratedVaultFactory} from '../../interfaces/ICuratedVaultFactory.sol';
+import {IBeacon, ICuratedVault, ICuratedVaultFactory} from '../../interfaces/vaults/ICuratedVaultFactory.sol';
 import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
+/// @title CuratedVaultFactory
+/// @author ZeroLend
+/// @notice Creates and tracks CuratedVaults.
 contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   /// @inheritdoc IBeacon
   address public implementation;
@@ -27,6 +30,10 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   /// @inheritdoc ICuratedVaultFactory
   mapping(address => bool) public isVault;
 
+  /**
+   * Initializes the factory with the implementation of the vaults.
+   * @param _implementation The address of the implementation contract.
+   */
   constructor(address _implementation) {
     implementation = _implementation;
   }
@@ -45,18 +52,15 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
     string memory name,
     string memory symbol,
     bytes32 salt
-  ) external returns (ICuratedVault pool) {
-    // create the pool
-    pool = ICuratedVault(address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner)));
-    pool.initialize(initialOwner, initialTimelock, asset, name, symbol);
+  ) external returns (ICuratedVault vault) {
+    // create the vault
+    vault = ICuratedVault(address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner)));
+    vault.initialize(initialOwner, initialTimelock, asset, name, symbol);
 
-    // track the pool
-    vaults.push(pool);
-    isVault[address(pool)] = true;
-    emit VaultCreated(pool, vaults.length, msg.sender);
-
-    // TODO: once pool is created ask users to deposit some funds into it
-    // set the liquidity index properly
+    // track the vault
+    vaults.push(vault);
+    isVault[address(vault)] = true;
+    emit VaultCreated(vault, vaults.length, msg.sender);
   }
 
   /// @inheritdoc ICuratedVaultFactory

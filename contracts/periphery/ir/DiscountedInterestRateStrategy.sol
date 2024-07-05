@@ -13,10 +13,18 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes, Pool} from '../core/pool/Pool.sol';
-import {ReserveLogic} from '../core/pool/logic/ReserveLogic.sol';
+import {PercentageMath} from '../../core/pool/utils/PercentageMath.sol';
+import {WadRayMath} from '../../core/pool/utils/WadRayMath.sol';
+import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
 
-contract MockPool is Pool {
-  using ReserveLogic for DataTypes.ReserveCache;
-  using ReserveLogic for DataTypes.ReserveData;
+/**
+ * @title DiscountedInterestRateStrategy contract
+ * @notice Implements an interest rate strategy that takes into account a
+ * discount given how much ZERO a user has staked.
+ */
+abstract contract DiscountedInterestRateStrategy is IDefaultInterestRateStrategy {
+  using WadRayMath for uint256;
+  using PercentageMath for uint256;
+
+  // todo
 }

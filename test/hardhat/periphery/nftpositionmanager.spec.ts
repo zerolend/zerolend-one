@@ -4,13 +4,14 @@ import { expect } from 'chai';
 import { Signer, ZeroAddress } from 'ethers';
 import { MintableERC20, NFTPositionManager, Pool } from '../../../types';
 import { deployNftPositionManager } from '../fixtures/periphery';
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('NFT Position Manager', () => {
   let manager: NFTPositionManager;
   let poolFactory;
   let pool: Pool;
   let tokenA: MintableERC20;
-  let governance: Signer, alice: Signer, bob: Signer;
+  let governance: SignerWithAddress, alice: SignerWithAddress, bob: SignerWithAddress;
 
   beforeEach(async () => {
     [alice, bob] = await ethers.getSigners();
@@ -67,7 +68,7 @@ describe('NFT Position Manager', () => {
       const mintAmount = ethers.parseUnits('100', 18);
       const supplyAmount = ethers.parseUnits('10', 18);
 
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -89,7 +90,7 @@ describe('NFT Position Manager', () => {
       const mintAmount = ethers.parseUnits('100', 18);
       const supplyAmount = ethers.parseUnits('10', 18);
 
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -121,7 +122,7 @@ describe('NFT Position Manager', () => {
     it('should revert if user pass invalid asset address', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
       const supplyAmount = ethers.parseUnits('10', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -151,7 +152,7 @@ describe('NFT Position Manager', () => {
     it('should revert if user pass invalid amount', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
       const supplyAmount = ethers.parseUnits('10', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -181,7 +182,7 @@ describe('NFT Position Manager', () => {
     it('should revert if the caller is not owner or approved for tokenId', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
 
       const mintParams = {
         asset: tokenA,
@@ -208,7 +209,7 @@ describe('NFT Position Manager', () => {
       const mintAmount = ethers.parseUnits('100', 18);
       const supplyAmount = ethers.parseUnits('10', 18);
 
-      await tokenA.connect(bob)['mint(uint256)'](mintAmount);
+      await tokenA.mint(bob.address, mintAmount);
       expect(await tokenA.balanceOf(await bob.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -256,7 +257,7 @@ describe('NFT Position Manager', () => {
     it('should revert if user pass invalid asset address', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
       const supplyAmount = ethers.parseUnits('10', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -286,7 +287,7 @@ describe('NFT Position Manager', () => {
     it('should revert if user pass invalid amount', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
       const supplyAmount = ethers.parseUnits('10', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -316,7 +317,7 @@ describe('NFT Position Manager', () => {
     it('should revert if the caller is not owner or approved for tokenId', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
 
       const mintParams = {
         asset: tokenA,
@@ -344,7 +345,7 @@ describe('NFT Position Manager', () => {
       let mintAmount = ethers.parseUnits('150', 18);
       let supplyAmount = ethers.parseUnits('50', 18);
       let withdrawAmount = ethers.parseUnits('20', 18);
-      await tokenA.connect(bob)['mint(uint256)'](mintAmount);
+      await tokenA.mint(bob.address, mintAmount);
       expect(await tokenA.balanceOf(await bob.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: await tokenA.getAddress(),
@@ -371,7 +372,7 @@ describe('NFT Position Manager', () => {
     it('Should revert if he is not the ower or approved', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
 
       const mintParams = {
         asset: tokenA,
@@ -391,7 +392,7 @@ describe('NFT Position Manager', () => {
     it.skip('should revert if the position not cleared', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
 
       const mintParams = {
         asset: tokenA,
@@ -412,7 +413,7 @@ describe('NFT Position Manager', () => {
     it('Should burn the tokenId and delete the position', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
 
       const mintParams = {
         asset: tokenA,
@@ -440,7 +441,7 @@ describe('NFT Position Manager', () => {
     it('Should return the operator address if tokenId is valid', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
 
       const mintParams = {
         asset: tokenA,
@@ -462,7 +463,7 @@ describe('NFT Position Manager', () => {
   describe('borrow', () => {
     it('should revert if user pass invalid asset address', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -490,7 +491,7 @@ describe('NFT Position Manager', () => {
     });
     it('should revert if user pass invalid amount', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: await tokenA.getAddress(),
@@ -519,7 +520,7 @@ describe('NFT Position Manager', () => {
     it('should revert if the caller is not owner or approved for tokenId', async () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
 
       const mintParams = {
         asset: tokenA,
@@ -560,7 +561,7 @@ describe('NFT Position Manager', () => {
         data: { interestRateData: '0x', hookData: '0x' },
       };
 
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
 
       await tokenA.connect(alice).approve(manager.target, supplyAmount);
 
@@ -588,7 +589,7 @@ describe('NFT Position Manager', () => {
         data: { interestRateData: '0x', hookData: '0x' },
       };
 
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       await tokenA.connect(alice).approve(manager.target, supplyAmount);
       await manager.connect(alice).mint(mintParams);
 
@@ -604,7 +605,7 @@ describe('NFT Position Manager', () => {
   describe('repay', () => {
     it('should revert if user pass invalid asset address', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: tokenA,
@@ -632,7 +633,7 @@ describe('NFT Position Manager', () => {
     });
     it('should revert if user pass invalid amount', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
-      await tokenA.connect(alice)['mint(uint256)'](mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: await tokenA.getAddress(),
@@ -666,7 +667,7 @@ describe('NFT Position Manager', () => {
       const borrowAmount = ethers.parseUnits('30', 18);
       const repayAmount = ethers.parseUnits('20', 18);
 
-      await tokenA.connect(bob)['mint(uint256)'](mintAmount);
+      await tokenA.mint(bob.address, mintAmount);
       expect(await tokenA.balanceOf(await bob.getAddress())).to.be.equals(mintAmount);
       const mintParams = {
         asset: await tokenA.getAddress(),

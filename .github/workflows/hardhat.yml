@@ -1,3 +1,4 @@
+# This workflow will build the contracts and run the tests for the repository using hardhat
 name: Hardhat
 
 concurrency:

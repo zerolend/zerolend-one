@@ -13,10 +13,10 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes, Pool} from '../core/pool/Pool.sol';
-import {ReserveLogic} from '../core/pool/logic/ReserveLogic.sol';
+import {CuratedVault} from '../core/vaults/CuratedVault.sol';
 
-contract MockPool is Pool {
-  using ReserveLogic for DataTypes.ReserveCache;
-  using ReserveLogic for DataTypes.ReserveData;
+contract UpgradedCuratedVault is CuratedVault {
+  function revision() external pure override returns (uint256) {
+    return 1000;
+  }
 }

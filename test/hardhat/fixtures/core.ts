@@ -9,10 +9,10 @@ export async function deployCore() {
   const LiquidationLogic = await ethers.getContractFactory('LiquidationLogic');
   const PoolLogic = await ethers.getContractFactory('PoolLogic');
   const SupplyLogic = await ethers.getContractFactory('SupplyLogic');
-
   const PoolFactory = await ethers.getContractFactory('PoolFactory');
+  const CuratedVaultFactory = await ethers.getContractFactory('CuratedVaultFactory');
+  const CuratedVault = await ethers.getContractFactory('CuratedVault');
   const PoolConfigurator = await ethers.getContractFactory('PoolConfigurator');
-
   const MintableERC20 = await ethers.getContractFactory('MintableERC20');
   const MockAggregator = await ethers.getContractFactory('MockAggregator');
   const DefaultReserveInterestRateStrategy = await ethers.getContractFactory(
@@ -39,8 +39,11 @@ export async function deployCore() {
   const poolImpl = await Pool.deploy();
   const poolFactory = await PoolFactory.deploy(poolImpl.target);
   const configurator = await PoolConfigurator.deploy(poolFactory.target, governance.address);
-
   await poolFactory.setConfigurator(configurator.target);
+
+  // deploy vault
+  const curatedVaultImpl = await CuratedVault.deploy();
+  const curatedVaultFactory = await CuratedVaultFactory.deploy(curatedVaultImpl.target);
 
   // create dummy tokens
   const tokenA = await MintableERC20.deploy('TOKEN A', 'TOKENA');
@@ -68,6 +71,8 @@ export async function deployCore() {
     irStrategy,
     poolImpl,
     poolFactory,
+    curatedVaultFactory,
+    curatedVaultImpl,
     tokenA,
     tokenB,
     tokenC,
