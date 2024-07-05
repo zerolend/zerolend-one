@@ -167,14 +167,21 @@ interface IPool {
    * @param amount The amount to be supplied
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
+   * @return shares The amount of shares received
+   * @return assets The amount of assets received (ie shares * liquidit index)
    */
-  function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
+  function supply(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) external returns (uint256 shares, uint256 assets);
 
   /**
    * @dev See [supply(...)](#supply) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function supplySimple(address asset, uint256 amount, uint256 index) external;
+  function supplySimple(address asset, uint256 amount, uint256 index) external returns (uint256 shares, uint256 assets);
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -480,11 +487,15 @@ interface IPool {
 
   function totalDebt(address asset) external view returns (uint256 balance);
 
-  // function forceUpdateReserve() external;
+  function supplyShares(address asset, bytes32 positionId) external view returns (uint256 shares);
 
-  // function forceUpdateReserves(address asset) external;
+  function forceUpdateReserves() external;
+
+  function forceUpdateReserve(address asset) external;
 
   function marketBalances(
     address asset
   ) external view returns (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, uint256 totalBorrowShares);
+
+  function supplyAssets(address asset, bytes32 positionId) external view returns (uint256);
 }

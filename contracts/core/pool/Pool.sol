@@ -19,10 +19,14 @@ import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {PoolGetters} from './PoolGetters.sol';
 
 import {PoolSetters} from './PoolSetters.sol';
+import {ReserveLogic} from './logic/PoolLogic.sol';
 import {DataTypes} from './configuration/DataTypes.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 
 contract Pool is PoolSetters {
+  using ReserveLogic for DataTypes.ReserveCache;
+  using ReserveLogic for DataTypes.ReserveData;
+
   /**
    * @notice Initializes the Pool.
    * @dev This function is invoked by the factory contract when the Pool is created
@@ -58,13 +62,18 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public virtual override {
-    _supply(asset, amount, index, data);
+  function supply(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) public virtual override returns (uint256 shares, uint256 assets) {
+    return _supply(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function supplySimple(address asset, uint256 amount, uint256 index) public virtual override {
-    _supply(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
+  function supplySimple(address asset, uint256 amount, uint256 index) public virtual override returns (uint256 shares, uint256 assets) {
+    return _supply(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPool
@@ -137,5 +146,17 @@ contract Pool is PoolSetters {
   ) external virtual {
     require(msg.sender == address(_factory.configurator()), 'only configurator');
     PoolLogic.setReserveConfiguration(_reserves, asset, rateStrategy, source, config);
+  }
+
+  /// @inheritdoc IPool
+  function forceUpdateReserve(address asset) public {
+    DataTypes.ReserveData storage reserve = _reserves[asset];
+    DataTypes.ReserveCache memory cache = reserve.cache(_totalSupplies[asset]);
+    reserve.updateState(0, cache);
+  }
+
+  /// @inheritdoc IPool
+  function forceUpdateReserves() external {
+    for (uint i = 0; i < _reservesCount; i++) forceUpdateReserve(_reservesList[i]);
   }
 }

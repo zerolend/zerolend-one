@@ -173,7 +173,11 @@ abstract contract PoolGetters is PoolStorage, IPool {
     return _factory.reserveFactor();
   }
 
-  function marketBalances(address asset) external view returns (uint256, uint256, uint256, uint256) {
+  function supplyShares(address asset, bytes32 positionId) external view returns (uint256 shares) {
+    return _balances[asset][positionId].supplyShares;
+  }
+
+  function marketBalances(address asset) public view returns (uint256, uint256, uint256, uint256) {
     DataTypes.ReserveSupplies storage supplies = _totalSupplies[asset];
 
     return (
@@ -182,5 +186,9 @@ abstract contract PoolGetters is PoolStorage, IPool {
       supplies.getDebtBalance(_reserves[asset].borrowIndex),
       supplies.debtShares
     );
+  }
+
+  function supplyAssets(address asset, bytes32 positionId) external view returns (uint256) {
+    return _balances[asset][positionId].getSupplyBalance(_reserves[asset].liquidityIndex);
   }
 }

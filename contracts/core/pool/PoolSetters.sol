@@ -40,7 +40,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 shares, uint256 assets) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 

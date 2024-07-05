@@ -257,32 +257,32 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /* ONLY CURATOR FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
-  function submitCap(IPool id, uint256 newSupplyCap) external onlyCuratorRole {
+  function submitCap(IPool pool, uint256 newSupplyCap) external onlyCuratorRole {
     // if (marketParams.loanToken != asset()) revert InconsistentAsset(id);
     // if (MORPHO.lastUpdate(id) == 0) revert MarketNotCreated();
-    if (pendingCap[id].validAt != 0) revert AlreadyPending();
-    if (config[id].removableAt != 0) revert PendingRemoval();
-    uint256 supplyCap = config[id].cap;
+    if (pendingCap[pool].validAt != 0) revert AlreadyPending();
+    if (config[pool].removableAt != 0) revert PendingRemoval();
+    uint256 supplyCap = config[pool].cap;
     if (newSupplyCap == supplyCap) revert AlreadySet();
 
     if (newSupplyCap < supplyCap) {
-      _setCap(id, newSupplyCap.toUint184());
+      _setCap(pool, newSupplyCap.toUint184());
     } else {
-      pendingCap[id].update(newSupplyCap.toUint184(), timelock);
-      emit SubmitCap(_msgSender(), id, newSupplyCap);
+      pendingCap[pool].update(newSupplyCap.toUint184(), timelock);
+      emit SubmitCap(_msgSender(), pool, newSupplyCap);
     }
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function submitMarketRemoval(IPool id) external onlyCuratorRole {
-    if (config[id].removableAt != 0) revert AlreadyPending();
-    if (config[id].cap != 0) revert NonZeroCap();
-    if (!config[id].enabled) revert MarketNotEnabled(id);
-    if (pendingCap[id].validAt != 0) revert PendingCap(id);
+  function submitMarketRemoval(IPool pool) external onlyCuratorRole {
+    if (config[pool].removableAt != 0) revert AlreadyPending();
+    if (config[pool].cap != 0) revert NonZeroCap();
+    if (!config[pool].enabled) revert MarketNotEnabled(pool);
+    if (pendingCap[pool].validAt != 0) revert PendingCap(pool);
 
     // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
-    config[id].removableAt = uint64(block.timestamp + timelock);
-    emit SubmitMarketRemoval(_msgSender(), id);
+    config[pool].removableAt = uint64(block.timestamp + timelock);
+    emit SubmitMarketRemoval(_msgSender(), pool);
   }
 
   /* ONLY ALLOCATOR FUNCTIONS */
@@ -314,11 +314,11 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
       uint256 prevIndex = indexes[i];
 
       // If prevIndex >= currLength, it will revert with native "Index out of bounds".
-      IPool id = withdrawQueue[prevIndex];
-      if (seen[prevIndex]) revert DuplicateMarket(id);
+      IPool pool = withdrawQueue[prevIndex];
+      if (seen[prevIndex]) revert DuplicateMarket(pool);
       seen[prevIndex] = true;
 
-      newWithdrawQueue[i] = id;
+      newWithdrawQueue[i] = pool;
     }
 
     for (uint256 i; i < currLength; ++i) {
@@ -577,18 +577,18 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /// @dev Returns the maximum amount of assets that the vault can supply on ZeroLend.
   function _maxDeposit() internal view returns (uint256 totalSuppliable) {
     for (uint256 i; i < supplyQueue.length; ++i) {
-      IPool id = supplyQueue[i];
+      IPool pool = supplyQueue[i];
 
-      uint256 supplyCap = config[id].cap;
+      uint256 supplyCap = config[pool].cap;
       if (supplyCap == 0) continue;
 
       // todo
-      // uint256 supplyShares = MORPHO.supplyShares(id, address(this));
-      // (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = MORPHO.expectedMarketBalances(_marketParams(id));
-      // // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
-      // uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+      uint256 supplyShares = pool.supplyShares(asset(), positionId);
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
 
-      // totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
+      // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
+      uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+      totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
     }
   }
 
@@ -656,7 +656,7 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /// market defined by `pool`, as well as the market's state.
   /// @dev Assumes that the inputs `marketParams` and `id` match.
   function _accruedSupplyBalance(IPool pool) internal returns (uint256 assets, uint256 shares) {
-    // pool.forceUpdateReserve(); // todo
+    pool.forceUpdateReserve(asset()); // todo
     DataTypes.ReserveSupplies memory reserveInfo = pool.getTotalSupplyRaw(asset());
     shares = reserveInfo.supplyShares;
     assets = pool.totalAssets(asset()); // todo take care of percision
@@ -682,24 +682,22 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
     delete pendingGuardian;
   }
 
-  /// @dev Sets the cap of the market defined by `id` to `supplyCap`.
-  /// @dev Assumes that the inputs `marketParams` and `id` match.
-  function _setCap(IPool id, uint184 supplyCap) internal {
-    MarketConfig storage marketConfig = config[id];
+  /// @dev Sets the cap of the market defined by `pool` to `supplyCap`.
+  function _setCap(IPool pool, uint184 supplyCap) internal {
+    MarketConfig storage marketConfig = config[pool];
 
     if (supplyCap > 0) {
       if (!marketConfig.enabled) {
-        withdrawQueue.push(id);
+        withdrawQueue.push(pool);
 
         if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
 
         marketConfig.enabled = true;
 
-        // todo
-        // // Take into account assets of the new market without applying a fee.
-        // _updateLastTotalAssets(
-        //   lastTotalAssets + MORPHO.expectedSupplyAssets(marketParams, address(this))
-        // );
+        // Take into account assets of the new market without applying a fee.
+        pool.forceUpdateReserve(asset());
+        uint256 supplyAssets = pool.supplyAssets(asset(), positionId);
+        _updateLastTotalAssets(lastTotalAssets + supplyAssets);
 
         emit SetWithdrawQueue(msg.sender, withdrawQueue);
       }
@@ -708,8 +706,8 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
     }
 
     marketConfig.cap = supplyCap;
-    emit SetCap(_msgSender(), id, supplyCap);
-    delete pendingCap[id];
+    emit SetCap(_msgSender(), pool, supplyCap);
+    delete pendingCap[pool];
   }
 
   /* LIQUIDITY ALLOCATION */
@@ -722,18 +720,19 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
       uint256 supplyCap = config[pool].cap;
       if (supplyCap == 0) continue;
 
-      // MORPHO.accrueInterest(marketParams);
+      pool.forceUpdateReserve(asset());
 
-      // todo
-      uint256 supplyShares = MORPHO.supplyShares(id, address(this));
+      uint256 supplyShares = pool.supplyShares(asset(), positionId);
+
       // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      uint256 supplyAssets = supplyShares.toAssetsUp(market.totalSupplyAssets, market.totalSupplyShares);
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
+      uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
       uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
 
       if (toSupply > 0) {
         // Using try/catch to skip markets that revert.
-        try MORPHO.supply(marketParams, toSupply, 0, address(this), hex'') {
+        try pool.supplySimple(asset(), assets, 0) {
           assets -= toSupply;
         } catch {}
       }
