@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.12;
 
-import {IPool} from '../../interfaces/IPool.sol';
 import {INFTRewardsDistributor} from '../../interfaces/INFTRewardsDistributor.sol';
+import {IPool} from '../../interfaces/IPool.sol';
 
 import {OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+
+import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
@@ -61,12 +62,11 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
     if (_totalSupply[_assetHash] == 0) {
       return rewardPerTokenStored[_assetHash];
     }
-    return
-      rewardPerTokenStored[_assetHash].add(
-        lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
-          _totalSupply[_assetHash]
-        )
-      );
+    return rewardPerTokenStored[_assetHash].add(
+      lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+        _totalSupply[_assetHash]
+      )
+    );
   }
 
   function getReward(uint256 tokenId, bytes32 _assetHash) public /* nonReentrant */ {
@@ -80,10 +80,9 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
   }
 
   function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
-    return
-      _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
-        rewards[tokenId][_assetHash]
-      );
+    return _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+      rewards[tokenId][_assetHash]
+    );
   }
 
   function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {
