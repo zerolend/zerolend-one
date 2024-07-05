@@ -1,3 +1,4 @@
+# This workflow will run the linter on the repository
 name: Formatting
 
 on:

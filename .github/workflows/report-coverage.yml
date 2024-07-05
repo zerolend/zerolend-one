@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# This workflow will run the coverage reports and publish it on github pages.
 name: Coverage & Gas Report
 
 concurrency:
@@ -49,3 +49,8 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

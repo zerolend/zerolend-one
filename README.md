@@ -1,5 +1,9 @@
 # ZeroLend One
 
+[![Hardhat Build](https://github.com/zerolend/zerolend-one/actions/workflows/hardhat.yml/badge.svg)](https://github.com/zerolend/zerolend-one/actions/workflows/hardhat.yml)
+[![Foundry Build](https://github.com/zerolend/zerolend-one/actions/workflows/foundry.yml/badge.svg)](https://github.com/zerolend/zerolend-one/actions/workflows/foundry.yml)
+[![codecov](https://codecov.io/github/zerolend/zerolend-one/graph/badge.svg?token=1F8SF7LANW)](https://codecov.io/github/zerolend/zerolend-one)
+
 ZeroLend One is the next version of the ZeroLend protocol and introduces a highly scalable multi-chain lending protocol that is permission-less, isolated and curates risk management.
 
 At the crux of ZeroLend One is Isolated markets. A scalable way for us to address lending demand across many chains and many assets without having to worry about scaling risk management
