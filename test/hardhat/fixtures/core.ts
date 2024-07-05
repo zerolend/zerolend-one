@@ -1,3 +1,4 @@
+import { parseUnits } from 'ethers';
 import { ethers } from 'hardhat';
 
 export async function deployCore() {
@@ -9,7 +10,7 @@ export async function deployCore() {
   const PoolLogic = await ethers.getContractFactory('PoolLogic');
   const SupplyLogic = await ethers.getContractFactory('SupplyLogic');
 
-  const Factory = await ethers.getContractFactory('Factory');
+  const PoolFactory = await ethers.getContractFactory('PoolFactory');
   const PoolConfigurator = await ethers.getContractFactory('PoolConfigurator');
 
   const MintableERC20 = await ethers.getContractFactory('MintableERC20');
@@ -24,7 +25,7 @@ export async function deployCore() {
   const poolLogic = await PoolLogic.deploy();
   const supplyLogic = await SupplyLogic.deploy();
 
-  const PoolFactory = await ethers.getContractFactory('Pool', {
+  const Pool = await ethers.getContractFactory('MockPool', {
     libraries: {
       BorrowLogic: borrowLogic.target,
       FlashLoanLogic: flashLoanLogic.target,
@@ -35,11 +36,11 @@ export async function deployCore() {
   });
 
   // deploy pool
-  const poolImpl = await PoolFactory.deploy();
-  const factory = await Factory.deploy(poolImpl.target);
-  const configurator = await PoolConfigurator.deploy(factory.target, governance.address);
+  const poolImpl = await Pool.deploy();
+  const poolFactory = await PoolFactory.deploy(poolImpl.target);
+  const configurator = await PoolConfigurator.deploy(poolFactory.target, governance.address);
 
-  await factory.setConfigurator(configurator.target);
+  await poolFactory.setConfigurator(configurator.target);
 
   // create dummy tokens
   const tokenA = await MintableERC20.deploy('TOKEN A', 'TOKENA');
@@ -51,7 +52,12 @@ export async function deployCore() {
   const oracleB = await MockAggregator.deploy(2 * 1e8);
   const oracleC = await MockAggregator.deploy(100 * 1e8);
 
-  const irStrategy = await DefaultReserveInterestRateStrategy.deploy(1, 1, 1, 1);
+  const irStrategy = await DefaultReserveInterestRateStrategy.deploy(
+    parseUnits('0.45', 27).toString(),
+    '0',
+    parseUnits('0.07', 27).toString(),
+    parseUnits('0.3', 27).toString()
+  );
 
   return {
     owner,
@@ -61,12 +67,19 @@ export async function deployCore() {
     governance,
     irStrategy,
     poolImpl,
-    factory,
+    poolFactory,
     tokenA,
     tokenB,
     tokenC,
     oracleA,
     oracleB,
     oracleC,
+    libraries: {
+      BorrowLogic: borrowLogic.target,
+      FlashLoanLogic: flashLoanLogic.target,
+      LiquidationLogic: liquidationLogic.target,
+      PoolLogic: poolLogic.target,
+      SupplyLogic: supplyLogic.target,
+    },
   };
 }

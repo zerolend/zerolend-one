@@ -1,8 +1,39 @@
 {
-  "name": "zerolend-one",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "BSL-3.0",
+  "name": "@zerolendxyz/one",
+  "version": "0.2.0",
+  "license": "BUSL-1.1",
+  "scripts": {
+    "clean": "rimraf artifacts artifacts-zk cache cache-zk dist types forge-build",
+    "compile:forge": "forge build",
+    "compile:hardhat": "hardhat compile",
+    "compile": "npm run compile:hardhat && npm run compile:forge",
+    "coverage:forge": "forge coverage --report lcov",
+    "coverage:hardhat": "SOLIDITY_COVERAGE=true hardhat coverage",
+    "coverage": "npm run coverage:hardhat && npm run coverage:forge",
+    "docs": "rimraf docs && hardhat docgen",
+    "lint:fix": "yarn lint:forge:fix && yarn lint:ts:fix",
+    "lint:forge:fix": "forge fmt",
+    "lint:forge": "forge fmt --check",
+    "lint:ts:fix": "prettier --write test/hardhat",
+    "lint:ts": "prettier --check test/hardhat",
+    "lint": "yarn lint:forge && yarn lint:ts",
+    "test": "npm run test:hardhat && npm run test:forge",
+    "test:forge": "forge test",
+    "test:hardhat": "hardhat test",
+    "prepublishOnly": "npm run compile && npm run lint && npm run docs && npm run test",
+    "postinstall": "forge install",
+    "test:certora": "bash ./certora.sh",
+    "prepare": "husky"
+  },
+  "files": [
+    "abi/**/*",
+    "artifacts/**/*",
+    "contracts/**/*",
+    "deployments/**/*",
+    "docs/**/*",
+    "forge-build/**/*",
+    "types/**/*"
+  ],
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "2.0.7",
     "@nomicfoundation/hardhat-ethers": "3.0.6",
@@ -13,6 +44,7 @@
     "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@openzeppelin/contracts": "^4.9.2",
     "@openzeppelin/contracts-upgradeable": "^4.9.2",
+    "@openzeppelin/hardhat-upgrades": "3.2.0",
     "@tsconfig/recommended": "^1.0.2",
     "@typechain/ethers-v6": "0.5.1",
     "@typechain/hardhat": "9.1.0",
@@ -26,6 +58,7 @@
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
     "hardhat": "^2.14.0",
     "hardhat-abi-exporter": "2.10.1",
+    "hardhat-contract-sizer": "2.10.0",
     "hardhat-dependency-compiler": "^1.1.4",
     "hardhat-deploy": "0.12.4",
     "hardhat-gas-reporter": "^1.0.8",
@@ -40,14 +73,21 @@
     "typescript": "~5.0.4",
     "viem": "^2.10.9"
   },
-  "scripts": {
-    "build": "tsc",
-    "test:forge": "forge test",
-    "compile:forge": "forge build",
-    "compile:hardhat": "hardhat compile",
-    "test:hardhat": "hardhat test",
-    "compile": "npm run compile:hardhat && npm run compile:forge",
-    "docs": "rimraf docs && hardhat docgen",
-    "prepare": "husky"
-  }
+  "engines": {
+    "npm": ">=9.0.0",
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerolend/zerolend-one.git"
+  },
+  "author": {
+    "name": "ZeroLend",
+    "email": "security@zerolend.xyz",
+    "url": "https://github.com/zerolend"
+  },
+  "bugs": {
+    "url": "https://github.com/zerolend/zerolend-one/issues"
+  },
+  "homepage": "https://github.com/zerolend/zerolend-one#readme"
 }

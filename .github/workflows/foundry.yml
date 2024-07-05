@@ -1,0 +1,67 @@
+# This workflow will build the contracts and run the tests for the repository using foundry
+name: Foundry
+
+on:
+  push:
+  pull_request:
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  build-no-ir:
+    name: Compilation (without IR)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/install-cache
+      - name: Build contracts without IR
+        run: yarn compile:forge
+        env:
+          FOUNDRY_PROFILE: test
+      - name: Save forge compilation cache
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            cache
+            out
+          key: forge-${{ github.ref_name }}
+
+  test-forge:
+    needs: build-no-ir
+    name: Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        type: ['slow', 'fast']
+        include:
+          - type: 'slow'
+            fuzz-runs: 1024
+            max-test-rejects: 1048576
+            invariant-runs: 32
+            invariant-depth: 512
+          - type: 'fast'
+            fuzz-runs: 256
+            max-test-rejects: 65536
+            invariant-runs: 16
+            invariant-depth: 256
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/install-cache
+      - name: Run tests in ${{ matrix.type }} mode
+        run: yarn test:forge -vvv
+        env:
+          FOUNDRY_FUZZ_RUNS: ${{ matrix.fuzz-runs }}
+          FOUNDRY_FUZZ_MAX_TEST_REJECTS: ${{ matrix.max-test-rejects }}
+          FOUNDRY_INVARIANT_RUNS: ${{ matrix.invariant-runs }}
+          FOUNDRY_INVARIANT_DEPTH: ${{ matrix.invariant-depth }}
+          FOUNDRY_FUZZ_SEED: 0x${{ github.event.pull_request.base.sha || github.sha }}

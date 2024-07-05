@@ -34,3 +34,8 @@ venv
 typechain-types
 types
 abi
+others
+out
+forge-build
+lcov.info
+docs

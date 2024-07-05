@@ -1,24 +1,53 @@
-## Feature List
+# ZeroLend One
 
-Here we document the final list of features we want to showcase in the protocol
+[![Hardhat Build](https://github.com/zerolend/zerolend-one/actions/workflows/hardhat.yml/badge.svg)](https://github.com/zerolend/zerolend-one/actions/workflows/hardhat.yml)
+[![Foundry Build](https://github.com/zerolend/zerolend-one/actions/workflows/foundry.yml/badge.svg)](https://github.com/zerolend/zerolend-one/actions/workflows/foundry.yml)
+[![codecov](https://codecov.io/github/zerolend/zerolend-one/graph/badge.svg?token=1F8SF7LANW)](https://codecov.io/github/zerolend/zerolend-one)
 
-- **Multiple pools & assets** - Permission-less listing of assets and pools through a simple UI
-- **Chain abstraction -** Abstraction of the interaction of the chain so that we can give support to EVM and non-EVM chains such as Solana, TON, Sui etc…
-- **Smart Accounts -** Allow users to make smart accounts that allow multiple transactions to be made through one account. This allow features like gas-less tx’s, touch-id based tx’s etc etc.. Ideally to make the flow seamless, we should batch the creation of the smart-account and the tx execution in one tx itself.
-- **Instant Liquidations** - Powered by Pyth Express Relay.
-- **NFT Positions** - Allow users to have multiple positions per wallet; and allow positions to be moved easily.
-- **Automated Risk Manager -** As detailed over here: [ZL - Automated Risk Manager](https://www.notion.so/ZL-Automated-Risk-Manager-77301ade66a7441fb8bbbd0deef2f89e?pvs=21) this allows risk management to be automated and done at scale
-- **Cross-chain Vaults** - This allows users to deposit into vaults that distribute liquidity across multiple chains. Users can deposit liquidity onto the ETH chain and the risk manager or curator can bridge the liquidity into another chain. Since most of liquidity is on the ETH chain, this allows users to get exposure to yield from other L2 chains while at the same time giving L2 curators the liquidity of ETH.
+ZeroLend One is the next version of the ZeroLend protocol and introduces a highly scalable multi-chain lending protocol that is permission-less, isolated and curates risk management.
 
-Steps for Certora
+At the crux of ZeroLend One is Isolated markets. A scalable way for us to address lending demand across many chains and many assets without having to worry about scaling risk management
+
+## Philosophy
+
+While designing ZeroLend One, we keep the following philosophies in mind.
+
+- **Highly customizable** and Permissionless: Anyone can create isolated lending pools on ZeroLend One with custom parameters and custom assets. Isolated markets are permission-less and inclusive. It enables anyone to lend/borrow assets or design their own isolated pool, regardless of their financial or geographical background.
+
+- **Minimal Governance**: ZeroLend governance keeps politics to a bare minimum. Voters will play a major role in decisions such as emission voting without the need to have governance votes. Political decisions are kept at a bare minimum and the only governance votes made by $ZERO holders will be regarding protocol-related security.
+
+- **Curated Risk Management**: Risk management at ZeroLend One is not delegated to a centralized entity but rather curated across many risk managers through vaults. Protocol risks are managed by vault managers and individual pool managers. Critical risk management actions undergo at least a one-day time lock. ZeroLend also further automates risk management by introducing the Automated Risk Manager (ARM).
+
+- **Better UX**: With a focus on features such as NFT Positions, Smart Accounts and fixed rate lending, ZeroLend focuses bringing a better lending experience to users and give borrowers more control on their positions.
+
+## Documentation
+
+- [docs-one.zerolend.xyz](https://docs-one.zerolend.xyz/) - Contains a high level overview of the entire protocol including architecture documentation.
+- [wiki pages](https://github.com/zerolend/zerolend-one/wiki) - The wiki pages contains the technical documentation for each contract and what they do.
+- [test folders](./test) - The unit tests for the protocol are also documented and can be browsed through for insights about how each test works.
+
+## Tests
+
+There are three test suites that this repository uses.
+
+- [Hardhat](./test/hardhat) - Hardhat is used for all various kinds of feature tests. We test basic functionalities such as supply/borrow, creation of vaults etc.. and basic rules using hardhat tests.
+- [Foundry](./test/forge) - Foundry is used to conduct various fuzzing and invariant tests.
+- [Certora](./test/certora) - Certora is used to conduct all kinds of formal verification tests. This is more in-depth than the foundry tests but run a lot slower.
+
+To compile and run the unit tests, simply run the following commands.
 
 ```
-virtualenv venv
-pip3 install solc-select certora-cli
-solc-select install 0.8.19
-solc-select use 0.8.19
-
-# add certora key here
-export CERTORAKEY=
-certoraRun contracts/mocks/tokens/MintableERC20.sol --verify MintableERC20:test/certora/ERC20.spec --solc solc
+yarn
+yarn compile
+yarn test
 ```
+
+Unit test coverages for hardhat and foundry; along with gas reports can be found here:
+
+- [Hardhat coverage](https://zerolend.github.io/zerolend-one/hardhat/) - Code coverage of the hardhat unit tests
+- [Foundry coverage](https://zerolend.github.io/zerolend-one/foundry/) - Code coverage of the foundry unit tests
+- [Gas Report](https://zerolend.github.io/zerolend-one/gasReport.txt) - A gas report for each function
+
+---
+
+For any questions or queries, feel free to reach out to us on [Discord](https://discord.gg/zerolend)

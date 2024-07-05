@@ -32,30 +32,21 @@ contract TimelockControllerEnumerable is TimelockController, AccessControlEnumer
   /**
    * @dev See {IERC165-supportsInterface}.
    */
-  function supportsInterface(
-    bytes4 interfaceId
-  ) public view virtual override(TimelockController, AccessControlEnumerable) returns (bool) {
-    return
-      interfaceId == type(IERC1155Receiver).interfaceId || super.supportsInterface(interfaceId);
+  function supportsInterface(bytes4 interfaceId) public view virtual override (TimelockController, AccessControlEnumerable) returns (bool) {
+    return interfaceId == type(IERC1155Receiver).interfaceId || super.supportsInterface(interfaceId);
   }
 
   /**
    * @dev Overload {_grantRole} to track enumerable memberships
    */
-  function _grantRole(
-    bytes32 role,
-    address account
-  ) internal virtual override(AccessControl, AccessControlEnumerable) {
+  function _grantRole(bytes32 role, address account) internal virtual override (AccessControl, AccessControlEnumerable) {
     super._grantRole(role, account);
   }
 
   /**
    * @dev Overload {_revokeRole} to track enumerable memberships
    */
-  function _revokeRole(
-    bytes32 role,
-    address account
-  ) internal virtual override(AccessControl, AccessControlEnumerable) {
+  function _revokeRole(bytes32 role, address account) internal virtual override (AccessControl, AccessControlEnumerable) {
     super._revokeRole(role, account);
   }
 }

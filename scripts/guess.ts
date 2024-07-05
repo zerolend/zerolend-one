@@ -3,7 +3,7 @@ import { ZeroAddress, ethers } from 'ethers';
 import { getCreate2Address } from './create2';
 
 // declare deployment parameters
-import contractArtifact from '../artifacts/contracts/core/protocol/factory/Factory.sol/Factory.json';
+import contractArtifact from '../artifacts/contracts/core/factory/Factory.sol/Factory.json';
 const constructorTypes = contractArtifact.abi
   .find((v) => v.type === 'constructor')
   ?.inputs.map((t) => t.type);

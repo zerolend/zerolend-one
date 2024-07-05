@@ -13,26 +13,35 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
-import {INFTPositionManager} from './INFTPositionManager.sol';
-import {IPool, IFactory} from './../../core/interfaces/IFactory.sol';
-import {Multicall} from '../multicall/Multicall.sol';
-import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
+import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
+import {IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+
+import {RewardsController, RewardsDataTypes} from './RewardsController.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
+import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
+import {
+  ERC721EnumerableUpgradeable,
+  ERC721Upgradeable,
+  IERC721Upgradeable
+} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 
 /**
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPositionManager {
+contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721EnumerableUpgradeable, INFTPositionManager {
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
-  IFactory factory;
+  /**
+   * @notice The pool factory contract that is used to create pools.
+   */
+  IPoolFactory factory;
 
   /**
-   * @dev The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
+   * @notice The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
    */
-  uint256 private _nextId = 1;
+  uint256 private _nextId;
 
   /**
    * @notice Mapping from token ID to the Position struct representing the details of the liquidity position.
@@ -51,8 +60,8 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
   }
 
   /**
-   *  @dev Modifier to check if the caller is pool or not.
-   *  @param pool Address of the pool.
+   * @dev Modifier to check if the caller is pool or not.
+   * @param pool Address of the pool.
    */
   modifier isPool(address pool) {
     if (!factory.isPool(pool)) {
@@ -61,9 +70,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     _;
   }
 
-  /**
-   * @dev Constructor to disable initializers.
-   */
+  /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
     _disableInitializers();
   }
@@ -71,10 +78,12 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
   /**
    * @notice Initializes the NFTPositionManager contract.
    */
-  function initialize(address _factory) external initializer {
-    factory = IFactory(_factory);
+  function initialize(address _factory, address _staking) external initializer {
+    factory = IPoolFactory(_factory);
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
+    __RewardsDistributor_init(50_000_000, _staking);
+    _nextId = 1;
   }
 
   /**
@@ -83,7 +92,6 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
    * @return tokenId The ID of the newly minted token.
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
    * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
-   * @custom:event NFTMinted is emitted for each new asset.
    */
   function mint(MintParams calldata params) external isPool(params.pool) returns (uint256 tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
@@ -92,7 +100,10 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     tokenId = _nextId;
     _nextId++;
 
-    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, tokenId));
+    positions[tokenId].pool = params.pool;
+    positions[tokenId].operator = address(0);
+
+    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, tokenId, params.data));
     _mint(msg.sender, tokenId);
   }
 
@@ -102,13 +113,12 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
    * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
    */
-  function increaseLiquidity(
-    LiquidityParams memory params
-  ) external isAuthorizedForToken(params.tokenId) {
+  function increaseLiquidity(LiquidityParams memory params) external {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
-
-    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, params.tokenId));
+    if (params.tokenId == 0) params.tokenId = _nextId - 1;
+    _isAuthorizedForToken(params.tokenId);
+    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, params.tokenId, params.data));
   }
 
   /**
@@ -119,25 +129,19 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
    * @custom:error BalanceMisMatch error thrown if difference of currentDebtBalance and previousDebtBalance is not equal to amount
    * @custom:event BorrowIncreased emitted whenever user borrows asset
    */
-  function borrow(
-    AssetOperationParams memory params
-  ) external isAuthorizedForToken(params.tokenId) {
+  function borrow(AssetOperationParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
 
     IPool pool = IPool(positions[params.tokenId].pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
-    uint256 previousContractBalance = asset.balanceOf(address(this));
-    pool.borrow(params.asset, params.amount, params.tokenId);
-    uint256 currentContractBalance = asset.balanceOf(address(this));
-
-    if (currentContractBalance - previousContractBalance != params.amount) {
-      revert BalanceMisMatch();
-    }
-
+    pool.borrow(params.asset, params.amount, params.tokenId, params.data);
     asset.safeTransfer(msg.sender, params.amount);
     emit BorrowIncreased(params.asset, params.amount, params.tokenId);
+
+    // update incentives
+    _handleDebt(address(pool), params.asset, params.tokenId);
   }
 
   /**
@@ -148,25 +152,19 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
    * @custom:error BalanceMisMatch error thrown if difference of previousSupplyBalance currentSupplyBalance and  is not equal to amount
    * @custom:event Withdrawal emitted whenever user withdraws asset
    */
-
-  function withdraw(
-    AssetOperationParams memory params
-  ) external isAuthorizedForToken(params.tokenId) {
+  function withdraw(AssetOperationParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
 
     IPool pool = IPool(positions[params.tokenId].pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
-    uint256 previousContractBalance = asset.balanceOf(address(this));
-    pool.withdraw(params.asset, params.amount, params.tokenId);
-    uint256 currentContractBalance = asset.balanceOf(address(this));
-
-    if (currentContractBalance - previousContractBalance != params.amount) {
-      revert BalanceMisMatch();
-    }
+    pool.withdraw(params.asset, params.amount, params.tokenId, params.data);
     asset.safeTransfer(msg.sender, params.amount);
     emit Withdrawal(params.asset, params.amount, params.tokenId);
+
+    // update incentives
+    _handleSupplies(address(pool), params.asset, params.tokenId);
   }
 
   /**
@@ -201,22 +199,35 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     asset.safeTransferFrom(msg.sender, address(this), params.amount);
     asset.forceApprove(userPosition.pool, params.amount);
 
-    bytes32 positionId = _getPositionId(params.tokenId);
-
-    uint256 previousDebtBalance = pool.getDebt(params.asset, positionId);
-    uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId);
-    uint256 currentDebtBalance = pool.getDebt(params.asset, positionId);
+    uint256 previousDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
+    uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId, params.data);
+    uint256 currentDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
 
     if (previousDebtBalance - currentDebtBalance != finalRepayAmout) {
       revert BalanceMisMatch();
     }
 
-    // Send back the extra tokens user send
     if (currentDebtBalance == 0 && finalRepayAmout < params.amount) {
       asset.safeTransfer(msg.sender, params.amount - finalRepayAmout);
     }
 
+    // update incentives
+    _handleDebt(address(pool), params.asset, params.tokenId);
+
     emit Repay(params.asset, params.amount, params.tokenId);
+  }
+
+  /// @inheritdoc IERC721Upgradeable
+  function getApproved(uint256 tokenId) public view override (ERC721Upgradeable, IERC721Upgradeable) returns (address) {
+    require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
+
+    return positions[tokenId].operator;
+  }
+
+  /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
+  function _approve(address to, uint256 tokenId) internal override (ERC721Upgradeable) {
+    positions[tokenId].operator = to;
+    emit Approval(ownerOf(tokenId), to, tokenId);
   }
 
   /**
@@ -229,16 +240,12 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     IERC20Upgradeable(params.asset).forceApprove(params.pool, params.amount);
 
     IPool pool = IPool(params.pool);
-    pool.supply(params.asset, params.amount, params.tokenId);
-    emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
-  }
 
-  /**
-   * @dev Get the Postion Id based on tokenID and Contract address.
-   * @param index NFT token ID.
-   */
-  function _getPositionId(uint256 index) private view returns (bytes32) {
-    return keccak256(abi.encodePacked(address(this), 'index', index));
+    pool.supply(params.asset, params.amount, params.tokenId, params.data);
+    emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
+
+    // update incentives
+    _handleSupplies(params.pool, params.asset, params.tokenId);
   }
 
   /**
@@ -246,9 +253,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
    * @param tokenId The ID of the position token.
    * @return assets An array of Asset structs representing the balances and debts of the position's assets.
    */
-  function getPosition(
-    uint256 tokenId
-  ) public view returns (Asset[] memory assets, bool isBurnAllowed) {
+  function getPosition(uint256 tokenId) public view returns (Asset[] memory assets, bool isBurnAllowed) {
     Position memory position = positions[tokenId];
 
     IPool pool = IPool(position.pool);
@@ -257,7 +262,7 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     isBurnAllowed = true;
 
     assets = new Asset[](length);
-    for (uint256 i; i < length; ) {
+    for (uint256 i; i < length;) {
       address asset = _assets[i];
       uint256 balance = assets[i].balance = pool.getBalance(asset, address(this), tokenId);
       uint256 debt = assets[i].debt = pool.getDebt(asset, address(this), tokenId);
@@ -271,5 +276,9 @@ contract NFTPositionManager is Multicall, ERC721EnumerableUpgradeable, INFTPosit
     }
 
     return (assets, isBurnAllowed);
+  }
+
+  function _isAuthorizedForToken(uint256 tokenId) internal {
+    if (!_isApprovedOrOwner(msg.sender, tokenId)) revert NotTokenIdOwner();
   }
 }

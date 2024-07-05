@@ -1,0 +1,196 @@
+// SPDX-License-Identifier: MIT
+// OpenZeppelin Contracts (last updated v4.9.0) (governance/TimelockController.sol)
+
+pragma solidity 0.8.19;
+
+import {ITimelock} from '../../../interfaces/ITimelock.sol';
+import {AccessControlEnumerable} from '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
+import {ERC1155Holder, ERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol';
+import {ERC721Holder} from '@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
+import {Address} from '@openzeppelin/contracts/utils/Address.sol';
+
+contract TimelockedActions is ITimelock, AccessControlEnumerable, ERC721Holder, ERC1155Holder {
+  uint256 internal constant _DONE_TIMESTAMP = uint256(1);
+  mapping(bytes32 id => uint256) private _timestamps;
+  uint256 internal _minDelay;
+
+  constructor(uint256 minDelay) {
+    _minDelay = minDelay;
+  }
+
+  /**
+   * @dev See {IERC165-supportsInterface}.
+   */
+  function supportsInterface(bytes4 interfaceId) public view virtual override (AccessControlEnumerable, ERC1155Receiver) returns (bool) {
+    return super.supportsInterface(interfaceId);
+  }
+
+  /**
+   * @dev Returns whether an id corresponds to a registered operation. This
+   * includes both Waiting, Ready, and Done operations.
+   */
+  function isOperation(bytes32 id) public view returns (bool) {
+    return getOperationState(id) != OperationState.Unset;
+  }
+
+  /**
+   * @dev Returns whether an operation is pending or not. Note that a "pending" operation may also be "ready".
+   */
+  function isOperationPending(bytes32 id) public view returns (bool) {
+    OperationState state = getOperationState(id);
+    return state == OperationState.Waiting || state == OperationState.Ready;
+  }
+
+  /**
+   * @dev Returns whether an operation is ready for execution. Note that a "ready" operation is also "pending".
+   */
+  function isOperationReady(bytes32 id) public view returns (bool) {
+    return getOperationState(id) == OperationState.Ready;
+  }
+
+  /**
+   * @dev Returns whether an operation is done or not.
+   */
+  function isOperationDone(bytes32 id) public view returns (bool) {
+    return getOperationState(id) == OperationState.Done;
+  }
+
+  /**
+   * @dev Returns the timestamp at which an operation becomes ready (0 for
+   * unset operations, 1 for done operations).
+   */
+  function getTimestamp(bytes32 id) public view virtual returns (uint256) {
+    return _timestamps[id];
+  }
+
+  /**
+   * @dev Returns operation state.
+   */
+  function getOperationState(bytes32 id) public view virtual returns (OperationState) {
+    uint256 timestamp = getTimestamp(id);
+    if (timestamp == 0) return OperationState.Unset;
+    else if (timestamp == _DONE_TIMESTAMP) return OperationState.Done;
+    else if (timestamp > block.timestamp) return OperationState.Waiting;
+    return OperationState.Ready;
+  }
+
+  /**
+   * @dev Returns the minimum delay in seconds for an operation to become valid.
+   *
+   * This value can be changed by executing an operation that calls `updateDelay`.
+   */
+  function getMinDelay() public view virtual returns (uint256) {
+    return _minDelay;
+  }
+
+  /**
+   * @dev Returns the identifier of an operation containing a single
+   * transaction.
+   */
+  function hashOperation(address target, uint256 value, bytes calldata data, bytes32 salt) public pure virtual returns (bytes32) {
+    return keccak256(abi.encode(target, value, data, salt));
+  }
+
+  /**
+   * @dev Schedule an operation containing a single transaction.
+   *
+   * Emits {CallSalt} if salt is nonzero, and {CallScheduled}.
+   *
+   * Requirements:
+   *
+   * - the caller must have the 'proposer' role.
+   */
+  function _schedule(address target, uint256 value, bytes calldata data, bytes32 salt, uint256 delay) internal virtual {
+    bytes32 id = hashOperation(target, value, data, salt);
+    _scheduleOp(id, delay);
+    emit CallScheduled(id, 0, target, value, data, salt, delay);
+  }
+
+  /**
+   * @dev Schedule an operation that is to become valid after a given delay.
+   */
+  function _scheduleOp(bytes32 id, uint256 delay) private {
+    if (isOperation(id)) {
+      revert TimelockUnexpectedOperationState(id, _encodeStateBitmap(OperationState.Unset));
+    }
+    uint256 minDelay = getMinDelay();
+    if (delay < minDelay) {
+      revert TimelockInsufficientDelay(delay, minDelay);
+    }
+    _timestamps[id] = block.timestamp + delay;
+  }
+
+  /**
+   * @dev Cancel an operation.
+   */
+  function _cancel(bytes32 id) internal {
+    if (!isOperationPending(id)) {
+      revert TimelockUnexpectedOperationState(id, _encodeStateBitmap(OperationState.Waiting) | _encodeStateBitmap(OperationState.Ready));
+    }
+    delete _timestamps[id];
+
+    emit Cancelled(id);
+  }
+
+  /**
+   * @dev Execute an (ready) operation containing a single transaction.
+   *
+   * Emits a {CallExecuted} event.
+   *
+   * Requirements:
+   *
+   * - the caller must have the 'executor' role.
+   */
+  // This function can reenter, but it doesn't pose a risk because _afterCall checks that the proposal is pending,
+  // thus any modifications to the operation during reentrancy should be caught.
+  // slither-disable-next-line reentrancy-eth
+  function execute(address target, uint256 value, bytes calldata payload, bytes32 salt) public payable virtual {
+    bytes32 id = hashOperation(target, value, payload, salt);
+    _beforeCall(id);
+    _execute(target, value, payload);
+    emit CallExecuted(id, 0, target, value, salt, payload);
+    _afterCall(id);
+  }
+
+  /**
+   * @dev Execute an operation's call.
+   */
+  function _execute(address target, uint256 value, bytes calldata data) internal virtual {
+    (bool success, bytes memory returndata) = target.call{value: value}(data);
+    Address.verifyCallResult(success, returndata, 'call failed');
+  }
+
+  /**
+   * @dev Checks before execution of an operation's calls.
+   */
+  function _beforeCall(bytes32 id) private view {
+    if (!isOperationReady(id)) {
+      revert TimelockUnexpectedOperationState(id, _encodeStateBitmap(OperationState.Ready));
+    }
+  }
+
+  /**
+   * @dev Checks after execution of an operation's calls.
+   */
+  function _afterCall(bytes32 id) private {
+    if (!isOperationReady(id)) {
+      revert TimelockUnexpectedOperationState(id, _encodeStateBitmap(OperationState.Ready));
+    }
+    _timestamps[id] = _DONE_TIMESTAMP;
+  }
+
+  /**
+   * @dev Encodes a `OperationState` into a `bytes32` representation where each bit enabled corresponds to
+   * the underlying position in the `OperationState` enum. For example:
+   *
+   * 0x000...1000
+   *   ^^^^^^----- ...
+   *         ^---- Done
+   *          ^--- Ready
+   *           ^-- Waiting
+   *            ^- Unset
+   */
+  function _encodeStateBitmap(OperationState operationState) internal pure returns (bytes32) {
+    return bytes32(1 << uint8(operationState));
+  }
+}
