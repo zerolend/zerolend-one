@@ -13,9 +13,9 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
 import {PercentageMath} from '../../core/pool/utils/PercentageMath.sol';
 import {WadRayMath} from '../../core/pool/utils/WadRayMath.sol';
+import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
 
 /**
  * @title DiscountedInterestRateStrategy contract
