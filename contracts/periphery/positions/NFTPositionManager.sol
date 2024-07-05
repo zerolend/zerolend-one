@@ -14,16 +14,12 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
-import {IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+import {DataTypes, IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
 import {RewardsController, RewardsDataTypes} from './RewardsController.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
-import {
-  ERC721EnumerableUpgradeable,
-  ERC721Upgradeable,
-  IERC721Upgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {ERC721EnumerableUpgradeable, ERC721Upgradeable, IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 
 /**
@@ -200,15 +196,15 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
     asset.forceApprove(userPosition.pool, params.amount);
 
     uint256 previousDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
-    (, uint256 finalRepayAmout) = pool.repay(params.asset, params.amount, params.tokenId, params.data);
+    DataTypes.SharesType memory repaid = pool.repay(params.asset, params.amount, params.tokenId, params.data);
     uint256 currentDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
 
-    if (previousDebtBalance - currentDebtBalance != finalRepayAmout) {
+    if (previousDebtBalance - currentDebtBalance != repaid.assets) {
       revert BalanceMisMatch();
     }
 
-    if (currentDebtBalance == 0 && finalRepayAmout < params.amount) {
-      asset.safeTransfer(msg.sender, params.amount - finalRepayAmout);
+    if (currentDebtBalance == 0 && repaid.assets < params.amount) {
+      asset.safeTransfer(msg.sender, params.amount - repaid.assets);
     }
 
     // update incentives
@@ -218,14 +214,14 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
   }
 
   /// @inheritdoc IERC721Upgradeable
-  function getApproved(uint256 tokenId) public view override (ERC721Upgradeable, IERC721Upgradeable) returns (address) {
+  function getApproved(uint256 tokenId) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (address) {
     require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
 
     return positions[tokenId].operator;
   }
 
   /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-  function _approve(address to, uint256 tokenId) internal override (ERC721Upgradeable) {
+  function _approve(address to, uint256 tokenId) internal override(ERC721Upgradeable) {
     positions[tokenId].operator = to;
     emit Approval(ownerOf(tokenId), to, tokenId);
   }
@@ -262,7 +258,7 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
     isBurnAllowed = true;
 
     assets = new Asset[](length);
-    for (uint256 i; i < length;) {
+    for (uint256 i; i < length; ) {
       address asset = _assets[i];
       uint256 balance = assets[i].balance = pool.getBalance(asset, address(this), tokenId);
       uint256 debt = assets[i].debt = pool.getDebt(asset, address(this), tokenId);
