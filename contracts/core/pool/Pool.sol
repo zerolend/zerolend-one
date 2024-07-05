@@ -40,8 +40,6 @@ contract Pool is PoolSetters {
     _factory = IPoolFactory(msg.sender);
     _hook = IHook(params.hook);
 
-    require(params.assets.length >= 2, 'not enough assets');
-
     for (uint256 i = 0; i < params.assets.length; i++) {
       PoolLogic.executeInitReserve(
         _reserves,
@@ -137,7 +135,13 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) public {
+  function flashLoan(
+    address receiverAddress,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    DataTypes.ExtraData memory data
+  ) public {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 

@@ -18,6 +18,7 @@ import {
   latest,
   setNextBlockTimestamp,
 } from '@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time';
+import { mine } from '@nomicfoundation/hardhat-network-helpers';
 
 const e18 = BigInt(10 ** 18);
 
@@ -60,6 +61,7 @@ describe('Curated Vault', () => {
   let poolD: Pool;
   let poolE: Pool;
   let poolIdle: Pool;
+  let pools: Pool[];
 
   let loan: MintableERC20;
   let collateral: MintableERC20;
@@ -123,6 +125,8 @@ describe('Curated Vault', () => {
     poolD = await ethers.getContractAt('Pool', await poolFactory.pools(3));
     poolE = await ethers.getContractAt('Pool', await poolFactory.pools(4));
     poolIdle = await ethers.getContractAt('Pool', await poolFactory.pools(5));
+
+    pools = [poolA, poolB, poolC, poolD, poolE, poolIdle];
 
     await factory.createVault(
       admin.address,
@@ -274,25 +278,22 @@ describe('Curated Vault', () => {
 
       // await hre.network.provider.send('evm_setAutomine', [false]);
 
-      // const borrower = borrowers[i % nbSuppliers];
+      const borrower = borrowers[i % nbSuppliers];
 
-      // for (const marketParams of allMarketParams) {
-      //   await randomForwardTimestamp();
+      for (const pool of pools) {
+        await randomForwardTimestamp();
 
-      //   const market = await expectedMarket(marketParams);
+        // const market = await expectedMarket(marketParams);
 
-      //   const liquidity = market.totalSupplyAssets - market.totalBorrowAssets;
-      //   const borrowed = liquidity / 100n;
-      //   if (borrowed === 0n) break;
+        const liquidity = 0n; // market.totalSupplyAssets - market.totalBorrowAssets;
+        const borrowed = BigInt(liquidity) / 100n;
+        if (borrowed === 0n) break;
 
-      //   await morpho
-      //     .connect(borrower)
-      //     .supplyCollateral(marketParams, liquidity, borrower.address, '0x');
-      //   await morpho
-      //     .connect(borrower)
-      //     .borrow(marketParams, borrowed, 0, borrower.address, borrower.address);
+        await pool.connect(borrower).supplySimple(loan, liquidity, 0);
+        await pool.connect(borrower).borrowSimple(collateral, borrowed, 0);
 
-      //   await mine(); // Include supplyCollateral + borrow in a single block.
+        await mine(); // Include supplyCollateral + borrow in a single block.
+      }
     }
 
     await hre.network.provider.send('evm_setAutomine', [true]);
