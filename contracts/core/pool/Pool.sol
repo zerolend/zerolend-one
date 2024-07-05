@@ -28,6 +28,10 @@ contract Pool is PoolSetters {
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
 
+  constructor() {
+    _disableInitializers();
+  }
+
   /**
    * @notice Initializes the Pool.
    * @dev This function is invoked by the factory contract when the Pool is created
@@ -133,7 +137,13 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) public {
+  function flashLoan(
+    address receiverAddress,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    DataTypes.ExtraData memory data
+  ) public {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 
