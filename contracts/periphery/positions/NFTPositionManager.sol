@@ -277,7 +277,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
     return (assets, isBurnAllowed);
   }
 
-  function _isAuthorizedForToken(uint256 tokenId) internal {
+  function _isAuthorizedForToken(uint256 tokenId) internal view {
     if (!_isApprovedOrOwner(msg.sender, tokenId)) revert NotTokenIdOwner();
   }
 }
