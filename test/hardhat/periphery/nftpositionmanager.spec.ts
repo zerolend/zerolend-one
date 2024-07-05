@@ -21,10 +21,10 @@ describe('NFT Position Manager', () => {
 
   describe('erc721-enumerable', () => {
     it('name of the nft should be correct', async () => {
-      expect(await manager.name()).to.be.equals('ZeroLend Position V2');
+      expect(await manager.name()).to.be.equals('ZeroLend One Position');
     });
     it('symbol of the nft should be correct', async () => {
-      expect(await manager.symbol()).to.be.equals('ZL-POS-V2');
+      expect(await manager.symbol()).to.be.equals('ZL-POS-ONE');
     });
   });
 
