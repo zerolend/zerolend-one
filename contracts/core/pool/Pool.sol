@@ -137,13 +137,7 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function flashLoan(
-    address receiverAddress,
-    address asset,
-    uint256 amount,
-    bytes calldata params,
-    DataTypes.ExtraData memory data
-  ) public {
+  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) public {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 
