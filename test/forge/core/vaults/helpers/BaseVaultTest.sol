@@ -3,12 +3,14 @@ pragma solidity 0.8.19;
 
 // import '../../../lib/morpho-blue/src/interfaces/IMorpho.sol';
 
-import {WAD, MathLib} from '../../../../../contracts/core/vaults/libraries/MathLib.sol';
-import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
-import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
+import {MathLib, WAD} from '../../../../../contracts/core/vaults/libraries/MathLib.sol';
+
 import {IPool} from '../../../../../contracts/interfaces/IPool.sol';
+import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
+import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
+
+import {DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator} from '../../pool/CorePoolTests.sol';
 import {DataTypes, PoolSetup} from '../../pool/PoolSetup.sol';
-import {MintableERC20, MockAggregator, DefaultReserveInterestRateStrategy} from '../../pool/CorePoolTests.sol';
 
 uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;
@@ -64,9 +66,9 @@ abstract contract BaseVaultTest is PoolSetup {
     _setupIdleMarket();
 
     // init markets
-    for (uint i = 0; i < NB_MARKETS; i++) {
-      IPool market = IPool(poolFactory.createPool(basicPoolInitParams));
-      allMarkets.push(market);
+    for (uint256 i = 0; i < NB_MARKETS; i++) {
+      IPool market = IPool(poolFactory.createPool(_basicPoolInitParams()));
+      // allMarkets.push(market);
 
       // give approvals
       vm.startPrank(SUPPLIER);
@@ -81,7 +83,7 @@ abstract contract BaseVaultTest is PoolSetup {
       loanToken.approve(address(market), type(uint256).max);
     }
 
-    allMarkets.push(idleMarket); // Must be pushed last.
+    // allMarkets.push(idleMarket); // Must be pushed last.
   }
 
   function _setupIdleMarket() private {
@@ -93,7 +95,7 @@ abstract contract BaseVaultTest is PoolSetup {
     idleAssets[0] = address(loanToken);
     idleStrategies[0] = address(irStrategy);
     idleOracles[0] = address(oracle);
-    configurationLocal[0] = basicConfig;
+    configurationLocal[0] = _basicConfig();
 
     idleMarket = IPool(
       poolFactory.createPool(
@@ -106,11 +108,6 @@ abstract contract BaseVaultTest is PoolSetup {
         })
       )
     );
-  }
-
-  function _setupSampleMarkets() private {
-    IPool market = IPool(poolFactory.createPool(basicPoolInitParams));
-    allMarkets.push(market);
   }
 
   /// @dev Rolls & warps the given number of blocks forward the blockchain.
