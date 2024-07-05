@@ -27,12 +27,7 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
 import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
-import {
-  ERC20Upgradeable,
-  ERC4626Upgradeable,
-  IERC4626Upgradeable,
-  MathUpgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
@@ -263,8 +258,8 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
 
   /// @inheritdoc ICuratedVaultBase
   function submitCap(IPool pool, uint256 newSupplyCap) external onlyCuratorRole {
-    // if (marketParams.loanToken != asset()) revert InconsistentAsset(id);
-    // if (MORPHO.lastUpdate(id) == 0) revert MarketNotCreated();
+    // if (marketParams.loanToken != asset()) revert InconsistentAsset(pool);
+    // if (MORPHO.lastUpdate(pool) == 0) revert MarketNotCreated();
     if (pendingCap[pool].validAt != 0) revert AlreadyPending();
     if (config[pool].removableAt != 0) revert PendingRemoval();
     uint256 supplyCap = config[pool].cap;
@@ -328,20 +323,20 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
 
     for (uint256 i; i < currLength; ++i) {
       if (!seen[i]) {
-        IPool id = withdrawQueue[i];
+        IPool pool = withdrawQueue[i];
 
-        if (config[id].cap != 0) revert InvalidMarketRemovalNonZeroCap(id);
-        if (pendingCap[id].validAt != 0) revert PendingCap(id);
+        if (config[pool].cap != 0) revert InvalidMarketRemovalNonZeroCap(pool);
+        if (pendingCap[pool].validAt != 0) revert PendingCap(pool);
 
         // todo
-        // if (MORPHO.supplyShares(id, address(this)) != 0) {
-        //   if (config[id].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(id);
-        //   if (block.timestamp < config[id].removableAt) {
-        //     revert InvalidMarketRemovalTimelockNotElapsed(id);
+        // if (MORPHO.supplyShares(pool, address(this)) != 0) {
+        //   if (config[pool].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(pool);
+        //   if (block.timestamp < config[pool].removableAt) {
+        //     revert InvalidMarketRemovalTimelockNotElapsed(pool);
         //   }
         // }
 
-        delete config[id];
+        delete config[pool];
       }
     }
 
@@ -380,8 +375,9 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
 
         totalWithdrawn += withdrawnAssets;
       } else {
-        uint256 suppliedAssets =
-          allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets = allocation.assets == type(uint256).max
+          ? totalWithdrawn.zeroFloorSub(totalSupplied)
+          : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
@@ -400,7 +396,7 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
         //   address(this),
         //   hex''
         // );
-        // emit ReallocateSupply(_msgSender(), id, suppliedAssets, suppliedShares);
+        // emit ReallocateSupply(_msgSender(), pool, suppliedAssets, suppliedShares);
         // totalSupplied += suppliedAssets;
       }
     }
@@ -423,15 +419,15 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingCap(IPool id) external onlyCuratorOrGuardianRole {
-    delete pendingCap[id];
-    emit RevokePendingCap(_msgSender(), id);
+  function revokePendingCap(IPool pool) external onlyCuratorOrGuardianRole {
+    delete pendingCap[pool];
+    emit RevokePendingCap(_msgSender(), pool);
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingMarketRemoval(IPool id) external onlyCuratorOrGuardianRole {
-    delete config[id].removableAt;
-    emit RevokePendingMarketRemoval(_msgSender(), id);
+  function revokePendingMarketRemoval(IPool pool) external onlyCuratorOrGuardianRole {
+    delete config[pool].removableAt;
+    emit RevokePendingMarketRemoval(_msgSender(), pool);
   }
 
   /* EXTERNAL */
@@ -457,9 +453,9 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function acceptCap(IPool id) external afterTimelock(pendingCap[id].validAt) {
+  function acceptCap(IPool pool) external afterTimelock(pendingCap[pool].validAt) {
     // Safe "unchecked" cast because pendingCap <= type(uint184).max.
-    _setCap(id, uint184(pendingCap[id].value));
+    _setCap(pool, uint184(pendingCap[pool].value));
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -472,10 +468,10 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
 
   /* ERC4626Upgradeable (PUBLIC) */
 
-  // /// @inheritdoc ERC20Upgradeable
-  // function decimals() public view override(ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
-  //   return ERC4626Upgradeable.decimals();
-  // }
+  /// @inheritdoc ERC20Upgradeable
+  function decimals() public view override returns (uint8) {
+    return ERC4626Upgradeable.decimals();
+  }
 
   /// @inheritdoc IERC4626Upgradeable
   /// @dev Warning: May be higher than the actual max deposit due to duplicate markets in the supplyQueue.
@@ -495,7 +491,7 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets,,) = _maxWithdraw(owner);
+    (assets, , ) = _maxWithdraw(owner);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -588,7 +584,7 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
 
       // todo
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
 
       // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
@@ -658,7 +654,7 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
 
   /// @dev Accrues interest on ZeroLend and returns the vault's assets & corresponding shares supplied on the
   /// market defined by `pool`, as well as the market's state.
-  /// @dev Assumes that the inputs `marketParams` and `id` match.
+  /// @dev Assumes that the inputs `marketParams` and `pool` match.
   function _accruedSupplyBalance(IPool pool) internal returns (uint256 assets, uint256 shares) {
     pool.forceUpdateReserve(asset()); // todo
     DataTypes.ReserveSupplies memory reserveInfo = pool.getTotalSupplyRaw(asset());
@@ -729,7 +725,7 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
 
       // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
       uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
@@ -751,9 +747,11 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   function _withdrawPool(uint256 withdrawAmount) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool pool = withdrawQueue[i];
-      (uint256 supplyAssets,) = _accruedSupplyBalance(pool);
-      uint256 toWithdraw =
-        UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
+      (uint256 supplyAssets, ) = _accruedSupplyBalance(pool);
+      uint256 toWithdraw = UtilsLib.min(
+        _withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets),
+        withdrawAmount
+      );
       if (toWithdraw > 0) {
         // Using try/catch to skip markets that revert.
         try pool.withdrawSimple(asset(), toWithdraw, 0) {
@@ -778,7 +776,7 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
       uint256 supplyShares = pos.supplyShares;
 
       // get info on how much shares and asset the pool has
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = pool.marketBalances(asset());
 
       // The vault withdrawing from ZeroLend cannot fail because:
       // 1. oracle.price() is never called (the vault doesn't borrow)
