@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import './helpers/IntegrationVaultTest.sol';
 
-import '../../../../contracts/core/vaults/CuratedVaultFactory.sol';
 import '../../../../contracts/core/vaults/CuratedVault.sol';
+import '../../../../contracts/core/vaults/CuratedVaultFactory.sol';
 
 contract CuratedVaultFactoryTest is IntegrationVaultTest {
   event VaultCreated(
