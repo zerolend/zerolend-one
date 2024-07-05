@@ -12,7 +12,7 @@ At the crux of ZeroLend One is Isolated markets. A scalable way for us to addres
 
 While designing ZeroLend One, we keep the following philosophies in mind.
 
-- **Highly customizable** and Permissionless: Anyone can create isolated lending pools on ZeroLend One with custom parameters and custom assets. Isolated markets are permission-less and inclusive. It enables anyone to lend/borrow assets or design their own isolated pool, regardless of their financial or geographical background.
+- **Highly customizable and Permissionless**: Anyone can create isolated lending pools on ZeroLend One with custom parameters and custom assets. Isolated markets are permission-less and inclusive. It enables anyone to lend/borrow assets or design their own isolated pool, regardless of their financial or geographical background.
 
 - **Minimal Governance**: ZeroLend governance keeps politics to a bare minimum. Voters will play a major role in decisions such as emission voting without the need to have governance votes. Political decisions are kept at a bare minimum and the only governance votes made by $ZERO holders will be regarding protocol-related security.
 
