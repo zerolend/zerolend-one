@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {BeaconProxy} from '../../core/protocol/factory/BeaconProxy.sol';
-import {IBeacon, IPoolERC4626Vault, IERC4626Factory} from '../interfaces/IERC4626Factory.sol';
+import {IBeacon, IERC4626Factory, IPoolERC4626Vault} from '../interfaces/IERC4626Factory.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 contract ERC4626Factory is Ownable, IERC4626Factory {

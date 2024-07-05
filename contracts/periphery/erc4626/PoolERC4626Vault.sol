@@ -2,24 +2,28 @@
 pragma solidity ^0.8.10;
 
 import {IPool} from '../../core/interfaces/IPool.sol';
+
+import {IPool} from '../../core/interfaces/IPool.sol';
 import {DataTypes, ReserveConfiguration} from '../../core/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {TokenConfiguration} from '../../core/protocol/libraries/configuration/TokenConfiguration.sol';
-import {IPool} from '../../core/interfaces/IPool.sol';
 
 import {IIncentivesController} from '../../core/interfaces/IIncentivesController.sol';
-import {WadRayMath} from '../../core/protocol/libraries/math/WadRayMath.sol';
+
 import {MathUtils} from '../../core/protocol/libraries/math/MathUtils.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {WadRayMath} from '../../core/protocol/libraries/math/WadRayMath.sol';
+
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
+import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 import {IPoolERC4626Vault} from '../interfaces/IPoolERC4626Vault.sol';
 // import {IAToken} from './interfaces/IAToken.sol';
-import {ERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol';
+
 import {PoolERC4626VaultErrors} from './PoolERC4626VaultErrors.sol';
 import {RayMathExplicitRounding, Rounding} from './RayMathExplicitRounding.sol';
+import {ERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol';
 import {IERC4626} from '@openzeppelin/contracts/interfaces/IERC4626.sol';
 
 /**
@@ -36,14 +40,11 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
   using TokenConfiguration for address;
   using RayMathExplicitRounding for uint256;
 
-  bytes32 public constant METADEPOSIT_TYPEHASH =
-    keccak256(
-      'Deposit(address depositor,address receiver,uint256 assets,uint16 referralCode,bool depositToAave,uint256 nonce,uint256 deadline,PermitParams permit)'
-    );
+  bytes32 public constant METADEPOSIT_TYPEHASH = keccak256(
+    'Deposit(address depositor,address receiver,uint256 assets,uint16 referralCode,bool depositToAave,uint256 nonce,uint256 deadline,PermitParams permit)'
+  );
   bytes32 public constant METAWITHDRAWAL_TYPEHASH =
-    keccak256(
-      'Withdraw(address owner,address receiver,uint256 shares,uint256 assets,bool withdrawFromAave,uint256 nonce,uint256 deadline)'
-    );
+    keccak256('Withdraw(address owner,address receiver,uint256 shares,uint256 assets,bool withdrawFromAave,uint256 nonce,uint256 deadline)');
 
   uint256 public constant STATIC__ATOKEN_LM_REVISION = 2;
 
@@ -63,8 +64,7 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
     underlying = IERC20(_underlying);
 
     __ERC20_init(
-      string.concat(IERC20Metadata(_underlying).name(), ' 4262 Vault'),
-      string.concat(IERC20Metadata(_underlying).symbol(), '-4262')
+      string.concat(IERC20Metadata(_underlying).name(), ' 4262 Vault'), string.concat(IERC20Metadata(_underlying).symbol(), '-4262')
     );
 
     _decimals = IERC20Metadata(_underlying).decimals();
@@ -90,13 +90,8 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
   }
 
   ////@inheritdoc IPoolERC4626Vault
-  function deposit(
-    uint256 assets,
-    address receiver,
-    uint16 referralCode,
-    bool depositToAave
-  ) external returns (uint256) {
-    (uint256 shares, ) = _deposit(msg.sender, receiver, 0, assets, referralCode, depositToAave);
+  function deposit(uint256 assets, address receiver, uint16 referralCode, bool depositToAave) external returns (uint256) {
+    (uint256 shares,) = _deposit(msg.sender, receiver, 0, assets, referralCode, depositToAave);
     return shares;
   }
 
@@ -138,11 +133,7 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
   }
 
   ///@inheritdoc IPoolERC4626Vault
-  function claimRewardsOnBehalf(
-    address onBehalfOf,
-    address receiver,
-    address[] memory rewards
-  ) external {
+  function claimRewardsOnBehalf(address onBehalfOf, address receiver, address[] memory rewards) external {
     // todo
     // require(
     //   msg.sender == onBehalfOf || msg.sender == incentives.getClaimer(onBehalfOf),
@@ -230,8 +221,8 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
       return 0;
     }
 
-    uint256 supplyCap = ReserveConfiguration.getSupplyCap(reserveData.configuration) *
-      (10 ** ReserveConfiguration.getDecimals(reserveData.configuration));
+    uint256 supplyCap =
+      ReserveConfiguration.getSupplyCap(reserveData.configuration) * (10 ** ReserveConfiguration.getDecimals(reserveData.configuration));
     // if no supply cap deposit is unlimited
     if (supplyCap == 0) return type(uint256).max;
     // return remaining supply cap margin
@@ -269,10 +260,7 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
       Rounding.DOWN
     );
     uint256 cachedUserBalance = balanceOf(owner);
-    return
-      underlyingTokenBalanceInShares >= cachedUserBalance
-        ? cachedUserBalance
-        : underlyingTokenBalanceInShares;
+    return underlyingTokenBalanceInShares >= cachedUserBalance ? cachedUserBalance : underlyingTokenBalanceInShares;
   }
 
   // ////@inheritdoc IERC4626
@@ -300,7 +288,7 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
 
   ////@inheritdoc IERC4626
   function deposit(uint256 assets, address receiver) external virtual returns (uint256) {
-    (uint256 shares, ) = _deposit(msg.sender, receiver, 0, assets, 0, true);
+    (uint256 shares,) = _deposit(msg.sender, receiver, 0, assets, 0, true);
     return shares;
   }
 
@@ -312,34 +300,21 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
   }
 
   ////@inheritdoc IERC4626
-  function withdraw(
-    uint256 assets,
-    address receiver,
-    address owner
-  ) external virtual returns (uint256) {
-    (uint256 shares, ) = _withdraw(owner, receiver, 0, assets, true);
+  function withdraw(uint256 assets, address receiver, address owner) external virtual returns (uint256) {
+    (uint256 shares,) = _withdraw(owner, receiver, 0, assets, true);
 
     return shares;
   }
 
   ////@inheritdoc IERC4626
-  function redeem(
-    uint256 shares,
-    address receiver,
-    address owner
-  ) external virtual returns (uint256) {
+  function redeem(uint256 shares, address receiver, address owner) external virtual returns (uint256) {
     (, uint256 assets) = _withdraw(owner, receiver, shares, 0, true);
 
     return assets;
   }
 
   ///@inheritdoc IPoolERC4626Vault
-  function redeem(
-    uint256 shares,
-    address receiver,
-    address owner,
-    bool withdrawFromAave
-  ) external virtual returns (uint256, uint256) {
+  function redeem(uint256 shares, address receiver, address owner, bool withdrawFromAave) external virtual returns (uint256, uint256) {
     return _withdraw(owner, receiver, shares, 0, withdrawFromAave);
   }
 
@@ -457,15 +432,10 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
   function _updateUser(address user, uint256 currentRewardsIndex, address rewardToken) internal {
     uint256 balance = balanceOf(user);
     if (balance > 0) {
-      _userRewardsData[user][rewardToken].unclaimedRewards = _getClaimableRewards(
-        user,
-        rewardToken,
-        balance,
-        currentRewardsIndex
-      ).toUint128();
+      _userRewardsData[user][rewardToken].unclaimedRewards =
+        _getClaimableRewards(user, rewardToken, balance, currentRewardsIndex).toUint128();
     }
-    _userRewardsData[user][rewardToken].rewardsIndexOnLastInteraction = currentRewardsIndex
-      .toUint128();
+    _userRewardsData[user][rewardToken].rewardsIndexOnLastInteraction = currentRewardsIndex.toUint128();
   }
 
   /**
@@ -496,19 +466,13 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
    * @param currentRewardsIndex The current rewards index
    * @return The total rewards that can be claimed by the user (if `fresh` flag true, after updating rewards)
    */
-  function _getClaimableRewards(
-    address user,
-    address reward,
-    uint256 balance,
-    uint256 currentRewardsIndex
-  ) internal view returns (uint256) {
+  function _getClaimableRewards(address user, address reward, uint256 balance, uint256 currentRewardsIndex) internal view returns (uint256) {
     RewardIndexCache memory rewardsIndexCache = _startIndex[reward];
     require(rewardsIndexCache.isRegistered == true, PoolERC4626VaultErrors.REWARD_NOT_INITIALIZED);
     UserRewardsData memory currentUserRewardsData = _userRewardsData[user][reward];
     uint256 assetUnit = 10 ** _decimals;
-    return
-      currentUserRewardsData.unclaimedRewards +
-      _getPendingRewards(
+    return currentUserRewardsData.unclaimedRewards
+      + _getPendingRewards(
         balance,
         currentUserRewardsData.rewardsIndexOnLastInteraction == 0
           ? rewardsIndexCache.lastUpdatedIndex
@@ -524,23 +488,14 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
    * @param rewards The addresses of the rewards
    * @param receiver The address to receive the rewards
    */
-  function _claimRewardsOnBehalf(
-    address onBehalfOf,
-    address receiver,
-    address[] memory rewards
-  ) internal {
+  function _claimRewardsOnBehalf(address onBehalfOf, address receiver, address[] memory rewards) internal {
     for (uint256 i = 0; i < rewards.length; i++) {
       if (address(rewards[i]) == address(0)) {
         continue;
       }
       uint256 currentRewardsIndex = getCurrentRewardsIndex(rewards[i]);
       uint256 balance = balanceOf(onBehalfOf);
-      uint256 userReward = _getClaimableRewards(
-        onBehalfOf,
-        rewards[i],
-        balance,
-        currentRewardsIndex
-      );
+      uint256 userReward = _getClaimableRewards(onBehalfOf, rewards[i], balance, currentRewardsIndex);
       uint256 totalRewardTokenBalance = IERC20(rewards[i]).balanceOf(address(this));
       uint256 unclaimedReward = 0;
 
@@ -554,8 +509,7 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
       }
       if (userReward > 0) {
         _userRewardsData[onBehalfOf][rewards[i]].unclaimedRewards = unclaimedReward.toUint128();
-        _userRewardsData[onBehalfOf][rewards[i]].rewardsIndexOnLastInteraction = currentRewardsIndex
-          .toUint128();
+        _userRewardsData[onBehalfOf][rewards[i]].rewardsIndexOnLastInteraction = currentRewardsIndex.toUint128();
         IERC20(rewards[i]).safeTransfer(receiver, userReward);
       }
     }
@@ -586,16 +540,16 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
   }
 
   /**
-   * Copy of https://github.com/aave/aave-v3-core/blob/29ff9b9f89af7cd8255231bc5faf26c3ce0fb7ce/contracts/protocol/libraries/logic/ReserveLogic.sol#L47 with memory instead of calldata
+   * Copy of
+   * https://github.com/aave/aave-v3-core/blob/29ff9b9f89af7cd8255231bc5faf26c3ce0fb7ce/contracts/protocol/libraries/logic/ReserveLogic.sol#L47
+   * with memory instead of calldata
    * @notice Returns the ongoing normalized income for the reserve.
    * @dev A value of 1e27 means there is no income. As time passes, the income is accrued
    * @dev A value of 2*1e27 means for each unit of asset one unit of income has been accrued
    * @param reserve The reserve object
    * @return The normalized income, expressed in ray
    */
-  function _getNormalizedIncome(
-    DataTypes.ReserveData memory reserve
-  ) internal view returns (uint256) {
+  function _getNormalizedIncome(DataTypes.ReserveData memory reserve) internal view returns (uint256) {
     uint40 timestamp = reserve.lastUpdateTimestamp;
 
     //solium-disable-next-line
@@ -603,10 +557,7 @@ contract PoolERC4626Vault is ERC20Upgradeable, IPoolERC4626Vault {
       //if the index was updated in the same block, no need to perform any calculation
       return reserve.liquidityIndex;
     } else {
-      return
-        MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(
-          reserve.liquidityIndex
-        );
+      return MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(reserve.liquidityIndex);
     }
   }
 

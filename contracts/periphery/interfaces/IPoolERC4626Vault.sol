@@ -13,21 +13,15 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {IIncentivesController} from '../../core/interfaces/IIncentivesController.sol';
 import {IPool} from '../../core/interfaces/IPool.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {IIncentivesController} from '../../core/interfaces/IIncentivesController.sol';
 
 interface IPoolERC4626Vault {
   event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
   event Initialized(address indexed token, string name, string symbol);
 
-  event Withdraw(
-    address indexed sender,
-    address indexed receiver,
-    address indexed owner,
-    uint256 assets,
-    uint256 shares
-  );
+  event Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares);
 
   struct SignatureParams {
     uint8 v;
@@ -66,13 +60,9 @@ interface IPoolERC4626Vault {
    * - `false` for the receiver to get aTokens (e.g. aUSDC)
    * @return amountToBurn: StaticATokens burnt, static balance
    * @return amountToWithdraw: underlying/aToken send to `receiver`, dynamic balance
-   **/
-  function redeem(
-    uint256 shares,
-    address receiver,
-    address owner,
-    bool withdrawFromAave
-  ) external returns (uint256, uint256);
+   *
+   */
+  function redeem(uint256 shares, address receiver, address owner, bool withdrawFromAave) external returns (uint256, uint256);
 
   /**
    * @notice Allows to deposit on Aave via meta-transaction
@@ -131,7 +121,8 @@ interface IPoolERC4626Vault {
    * @notice Returns the Aave liquidity index of the underlying aToken, denominated rate here
    * as it can be considered as an ever-increasing exchange rate
    * @return The liquidity index
-   **/
+   *
+   */
   function rate() external view returns (uint256);
 
   /**
@@ -148,11 +139,7 @@ interface IPoolERC4626Vault {
    * @param receiver The address to receive the rewards
    * @param rewards The rewards to claim
    */
-  function claimRewardsOnBehalf(
-    address onBehalfOf,
-    address receiver,
-    address[] memory rewards
-  ) external;
+  function claimRewardsOnBehalf(address onBehalfOf, address receiver, address[] memory rewards) external;
 
   /**
    * @notice Claim rewards and send them to a receiver
@@ -384,11 +371,7 @@ interface IPoolERC4626Vault {
    * Note that some implementations will require pre-requesting to the Vault before a withdrawal may be performed.
    * Those methods should be performed separately.
    */
-  function withdraw(
-    uint256 assets,
-    address receiver,
-    address owner
-  ) external returns (uint256 shares);
+  function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares);
 
   /**
    * @dev Returns the maximum amount of Vault shares that can be redeemed from the owner balance in the Vault,
@@ -429,9 +412,5 @@ interface IPoolERC4626Vault {
    * NOTE: some implementations will require pre-requesting to the Vault before a withdrawal may be performed.
    * Those methods should be performed separately.
    */
-  function redeem(
-    uint256 shares,
-    address receiver,
-    address owner
-  ) external returns (uint256 assets);
+  function redeem(uint256 shares, address receiver, address owner) external returns (uint256 assets);
 }

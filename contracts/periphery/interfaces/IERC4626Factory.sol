@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 import {IPoolERC4626Vault} from './IPoolERC4626Vault.sol';
+import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 
 interface IERC4626Factory is IBeacon {
   event ImplementationUpdated(address indexed old, address indexed updated, address owner);
