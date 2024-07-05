@@ -19,8 +19,9 @@ import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {PoolGetters} from './PoolGetters.sol';
 
 import {PoolSetters} from './PoolSetters.sol';
-import {ReserveLogic} from './logic/PoolLogic.sol';
+
 import {DataTypes} from './configuration/DataTypes.sol';
+import {ReserveLogic} from './logic/PoolLogic.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 
 contract Pool is PoolSetters {
@@ -157,6 +158,8 @@ contract Pool is PoolSetters {
 
   /// @inheritdoc IPool
   function forceUpdateReserves() external {
-    for (uint i = 0; i < _reservesCount; i++) forceUpdateReserve(_reservesList[i]);
+    for (uint256 i = 0; i < _reservesCount; i++) {
+      forceUpdateReserve(_reservesList[i]);
+    }
   }
 }

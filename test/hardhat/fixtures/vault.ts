@@ -38,15 +38,7 @@ export async function deployVault() {
   };
 
   // create a pool
-  await factory.createPool(
-    address initialOwner,
-    address initialProxyOwner,
-    uint256 initialTimelock,
-    address asset,
-    string memory name,
-    string memory symbol,
-    bytes32 salt
-  );
+  await factory.createPool(input);
 
   // grab the instance and return
   const poolAddr = await factory.pools(0);

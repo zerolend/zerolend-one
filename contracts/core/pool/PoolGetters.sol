@@ -99,18 +99,17 @@ abstract contract PoolGetters is PoolStorage, IPool {
     uint256 index
   ) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
     bytes32 positionId = user.getPositionId(index);
-    return
-      PoolLogic.executeGetUserAccountData(
-        _balances,
-        _reserves,
-        _reservesList,
-        DataTypes.CalculateUserAccountDataParams({
-          userConfig: _usersConfig[positionId],
-          reservesCount: _reservesCount,
-          position: positionId,
-          pool: address(this)
-        })
-      );
+    return PoolLogic.executeGetUserAccountData(
+      _balances,
+      _reserves,
+      _reservesList,
+      DataTypes.CalculateUserAccountDataParams({
+        userConfig: _usersConfig[positionId],
+        reservesCount: _reservesCount,
+        position: positionId,
+        pool: address(this)
+      })
+    );
   }
 
   /// @inheritdoc IPool
@@ -119,10 +118,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPool
-  function getUserConfiguration(
-    address user,
-    uint256 index
-  ) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
+  function getUserConfiguration(address user, uint256 index) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
     return _usersConfig[user.getPositionId(index)];
   }
 
@@ -139,7 +135,9 @@ abstract contract PoolGetters is PoolStorage, IPool {
   /// @inheritdoc IPool
   function getReservesList() external view virtual override returns (address[] memory) {
     address[] memory reservesList = new address[](_reservesCount);
-    for (uint256 i = 0; i < _reservesCount; i++) reservesList[i] = _reservesList[i];
+    for (uint256 i = 0; i < _reservesCount; i++) {
+      reservesList[i] = _reservesList[i];
+    }
     return reservesList;
   }
 
