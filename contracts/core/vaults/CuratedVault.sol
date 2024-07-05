@@ -15,9 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes, IPool} from '../../interfaces/IPool.sol';
 
-import {
-  ICuratedVaultBase, MarketAllocation, MarketConfig, PendingAddress, PendingUint192
-} from '../../interfaces/vaults/ICuratedVaultBase.sol';
+import {ICuratedVaultBase, MarketAllocation, MarketConfig, PendingAddress, PendingUint192} from '../../interfaces/vaults/ICuratedVaultBase.sol';
 import {ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
 
 import {PendingLib} from './libraries/PendingLib.sol';
@@ -28,17 +26,13 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
 import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
-import {
-  ERC20Upgradeable,
-  ERC4626Upgradeable,
-  IERC4626Upgradeable,
-  MathUpgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20, IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import 'hardhat/console.sol';
 
 /// @title CuratedVault
 /// @author ZeroLend
@@ -125,14 +119,14 @@ contract CuratedVault is
   }
 
   /// @dev Initializes the contract.
-  /// @param owner The owner of the contract.
-  /// @param initialTimelock The initial timelock.
+  /// @param _owner The owner of the contract.
+  /// @param _initialTimelock The initial timelock.
   /// @param _asset The address of the underlying asset.
   /// @param _name The name of the vault.
   /// @param _symbol The symbol of the vault.
   function initialize(
-    address owner,
-    uint256 initialTimelock,
+    address _owner,
+    uint256 _initialTimelock,
     address _asset,
     string memory _name,
     string memory _symbol
@@ -144,10 +138,10 @@ contract CuratedVault is
     __AccessControlEnumerable_init();
 
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
-    _checkTimelockBounds(initialTimelock);
-    _setTimelock(initialTimelock);
+    _checkTimelockBounds(_initialTimelock);
+    _setTimelock(_initialTimelock);
 
-    _setupRole(DEFAULT_ADMIN_ROLE, owner);
+    _setupRole(DEFAULT_ADMIN_ROLE, _owner);
 
     positionId = keccak256(abi.encodePacked(address(this), 'index', uint256(0)));
   }
@@ -367,8 +361,9 @@ contract CuratedVault is
         emit ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
         totalWithdrawn += burnt.assets;
       } else {
-        uint256 suppliedAssets =
-          allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets = allocation.assets == type(uint256).max
+          ? totalWithdrawn.zeroFloorSub(totalSupplied)
+          : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
@@ -442,7 +437,7 @@ contract CuratedVault is
   /* ERC4626Upgradeable (PUBLIC) */
 
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override (ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
+  function decimals() public view override(ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
@@ -463,7 +458,7 @@ contract CuratedVault is
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets,,) = _maxWithdraw(owner);
+    (assets, , ) = _maxWithdraw(owner);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -559,7 +554,7 @@ contract CuratedVault is
       if (supplyCap == 0) continue;
 
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
 
       // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
@@ -637,7 +632,7 @@ contract CuratedVault is
     shares = pool.supplyShares(asset(), positionId);
 
     // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-    (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
     assets = shares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
   }
 
@@ -697,7 +692,7 @@ contract CuratedVault is
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
 
       // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
       uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
@@ -705,6 +700,7 @@ contract CuratedVault is
       if (toSupply > 0) {
         // Using try/catch to skip markets that revert.
         try pool.supplySimple(asset(), assets, 0) {
+          console.log('supplied', assets);
           assets -= toSupply;
         } catch {}
       }
@@ -719,9 +715,11 @@ contract CuratedVault is
   function _withdrawPool(uint256 withdrawAmount) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool pool = withdrawQueue[i];
-      (uint256 supplyAssets,) = _accruedSupplyBalance(pool);
-      uint256 toWithdraw =
-        UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
+      (uint256 supplyAssets, ) = _accruedSupplyBalance(pool);
+      uint256 toWithdraw = UtilsLib.min(
+        _withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets),
+        withdrawAmount
+      );
       if (toWithdraw > 0) {
         // Using try/catch to skip markets that revert.
         try pool.withdrawSimple(asset(), toWithdraw, 0) {
@@ -746,7 +744,7 @@ contract CuratedVault is
       uint256 supplyShares = pos.supplyShares;
 
       // get info on how much shares and asset the pool has
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = pool.marketBalances(asset());
 
       // The vault withdrawing from ZeroLend cannot fail because:
       // 1. oracle.price() is never called (the vault doesn't borrow)

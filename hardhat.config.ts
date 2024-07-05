@@ -40,6 +40,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       live: false,
       loggingEnabled: false,
+      allowBlocksWithSameTimestamp: true,
       allowUnlimitedContractSize: true,
     },
     sepolia: {
