@@ -26,7 +26,7 @@ contract WithdrawPoolTest is PoolSetup {
     bytes32 pos = keccak256(abi.encodePacked(user, 'index', index));
 
     vm.startPrank(owner);
-    tokenA.mint(mintAmount);
+    tokenA.mint(owner, mintAmount);
     tokenA.approve(address(pool), supplyAmount);
 
     vm.expectEmit(true, true, false, true);
@@ -50,7 +50,7 @@ contract WithdrawPoolTest is PoolSetup {
     uint256 index = 1;
 
     vm.startPrank(owner);
-    tokenA.mint(mintAmount);
+    tokenA.mint(owner, mintAmount);
     tokenA.approve(address(pool), supplyAmount);
 
     pool.supplySimple(address(tokenA), supplyAmount, index);

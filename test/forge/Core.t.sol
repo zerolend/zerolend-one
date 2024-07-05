@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {DefaultReserveInterestRateStrategy} from '../../contracts/core/pool/DefaultReserveInterestRateStrategy.sol';
+import {DefaultReserveInterestRateStrategy} from '../../contracts/periphery/ir/DefaultReserveInterestRateStrategy.sol';
 import {Pool} from '../../contracts/core/pool/Pool.sol';
 import {PoolFactory} from '../../contracts/core/pool/PoolFactory.sol';
 import {PoolConfigurator} from '../../contracts/core/pool/manager/PoolConfigurator.sol';

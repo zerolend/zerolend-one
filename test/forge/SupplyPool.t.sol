@@ -16,7 +16,7 @@ contract SupplyPoolTest is PoolSetup {
     configurator.setReserveFreeze(address(pool), address(tokenA), true);
 
     vm.startPrank(address(1));
-    tokenA.mint(1e18);
+    tokenA.mint(address(1), 1e18);
     tokenA.approve(address(pool), 1e18);
 
     vm.expectRevert(bytes('RESERVE_FROZEN'));
@@ -27,7 +27,7 @@ contract SupplyPoolTest is PoolSetup {
     configurator.setSupplyCap(address(pool), address(tokenA), 100);
 
     vm.startPrank(address(1));
-    tokenA.mint(1e18);
+    tokenA.mint(address(1), 1e18);
     tokenA.approve(address(pool), 1e18);
 
     vm.expectRevert(bytes('SUPPLY_CAP_EXCEEDED'));
@@ -42,7 +42,7 @@ contract SupplyPoolTest is PoolSetup {
 
     vm.startPrank(owner);
 
-    tokenA.mint(150 ether);
+    tokenA.mint(owner, 150 ether);
     tokenA.approve(address(pool), supplyAmount);
 
     vm.expectEmit(true, true, false, true);
@@ -65,7 +65,7 @@ contract SupplyPoolTest is PoolSetup {
 
     vm.startPrank(owner);
 
-    tokenA.mint(mintAmount);
+    tokenA.mint(owner, mintAmount);
     tokenA.approve(address(pool), supplyAmount);
 
     pool.supplySimple(address(tokenA), supplyAmount, index);
