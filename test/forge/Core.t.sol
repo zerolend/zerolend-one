@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {DefaultReserveInterestRateStrategy} from './../../contracts/core/pool/DefaultReserveInterestRateStrategy.sol';
-import {Pool} from './../../contracts/core/pool/Pool.sol';
-import {PoolFactory} from './../../contracts/core/pool/PoolFactory.sol';
-import {PoolConfigurator} from './../../contracts/core/pool/manager/PoolConfigurator.sol';
+import {DefaultReserveInterestRateStrategy} from '../../contracts/core/pool/DefaultReserveInterestRateStrategy.sol';
+import {Pool} from '../../contracts/core/pool/Pool.sol';
+import {PoolFactory} from '../../contracts/core/pool/PoolFactory.sol';
+import {PoolConfigurator} from '../../contracts/core/pool/manager/PoolConfigurator.sol';
 
-import {MintableERC20} from './../../contracts/mocks/MintableERC20.sol';
-import {MockAggregator} from './../../contracts/mocks/MockAggregator.sol';
-import {Test} from './../../lib/forge-std/src/Test.sol';
+import {MintableERC20} from '../../contracts/mocks/MintableERC20.sol';
+import {MockAggregator} from '../../contracts/mocks/MockAggregator.sol';
+import {Test} from '../../lib/forge-std/src/Test.sol';
 
 contract PoolFactoryTest is Test {
   PoolFactory public poolFactory;
