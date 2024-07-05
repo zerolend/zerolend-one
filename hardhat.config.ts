@@ -8,6 +8,7 @@ import 'hardhat-abi-exporter';
 import 'hardhat-contract-sizer';
 import 'hardhat-dependency-compiler';
 import 'hardhat-deploy';
+import 'hardhat-tracer';
 import 'solidity-coverage';
 import 'solidity-docgen';
 

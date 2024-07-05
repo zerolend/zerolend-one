@@ -1,89 +1,103 @@
-import { MaxUint256, parseEther as eth } from 'ethers';
-import { MintableERC20 } from '../../../types';
-import { Pool } from '../../../types/contracts/core/pool';
+import {
+  CuratedVault,
+  CuratedVaultFactory,
+  DefaultReserveInterestRateStrategy,
+  MintableERC20,
+  MockAggregator,
+} from '../../../types';
+import { MaxUint256, keccak256 } from 'ethers';
 import { deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
+import hre, { ethers } from 'hardhat';
 
-describe('Pool', () => {
-  let pool: Pool;
+let seed = 42;
+const random = () => {
+  seed = (seed * 16807) % 2147483647;
+  return (seed - 1) / 2147483646;
+};
+
+describe('Curated Vault', () => {
+  // Without the division it overflows.
+  const initBalance = MaxUint256 / BigInt(10000000000000000);
+  const oraclePriceScale = BigInt(1000000000000000000000000000000000000);
+  const marketsCount = 5;
+  const timelock = 3600 * 24 * 7; // 1 week.
+
+  let factory: CuratedVaultFactory;
+
   let tokenA: MintableERC20;
   let tokenB: MintableERC20;
-  let deployer: SignerWithAddress;
+  let tokenC: MintableERC20;
+
+  let oracleA: MockAggregator;
+  let oracleB: MockAggregator;
+  let oracleC: MockAggregator;
+
+  let irStrategy: DefaultReserveInterestRateStrategy;
+
+  let vault: CuratedVault;
+
+  let admin: SignerWithAddress;
+  let curator: SignerWithAddress;
+  let allocator: SignerWithAddress;
+  let suppliers: SignerWithAddress[];
+  let borrowers: SignerWithAddress[];
+
+  let supplyCap: bigint;
+  let allMarketParams: {
+    loanToken: string;
+    collateralToken: string;
+    oracle: string;
+    irm: string;
+    lltv: number;
+  }[];
+  let idleParams: {
+    loanToken: string;
+    collateralToken: string;
+    oracle: string;
+    irm: string;
+    lltv: number;
+  };
 
   beforeEach(async () => {
     const fixture = await deployPool();
-    ({ tokenA, tokenB, pool, owner: deployer } = fixture);
-  });
+    ({
+      curatedVaultFactory: factory,
+      tokenA,
+      tokenB,
+      tokenC,
+      oracleA,
+      oracleC,
+      oracleB,
+      irStrategy,
+      whale: allocator,
+      ant: curator,
+      owner: admin,
+    } = fixture);
 
-  describe('Supply / Withdraw functions', () => {
-    beforeEach(async () => {
-      await tokenA['mint(uint256)'](eth('10'));
-      await tokenA.approve(pool.target, eth('3'));
-    });
+    const allSigners = await ethers.getSigners();
+    const users = allSigners.slice(0, -3);
+    suppliers = users.slice(0, users.length / 2);
+    borrowers = users.slice(users.length / 2);
 
-    it('try to supply into a pool', async () => {
-      await pool.supplySimple(tokenA.target, eth('1'), 0);
-    });
+    const tx = await factory.createVault(
+      admin.address, // address initialOwner,
+      admin.address, // address initialProxyOwner,
+      86400, // uint256 initialTimelock,
+      tokenA.target, // address asset,
+      'TEST', // string memory name,
+      'TEST-1', // string memory symbol,
+      keccak256('0x') // bytes32 salt
+    );
 
-    it('try to withdraw after a supply into a pool', async () => {
-      await pool.supplySimple(tokenA.target, eth('1'), 0);
-      await pool.withdrawSimple(tokenA.target, eth('1'), 0);
-    });
+    await expect(tx).to.emit(factory, 'VaultCreated');
+    await expect(await factory.vaultsLength()).eq(1);
 
-    it('should give right balances for supplied positions', async () => {
-      await pool.supplySimple(tokenA.target, eth('1'), 0);
-      await pool.supplySimple(tokenA.target, eth('2'), 1);
+    supplyCap = BigInt(50 * suppliers.length * 2) / BigInt(marketsCount / 2);
 
-      expect(await pool.getBalance(tokenA, deployer.address, 0)).eq(eth('1'));
-      expect(await pool.getBalance(tokenA, deployer.address, 1)).eq(eth('2'));
-    });
-
-    it('should revert if withdraw after another index', async () => {
-      await pool.supplySimple(tokenA.target, eth('1'), 0);
-      const t = pool.withdrawSimple(tokenA.target, eth('1'), 1);
-      await expect(t).to.revertedWith('Insufficient Balance!');
-    });
-
-    it('should revert if withdraw more than supplied', async () => {
-      await pool.supplySimple(tokenA.target, eth('1'), 0);
-      const t = pool.withdrawSimple(tokenA.target, eth('10'), 0);
-      await expect(t).to.revertedWith('Insufficient Balance!');
-    });
-  });
-
-  describe('Borrow / Repay functions', () => {
-    beforeEach(async () => {
-      await tokenA['mint(uint256)'](eth('10'));
-      await tokenB['mint(uint256)'](eth('10'));
-
-      await tokenA.approve(pool.target, eth('10'));
-      await tokenB.approve(pool.target, eth('10'));
-
-      await pool.supplySimple(tokenA.target, eth('5'), 0);
-      await pool.supplySimple(tokenB.target, eth('5'), 0);
-    });
-
-    it('try to borrow from a pool', async () => {
-      expect(await tokenB.balanceOf(deployer.address)).eq(eth('5'));
-      await pool.borrowSimple(tokenB.target, eth('1'), 0);
-      expect(await tokenB.balanceOf(deployer.address)).eq(eth('6'));
-    });
-
-    it('try to max repay whatever was borrowed', async () => {
-      expect(await tokenB.balanceOf(deployer.address)).eq(eth('5'));
-      await pool.borrowSimple(tokenB.target, eth('1'), 0);
-      expect(await tokenB.balanceOf(deployer.address)).eq(eth('6'));
-      await pool.repaySimple(tokenB.target, MaxUint256.toString(), 0);
-      expect(await tokenB.balanceOf(deployer.address)).closeTo(eth('5'), eth('0.01'));
-    });
-
-    it('try to partial repay whatever was borrowed', async () => {
-      expect(await tokenB.balanceOf(deployer.address)).eq(eth('5'));
-      await pool.borrowSimple(tokenB.target, eth('1'), 0);
-      expect(await tokenB.balanceOf(deployer.address)).eq(eth('6'));
-      await pool.repaySimple(tokenB.target, eth('0.1'), 0);
-      expect(await tokenB.balanceOf(deployer.address)).closeTo(eth('5.9'), eth('0.01'));
-    });
+    const vaultAddr = await factory.vaults(0);
+    vault = await ethers.getContractAt('CuratedVault', vaultAddr);
+    hre.tracer.enabled = true;
   });
 });
