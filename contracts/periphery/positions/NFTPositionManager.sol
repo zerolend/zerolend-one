@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
-import {IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+import {DataTypes, IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
 import {RewardsController, RewardsDataTypes} from './RewardsController.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
@@ -200,15 +200,15 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
     asset.forceApprove(userPosition.pool, params.amount);
 
     uint256 previousDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
-    uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId, params.data);
+    DataTypes.SharesType memory repaid = pool.repay(params.asset, params.amount, params.tokenId, params.data);
     uint256 currentDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
 
-    if (previousDebtBalance - currentDebtBalance != finalRepayAmout) {
+    if (previousDebtBalance - currentDebtBalance != repaid.assets) {
       revert BalanceMisMatch();
     }
 
-    if (currentDebtBalance == 0 && finalRepayAmout < params.amount) {
-      asset.safeTransfer(msg.sender, params.amount - finalRepayAmout);
+    if (currentDebtBalance == 0 && repaid.assets < params.amount) {
+      asset.safeTransfer(msg.sender, params.amount - repaid.assets);
     }
 
     // update incentives

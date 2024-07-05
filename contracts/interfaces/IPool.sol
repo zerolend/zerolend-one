@@ -163,14 +163,20 @@ interface IPool {
    * @param amount The amount to be supplied
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
+   * @return minted The amount of shares minted
    */
-  function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
+  function supply(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) external returns (DataTypes.SharesType memory minted);
 
   /**
    * @dev See [supply(...)](#supply) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function supplySimple(address asset, uint256 amount, uint256 index) external;
+  function supplySimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -180,15 +186,20 @@ interface IPool {
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
-   * @return The final amount withdrawn
+   * @return burnt The amount of shares burnt
    */
-  function withdraw(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external returns (uint256);
+  function withdraw(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) external returns (DataTypes.SharesType memory burnt);
 
   /**
    * @dev See [withdraw(...)](#withdraw) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function withdrawSimple(address asset, uint256 amount, uint256 index) external returns (uint256);
+  function withdrawSimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory minted);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -200,14 +211,20 @@ interface IPool {
    * @param amount The amount to be borrowed
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
+   * @return borrowed The amount of shares borrowed
    */
-  function borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external;
+  function borrow(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) external returns (DataTypes.SharesType memory borrowed);
 
   /**
    * @dev See [borrow(...)](#borrow) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function borrowSimple(address asset, uint256 amount, uint256 index) external;
+  function borrowSimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -217,22 +234,28 @@ interface IPool {
    * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
-   * @return The final amount repaid
+   * @return repaid The amount of shares repaid
    */
-  function repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) external returns (uint256);
+  function repay(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) external returns (DataTypes.SharesType memory repaid);
 
   /**
    * @dev See [repay(...)](#repay) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function repaySimple(address asset, uint256 amount, uint256 index) external returns (uint256);
+  function repaySimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
 
-  // /**
-  //  * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
-  //  * @param asset The address of the underlying asset supplied
-  //  * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
-  //  */
-  // function setUserUseReserveAsCollateral(address asset, bool useAsCollateral) external;
+  /**
+   * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
+   * @param asset The address of the underlying asset supplied
+   * @param index The index of the user's position
+   * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
+   */
+  function setUserUseReserveAsCollateral(address asset, uint256 index, bool useAsCollateral) external;
 
   /**
    * @notice Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
@@ -471,4 +494,21 @@ interface IPool {
    * @return The address of the Pool Configurator
    */
   function getConfigurator() external view returns (address);
+
+  function totalAssets(address asset) external view returns (uint256 balance);
+
+  function totalDebt(address asset) external view returns (uint256 balance);
+
+  function supplyShares(address asset, bytes32 positionId) external view returns (uint256 shares);
+
+  function forceUpdateReserves() external;
+
+  function forceUpdateReserve(address asset) external;
+
+  function marketBalances(address asset)
+    external
+    view
+    returns (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, uint256 totalBorrowShares);
+
+  function supplyAssets(address asset, bytes32 positionId) external view returns (uint256);
 }

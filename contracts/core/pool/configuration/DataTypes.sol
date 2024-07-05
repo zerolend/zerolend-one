@@ -96,6 +96,11 @@ library DataTypes {
     uint128 underlyingBalance;
   }
 
+  struct SharesType {
+    uint256 shares;
+    uint256 assets;
+  }
+
   struct ExtraData {
     bytes hookData;
     bytes interestRateData;
