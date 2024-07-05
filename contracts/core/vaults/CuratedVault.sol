@@ -288,6 +288,7 @@ contract CuratedVault is
     if (length > MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
 
     for (uint256 i; i < length; ++i) {
+      IERC20(asset()).forceApprove(address(newSupplyQueue[i]), type(uint256).max);
       if (config[newSupplyQueue[i]].cap == 0) revert UnauthorizedMarket(newSupplyQueue[i]);
     }
 
@@ -699,8 +700,7 @@ contract CuratedVault is
 
       if (toSupply > 0) {
         // Using try/catch to skip markets that revert.
-        try pool.supplySimple(asset(), assets, 0) {
-          console.log('supplied', assets);
+        try pool.supplySimple(asset(), toSupply, 0) {
           assets -= toSupply;
         } catch {}
       }

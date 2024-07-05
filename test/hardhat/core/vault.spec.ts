@@ -46,7 +46,7 @@ const randomForwardTimestamp = async () => {
 
 describe('Curated Vault', () => {
   // Without the division it overflows.
-  const initBalance = MaxUint256 / BigInt(10000000000000000);
+  const initBalance = 100000000000000000000000n;
   const oraclePriceScale = BigInt(1000000000000000000000000000000000000);
   const marketsCount = 5;
   const timelock = 3600 * 24 * 7; // 1 week.
@@ -135,6 +135,7 @@ describe('Curated Vault', () => {
     );
 
     supplyCap = (e18 * BigInt(50 * suppliers.length * 2)) / BigInt(Math.floor(marketsCount / 2));
+    console.log('suppl', supplyCap);
 
     const vaultAddr = await factory.vaults(0);
     vault = await ethers.getContractAt('CuratedVault', vaultAddr);
@@ -191,22 +192,23 @@ describe('Curated Vault', () => {
       await randomForwardTimestamp();
 
       // Supplier j supplies twice, ~100 in total.
-      await vault.connect(supplier).deposit(
-        // e18 * 100n,
-        e18 * BigInt(1 + Math.floor((99 * (nbDeposits - i - 1)) / (nbDeposits - 1))),
-        supplier.address
-      );
+      await vault
+        .connect(supplier)
+        .deposit(
+          e18 * BigInt(1 + Math.floor((99 * (nbDeposits - i - 1)) / (nbDeposits - 1))),
+          supplier.address
+        );
 
       await randomForwardTimestamp();
 
-      // // Supplier j withdraws twice, ~80 in total.
-      // await vault
-      //   .connect(supplier)
-      //   .withdraw(
-      //     e18 * BigInt(1 + Math.ceil((79 * i) / (nbDeposits - 1))),
-      //     supplier.address,
-      //     supplier.address
-      //   );
+      // Supplier j withdraws twice, ~80 in total.
+      await vault
+        .connect(supplier)
+        .withdraw(
+          e18 * BigInt(1 + Math.ceil((79 * i) / (nbDeposits - 1))),
+          supplier.address,
+          supplier.address
+        );
 
       await randomForwardTimestamp();
 
