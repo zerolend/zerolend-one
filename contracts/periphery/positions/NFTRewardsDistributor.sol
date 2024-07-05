@@ -2,23 +2,21 @@
 pragma solidity ^0.8.12;
 
 import {IPool} from '../../interfaces/IPool.sol';
-import {IRewardsDistributor} from '../../interfaces/IRewardsDistributor.sol';
+import {INFTRewardsDistributor} from '../../interfaces/INFTRewardsDistributor.sol';
 
-import {RewardsDataTypes} from './RewardsDataTypes.sol';
 import {OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
 /**
- * @title RewardsDistributor
+ * @title NFTRewardsDistributor
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
  */
-abstract contract RewardsDistributor is OwnableUpgradeable {
-  using SafeCast for uint256;
+abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableUpgradeable, INFTRewardsDistributor {
   using SafeMath for uint256;
 
   IERC20 public rewardsToken;
@@ -35,8 +33,7 @@ abstract contract RewardsDistributor is OwnableUpgradeable {
   uint256 internal _maxBoostRequirement;
   uint256 public rewardsDuration;
 
-  function __RewardsDistributor_init(
-    address owner_,
+  function __NFTRewardsDistributor_init(
     uint256 maxBoostRequirement_,
     address staking_,
     uint256 rewardsDuration_,
@@ -46,8 +43,6 @@ abstract contract RewardsDistributor is OwnableUpgradeable {
     _staking = IVotes(staking_);
     rewardsToken = IERC20(rewardsToken_);
     rewardsDuration = rewardsDuration_;
-    __Ownable_init();
-    _transferOwnership(owner_);
   }
 
   function totalSupplyAssetForRewards(bytes32 _assetHash) external view returns (uint256) {
@@ -66,17 +61,29 @@ abstract contract RewardsDistributor is OwnableUpgradeable {
     if (_totalSupply[_assetHash] == 0) {
       return rewardPerTokenStored[_assetHash];
     }
-    return rewardPerTokenStored[_assetHash].add(
-      lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
-        _totalSupply[_assetHash]
-      )
-    );
+    return
+      rewardPerTokenStored[_assetHash].add(
+        lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+          _totalSupply[_assetHash]
+        )
+      );
+  }
+
+  function getReward(uint256 tokenId, bytes32 _assetHash) public /* nonReentrant */ {
+    _updateReward(tokenId, _assetHash);
+    uint256 reward = rewards[tokenId][_assetHash];
+    if (reward > 0) {
+      rewards[tokenId][_assetHash] = 0;
+      rewardsToken.transfer(ownerOf(tokenId), reward);
+      emit RewardPaid(tokenId, ownerOf(tokenId), reward);
+    }
   }
 
   function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
-    return _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
-      rewards[tokenId][_assetHash]
-    );
+    return
+      _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+        rewards[tokenId][_assetHash]
+      );
   }
 
   function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {
@@ -123,7 +130,7 @@ abstract contract RewardsDistributor is OwnableUpgradeable {
 
     lastUpdateTime[_assetHash] = block.timestamp;
     periodFinish[_assetHash] = block.timestamp.add(rewardsDuration);
-    // emit RewardAdded(reward);
+    emit RewardAdded(_assetHash, reward);
   }
 
   function _updateReward(uint256 _tokenId, bytes32 _assetHash) internal {

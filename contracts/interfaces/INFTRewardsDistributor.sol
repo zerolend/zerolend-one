@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+/**
+ * @title IRewardsDistributor
+ * @author Aave
+ * @notice Defines the basic interface for a Rewards Distributor.
+ */
+interface INFTRewardsDistributor {
+  event RewardAdded(bytes32 indexed assetHash, uint256 indexed reward);
+  event Staked(address indexed user, uint256 amount);
+  event Withdrawn(address indexed user, uint256 amount);
+  event RewardPaid(uint256 indexed tokenId, address indexed user, uint256 reward);
+  event RewardsDurationUpdated(uint256 newDuration);
+  event Recovered(address token, uint256 amount);
+
+  // IERC20 external rewardsToken;
+  // mapping(bytes32 assetHash => uint256) external lastUpdateTime;
+  // mapping(bytes32 assetHash => uint256) external periodFinish;
+  // mapping(bytes32 assetHash => uint256) external rewardPerTokenStored;
+  // mapping(bytes32 assetHash => uint256) external rewardRate;
+  // mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewards)) external rewards;
+
+  // uint256 external rewardsDuration;
+
+  function totalSupplyAssetForRewards(bytes32 _assetHash) external view returns (uint256);
+
+  function balanceOfByAssetHash(uint256 tokenId, bytes32 _assetHash) external view returns (uint256);
+
+  function lastTimeRewardApplicable(bytes32 _assetHash) external view returns (uint256);
+
+  function rewardPerToken(bytes32 _assetHash) external view returns (uint256);
+
+  function earned(uint256 tokenId, bytes32 _assetHash) external view returns (uint256);
+
+  function getRewardForDuration(bytes32 _assetHash) external view returns (uint256);
+
+  /**
+   * @dev Calculates the boosted balance for an account.
+   * @param account The address of the account for which to calculate the boosted balance.
+   * @param balance The amount to boost.
+   * @return The boosted balance of the account.
+   */
+  function boostedBalance(address account, uint256 balance) external view returns (uint256);
+
+  function notifyRewardAmount(uint256 reward, address pool, address asset, bool isDebt) external;
+
+  function assetHash(address pool, address asset, bool isDebt) external pure returns (bytes32);
+}
