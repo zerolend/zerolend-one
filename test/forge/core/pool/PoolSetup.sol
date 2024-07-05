@@ -2,19 +2,17 @@
 pragma solidity 0.8.19;
 
 import {IPool} from '../../../../contracts/interfaces/IPool.sol';
-import {Pool, PoolFactoryTest} from '../Core.t.sol';
+import {CorePoolTest} from './CorePool.sol';
 import {DataTypes} from '../../../../contracts/core/pool/configuration/DataTypes.sol';
 
-contract PoolSetup is PoolFactoryTest {
-  DataTypes.InitPoolParams internal inputParams;
+contract PoolSetup is CorePoolTest {
+  DataTypes.InitPoolParams internal basicPoolInitParams;
   DataTypes.InitReserveConfig internal basicConfig;
-  DataTypes.InitReserveConfig[] configurations;
-
-  Pool public pool;
+  IPool internal pool;
 
   function setUp() public {
     config_factory();
-    DataTypes.InitReserveConfig memory basicConfigLocal = DataTypes.InitReserveConfig({
+    basicConfig = DataTypes.InitReserveConfig({
       ltv: 7500,
       liquidationThreshold: 8000,
       liquidationBonus: 10_500,
@@ -41,11 +39,11 @@ contract PoolSetup is PoolFactoryTest {
     sources[2] = address(oracleC);
 
     DataTypes.InitReserveConfig[] memory configurationLocal = new DataTypes.InitReserveConfig[](3);
-    configurationLocal[0] = basicConfigLocal;
-    configurationLocal[1] = basicConfigLocal;
-    configurationLocal[2] = basicConfigLocal;
+    configurationLocal[0] = basicConfig;
+    configurationLocal[1] = basicConfig;
+    configurationLocal[2] = basicConfig;
 
-    DataTypes.InitPoolParams memory inputParamsLocal = DataTypes.InitPoolParams({
+    basicPoolInitParams = DataTypes.InitPoolParams({
       hook: address(0),
       assets: assets,
       rateStrategyAddresses: rateStrategyAddresses,
@@ -53,21 +51,10 @@ contract PoolSetup is PoolFactoryTest {
       configurations: configurationLocal
     });
 
-    poolFactory.createPool(inputParamsLocal);
+    poolFactory.createPool(basicPoolInitParams);
 
     IPool poolAddr = poolFactory.pools(0);
 
-    pool = Pool(address(poolAddr));
-  }
-
-  function testPoolFactoryLength() external view {
-    assertEq(poolFactory.poolsLength(), 1);
-  }
-
-  function testReserveList() external view {
-    address[] memory reserveList = pool.getReservesList();
-    assertEq(reserveList[0], address(tokenA));
-    assertEq(reserveList[1], address(tokenB));
-    assertEq(reserveList[2], address(tokenC));
+    pool = IPool(address(poolAddr));
   }
 }
