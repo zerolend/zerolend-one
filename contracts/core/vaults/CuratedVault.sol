@@ -40,7 +40,7 @@ import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 /// @author ZeroLend
 /// @custom:contact contact@zerolend.xyz
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
-contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallUpgradeable, ICuratedVaultStaticTyping {
+contract CuratedVault is ERC4626Upgradeable, AccessControlEnumerableUpgradeable, MulticallUpgradeable, ICuratedVaultStaticTyping {
   using MathUpgradeable for uint256;
   using UtilsLib for uint256;
   using SafeCast for uint256;
@@ -50,30 +50,20 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   using PendingLib for PendingUint192;
   using PendingLib for PendingAddress;
 
-  // bytes32 GUA
+  bytes32 public immutable GUARDIAN_ROLE = keccak256('GUARDIAN_ROLE');
+  bytes32 public immutable CURATOR_ROLE = keccak256('GUARDIAN_ROLE');
+  bytes32 public immutable ALLOCATOR_ROLE = keccak256('GUARDIAN_ROLE');
 
   /// @notice OpenZeppelin decimals offset used by the ERC4626Upgradeable implementation.
   /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
   /// precision between shares and assets.
   uint8 public DECIMALS_OFFSET;
 
-  /// @inheritdoc ICuratedVaultBase
-  address public curator;
-
-  /// @inheritdoc ICuratedVaultBase
-  mapping(address => bool) public isAllocator;
-
-  /// @inheritdoc ICuratedVaultBase
-  address public guardian;
-
   /// @inheritdoc ICuratedVaultStaticTyping
   mapping(IPool => MarketConfig) public config;
 
   /// @inheritdoc ICuratedVaultBase
   uint256 public timelock;
-
-  /// @inheritdoc ICuratedVaultStaticTyping
-  PendingAddress public pendingGuardian;
 
   /// @inheritdoc ICuratedVaultStaticTyping
   mapping(IPool => PendingUint192) public pendingCap;
@@ -99,6 +89,7 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /// @inheritdoc ICuratedVaultBase
   uint256 public lastTotalAssets;
 
+  /// @inheritdoc ICuratedVaultBase
   bytes32 public positionId;
 
   /// @dev Initializes the contract.
@@ -118,15 +109,16 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
     // __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
     __Multicall_init();
-    __Ownable_init();
-    __Ownable2Step_init();
-    // __AccessControlEnumerable_init();
+    __AccessControlEnumerable_init();
 
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
     _checkTimelockBounds(initialTimelock);
     _setTimelock(initialTimelock);
 
-    _transferOwnership(owner);
+    _setupRole(DEFAULT_ADMIN_ROLE, owner);
+    _setupRole(GUARDIAN_ROLE, owner);
+    _setupRole(CURATOR_ROLE, owner);
+    _setupRole(ALLOCATOR_ROLE, owner);
 
     positionId = keccak256(abi.encodePacked(address(this), 'index', uint256(0)));
   }
@@ -136,14 +128,14 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /// @dev Reverts if the caller doesn't have the curator role.
   modifier onlyCuratorRole() {
     address sender = _msgSender();
-    if (sender != curator && sender != owner()) revert NotCuratorRole();
+    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(CURATOR_ROLE, _msgSender())) revert NotGuardianRole();
     _;
   }
 
   /// @dev Reverts if the caller doesn't have the allocator role.
   modifier onlyAllocatorRole() {
     address sender = _msgSender();
-    if (!isAllocator[sender] && sender != curator && sender != owner()) {
+    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(ALLOCATOR_ROLE, _msgSender())) {
       revert NotAllocatorRole();
     }
     _;
@@ -151,13 +143,18 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
 
   /// @dev Reverts if the caller doesn't have the guardian role.
   modifier onlyGuardianRole() {
-    if (_msgSender() != owner() && _msgSender() != guardian) revert NotGuardianRole();
+    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(GUARDIAN_ROLE, _msgSender())) revert NotGuardianRole();
+    _;
+  }
+
+  modifier onlyOwner() {
+    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) revert NotOwnerRole();
     _;
   }
 
   /// @dev Reverts if the caller doesn't have the curator nor the guardian role.
   modifier onlyCuratorOrGuardianRole() {
-    if (_msgSender() != guardian && _msgSender() != curator && _msgSender() != owner()) {
+    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(CURATOR_ROLE, _msgSender()) && !hasRole(GUARDIAN_ROLE, _msgSender())) {
       revert NotCuratorNorGuardianRole();
     }
     _;
@@ -176,20 +173,6 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /* ONLY OWNER FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
-  function setCurator(address newCurator) external onlyOwner {
-    if (newCurator == curator) revert AlreadySet();
-    curator = newCurator;
-    emit SetCurator(newCurator);
-  }
-
-  /// @inheritdoc ICuratedVaultBase
-  function setIsAllocator(address newAllocator, bool newIsAllocator) external onlyOwner {
-    if (isAllocator[newAllocator] == newIsAllocator) revert AlreadySet();
-    isAllocator[newAllocator] = newIsAllocator;
-    emit SetIsAllocator(newAllocator, newIsAllocator);
-  }
-
-  /// @inheritdoc ICuratedVaultBase
   function setSkimRecipient(address newSkimRecipient) external onlyOwner {
     if (newSkimRecipient == skimRecipient) revert AlreadySet();
     skimRecipient = newSkimRecipient;
@@ -202,12 +185,10 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
     if (pendingTimelock.validAt != 0) revert AlreadyPending();
     _checkTimelockBounds(newTimelock);
 
-    if (newTimelock > timelock) {
-      _setTimelock(newTimelock);
-    } else {
+    if (newTimelock > timelock) _setTimelock(newTimelock);
+    else {
       // Safe "unchecked" cast because newTimelock <= MAX_TIMELOCK.
       pendingTimelock.update(uint184(newTimelock), timelock);
-
       emit SubmitTimelock(newTimelock);
     }
   }
@@ -238,20 +219,6 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
     feeRecipient = newFeeRecipient;
 
     emit SetFeeRecipient(newFeeRecipient);
-  }
-
-  /// @inheritdoc ICuratedVaultBase
-  function submitGuardian(address newGuardian) external onlyOwner {
-    if (newGuardian == guardian) revert AlreadySet();
-    if (pendingGuardian.validAt != 0) revert AlreadyPending();
-
-    if (guardian == address(0)) {
-      _setGuardian(newGuardian);
-    } else {
-      pendingGuardian.update(newGuardian, timelock);
-
-      emit SubmitGuardian(newGuardian);
-    }
   }
 
   /* ONLY CURATOR FUNCTIONS */
@@ -413,12 +380,6 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingGuardian() external onlyGuardianRole {
-    delete pendingGuardian;
-    emit RevokePendingGuardian(_msgSender());
-  }
-
-  /// @inheritdoc ICuratedVaultBase
   function revokePendingCap(IPool pool) external onlyCuratorOrGuardianRole {
     delete pendingCap[pool];
     emit RevokePendingCap(_msgSender(), pool);
@@ -445,11 +406,6 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /// @inheritdoc ICuratedVaultBase
   function acceptTimelock() external afterTimelock(pendingTimelock.validAt) {
     _setTimelock(pendingTimelock.value);
-  }
-
-  /// @inheritdoc ICuratedVaultBase
-  function acceptGuardian() external afterTimelock(pendingGuardian.validAt) {
-    _setGuardian(pendingGuardian.value);
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -499,7 +455,6 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
   /// roundings between shares and assets.
   function maxRedeem(address owner) public view override returns (uint256) {
     (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) = _maxWithdraw(owner);
-
     return _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, MathUpgradeable.Rounding.Down);
   }
 
@@ -554,6 +509,11 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
     for (uint256 i; i < withdrawQueue.length; ++i) {
       assets += withdrawQueue[i].getBalanceByPosition(asset(), positionId);
     }
+  }
+
+  /// @inheritdoc ICuratedVaultBase
+  function isAllocator(address who) public view override returns (bool) {
+    return hasRole(ALLOCATOR_ROLE, who);
   }
 
   /* ERC4626Upgradeable (INTERNAL) */
@@ -673,13 +633,6 @@ contract CuratedVault is ERC4626Upgradeable, Ownable2StepUpgradeable, MulticallU
     timelock = newTimelock;
     emit SetTimelock(_msgSender(), newTimelock);
     delete pendingTimelock;
-  }
-
-  /// @dev Sets `guardian` to `newGuardian`.
-  function _setGuardian(address newGuardian) internal {
-    guardian = newGuardian;
-    emit SetGuardian(_msgSender(), newGuardian);
-    delete pendingGuardian;
   }
 
   /// @dev Sets the cap of the market defined by `pool` to `supplyCap`.

@@ -22,9 +22,6 @@ interface ICuratedVaultStaticTyping is ICuratedVaultBase {
   /// @notice Returns the current configuration of each market.
   function config(IPool) external view returns (uint184 cap, bool enabled, uint64 removableAt);
 
-  /// @notice Returns the pending guardian.
-  function pendingGuardian() external view returns (address guardian, uint64 validAt);
-
   /// @notice Returns the pending cap for each market.
   function pendingCap(IPool) external view returns (uint192 value, uint64 validAt);
 

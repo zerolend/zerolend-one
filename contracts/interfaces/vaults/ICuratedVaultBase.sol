@@ -57,6 +57,9 @@ interface ICuratedVaultBase {
   /// @notice Thrown when the caller doesn't have the allocator role.
   error NotAllocatorRole();
 
+  /// @notice Thrown when the caller doesn't have the admin role.
+  error NotOwnerRole();
+
   /// @notice Thrown when the caller doesn't have the guardian role.
   error NotGuardianRole();
 
@@ -237,14 +240,8 @@ interface ICuratedVaultBase {
 
   function DECIMALS_OFFSET() external view returns (uint8);
 
-  /// @notice The address of the curator.
-  function curator() external view returns (address);
-
   /// @notice Stores whether an address is an allocator or not.
   function isAllocator(address target) external view returns (bool);
-
-  /// @notice The current guardian. Can be set even without the timelock set.
-  function guardian() external view returns (address);
 
   /// @notice The current fee.
   function fee() external view returns (uint96);
@@ -257,6 +254,9 @@ interface ICuratedVaultBase {
 
   /// @notice The current timelock.
   function timelock() external view returns (uint256);
+
+  /// @notice The current position id used in various pools.
+  function positionId() external view returns (bytes32);
 
   /// @dev Stores the order of markets on which liquidity is supplied upon deposit.
   /// @dev Can contain any market. A market is skipped as soon as its supply cap is reached.
@@ -319,27 +319,8 @@ interface ICuratedVaultBase {
   /// @dev Does not revert if there is no pending market removal.
   function revokePendingMarketRemoval(IPool id) external;
 
-  /// @notice Submits a `newGuardian`.
-  /// @notice Warning: a malicious guardian could disrupt the vault's operation, and would have the power to revoke
-  /// any pending guardian.
-  /// @dev In case there is no guardian, the gardian is set immediately.
-  /// @dev Warning: Submitting a gardian will overwrite the current pending gardian.
-  function submitGuardian(address newGuardian) external;
-
-  /// @notice Accepts the pending guardian.
-  function acceptGuardian() external;
-
-  /// @notice Revokes the pending guardian.
-  function revokePendingGuardian() external;
-
   /// @notice Skims the vault `token` balance to `skimRecipient`.
   function skim(address) external;
-
-  /// @notice Sets `newAllocator` as an allocator or not (`newIsAllocator`).
-  function setIsAllocator(address newAllocator, bool newIsAllocator) external;
-
-  /// @notice Sets `curator` to `newCurator`.
-  function setCurator(address newCurator) external;
 
   /// @notice Sets the `fee` to `newFee`.
   function setFee(uint256 newFee) external;
