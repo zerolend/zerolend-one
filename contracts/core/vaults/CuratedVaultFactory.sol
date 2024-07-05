@@ -60,7 +60,7 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
     // track the vault
     vaults.push(vault);
     isVault[address(vault)] = true;
-    emit VaultCreated(vault, vaults.length, msg.sender);
+    emit VaultCreated(vault, vaults.length, msg.sender, initialOwner, initialProxyOwner, initialTimelock, asset, name, symbol, salt);
   }
 
   /// @inheritdoc ICuratedVaultFactory

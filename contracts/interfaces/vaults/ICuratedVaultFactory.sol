@@ -17,7 +17,18 @@ import {ICuratedVault} from './ICuratedVault.sol';
 import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 
 interface ICuratedVaultFactory is IBeacon {
-  event VaultCreated(ICuratedVault indexed vault, uint256 indexed index, address creator);
+  event VaultCreated(
+    ICuratedVault indexed vault,
+    uint256 indexed index,
+    address creator,
+    address initialOwner,
+    address initialProxyOwner,
+    uint256 initialTimelock,
+    address asset,
+    string name,
+    string symbol,
+    bytes32 salt
+  );
   event ImplementationUpdated(address indexed old, address indexed updated, address owner);
 
   /**
