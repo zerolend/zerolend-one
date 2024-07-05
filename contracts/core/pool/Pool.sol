@@ -63,22 +63,32 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function supply(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public returns (uint256, uint256) {
+  function supply(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) public returns (DataTypes.SharesType memory) {
     return _supply(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function supplySimple(address asset, uint256 amount, uint256 index) public returns (uint256, uint256) {
+  function supplySimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
     return _supply(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPool
-  function withdraw(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public returns (uint256, uint256) {
+  function withdraw(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) public returns (DataTypes.SharesType memory) {
     return _withdraw(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function withdrawSimple(address asset, uint256 amount, uint256 index) public returns (uint256, uint256) {
+  function withdrawSimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
     return _withdraw(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 

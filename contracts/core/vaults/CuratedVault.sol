@@ -351,13 +351,9 @@ contract CuratedVault is
           withdrawn = 0;
         }
 
-        // todo
-
-        (, uint256 withdrawnAssets) = pool.withdrawSimple(asset(), withdrawn, 0);
-
-        // emit ReallocateWithdraw(_msgSender(), address(pool), withdrawnAssets, withdrawnShares);
-
-        totalWithdrawn += withdrawnAssets;
+        DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), withdrawn, 0);
+        emit ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
+        totalWithdrawn += burnt.assets;
       } else {
         uint256 suppliedAssets = allocation.assets == type(uint256).max
           ? totalWithdrawn.zeroFloorSub(totalSupplied)
@@ -372,8 +368,8 @@ contract CuratedVault is
 
         // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
         IERC20(asset()).forceApprove(address(pool), type(uint256).max);
-        (, uint256 suppliedShares) = pool.supplySimple(asset(), suppliedAssets, 0);
-        emit ReallocateSupply(_msgSender(), pool, suppliedAssets, suppliedShares);
+        DataTypes.SharesType memory minted = pool.supplySimple(asset(), suppliedAssets, 0);
+        emit ReallocateSupply(_msgSender(), pool, suppliedAssets, minted.shares);
         totalSupplied += suppliedAssets;
       }
     }

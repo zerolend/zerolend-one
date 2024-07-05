@@ -167,21 +167,20 @@ interface IPool {
    * @param amount The amount to be supplied
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
-   * @return shares The amount of shares received
-   * @return assets The amount of assets received (ie shares * liquidit index)
+   * @return minted The amount of shares minted
    */
   function supply(
     address asset,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) external returns (uint256 shares, uint256 assets);
+  ) external returns (DataTypes.SharesType memory minted);
 
   /**
    * @dev See [supply(...)](#supply) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function supplySimple(address asset, uint256 amount, uint256 index) external returns (uint256 shares, uint256 assets);
+  function supplySimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -191,21 +190,20 @@ interface IPool {
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
-   * @return shares The amount of shares withdrawn
-   * @return assets The amount of assets withdrawn (ie shares * liquidit index)
+   * @return burnt The amount of shares burnt
    */
   function withdraw(
     address asset,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) external returns (uint256 shares, uint256 assets);
+  ) external returns (DataTypes.SharesType memory burnt);
 
   /**
    * @dev See [withdraw(...)](#withdraw) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function withdrawSimple(address asset, uint256 amount, uint256 index) external returns (uint256 shares, uint256 assets);
+  function withdrawSimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory minted);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
