@@ -3,9 +3,12 @@ pragma solidity ^0.8.12;
 
 import {IPool} from '../../interfaces/IPool.sol';
 import {IRewardsDistributor} from '../../interfaces/IRewardsDistributor.sol';
+
 import {RewardsDataTypes} from './RewardsDataTypes.sol';
+import {OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
@@ -14,7 +17,7 @@ import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
  */
-abstract contract RewardsDistributor {
+abstract contract RewardsDistributor is OwnableUpgradeable {
   using SafeCast for uint256;
   using SafeMath for uint256;
 
@@ -33,15 +36,18 @@ abstract contract RewardsDistributor {
   uint256 public rewardsDuration;
 
   function __RewardsDistributor_init(
+    address owner_,
     uint256 maxBoostRequirement_,
     address staking_,
     uint256 rewardsDuration_,
     address rewardsToken_
-  ) internal {
+  ) internal onlyInitializing {
     _maxBoostRequirement = maxBoostRequirement_;
     _staking = IVotes(staking_);
     rewardsToken = IERC20(rewardsToken_);
     rewardsDuration = rewardsDuration_;
+    __Ownable_init();
+    _transferOwnership(owner_);
   }
 
   function totalSupplyAssetForRewards(bytes32 _assetHash) external view returns (uint256) {
@@ -60,19 +66,17 @@ abstract contract RewardsDistributor {
     if (_totalSupply[_assetHash] == 0) {
       return rewardPerTokenStored[_assetHash];
     }
-    return
-      rewardPerTokenStored[_assetHash].add(
-        lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
-          _totalSupply[_assetHash]
-        )
-      );
+    return rewardPerTokenStored[_assetHash].add(
+      lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+        _totalSupply[_assetHash]
+      )
+    );
   }
 
   function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
-    return
-      _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
-        rewards[tokenId][_assetHash]
-      );
+    return _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+      rewards[tokenId][_assetHash]
+    );
   }
 
   function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {
@@ -96,11 +100,7 @@ abstract contract RewardsDistributor {
     return _boostedBalance > balance ? balance : _boostedBalance;
   }
 
-  modifier onlyRewardsDistribution() {
-    _;
-  }
-
-  function notifyRewardAmount(uint256 reward, address pool, address asset, bool isDebt) external onlyRewardsDistribution {
+  function notifyRewardAmount(uint256 reward, address pool, address asset, bool isDebt) external onlyOwner {
     rewardsToken.transferFrom(msg.sender, address(this), reward);
 
     bytes32 _assetHash = assetHash(pool, asset, isDebt);
@@ -118,7 +118,7 @@ abstract contract RewardsDistributor {
     // This keeps the reward rate in the right range, preventing overflows due to
     // very high values of rewardRate in the earned and rewardsPerToken functions;
     // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-    uint balance = rewardsToken.balanceOf(address(this));
+    uint256 balance = rewardsToken.balanceOf(address(this));
     require(rewardRate[_assetHash] <= balance.div(rewardsDuration), 'Provided reward too high');
 
     lastUpdateTime[_assetHash] = block.timestamp;
@@ -141,10 +141,16 @@ abstract contract RewardsDistributor {
 
   //// @inheritdoc IRewardsController
   function _handleSupplies(address pool, address asset, uint256 id) internal {
-    // _updateData(pool, asset, id, 0, 0);
+    bytes32 _assetHash = assetHash(pool, asset, false);
+    _updateReward(id, _assetHash);
+
+    // todo
   }
 
   function _handleDebt(address pool, address asset, uint256 id) internal {
-    // _updateData(pool, asset, id, 0, 0); // todo seperate debt and supply
+    bytes32 _assetHash = assetHash(pool, asset, true);
+    _updateReward(id, _assetHash);
+
+    // todo
   }
 }
