@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {PoolSetup} from './Pool.t.sol';
 
-contract WithdrawPoolTest is PoolSetup {
+contract PoolWithdrawTest is PoolSetup {
   event Withdraw(address indexed reserve, bytes32 indexed pos, address indexed to, uint256 amount);
   event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
 

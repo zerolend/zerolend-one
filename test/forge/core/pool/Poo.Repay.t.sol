@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {PoolSetup} from './Pool.t.sol';
 
-contract RepayPoolTest is PoolSetup {
+contract PoolRepayTest is PoolSetup {
   /// ------------Repay------------
   function testRepayAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));

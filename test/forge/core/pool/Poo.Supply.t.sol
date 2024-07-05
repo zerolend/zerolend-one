@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {PoolSetup} from './Pool.t.sol';
 
-contract SupplyPoolTest is PoolSetup {
+contract PoolSupplyTest is PoolSetup {
   event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
 
   /// ------------Supply------------

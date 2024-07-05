@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IPool} from '../../contracts/interfaces/IPool.sol';
-import {Pool, PoolFactoryTest} from './Core.t.sol';
-
-import {DataTypes} from '../../contracts/core/pool/configuration/DataTypes.sol';
+import {IPool} from '../../../../contracts/interfaces/IPool.sol';
+import {Pool, PoolFactoryTest} from '../Core.t.sol';
+import {DataTypes} from '../../../../contracts/core/pool/configuration/DataTypes.sol';
 
 contract PoolSetup is PoolFactoryTest {
   DataTypes.InitPoolParams internal inputParams;
