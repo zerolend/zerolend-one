@@ -4,12 +4,15 @@ import {
   DefaultReserveInterestRateStrategy,
   MintableERC20,
   MockAggregator,
+  PoolFactory,
 } from '../../../types';
-import { MaxUint256, keccak256 } from 'ethers';
-import { deployPool } from '../fixtures/pool';
+import { MaxUint256, ZeroAddress, keccak256 } from 'ethers';
+import { basicConfig, deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
+import _range from 'lodash/range';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import hre, { ethers } from 'hardhat';
+import { DataTypes, Pool } from '../../../types/contracts/core/pool/Pool';
 
 let seed = 42;
 const random = () => {
@@ -25,10 +28,16 @@ describe('Curated Vault', () => {
   const timelock = 3600 * 24 * 7; // 1 week.
 
   let factory: CuratedVaultFactory;
+  let poolFactory: PoolFactory;
 
-  let tokenA: MintableERC20;
-  let tokenB: MintableERC20;
-  let tokenC: MintableERC20;
+  let poolA: Pool;
+  let poolB: Pool;
+  let poolC: Pool;
+  let poolD: Pool;
+  let poolE: Pool;
+
+  let loan: MintableERC20;
+  let collateral: MintableERC20;
 
   let oracleA: MockAggregator;
   let oracleB: MockAggregator;
@@ -45,28 +54,14 @@ describe('Curated Vault', () => {
   let borrowers: SignerWithAddress[];
 
   let supplyCap: bigint;
-  let allMarketParams: {
-    loanToken: string;
-    collateralToken: string;
-    oracle: string;
-    irm: string;
-    lltv: number;
-  }[];
-  let idleParams: {
-    loanToken: string;
-    collateralToken: string;
-    oracle: string;
-    irm: string;
-    lltv: number;
-  };
 
   beforeEach(async () => {
     const fixture = await deployPool();
     ({
       curatedVaultFactory: factory,
-      tokenA,
-      tokenB,
-      tokenC,
+      poolFactory,
+      tokenA: loan,
+      tokenB: collateral,
       oracleA,
       oracleC,
       oracleB,
@@ -81,23 +76,49 @@ describe('Curated Vault', () => {
     suppliers = users.slice(0, users.length / 2);
     borrowers = users.slice(users.length / 2);
 
-    const tx = await factory.createVault(
-      admin.address, // address initialOwner,
-      admin.address, // address initialProxyOwner,
-      86400, // uint256 initialTimelock,
-      tokenA.target, // address asset,
-      'TEST', // string memory name,
-      'TEST-1', // string memory symbol,
-      keccak256('0x') // bytes32 salt
-    );
+    // create 5 pools and a vault
+    const input: DataTypes.InitPoolParamsStruct = {
+      hook: ZeroAddress,
+      assets: [loan.target, collateral.target],
+      rateStrategyAddresses: [irStrategy.target, irStrategy.target],
+      sources: [oracleA.target, oracleB.target],
+      configurations: [basicConfig, basicConfig],
+    };
 
-    await expect(tx).to.emit(factory, 'VaultCreated');
-    await expect(await factory.vaultsLength()).eq(1);
+    await poolFactory.createPool(input);
+    await poolFactory.createPool(input);
+    await poolFactory.createPool(input);
+    await poolFactory.createPool(input);
+    await poolFactory.createPool(input);
+
+    poolA = await ethers.getContractAt('Pool', await poolFactory.pools(0));
+    poolB = await ethers.getContractAt('Pool', await poolFactory.pools(1));
+    poolC = await ethers.getContractAt('Pool', await poolFactory.pools(2));
+    poolD = await ethers.getContractAt('Pool', await poolFactory.pools(3));
+    poolE = await ethers.getContractAt('Pool', await poolFactory.pools(4));
+
+    await factory.createVault(
+      admin.address,
+      admin.address,
+      86400,
+      loan.target,
+      'TEST',
+      'TEST-1',
+      keccak256('0x')
+    );
 
     supplyCap = BigInt(50 * suppliers.length * 2) / BigInt(marketsCount / 2);
 
     const vaultAddr = await factory.vaults(0);
     vault = await ethers.getContractAt('CuratedVault', vaultAddr);
+
+    for (const user of users) {
+      await loan.mint(user.address, initBalance);
+      await loan.connect(user).approve(vault.target, MaxUint256);
+      await collateral.mint(user.address, initBalance);
+      await collateral.connect(user).approve(vault.target, MaxUint256);
+    }
+
     hre.tracer.enabled = true;
   });
 });
