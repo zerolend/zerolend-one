@@ -30,7 +30,7 @@ import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgrad
 import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
+import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
@@ -40,7 +40,13 @@ import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 /// @author ZeroLend
 /// @custom:contact contact@zerolend.xyz
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
-contract CuratedVault is ERC4626Upgradeable, AccessControlEnumerableUpgradeable, MulticallUpgradeable, ICuratedVaultStaticTyping {
+contract CuratedVault is
+  ERC4626Upgradeable,
+  ERC20PermitUpgradeable,
+  AccessControlEnumerableUpgradeable,
+  MulticallUpgradeable,
+  ICuratedVaultStaticTyping
+{
   using MathUpgradeable for uint256;
   using UtilsLib for uint256;
   using SafeCast for uint256;
@@ -106,7 +112,7 @@ contract CuratedVault is ERC4626Upgradeable, AccessControlEnumerableUpgradeable,
     string memory _symbol
   ) external initializer {
     __ERC20_init(_name, _symbol);
-    // __ERC20Permit_init(_name);
+    __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
     __Multicall_init();
     __AccessControlEnumerable_init();
@@ -425,7 +431,7 @@ contract CuratedVault is ERC4626Upgradeable, AccessControlEnumerableUpgradeable,
   /* ERC4626Upgradeable (PUBLIC) */
 
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override returns (uint8) {
+  function decimals() public view override(ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
