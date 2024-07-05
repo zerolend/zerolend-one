@@ -5,8 +5,9 @@ import {DefaultReserveInterestRateStrategy} from './../../contracts/core/pool/De
 import {Pool} from './../../contracts/core/pool/Pool.sol';
 import {PoolFactory} from './../../contracts/core/pool/PoolFactory.sol';
 import {PoolConfigurator} from './../../contracts/core/pool/manager/PoolConfigurator.sol';
-import {MockAggregator} from './../../contracts/mocks/tests/MockAggregator.sol';
-import {MintableERC20} from './../../contracts/mocks/tokens/MintableERC20.sol';
+
+import {MintableERC20} from './../../contracts/mocks/MintableERC20.sol';
+import {MockAggregator} from './../../contracts/mocks/MockAggregator.sol';
 import {Test} from './../../lib/forge-std/src/Test.sol';
 
 contract PoolFactoryTest is Test {
