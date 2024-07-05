@@ -17,6 +17,9 @@ import {IBeacon, ICuratedVault, ICuratedVaultFactory} from '../../interfaces/vau
 import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
+/// @title CuratedVaultFactory
+/// @author ZeroLend
+/// @notice Creates and tracks CuratedVaults.
 contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   /// @inheritdoc IBeacon
   address public implementation;
@@ -27,6 +30,10 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   /// @inheritdoc ICuratedVaultFactory
   mapping(address => bool) public isVault;
 
+  /**
+   * Initializes the factory with the implementation of the vaults.
+   * @param _implementation The address of the implementation contract.
+   */
   constructor(address _implementation) {
     implementation = _implementation;
   }
