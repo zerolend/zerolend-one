@@ -215,21 +215,20 @@ interface IPool {
    * @param amount The amount to be borrowed
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
-   * @return shares The amount of shares borrowed
-   * @return assets The amount of assets borrowed (ie shares * liquidit index)
+   * @return borrowed The amount of shares borrowed
    */
   function borrow(
     address asset,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) external returns (uint256 shares, uint256 assets);
+  ) external returns (DataTypes.SharesType memory borrowed);
 
   /**
    * @dev See [borrow(...)](#borrow) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function borrowSimple(address asset, uint256 amount, uint256 index) external returns (uint256 shares, uint256 assets);
+  function borrowSimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -239,21 +238,20 @@ interface IPool {
    * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
-   * @return shares The amount of shares repaid
-   * @return assets The amount of assets repaid (ie shares * liquidit index)
+   * @return repaid The amount of shares repaid
    */
   function repay(
     address asset,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) external returns (uint256 shares, uint256 assets);
+  ) external returns (DataTypes.SharesType memory repaid);
 
   /**
    * @dev See [repay(...)](#repay) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function repaySimple(address asset, uint256 amount, uint256 index) external returns (uint256 shares, uint256 assets);
+  function repaySimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
 
   /**
    * @notice Allows suppliers to enable/disable a specific supplied asset as collateral

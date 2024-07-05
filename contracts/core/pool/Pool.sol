@@ -93,22 +93,32 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPool
-  function borrow(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public returns (uint256, uint256) {
+  function borrow(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) public returns (DataTypes.SharesType memory) {
     return _borrow(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function borrowSimple(address asset, uint256 amount, uint256 index) public returns (uint256, uint256) {
+  function borrowSimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
     return _borrow(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPool
-  function repay(address asset, uint256 amount, uint256 index, DataTypes.ExtraData memory data) public returns (uint256, uint256) {
+  function repay(
+    address asset,
+    uint256 amount,
+    uint256 index,
+    DataTypes.ExtraData memory data
+  ) public returns (DataTypes.SharesType memory) {
     return _repay(asset, amount, index, data);
   }
 
   /// @inheritdoc IPool
-  function repaySimple(address asset, uint256 amount, uint256 index) public returns (uint256, uint256) {
+  function repaySimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
     return _repay(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
