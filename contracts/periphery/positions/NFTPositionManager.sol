@@ -16,21 +16,17 @@ pragma solidity 0.8.19;
 import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
 import {DataTypes, IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
-import {RewardsController, RewardsDataTypes} from './RewardsController.sol';
+import {RewardsDistributor} from './RewardsDistributor.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
-import {
-  ERC721EnumerableUpgradeable,
-  ERC721Upgradeable,
-  IERC721Upgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {ERC721EnumerableUpgradeable, ERC721Upgradeable, IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 
 /**
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721EnumerableUpgradeable, INFTPositionManager {
+contract NFTPositionManager is RewardsDistributor, MulticallUpgradeable, ERC721EnumerableUpgradeable, INFTPositionManager {
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
   /**
@@ -78,11 +74,11 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
   /**
    * @notice Initializes the NFTPositionManager contract.
    */
-  function initialize(address _factory, address _staking) external initializer {
+  function initialize(address _factory, address _staking, address _zero) external initializer {
     factory = IPoolFactory(_factory);
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
-    __RewardsDistributor_init(50_000_000, _staking);
+    __RewardsDistributor_init(50_000_000, _staking, 14 days, _zero);
     _nextId = 1;
   }
 
@@ -218,14 +214,14 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
   }
 
   /// @inheritdoc IERC721Upgradeable
-  function getApproved(uint256 tokenId) public view override (ERC721Upgradeable, IERC721Upgradeable) returns (address) {
+  function getApproved(uint256 tokenId) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (address) {
     require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
 
     return positions[tokenId].operator;
   }
 
   /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-  function _approve(address to, uint256 tokenId) internal override (ERC721Upgradeable) {
+  function _approve(address to, uint256 tokenId) internal override(ERC721Upgradeable) {
     positions[tokenId].operator = to;
     emit Approval(ownerOf(tokenId), to, tokenId);
   }
@@ -262,7 +258,7 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
     isBurnAllowed = true;
 
     assets = new Asset[](length);
-    for (uint256 i; i < length;) {
+    for (uint256 i; i < length; ) {
       address asset = _assets[i];
       uint256 balance = assets[i].balance = pool.getBalance(asset, address(this), tokenId);
       uint256 debt = assets[i].debt = pool.getDebt(asset, address(this), tokenId);

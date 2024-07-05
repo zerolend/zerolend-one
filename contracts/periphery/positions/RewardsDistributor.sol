@@ -5,141 +5,85 @@ import {IPool} from '../../interfaces/IPool.sol';
 import {IRewardsDistributor} from '../../interfaces/IRewardsDistributor.sol';
 import {RewardsDataTypes} from './RewardsDataTypes.sol';
 import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
 /**
  * @title RewardsDistributor
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
  */
-abstract contract RewardsDistributor is IRewardsDistributor {
+abstract contract RewardsDistributor {
   using SafeCast for uint256;
+  using SafeMath for uint256;
 
-  // Map of rewarded asset addresses and their data (assetAddress => assetData)
-  // mapping(address => RewardsDataTypes.AssetData) internal _poolAssets;
-
-  /// @dev Map of rewarded asset addresses and their data (assetAddress => assetData)
-  mapping(address pool => mapping(address asset => RewardsDataTypes.AssetData data)) internal _poolAssets;
-
-  // Map of reward assets (rewardAddress => enabled)
-  // mapping(address => bool) internal _isPoolRewardEnabled[pool];
-
-  mapping(address pool => mapping(address asset => bool enabled)) internal _isPoolRewardEnabled;
-
-  // Rewards list
-  // address[] internal _poolRewardsList[pool];
-
-  mapping(address pool => address[] rewards) internal _poolRewardsList;
-
-  // Assets list
-  // address[] internal _poolRewardsList[pool];
-
-  // Assets list
-  mapping(address pool => address[] assets) internal _poolAssetList;
-
-  uint256 internal _maxBoostRequirement;
-
+  IERC20 public rewardsToken;
   IVotes internal _staking;
+  mapping(address pool => address[] assets) internal _poolAssetList;
+  mapping(bytes32 assetHash => uint256 supply) private _totalSupply;
+  mapping(bytes32 assetHash => uint256) public lastUpdateTime;
+  mapping(bytes32 assetHash => uint256) public periodFinish;
+  mapping(bytes32 assetHash => uint256) public rewardPerTokenStored;
+  mapping(bytes32 assetHash => uint256) public rewardRate;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 balance)) private _balances;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewardPerTokenStored)) public userRewardPerTokenPaid;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewards)) public rewards;
+  uint256 internal _maxBoostRequirement;
+  uint256 public rewardsDuration;
 
-  modifier onlyEmissionManager(address pool) {
-    // require(msg.sender == EMISSION_MANAGER, 'ONLY_EMISSION_MANAGER');
-    _;
-  }
-
-  function __RewardsDistributor_init(uint256 maxBoostRequirement_, address staking_) internal {
+  function __RewardsDistributor_init(
+    uint256 maxBoostRequirement_,
+    address staking_,
+    uint256 rewardsDuration_,
+    address rewardsToken_
+  ) internal {
     _maxBoostRequirement = maxBoostRequirement_;
     _staking = IVotes(staking_);
+    rewardsToken = IERC20(rewardsToken_);
+    rewardsDuration = rewardsDuration_;
   }
 
-  //// @inheritdoc IRewardsDistributor
-  function getRewardsData(address pool, address asset, address reward) public view returns (uint256, uint256, uint256, uint256) {
-    return (
-      _poolAssets[pool][asset].rewards[reward].index,
-      _poolAssets[pool][asset].rewards[reward].emissionPerSecond,
-      _poolAssets[pool][asset].rewards[reward].lastUpdateTimestamp,
-      _poolAssets[pool][asset].rewards[reward].distributionEnd
-    );
+  function totalSupplyAssetForRewards(bytes32 _assetHash) external view returns (uint256) {
+    return _totalSupply[_assetHash];
   }
 
-  //// @inheritdoc IRewardsDistributor
-  function getAssetIndex(address pool, address asset, address reward) external view returns (uint256, uint256) {
-    RewardsDataTypes.RewardData storage rewardData = _poolAssets[pool][asset].rewards[reward];
-    return (0, 0);
-    // return _getAssetIndex(rewardData, IScaledBalanceToken(asset).scaledTotalSupply(), 10 ** _poolAssets[pool][asset].decimals);
+  function balanceOfByAssetHash(uint256 tokenId, bytes32 _assetHash) external view returns (uint256) {
+    return _balances[tokenId][_assetHash];
   }
 
-  //// @inheritdoc IRewardsDistributor
-  function getDistributionEnd(address pool, address asset, address reward) external view returns (uint256) {
-    return _poolAssets[pool][asset].rewards[reward].distributionEnd;
+  function lastTimeRewardApplicable(bytes32 _assetHash) public view returns (uint256) {
+    return block.timestamp < periodFinish[_assetHash] ? block.timestamp : periodFinish[_assetHash];
   }
 
-  //// @inheritdoc IRewardsDistributor
-  function getRewardsByAsset(address pool, address asset) external view returns (address[] memory) {
-    uint128 rewardsCount = _poolAssets[pool][asset].availableRewardsCount;
-    address[] memory availableRewards = new address[](rewardsCount);
-
-    for (uint128 i = 0; i < rewardsCount; i++) {
-      availableRewards[i] = _poolAssets[pool][asset].availableRewards[i];
+  function rewardPerToken(bytes32 _assetHash) public view returns (uint256) {
+    if (_totalSupply[_assetHash] == 0) {
+      return rewardPerTokenStored[_assetHash];
     }
-    return availableRewards;
+    return
+      rewardPerTokenStored[_assetHash].add(
+        lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+          _totalSupply[_assetHash]
+        )
+      );
   }
 
-  //// @inheritdoc IRewardsDistributor
-  function getRewardsList(address pool) external view returns (address[] memory) {
-    return _poolRewardsList[pool];
+  function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
+    return
+      _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+        rewards[tokenId][_assetHash]
+      );
   }
 
-  //// @inheritdoc IRewardsDistributor
-  function getUserAssetIndex(address pool, uint256 user, address asset, address reward) public view returns (uint256) {
-    return _poolAssets[pool][asset].rewards[reward].usersData[user].index;
-  }
-
-  //// @inheritdoc IRewardsDistributor
-  function getUserAccruedRewards(address pool, uint256 user, address reward) external view returns (uint256) {
-    uint256 totalAccrued;
-    for (uint256 i = 0; i < _poolRewardsList[pool].length; i++) {
-      totalAccrued += _poolAssets[pool][_poolRewardsList[pool][i]].rewards[reward].usersData[user].accrued;
-    }
-
-    return totalAccrued;
-  }
-
-  //// @inheritdoc IRewardsDistributor
-  function getUserRewards(address pool, address[] calldata assets, uint256 user, address reward) external view returns (uint256) {
-    return _getUserReward(pool, user, reward, _getUserAssetBalances(pool, assets, user));
-  }
-
-  //// @inheritdoc IRewardsDistributor
-  function getAllUserRewards(
-    address pool,
-    address[] calldata assets,
-    uint256 user
-  ) external view returns (address[] memory rewardsList, uint256[] memory unclaimedAmounts) {
-    RewardsDataTypes.UserAssetBalance[] memory userAssetBalances = _getUserAssetBalances(pool, assets, user);
-    rewardsList = new address[](_poolRewardsList[pool].length);
-    unclaimedAmounts = new uint256[](rewardsList.length);
-
-    // Add unrealized rewards from user to unclaimedRewards
-    for (uint256 i = 0; i < userAssetBalances.length; i++) {
-      for (uint256 r = 0; r < rewardsList.length; r++) {
-        rewardsList[r] = _poolRewardsList[pool][r];
-        unclaimedAmounts[r] += _poolAssets[pool][userAssetBalances[i].asset].rewards[rewardsList[r]].usersData[user].accrued;
-
-        if (userAssetBalances[i].userBalance == 0) {
-          continue;
-        }
-        unclaimedAmounts[r] += _getPendingRewards(pool, user, rewardsList[r], userAssetBalances[i]);
-      }
-    }
-    return (rewardsList, unclaimedAmounts);
+  function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {
+    return rewardRate[_assetHash].mul(rewardsDuration);
   }
 
   /**
    * @dev Calculates the boosted balance for an account.
    * @param account The address of the account for which to calculate the boosted balance.
+   * @param balance The amount to boost.
    * @return The boosted balance of the account.
-   *
    */
   function boostedBalance(address account, uint256 balance) public view returns (uint256) {
     uint256 _boosted = (balance * 20) / 100;
@@ -152,284 +96,55 @@ abstract contract RewardsDistributor is IRewardsDistributor {
     return _boostedBalance > balance ? balance : _boostedBalance;
   }
 
-  /**
-   * @dev Configure the _poolAssets for a specific emission
-   * @param rewardsInput The array of each asset configuration
-   *
-   */
-  function _configureAssets(address pool, RewardsDataTypes.RewardsConfigInput[] memory rewardsInput) internal {
-    for (uint256 i = 0; i < rewardsInput.length; i++) {
-      if (_poolAssets[pool][rewardsInput[i].asset].decimals == 0) {
-        // never initialized before, adding to the list of assets
-        _poolRewardsList[pool].push(rewardsInput[i].asset);
-      }
-
-      // todo
-      uint256 decimals = _poolAssets[pool][rewardsInput[i].asset].decimals = 0; // IERC20Detailed(rewardsInput[i].asset).decimals();
-
-      RewardsDataTypes.RewardData storage rewardConfig = _poolAssets[pool][rewardsInput[i].asset].rewards[rewardsInput[i].reward];
-
-      // Add reward address to asset available rewards if latestUpdateTimestamp is zero
-      if (rewardConfig.lastUpdateTimestamp == 0) {
-        _poolAssets[pool][rewardsInput[i].asset].availableRewards[_poolAssets[pool][rewardsInput[i].asset].availableRewardsCount] =
-          rewardsInput[i].reward;
-        _poolAssets[pool][rewardsInput[i].asset].availableRewardsCount++;
-      }
-
-      // Add reward address to global rewards list if still not enabled
-      if (_isPoolRewardEnabled[pool][rewardsInput[i].reward] == false) {
-        _isPoolRewardEnabled[pool][rewardsInput[i].reward] = true;
-        _poolRewardsList[pool].push(rewardsInput[i].reward);
-      }
-
-      // Due emissions is still zero, updates only latestUpdateTimestamp
-      (uint256 newIndex,) = _updateRewardData(rewardConfig, rewardsInput[i].totalSupply, 10 ** decimals);
-
-      // Configure emission and distribution end of the reward per asset
-      uint88 oldEmissionsPerSecond = rewardConfig.emissionPerSecond;
-      uint32 oldDistributionEnd = rewardConfig.distributionEnd;
-      rewardConfig.emissionPerSecond = rewardsInput[i].emissionPerSecond;
-      rewardConfig.distributionEnd = rewardsInput[i].distributionEnd;
-
-      emit AssetConfigUpdated(
-        rewardsInput[i].asset,
-        rewardsInput[i].reward,
-        oldEmissionsPerSecond,
-        rewardsInput[i].emissionPerSecond,
-        oldDistributionEnd,
-        rewardsInput[i].distributionEnd,
-        newIndex
-      );
-    }
+  modifier onlyRewardsDistribution() {
+    _;
   }
 
-  /**
-   * @dev Updates the state of the distribution for the specified reward
-   * @param rewardData Storage pointer to the distribution reward config
-   * @param totalSupply Current total of underlying assets for this distribution
-   * @param assetUnit One unit of asset (10**decimals)
-   * @return The new distribution index
-   * @return True if the index was updated, false otherwise
-   *
-   */
-  function _updateRewardData(
-    RewardsDataTypes.RewardData storage rewardData,
-    uint256 totalSupply,
-    uint256 assetUnit
-  ) internal returns (uint256, bool) {
-    (uint256 oldIndex, uint256 newIndex) = _getAssetIndex(rewardData, totalSupply, assetUnit);
-    bool indexUpdated;
-    if (newIndex != oldIndex) {
-      require(newIndex <= type(uint104).max, 'INDEX_OVERFLOW');
-      indexUpdated = true;
+  function notifyRewardAmount(uint256 reward, address pool, address asset, bool isDebt) external onlyRewardsDistribution {
+    rewardsToken.transferFrom(msg.sender, address(this), reward);
 
-      //optimization: storing one after another saves one SSTORE
-      rewardData.index = uint104(newIndex);
-      rewardData.lastUpdateTimestamp = block.timestamp.toUint32();
+    bytes32 _assetHash = assetHash(pool, asset, isDebt);
+    _updateReward(0, _assetHash);
+
+    if (block.timestamp >= periodFinish[_assetHash]) {
+      rewardRate[_assetHash] = reward.div(rewardsDuration);
     } else {
-      rewardData.lastUpdateTimestamp = block.timestamp.toUint32();
+      uint256 remaining = periodFinish[_assetHash].sub(block.timestamp);
+      uint256 leftover = remaining.mul(rewardRate[_assetHash]);
+      rewardRate[_assetHash] = reward.add(leftover).div(rewardsDuration);
     }
 
-    return (newIndex, indexUpdated);
+    // Ensure the provided reward amount is not more than the balance in the contract.
+    // This keeps the reward rate in the right range, preventing overflows due to
+    // very high values of rewardRate in the earned and rewardsPerToken functions;
+    // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
+    uint balance = rewardsToken.balanceOf(address(this));
+    require(rewardRate[_assetHash] <= balance.div(rewardsDuration), 'Provided reward too high');
+
+    lastUpdateTime[_assetHash] = block.timestamp;
+    periodFinish[_assetHash] = block.timestamp.add(rewardsDuration);
+    // emit RewardAdded(reward);
   }
 
-  /**
-   * @dev Updates the state of the distribution for the specific user
-   * @param rewardData Storage pointer to the distribution reward config
-   * @param user The address of the user
-   * @param userBalance The user balance of the asset
-   * @param newAssetIndex The new index of the asset distribution
-   * @param assetUnit One unit of asset (10**decimals)
-   * @return The rewards accrued since the last update
-   *
-   */
-  function _updateUserData(
-    RewardsDataTypes.RewardData storage rewardData,
-    uint256 user,
-    uint256 userBalance,
-    uint256 newAssetIndex,
-    uint256 assetUnit
-  ) internal returns (uint256, bool) {
-    // recalculate user balance based on boost
-    // userBalance = boostedBalance(user, userBalance);
-
-    uint256 userIndex = rewardData.usersData[user].index;
-    uint256 rewardsAccrued;
-    bool dataUpdated;
-    if ((dataUpdated = userIndex != newAssetIndex)) {
-      // already checked for overflow in _updateRewardData
-      rewardData.usersData[user].index = uint104(newAssetIndex);
-      if (userBalance != 0) {
-        rewardsAccrued = _getRewards(userBalance, newAssetIndex, userIndex, assetUnit);
-
-        rewardData.usersData[user].accrued += rewardsAccrued.toUint128();
-      }
-    }
-    return (rewardsAccrued, dataUpdated);
-  }
-
-  /**
-   * @dev Iterates and accrues all the rewards for asset of the specific user
-   * @param asset The address of the reference asset of the distribution
-   * @param user The user address
-   * @param userBalance The current user asset balance
-   * @param totalSupply Total supply of the asset
-   *
-   */
-  function _updateData(address pool, address asset, uint256 user, uint256 userBalance, uint256 totalSupply) internal {
-    uint256 assetUnit;
-    uint256 numAvailableRewards = _poolAssets[pool][asset].availableRewardsCount;
-    unchecked {
-      assetUnit = 10 ** _poolAssets[pool][asset].decimals;
-    }
-
-    if (numAvailableRewards == 0) {
-      return;
-    }
-    unchecked {
-      for (uint128 r = 0; r < numAvailableRewards; r++) {
-        address reward = _poolAssets[pool][asset].availableRewards[r];
-        RewardsDataTypes.RewardData storage rewardData = _poolAssets[pool][asset].rewards[reward];
-
-        (uint256 newAssetIndex, bool rewardDataUpdated) = _updateRewardData(rewardData, totalSupply, assetUnit);
-
-        (uint256 rewardsAccrued, bool userDataUpdated) = _updateUserData(rewardData, user, userBalance, newAssetIndex, assetUnit);
-
-        if (rewardDataUpdated || userDataUpdated) {
-          // todo
-          // emit Accrued(asset, reward, user, newAssetIndex, newAssetIndex, rewardsAccrued);
-        }
-      }
+  function _updateReward(uint256 _tokenId, bytes32 _assetHash) internal {
+    rewardPerTokenStored[_assetHash] = rewardPerToken(_assetHash);
+    lastUpdateTime[_assetHash] = lastTimeRewardApplicable(_assetHash);
+    if (_tokenId != 0) {
+      rewards[_tokenId][_assetHash] = earned(_tokenId, _assetHash);
+      userRewardPerTokenPaid[_tokenId][_assetHash] = rewardPerTokenStored[_assetHash];
     }
   }
 
-  /**
-   * @dev Accrues all the rewards of the assets specified in the userAssetBalances list
-   * @param user The address of the user
-   * @param userAssetBalances List of structs with the user balance and total supply of a set of assets
-   *
-   */
-  function _updateDataMultiple(address pool, uint256 user, RewardsDataTypes.UserAssetBalance[] memory userAssetBalances) internal {
-    for (uint256 i = 0; i < userAssetBalances.length; i++) {
-      _updateData(pool, userAssetBalances[i].asset, user, userAssetBalances[i].userBalance, userAssetBalances[i].totalSupply);
-    }
+  function assetHash(address pool, address asset, bool isDebt) public pure returns (bytes32) {
+    return keccak256(abi.encode(pool, asset, isDebt));
   }
 
-  /**
-   * @dev Return the accrued unclaimed amount of a reward from a user over a list of distribution
-   * @param user The address of the user
-   * @param reward The address of the reward token
-   * @param userAssetBalances List of structs with the user balance and total supply of a set of assets
-   * @return unclaimedRewards The accrued rewards for the user until the moment
-   *
-   */
-  function _getUserReward(
-    address pool,
-    uint256 user,
-    address reward,
-    RewardsDataTypes.UserAssetBalance[] memory userAssetBalances
-  ) internal view returns (uint256 unclaimedRewards) {
-    // Add unrealized rewards
-    for (uint256 i = 0; i < userAssetBalances.length; i++) {
-      if (userAssetBalances[i].userBalance == 0) {
-        unclaimedRewards += _poolAssets[pool][userAssetBalances[i].asset].rewards[reward].usersData[user].accrued;
-      } else {
-        unclaimedRewards += _getPendingRewards(pool, user, reward, userAssetBalances[i])
-          + _poolAssets[pool][userAssetBalances[i].asset].rewards[reward].usersData[user].accrued;
-      }
-    }
-
-    return unclaimedRewards;
+  //// @inheritdoc IRewardsController
+  function _handleSupplies(address pool, address asset, uint256 id) internal {
+    // _updateData(pool, asset, id, 0, 0);
   }
 
-  /**
-   * @dev Calculates the pending (not yet accrued) rewards since the last user action
-   * @param user The address of the user
-   * @param reward The address of the reward token
-   * @param userAssetBalance struct with the user balance and total supply of the incentivized asset
-   * @return The pending rewards for the user since the last user action
-   *
-   */
-  function _getPendingRewards(
-    address pool,
-    uint256 user,
-    address reward,
-    RewardsDataTypes.UserAssetBalance memory userAssetBalance
-  ) internal view returns (uint256) {
-    RewardsDataTypes.RewardData storage rewardData = _poolAssets[pool][userAssetBalance.asset].rewards[reward];
-    uint256 assetUnit = 10 ** _poolAssets[pool][userAssetBalance.asset].decimals;
-    (, uint256 nextIndex) = _getAssetIndex(rewardData, userAssetBalance.totalSupply, assetUnit);
-
-    return _getRewards(userAssetBalance.userBalance, nextIndex, rewardData.usersData[user].index, assetUnit);
+  function _handleDebt(address pool, address asset, uint256 id) internal {
+    // _updateData(pool, asset, id, 0, 0); // todo seperate debt and supply
   }
-
-  /**
-   * @dev Internal function for the calculation of user's rewards on a distribution
-   * @param userBalance Balance of the user asset on a distribution
-   * @param reserveIndex Current index of the distribution
-   * @param userIndex Index stored for the user, representation his staking moment
-   * @param assetUnit One unit of asset (10**decimals)
-   * @return The rewards
-   *
-   */
-  function _getRewards(uint256 userBalance, uint256 reserveIndex, uint256 userIndex, uint256 assetUnit) internal pure returns (uint256) {
-    uint256 result = userBalance * (reserveIndex - userIndex);
-    assembly {
-      result := div(result, assetUnit)
-    }
-    return result;
-  }
-
-  /**
-   * @dev Calculates the next value of an specific distribution index, with validations
-   * @param rewardData Storage pointer to the distribution reward config
-   * @param totalSupply of the asset being rewarded
-   * @param assetUnit One unit of asset (10**decimals)
-   * @return The new index.
-   *
-   */
-  function _getAssetIndex(
-    RewardsDataTypes.RewardData storage rewardData,
-    uint256 totalSupply,
-    uint256 assetUnit
-  ) internal view returns (uint256, uint256) {
-    uint256 oldIndex = rewardData.index;
-    uint256 distributionEnd = rewardData.distributionEnd;
-    uint256 emissionPerSecond = rewardData.emissionPerSecond;
-    uint256 lastUpdateTimestamp = rewardData.lastUpdateTimestamp;
-
-    if (emissionPerSecond == 0 || totalSupply == 0 || lastUpdateTimestamp == block.timestamp || lastUpdateTimestamp >= distributionEnd) {
-      return (oldIndex, oldIndex);
-    }
-
-    uint256 currentTimestamp = block.timestamp > distributionEnd ? distributionEnd : block.timestamp;
-    uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
-    uint256 firstTerm = emissionPerSecond * timeDelta * assetUnit;
-    assembly {
-      firstTerm := div(firstTerm, totalSupply)
-    }
-    return (oldIndex, (firstTerm + oldIndex));
-  }
-
-  /**
-   * @dev Get user balances and total supply of all the assets specified by the assets parameter
-   * @param assets List of assets to retrieve user balance and total supply
-   * @param user Address of the user
-   * @return userAssetBalances contains a list of structs with user balance and total supply of the given assets
-   */
-  function _getUserAssetBalances(
-    address pool,
-    address[] calldata assets,
-    uint256 user
-  ) internal view virtual returns (RewardsDataTypes.UserAssetBalance[] memory userAssetBalances);
-
-  //// @inheritdoc IRewardsDistributor
-  function getAssetDecimals(address pool, address asset) external view returns (uint8) {
-    return _poolAssets[pool][asset].decimals;
-  }
-
-  // //// @inheritdoc IRewardsDistributor
-  // function getEmissionManager() external view returns (address) {
-  //   return EMISSION_MANAGER;
-  // }
 }
