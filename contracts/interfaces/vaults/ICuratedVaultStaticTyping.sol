@@ -14,21 +14,36 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IPool} from '../IPool.sol';
-import {ICuratedVaultBase} from './ICuratedVaultBase.sol';
+import {PendingUint192, MarketConfig, ICuratedVaultBase} from './ICuratedVaultBase.sol';
 
 /// @dev This interface is inherited by ZeroLend so that function signatures are checked by the compiler.
 /// @dev Consider using the ICuratedVault interface instead of this one.
 interface ICuratedVaultStaticTyping is ICuratedVaultBase {
-  /// @notice Returns the current configuration of each market.
-  function config(IPool) external view returns (uint184 cap, bool enabled, uint64 removableAt);
-
-  /// @notice Returns the pending cap for each market.
-  function pendingCap(IPool) external view returns (uint192 value, uint64 validAt);
-
-  /// @notice Returns the pending timelock.
-  function pendingTimelock() external view returns (uint192 value, uint64 validAt);
-
   /// @notice Initializes the vault with the initial owner and timelock.
   /// @dev Called only by the factory contract
   function initialize(address initialOwner, uint256 initialTimelock, address asset, string memory name, string memory symbol) external;
+
+  function isCurator(address who) external view returns (bool);
+
+  function isGuardian(address who) external view returns (bool);
+
+  function isOwner(address who) external view returns (bool);
+
+  function isAllocator(address who) external view returns (bool);
+
+  function grantCuratorRole(address who) external;
+
+  function grantGuardianRole(address who) external;
+
+  function grantOwnerRole(address who) external;
+
+  function grantAllocatorRole(address who) external;
+
+  function revokeCuratorRole(address who) external;
+
+  function revokeGuardianRole(address who) external;
+
+  function revokeOwnerRole(address who) external;
+
+  function revokeAllocatorRole(address who) external;
 }

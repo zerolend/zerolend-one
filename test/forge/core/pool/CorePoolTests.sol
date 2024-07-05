@@ -10,7 +10,7 @@ import {MintableERC20} from '../../../../contracts/mocks/MintableERC20.sol';
 import {MockAggregator} from '../../../../contracts/mocks/MockAggregator.sol';
 import {Test} from '../../../../lib/forge-std/src/Test.sol';
 
-contract CorePoolTest is Test {
+abstract contract CorePoolTests is Test {
   PoolFactory public poolFactory;
   Pool public poolImplementation;
   PoolConfigurator public configurator;
@@ -30,7 +30,7 @@ contract CorePoolTest is Test {
   address public ant;
   address public governance;
 
-  function config_factory() internal {
+  function setUp() public virtual {
     owner = address(this);
     whale = address(1);
     ant = address(2);

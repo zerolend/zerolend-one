@@ -2,16 +2,16 @@
 pragma solidity 0.8.19;
 
 import {IPool} from '../../../../contracts/interfaces/IPool.sol';
-import {CorePoolTest} from './CorePool.sol';
+import {CorePoolTests} from './CorePoolTests.sol';
 import {DataTypes} from '../../../../contracts/core/pool/configuration/DataTypes.sol';
 
-contract PoolSetup is CorePoolTest {
+abstract contract PoolSetup is CorePoolTests {
   DataTypes.InitPoolParams internal basicPoolInitParams;
   DataTypes.InitReserveConfig internal basicConfig;
   IPool internal pool;
 
-  function setUp() public {
-    config_factory();
+  function setUp() public virtual override {
+    super.setUp();
     basicConfig = DataTypes.InitReserveConfig({
       ltv: 7500,
       liquidationThreshold: 8000,
