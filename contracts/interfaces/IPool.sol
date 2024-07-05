@@ -115,11 +115,7 @@ interface IPool {
    * @param borrowIndex The next variable borrow index
    */
   event ReserveDataUpdated(
-    address indexed reserve,
-    uint256 liquidityRate,
-    uint256 variableBorrowRate,
-    uint256 liquidityIndex,
-    uint256 borrowIndex
+    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
   );
 
   /**
@@ -509,9 +505,10 @@ interface IPool {
 
   function forceUpdateReserve(address asset) external;
 
-  function marketBalances(
-    address asset
-  ) external view returns (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, uint256 totalBorrowShares);
+  function marketBalances(address asset)
+    external
+    view
+    returns (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, uint256 totalBorrowShares);
 
   function supplyAssets(address asset, bytes32 positionId) external view returns (uint256);
 }
