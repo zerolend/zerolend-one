@@ -17,14 +17,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-
+      - uses: ./.github/actions/install-cache
       - name: Install python
         uses: actions/setup-python@v5
         with:
           python-version: '>=3.9'
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
 
       - name: Install halmos
         run: pip install halmos
