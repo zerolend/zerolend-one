@@ -13,6 +13,12 @@ jobs:
   build-halmos:
     runs-on: ubuntu-latest
     name: Build Halmos
+    strategy:
+      fail-fast: false
+      matrix:
+        conf:
+          - OpenZeppelinERC20HalmosTest
+          - BorrowSolvencyHalmosTest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,22 +28,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '>=3.9'
-
       - name: Install halmos
         run: pip install halmos
-
-  test-halmos:
-    runs-on: ubuntu-latest
-    name: Run Halmos
-    needs: build-halmos
-
-    strategy:
-      fail-fast: false
-      matrix:
-        conf:
-          - OpenZeppelinERC20HalmosTest
-          - BorrowSolvencyHalmosTest
-
-    steps:
       - name: Run Halmos for ${{ matrix.conf }}
         run: FOUNDRY_PROFILE=test halmos --forge-build-out forge-build --contract ${{ matrix.conf }}
