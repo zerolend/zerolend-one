@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {PoolSetup} from './PoolSetup.sol';
+import {IPool, PoolSetup} from './PoolSetup.sol';
 
 contract PoolSupplyTests is PoolSetup {
   event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
@@ -13,7 +13,7 @@ contract PoolSupplyTests is PoolSetup {
   }
 
   function testSupplyFrozenEnabled() external {
-    configurator.setReserveFreeze(address(pool), address(tokenA), true);
+    configurator.setReserveFreeze(IPool(address(pool)), address(tokenA), true);
 
     vm.startPrank(address(1));
     tokenA.mint(address(1), 1e18);
@@ -24,7 +24,7 @@ contract PoolSupplyTests is PoolSetup {
   }
 
   function testSupplyCapExceed() external {
-    configurator.setSupplyCap(address(pool), address(tokenA), 100);
+    configurator.setSupplyCap(IPool(address(pool)), address(tokenA), 100);
 
     vm.startPrank(address(1));
     tokenA.mint(address(1), 1e18);
