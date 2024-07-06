@@ -40,11 +40,11 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 
-    SupplyLogic.executeSupply(
+    res = SupplyLogic.executeSupply(
       _reserves[asset],
       _usersConfig[pos],
       _balances[asset][pos],
@@ -67,13 +67,13 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 withdrawalAmount) {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
     bytes32 pos = msg.sender.getPositionId(index);
     require(amount <= _balances[asset][pos].supplyShares, 'Insufficient Balance!');
 
     if (address(_hook) != address(0)) _hook.beforeWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
 
-    withdrawalAmount = SupplyLogic.executeWithdraw(
+    res = SupplyLogic.executeWithdraw(
       _reserves,
       _reservesList,
       _usersConfig[pos],
@@ -101,11 +101,11 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
 
-    BorrowLogic.executeBorrow(
+    res = BorrowLogic.executeBorrow(
       _reserves,
       _reservesList,
       _usersConfig[pos],
@@ -131,11 +131,11 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
-  ) internal nonReentrant(RentrancyKind.LENDING) returns (uint256 paybackAmount) {
+  ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
     bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
 
-    paybackAmount = BorrowLogic.executeRepay(
+    res = BorrowLogic.executeRepay(
       _reserves[asset],
       _balances[asset][pos],
       _totalSupplies[asset],

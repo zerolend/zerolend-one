@@ -13,6 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {IPool} from './IPool.sol';
+
 /**
  * @title IPoolConfigurator
  * @notice Defines the basic interface for a Pool configurator.
@@ -69,7 +71,7 @@ interface IPoolConfigurator {
    * @param asset The address of the underlying asset of the reserve
    * @param enabled True if borrowing needs to be enabled, false otherwise
    */
-  function setReserveBorrowing(address pool, address asset, bool enabled) external;
+  function setReserveBorrowing(IPool pool, address asset, bool enabled) external;
 
   /**
    * @notice Freeze or unfreeze a reserve. A frozen reserve doesn't allow any new supply, borrow
@@ -77,34 +79,34 @@ interface IPoolConfigurator {
    * @param asset The address of the underlying asset of the reserve
    * @param freeze True if the reserve needs to be frozen, false otherwise
    */
-  function setReserveFreeze(address pool, address asset, bool freeze) external;
+  function setReserveFreeze(IPool pool, address asset, bool freeze) external;
 
-  function initRoles(address pool, address admin) external;
+  function initRoles(IPool pool, address admin) external;
 
   /**
    * @notice Sets the interest rate strategy of a reserve.
    * @param asset The address of the underlying asset of the reserve
    * @param newRateStrategyAddress The address of the new interest strategy contract
    */
-  function setReserveInterestRateStrategyAddress(address pool, address asset, address newRateStrategyAddress) external;
+  function setReserveInterestRateStrategyAddress(IPool pool, address asset, address newRateStrategyAddress) external;
 
   /**
    * @notice Freezes the pool reserves. In the frozen state only withdraw and repay can be done
    * @param freeze True if protocol needs to be frozen, false otherwise
    */
-  function setPoolFreeze(address pool, bool freeze) external;
+  function setPoolFreeze(IPool pool, bool freeze) external;
 
   /**
    * @notice Updates the borrow cap of a reserve.
    * @param asset The address of the underlying asset of the reserve
    * @param newBorrowCap The new borrow cap of the reserve
    */
-  function setBorrowCap(address pool, address asset, uint256 newBorrowCap) external;
+  function setBorrowCap(IPool pool, address asset, uint256 newBorrowCap) external;
 
   /**
    * @notice Updates the supply cap of a reserve.
    * @param asset The address of the underlying asset of the reserve
    * @param newSupplyCap The new supply cap of the reserve
    */
-  function setSupplyCap(address pool, address asset, uint256 newSupplyCap) external;
+  function setSupplyCap(IPool pool, address asset, uint256 newSupplyCap) external;
 }

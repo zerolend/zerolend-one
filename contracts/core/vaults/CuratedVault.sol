@@ -13,25 +13,19 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {DataTypes, IPool} from '../../interfaces/IPool.sol';
+
 import {
-  ICuratedVaultBase,
-  ICuratedVaultStaticTyping,
-  MarketAllocation,
-  MarketConfig,
-  PendingAddress,
-  PendingUint192
-} from '../../interfaces/ICuratedVault.sol';
-import {IPool} from '../../interfaces/IPool.sol';
-import {ConstantsLib} from './libraries/ConstantsLib.sol';
+  ICuratedVaultBase, MarketAllocation, MarketConfig, PendingAddress, PendingUint192
+} from '../../interfaces/vaults/ICuratedVaultBase.sol';
+import {ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
 
 import {PendingLib} from './libraries/PendingLib.sol';
-
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
-import {Ownable2StepUpgradeable, OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
-import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 
+import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 import {
   ERC20Upgradeable,
   ERC4626Upgradeable,
@@ -39,24 +33,19 @@ import {
   MathUpgradeable
 } from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {ERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IERC20, IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
+import {CuratedVaultRoles} from './CuratedVaultRoles.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import 'hardhat/console.sol';
 
 /// @title CuratedVault
 /// @author ZeroLend
 /// @custom:contact contact@zerolend.xyz
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
-contract CuratedVault is
-  ERC4626Upgradeable,
-  ERC20PermitUpgradeable,
-  Ownable2StepUpgradeable,
-  MulticallUpgradeable,
-  ICuratedVaultStaticTyping
-{
+/// @dev This is a proxy contract and is not meant to be deployed directly.
+contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaultRoles, MulticallUpgradeable {
   using MathUpgradeable for uint256;
   using UtilsLib for uint256;
   using SafeCast for uint256;
@@ -71,28 +60,13 @@ contract CuratedVault is
   /// precision between shares and assets.
   uint8 public DECIMALS_OFFSET;
 
-  /// @inheritdoc ICuratedVaultBase
-  address public curator;
-
-  /// @inheritdoc ICuratedVaultBase
-  mapping(address => bool) public isAllocator;
-
-  /// @inheritdoc ICuratedVaultBase
-  address public guardian;
-
-  /// @inheritdoc ICuratedVaultStaticTyping
   mapping(IPool => MarketConfig) public config;
 
   /// @inheritdoc ICuratedVaultBase
   uint256 public timelock;
 
-  /// @inheritdoc ICuratedVaultStaticTyping
-  PendingAddress public pendingGuardian;
-
-  /// @inheritdoc ICuratedVaultStaticTyping
   mapping(IPool => PendingUint192) public pendingCap;
 
-  /// @inheritdoc ICuratedVaultStaticTyping
   PendingUint192 public pendingTimelock;
 
   /// @inheritdoc ICuratedVaultBase
@@ -113,17 +87,34 @@ contract CuratedVault is
   /// @inheritdoc ICuratedVaultBase
   uint256 public lastTotalAssets;
 
+  /// @inheritdoc ICuratedVaultBase
   bytes32 public positionId;
 
+  /// @dev The maximum delay of a timelock.
+  uint256 internal immutable MAX_TIMELOCK = 2 weeks;
+
+  /// @dev The minimum delay of a timelock.
+  uint256 internal immutable MIN_TIMELOCK = 1 days;
+
+  /// @dev The maximum number of markets in the supply/withdraw queue.
+  uint256 internal immutable MAX_QUEUE_LENGTH = 30;
+
+  /// @dev The maximum fee the vault can have (50%).
+  uint256 internal immutable MAX_FEE = 0.5e18;
+
+  constructor() {
+    _disableInitializers();
+  }
+
   /// @dev Initializes the contract.
-  /// @param owner The owner of the contract.
-  /// @param initialTimelock The initial timelock.
+  /// @param _owner The owner of the contract.
+  /// @param _initialTimelock The initial timelock.
   /// @param _asset The address of the underlying asset.
   /// @param _name The name of the vault.
   /// @param _symbol The symbol of the vault.
   function initialize(
-    address owner,
-    uint256 initialTimelock,
+    address _owner,
+    uint256 _initialTimelock,
     address _asset,
     string memory _name,
     string memory _symbol
@@ -132,48 +123,17 @@ contract CuratedVault is
     __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
     __Multicall_init();
-    __Ownable_init();
-    __Ownable2Step_init();
+    __CuratedVaultRoles_init(_owner);
 
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
-    _checkTimelockBounds(initialTimelock);
-    _setTimelock(initialTimelock);
-
-    _transferOwnership(owner);
+    _checkTimelockBounds(_initialTimelock);
+    _setTimelock(_initialTimelock);
 
     positionId = keccak256(abi.encodePacked(address(this), 'index', uint256(0)));
   }
 
-  /* MODIFIERS */
-
-  /// @dev Reverts if the caller doesn't have the curator role.
-  modifier onlyCuratorRole() {
-    address sender = _msgSender();
-    if (sender != curator && sender != owner()) revert NotCuratorRole();
-    _;
-  }
-
-  /// @dev Reverts if the caller doesn't have the allocator role.
-  modifier onlyAllocatorRole() {
-    address sender = _msgSender();
-    if (!isAllocator[sender] && sender != curator && sender != owner()) {
-      revert NotAllocatorRole();
-    }
-    _;
-  }
-
-  /// @dev Reverts if the caller doesn't have the guardian role.
-  modifier onlyGuardianRole() {
-    if (_msgSender() != owner() && _msgSender() != guardian) revert NotGuardianRole();
-    _;
-  }
-
-  /// @dev Reverts if the caller doesn't have the curator nor the guardian role.
-  modifier onlyCuratorOrGuardianRole() {
-    if (_msgSender() != guardian && _msgSender() != curator && _msgSender() != owner()) {
-      revert NotCuratorNorGuardianRole();
-    }
-    _;
+  function revision() external pure virtual returns (uint256) {
+    return 1;
   }
 
   /// @dev Makes sure conditions are met to accept a pending value.
@@ -187,20 +147,6 @@ contract CuratedVault is
   }
 
   /* ONLY OWNER FUNCTIONS */
-
-  /// @inheritdoc ICuratedVaultBase
-  function setCurator(address newCurator) external onlyOwner {
-    if (newCurator == curator) revert AlreadySet();
-    curator = newCurator;
-    emit SetCurator(newCurator);
-  }
-
-  /// @inheritdoc ICuratedVaultBase
-  function setIsAllocator(address newAllocator, bool newIsAllocator) external onlyOwner {
-    if (isAllocator[newAllocator] == newIsAllocator) revert AlreadySet();
-    isAllocator[newAllocator] = newIsAllocator;
-    emit SetIsAllocator(newAllocator, newIsAllocator);
-  }
 
   /// @inheritdoc ICuratedVaultBase
   function setSkimRecipient(address newSkimRecipient) external onlyOwner {
@@ -220,7 +166,6 @@ contract CuratedVault is
     } else {
       // Safe "unchecked" cast because newTimelock <= MAX_TIMELOCK.
       pendingTimelock.update(uint184(newTimelock), timelock);
-
       emit SubmitTimelock(newTimelock);
     }
   }
@@ -228,7 +173,7 @@ contract CuratedVault is
   /// @inheritdoc ICuratedVaultBase
   function setFee(uint256 newFee) external onlyOwner {
     if (newFee == fee) revert AlreadySet();
-    if (newFee > ConstantsLib.MAX_FEE) revert MaxFeeExceeded();
+    if (newFee > MAX_FEE) revert MaxFeeExceeded();
     if (newFee != 0 && feeRecipient == address(0)) revert ZeroFeeRecipient();
 
     // Accrue fee using the previous fee set before changing it.
@@ -253,70 +198,54 @@ contract CuratedVault is
     emit SetFeeRecipient(newFeeRecipient);
   }
 
-  /// @inheritdoc ICuratedVaultBase
-  function submitGuardian(address newGuardian) external onlyOwner {
-    if (newGuardian == guardian) revert AlreadySet();
-    if (pendingGuardian.validAt != 0) revert AlreadyPending();
-
-    if (guardian == address(0)) {
-      _setGuardian(newGuardian);
-    } else {
-      pendingGuardian.update(newGuardian, timelock);
-
-      emit SubmitGuardian(newGuardian);
-    }
-  }
-
   /* ONLY CURATOR FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
-  function submitCap(IPool id, uint256 newSupplyCap) external onlyCuratorRole {
-    // if (marketParams.loanToken != asset()) revert InconsistentAsset(id);
-    // if (MORPHO.lastUpdate(id) == 0) revert MarketNotCreated();
-    if (pendingCap[id].validAt != 0) revert AlreadyPending();
-    if (config[id].removableAt != 0) revert PendingRemoval();
-    uint256 supplyCap = config[id].cap;
+  function submitCap(IPool pool, uint256 newSupplyCap) external onlyCuratorRole {
+    if (pendingCap[pool].validAt != 0) revert AlreadyPending();
+    if (config[pool].removableAt != 0) revert PendingRemoval();
+    uint256 supplyCap = config[pool].cap;
     if (newSupplyCap == supplyCap) revert AlreadySet();
 
     if (newSupplyCap < supplyCap) {
-      _setCap(id, newSupplyCap.toUint184());
+      _setCap(pool, newSupplyCap.toUint184());
     } else {
-      pendingCap[id].update(newSupplyCap.toUint184(), timelock);
-      emit SubmitCap(_msgSender(), id, newSupplyCap);
+      pendingCap[pool].update(newSupplyCap.toUint184(), timelock);
+      emit SubmitCap(_msgSender(), pool, newSupplyCap);
     }
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function submitMarketRemoval(IPool id) external onlyCuratorRole {
-    if (config[id].removableAt != 0) revert AlreadyPending();
-    if (config[id].cap != 0) revert NonZeroCap();
-    if (!config[id].enabled) revert MarketNotEnabled(id);
-    if (pendingCap[id].validAt != 0) revert PendingCap(id);
+  function submitMarketRemoval(IPool pool) external onlyCuratorRole {
+    if (config[pool].removableAt != 0) revert AlreadyPending();
+    if (config[pool].cap != 0) revert NonZeroCap();
+    if (!config[pool].enabled) revert MarketNotEnabled(pool);
+    if (pendingCap[pool].validAt != 0) revert PendingCap(pool);
 
     // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
-    config[id].removableAt = uint64(block.timestamp + timelock);
-    emit SubmitMarketRemoval(_msgSender(), id);
+    config[pool].removableAt = uint64(block.timestamp + timelock);
+    emit SubmitMarketRemoval(_msgSender(), pool);
   }
 
   /* ONLY ALLOCATOR FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
-  function setSupplyQueue(IPool[] calldata newSupplyQueue) external onlyAllocatorRole {
+  function setSupplyQueue(IPool[] calldata newSupplyQueue) external onlyAllocator {
     uint256 length = newSupplyQueue.length;
 
-    if (length > ConstantsLib.MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
+    if (length > MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
 
     for (uint256 i; i < length; ++i) {
+      IERC20(asset()).forceApprove(address(newSupplyQueue[i]), type(uint256).max);
       if (config[newSupplyQueue[i]].cap == 0) revert UnauthorizedMarket(newSupplyQueue[i]);
     }
 
     supplyQueue = newSupplyQueue;
-
     emit SetSupplyQueue(_msgSender(), newSupplyQueue);
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function updateWithdrawQueue(uint256[] calldata indexes) external onlyAllocatorRole {
+  function updateWithdrawQueue(uint256[] calldata indexes) external onlyAllocator {
     uint256 newLength = indexes.length;
     uint256 currLength = withdrawQueue.length;
 
@@ -327,65 +256,59 @@ contract CuratedVault is
       uint256 prevIndex = indexes[i];
 
       // If prevIndex >= currLength, it will revert with native "Index out of bounds".
-      IPool id = withdrawQueue[prevIndex];
-      if (seen[prevIndex]) revert DuplicateMarket(id);
+      IPool pool = withdrawQueue[prevIndex];
+      if (seen[prevIndex]) revert DuplicateMarket(pool);
       seen[prevIndex] = true;
 
-      newWithdrawQueue[i] = id;
+      newWithdrawQueue[i] = pool;
     }
 
     for (uint256 i; i < currLength; ++i) {
       if (!seen[i]) {
-        IPool id = withdrawQueue[i];
+        IPool pool = withdrawQueue[i];
 
-        if (config[id].cap != 0) revert InvalidMarketRemovalNonZeroCap(id);
-        if (pendingCap[id].validAt != 0) revert PendingCap(id);
+        if (config[pool].cap != 0) revert InvalidMarketRemovalNonZeroCap(pool);
+        if (pendingCap[pool].validAt != 0) revert PendingCap(pool);
+        if (pool.supplyShares(asset(), positionId) != 0) {
+          if (config[pool].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(pool);
+          if (block.timestamp < config[pool].removableAt) {
+            revert InvalidMarketRemovalTimelockNotElapsed(pool);
+          }
+        }
 
-        // todo
-        // if (MORPHO.supplyShares(id, address(this)) != 0) {
-        //   if (config[id].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(id);
-        //   if (block.timestamp < config[id].removableAt) {
-        //     revert InvalidMarketRemovalTimelockNotElapsed(id);
-        //   }
-        // }
-
-        delete config[id];
+        delete config[pool];
       }
     }
 
     withdrawQueue = newWithdrawQueue;
-
     emit SetWithdrawQueue(_msgSender(), newWithdrawQueue);
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function reallocate(MarketAllocation[] calldata allocations) external onlyAllocatorRole {
+  function reallocate(MarketAllocation[] calldata allocations) external onlyAllocator {
     uint256 totalSupplied;
     uint256 totalWithdrawn;
+
     for (uint256 i; i < allocations.length; ++i) {
       MarketAllocation memory allocation = allocations[i];
       IPool pool = allocation.market;
 
       (uint256 supplyAssets, uint256 supplyShares) = _accruedSupplyBalance(pool);
-      uint256 withdrawn = supplyAssets.zeroFloorSub(allocation.assets);
+      uint256 toWithdraw = supplyAssets.zeroFloorSub(allocation.assets);
 
-      if (withdrawn > 0) {
+      if (toWithdraw > 0) {
         if (!config[pool].enabled) revert MarketNotEnabled(pool);
 
         // Guarantees that unknown frontrunning donations can be withdrawn, in order to disable a market.
         uint256 shares;
         if (allocation.assets == 0) {
           shares = supplyShares;
-          withdrawn = 0;
+          toWithdraw = 0;
         }
 
-        // todo
-
-        uint256 withdrawnAssets = pool.withdrawSimple(asset(), withdrawn, 0);
-
-        // emit ReallocateWithdraw(_msgSender(), id, withdrawnAssets, withdrawnShares);
-
-        totalWithdrawn += withdrawnAssets;
+        DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), toWithdraw, 0);
+        emit ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
+        totalWithdrawn += burnt.assets;
       } else {
         uint256 suppliedAssets =
           allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
@@ -397,18 +320,11 @@ contract CuratedVault is
 
         if (supplyAssets + suppliedAssets > supplyCap) revert SupplyCapExceeded(pool);
 
-        // todo
-        // // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
-        // // IERC20(_asset).forceApprove(morpho, type(uint256).max);
-        // (, uint256 suppliedShares) = MORPHO.supply(
-        //   allocation.marketParams,
-        //   suppliedAssets,
-        //   0,
-        //   address(this),
-        //   hex''
-        // );
-        // emit ReallocateSupply(_msgSender(), id, suppliedAssets, suppliedShares);
-        // totalSupplied += suppliedAssets;
+        // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
+        IERC20(asset()).forceApprove(address(pool), type(uint256).max);
+        DataTypes.SharesType memory minted = pool.supplySimple(asset(), suppliedAssets, 0);
+        emit ReallocateSupply(_msgSender(), pool, minted.assets, minted.shares);
+        totalSupplied += suppliedAssets;
       }
     }
 
@@ -418,27 +334,21 @@ contract CuratedVault is
   /* REVOKE FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingTimelock() external onlyGuardianRole {
+  function revokePendingTimelock() external onlyGuardian {
     delete pendingTimelock;
     emit RevokePendingTimelock(_msgSender());
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingGuardian() external onlyGuardianRole {
-    delete pendingGuardian;
-    emit RevokePendingGuardian(_msgSender());
+  function revokePendingCap(IPool pool) external onlyCuratorOrGuardian {
+    delete pendingCap[pool];
+    emit RevokePendingCap(_msgSender(), pool);
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function revokePendingCap(IPool id) external onlyCuratorOrGuardianRole {
-    delete pendingCap[id];
-    emit RevokePendingCap(_msgSender(), id);
-  }
-
-  /// @inheritdoc ICuratedVaultBase
-  function revokePendingMarketRemoval(IPool id) external onlyCuratorOrGuardianRole {
-    delete config[id].removableAt;
-    emit RevokePendingMarketRemoval(_msgSender(), id);
+  function revokePendingMarketRemoval(IPool pool) external onlyCuratorOrGuardian {
+    delete config[pool].removableAt;
+    emit RevokePendingMarketRemoval(_msgSender(), pool);
   }
 
   /* EXTERNAL */
@@ -459,14 +369,9 @@ contract CuratedVault is
   }
 
   /// @inheritdoc ICuratedVaultBase
-  function acceptGuardian() external afterTimelock(pendingGuardian.validAt) {
-    _setGuardian(pendingGuardian.value);
-  }
-
-  /// @inheritdoc ICuratedVaultBase
-  function acceptCap(IPool id) external afterTimelock(pendingCap[id].validAt) {
+  function acceptCap(IPool pool) external afterTimelock(pendingCap[pool].validAt) {
     // Safe "unchecked" cast because pendingCap <= type(uint184).max.
-    _setCap(id, uint184(pendingCap[id].value));
+    _setCap(pool, uint184(pendingCap[pool].value));
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -480,7 +385,7 @@ contract CuratedVault is
   /* ERC4626Upgradeable (PUBLIC) */
 
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override (ERC4626Upgradeable, ERC20Upgradeable) returns (uint8) {
+  function decimals() public view override (ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
@@ -494,7 +399,6 @@ contract CuratedVault is
   /// @dev Warning: May be higher than the actual max mint due to duplicate markets in the supplyQueue.
   function maxMint(address) public view override returns (uint256) {
     uint256 suppliable = _maxDeposit();
-
     return _convertToShares(suppliable, MathUpgradeable.Rounding.Down);
   }
 
@@ -510,7 +414,6 @@ contract CuratedVault is
   /// roundings between shares and assets.
   function maxRedeem(address owner) public view override returns (uint256) {
     (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) = _maxWithdraw(owner);
-
     return _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, MathUpgradeable.Rounding.Down);
   }
 
@@ -582,26 +485,23 @@ contract CuratedVault is
     newTotalSupply = totalSupply() + feeShares;
 
     assets = _convertToAssetsWithTotals(balanceOf(owner), newTotalSupply, newTotalAssets, MathUpgradeable.Rounding.Down);
-    assets -= _simulateWithdrawMorpho(assets);
+    assets -= _simulateWithdraw(assets);
   }
 
-  /// @dev Returns the maximum amount of assets that the vault can supply on Morpho.
+  /// @dev Returns the maximum amount of assets that the vault can supply on ZeroLend.
   function _maxDeposit() internal view returns (uint256 totalSuppliable) {
     for (uint256 i; i < supplyQueue.length; ++i) {
-      IPool id = supplyQueue[i];
+      IPool pool = supplyQueue[i];
 
-      uint256 supplyCap = config[id].cap;
+      uint256 supplyCap = config[pool].cap;
       if (supplyCap == 0) continue;
 
-      // todo
-      // uint256 supplyShares = MORPHO.supplyShares(id, address(this));
-      // (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = MORPHO.expectedMarketBalances(
-      //   _marketParams(id)
-      // );
-      // // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
-      // uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+      uint256 supplyShares = pool.supplyShares(asset(), positionId);
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
 
-      // totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
+      // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
+      uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+      totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
     }
   }
 
@@ -642,7 +542,7 @@ contract CuratedVault is
   }
 
   /// @inheritdoc ERC4626Upgradeable
-  /// @dev Used in mint or deposit to deposit the underlying asset to Morpho markets.
+  /// @dev Used in mint or deposit to deposit the underlying asset to ZeroLend markets.
   function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
     super._deposit(caller, receiver, assets, shares);
 
@@ -653,7 +553,7 @@ contract CuratedVault is
   }
 
   /// @inheritdoc ERC4626Upgradeable
-  /// @dev Used in redeem or withdraw to withdraw the underlying asset from Morpho markets.
+  /// @dev Used in redeem or withdraw to withdraw the underlying asset from ZeroLend markets.
   /// @dev Depending on 3 cases, reverts when withdrawing "too much" with:
   /// 1. NotEnoughLiquidity when withdrawing more than available liquidity.
   /// 2. ERC20InsufficientAllowance when withdrawing more than `caller`'s allowance.
@@ -665,20 +565,24 @@ contract CuratedVault is
 
   /* INTERNAL */
 
-  /// @dev Accrues interest on Morpho Blue and returns the vault's assets & corresponding shares supplied on the
-  /// market defined by `marketParams`, as well as the market's state.
-  /// @dev Assumes that the inputs `marketParams` and `id` match.
+  /// @dev Accrues interest on ZeroLend and returns the vault's assets & corresponding shares supplied on the
+  /// market defined by `pool`, as well as the market's state.
+  /// @dev Assumes that the inputs `marketParams` and `pool` match.
   function _accruedSupplyBalance(IPool pool) internal returns (uint256 assets, uint256 shares) {
-    // MORPHO.accrueInterest(marketParams);
-    // market = MORPHO.market(id);
-    // shares = MORPHO.supplyShares(id, address(this));
-    // assets = shares.toAssetsDown(market.totalSupplyAssets, market.totalSupplyShares);
+    // force update the rates and liquidity indexes
+    pool.forceUpdateReserve(asset());
+
+    shares = pool.supplyShares(asset(), positionId);
+
+    // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+    assets = shares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
   }
 
   /// @dev Reverts if `newTimelock` is not within the bounds.
   function _checkTimelockBounds(uint256 newTimelock) internal pure {
-    if (newTimelock > ConstantsLib.MAX_TIMELOCK) revert AboveMaxTimelock();
-    if (newTimelock < ConstantsLib.MIN_TIMELOCK) revert BelowMinTimelock();
+    if (newTimelock > MAX_TIMELOCK) revert AboveMaxTimelock();
+    if (newTimelock < MIN_TIMELOCK) revert BelowMinTimelock();
   }
 
   /// @dev Sets `timelock` to `newTimelock`.
@@ -688,31 +592,22 @@ contract CuratedVault is
     delete pendingTimelock;
   }
 
-  /// @dev Sets `guardian` to `newGuardian`.
-  function _setGuardian(address newGuardian) internal {
-    guardian = newGuardian;
-    emit SetGuardian(_msgSender(), newGuardian);
-    delete pendingGuardian;
-  }
-
-  /// @dev Sets the cap of the market defined by `id` to `supplyCap`.
-  /// @dev Assumes that the inputs `marketParams` and `id` match.
-  function _setCap(IPool id, uint184 supplyCap) internal {
-    MarketConfig storage marketConfig = config[id];
+  /// @dev Sets the cap of the market defined by `pool` to `supplyCap`.
+  function _setCap(IPool pool, uint184 supplyCap) internal {
+    MarketConfig storage marketConfig = config[pool];
 
     if (supplyCap > 0) {
       if (!marketConfig.enabled) {
-        withdrawQueue.push(id);
+        withdrawQueue.push(pool);
 
-        if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
+        if (withdrawQueue.length > MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
 
         marketConfig.enabled = true;
 
-        // todo
-        // // Take into account assets of the new market without applying a fee.
-        // _updateLastTotalAssets(
-        //   lastTotalAssets + MORPHO.expectedSupplyAssets(marketParams, address(this))
-        // );
+        // Take into account assets of the new market without applying a fee.
+        pool.forceUpdateReserve(asset());
+        uint256 supplyAssets = pool.supplyAssets(asset(), positionId);
+        _updateLastTotalAssets(lastTotalAssets + supplyAssets);
 
         emit SetWithdrawQueue(msg.sender, withdrawQueue);
       }
@@ -721,40 +616,36 @@ contract CuratedVault is
     }
 
     marketConfig.cap = supplyCap;
-    emit SetCap(_msgSender(), id, supplyCap);
-    delete pendingCap[id];
+    emit SetCap(_msgSender(), pool, supplyCap);
+    delete pendingCap[pool];
   }
 
   /* LIQUIDITY ALLOCATION */
 
-  /// @dev Supplies `assets` to Morpho.
+  /// @dev Supplies `assets` to ZeroLend.
   function _supplyPool(uint256 assets) internal {
     for (uint256 i; i < supplyQueue.length; ++i) {
-      IPool id = supplyQueue[i];
+      IPool pool = supplyQueue[i];
 
-      uint256 supplyCap = config[id].cap;
+      uint256 supplyCap = config[pool].cap;
       if (supplyCap == 0) continue;
 
-      // IPool marketParams = _marketParams(id);
-      // MORPHO.accrueInterest(marketParams);
+      pool.forceUpdateReserve(asset());
 
-      // todo
-      // Market memory market = MORPHO.market(id);
-      // uint256 supplyShares = MORPHO.supplyShares(id, address(this));
-      // // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      // uint256 supplyAssets = supplyShares.toAssetsUp(
-      //   market.totalSupplyAssets,
-      //   market.totalSupplyShares
-      // );
+      uint256 supplyShares = pool.supplyShares(asset(), positionId);
 
-      // uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
+      // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
-      // if (toSupply > 0) {
-      //   // Using try/catch to skip markets that revert.
-      //   try MORPHO.supply(marketParams, toSupply, 0, address(this), hex'') {
-      //     assets -= toSupply;
-      //   } catch {}
-      // }
+      uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
+
+      if (toSupply > 0) {
+        // Using try/catch to skip markets that revert.
+        try pool.supplySimple(asset(), toSupply, 0) {
+          assets -= toSupply;
+        } catch {}
+      }
 
       if (assets == 0) return;
     }
@@ -762,52 +653,46 @@ contract CuratedVault is
     if (assets != 0) revert AllCapsReached();
   }
 
-  /// @dev Withdraws `assets` from Morpho.
-  function _withdrawPool(uint256 assets) internal {
+  /// @dev Withdraws `assets` from ZeroLend.
+  function _withdrawPool(uint256 withdrawAmount) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
-      IPool id = withdrawQueue[i];
-      (uint256 supplyAssets,) = _accruedSupplyBalance(id);
-      // uint256 toWithdraw = UtilsLib.min(
-      //   _withdrawable(id, market.totalSupplyAssets, market.totalBorrowAssets, supplyAssets),
-      //   assets
-      // );
-      // if (toWithdraw > 0) {
-      //   // Using try/catch to skip markets that revert.
-      //   try MORPHO.withdraw(marketParams, toWithdraw, 0, address(this), address(this)) {
-      //     assets -= toWithdraw;
-      //   } catch {}
-      // }
+      IPool pool = withdrawQueue[i];
+      (uint256 supplyAssets,) = _accruedSupplyBalance(pool);
+      uint256 toWithdraw =
+        UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
+      if (toWithdraw > 0) {
+        // Using try/catch to skip markets that revert.
+        try pool.withdrawSimple(asset(), toWithdraw, 0) {
+          withdrawAmount -= toWithdraw;
+        } catch {}
+      }
 
-      if (assets == 0) return;
+      if (withdrawAmount == 0) return;
     }
 
-    if (assets != 0) revert NotEnoughLiquidity();
+    if (withdrawAmount != 0) revert NotEnoughLiquidity();
   }
 
-  /// @dev Simulates a withdraw of `assets` from Morpho.
+  /// @notice simulates a withdraw of `assets` from ZeroLend.
   /// @return The remaining assets to be withdrawn.
-  function _simulateWithdrawMorpho(uint256 assets) internal view returns (uint256) {
+  function _simulateWithdraw(uint256 assets) internal view returns (uint256) {
     for (uint256 i; i < withdrawQueue.length; ++i) {
-      IPool id = withdrawQueue[i];
-      // MarketConfig marketParams = _marketParams(id);
+      IPool pool = withdrawQueue[i];
 
-      // todo
-      // uint256 supplyShares = MORPHO.supplyShares(id, address(this));
-      // (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = MORPHO
-      //   .expectedMarketBalances(id);
+      // get info on how much shares this contract has
+      DataTypes.PositionBalance memory pos = pool.getBalanceRawByPositionId(asset(), positionId);
+      uint256 supplyShares = pos.supplyShares;
 
-      // // The vault withdrawing from Morpho cannot fail because:
-      // // 1. oracle.price() is never called (the vault doesn't borrow)
-      // // 2. the amount is capped to the liquidity available on Morpho
-      // // 3. virtually accruing interest didn't fail
-      // assets = assets.zeroFloorSub(
-      //   _withdrawable(
-      //     marketParams,
-      //     totalSupplyAssets,
-      //     totalBorrowAssets,
-      //     supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares)
-      //   )
-      // );
+      // get info on how much shares and asset the pool has
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets,) = pool.marketBalances(asset());
+
+      // The vault withdrawing from ZeroLend cannot fail because:
+      // 1. oracle.price() is never called (the vault doesn't borrow)
+      // 2. the amount is capped to the liquidity available on ZeroLend
+      // 3. virtually accruing interest didn't fail
+      assets = assets.zeroFloorSub(
+        _withdrawable(pool, totalSupplyAssets, totalBorrowAssets, supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares))
+      );
 
       if (assets == 0) break;
     }
@@ -815,22 +700,17 @@ contract CuratedVault is
     return assets;
   }
 
-  /// @dev Returns the withdrawable amount of assets from the market defined by `marketParams`, given the market's
+  /// @dev Returns the withdrawable amount of assets from the market defined by `pool`, given the market's
   /// total supply and borrow assets and the vault's assets supplied.
   function _withdrawable(
-    IPool marketParams,
+    IPool pool,
     uint256 totalSupplyAssets,
     uint256 totalBorrowAssets,
     uint256 supplyAssets
   ) internal view returns (uint256) {
-    // todo
-    // // Inside a flashloan callback, liquidity on Morpho Blue may be limited to the singleton's balance.
-    // uint256 availableLiquidity = UtilsLib.min(
-    //   totalSupplyAssets - totalBorrowAssets,
-    //   ERC20(marketParams.loanToken).balanceOf(address(MORPHO))
-    // );
-    // return UtilsLib.min(supplyAssets, availableLiquidity);
-    return 0;
+    // Inside a flashloan callback, liquidity on the pool may be limited to the singleton's balance.
+    uint256 availableLiquidity = UtilsLib.min(totalSupplyAssets - totalBorrowAssets, IERC20(asset()).balanceOf(address(pool)));
+    return UtilsLib.min(supplyAssets, availableLiquidity);
   }
 
   /* FEE MANAGEMENT */
@@ -838,7 +718,6 @@ contract CuratedVault is
   /// @dev Updates `lastTotalAssets` to `updatedTotalAssets`.
   function _updateLastTotalAssets(uint256 updatedTotalAssets) internal {
     lastTotalAssets = updatedTotalAssets;
-
     emit UpdateLastTotalAssets(updatedTotalAssets);
   }
 

@@ -1,0 +1,162 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.12;
+
+import {INFTRewardsDistributor} from '../../interfaces/INFTRewardsDistributor.sol';
+import {IPool} from '../../interfaces/IPool.sol';
+
+import {OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+
+import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+
+import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
+
+/**
+ * @title NFTRewardsDistributor
+ * @notice Accounting contract to manage multiple staking distributions with multiple rewards
+ * @author ZeroLend
+ */
+abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableUpgradeable, INFTRewardsDistributor {
+  using SafeMath for uint256;
+
+  IERC20 public rewardsToken;
+  IVotes internal _staking;
+  mapping(address pool => address[] assets) internal _poolAssetList;
+  mapping(bytes32 assetHash => uint256 supply) private _totalSupply;
+  mapping(bytes32 assetHash => uint256) public lastUpdateTime;
+  mapping(bytes32 assetHash => uint256) public periodFinish;
+  mapping(bytes32 assetHash => uint256) public rewardPerTokenStored;
+  mapping(bytes32 assetHash => uint256) public rewardRate;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 balance)) private _balances;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewardPerTokenStored)) public userRewardPerTokenPaid;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewards)) public rewards;
+  uint256 internal _maxBoostRequirement;
+  uint256 public rewardsDuration;
+
+  function __NFTRewardsDistributor_init(
+    uint256 maxBoostRequirement_,
+    address staking_,
+    uint256 rewardsDuration_,
+    address rewardsToken_
+  ) internal onlyInitializing {
+    _maxBoostRequirement = maxBoostRequirement_;
+    _staking = IVotes(staking_);
+    rewardsToken = IERC20(rewardsToken_);
+    rewardsDuration = rewardsDuration_;
+  }
+
+  function totalSupplyAssetForRewards(bytes32 _assetHash) external view returns (uint256) {
+    return _totalSupply[_assetHash];
+  }
+
+  function balanceOfByAssetHash(uint256 tokenId, bytes32 _assetHash) external view returns (uint256) {
+    return _balances[tokenId][_assetHash];
+  }
+
+  function lastTimeRewardApplicable(bytes32 _assetHash) public view returns (uint256) {
+    return block.timestamp < periodFinish[_assetHash] ? block.timestamp : periodFinish[_assetHash];
+  }
+
+  function rewardPerToken(bytes32 _assetHash) public view returns (uint256) {
+    if (_totalSupply[_assetHash] == 0) {
+      return rewardPerTokenStored[_assetHash];
+    }
+    return rewardPerTokenStored[_assetHash].add(
+      lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+        _totalSupply[_assetHash]
+      )
+    );
+  }
+
+  function getReward(uint256 tokenId, bytes32 _assetHash) public /* nonReentrant */ {
+    _updateReward(tokenId, _assetHash);
+    uint256 reward = rewards[tokenId][_assetHash];
+    if (reward > 0) {
+      rewards[tokenId][_assetHash] = 0;
+      rewardsToken.transfer(ownerOf(tokenId), reward);
+      emit RewardPaid(tokenId, ownerOf(tokenId), reward);
+    }
+  }
+
+  function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
+    return _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+      rewards[tokenId][_assetHash]
+    );
+  }
+
+  function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {
+    return rewardRate[_assetHash].mul(rewardsDuration);
+  }
+
+  /**
+   * @dev Calculates the boosted balance for an account.
+   * @param account The address of the account for which to calculate the boosted balance.
+   * @param balance The amount to boost.
+   * @return The boosted balance of the account.
+   */
+  function boostedBalance(address account, uint256 balance) public view returns (uint256) {
+    uint256 _boosted = (balance * 20) / 100;
+    uint256 _stake = _staking.getVotes(account);
+
+    uint256 _adjusted = ((balance * _stake * 80) / _maxBoostRequirement) / 100;
+
+    // because of this we are able to max out the boost by 5x
+    uint256 _boostedBalance = _boosted + _adjusted;
+    return _boostedBalance > balance ? balance : _boostedBalance;
+  }
+
+  function notifyRewardAmount(uint256 reward, address pool, address asset, bool isDebt) external onlyOwner {
+    rewardsToken.transferFrom(msg.sender, address(this), reward);
+
+    bytes32 _assetHash = assetHash(pool, asset, isDebt);
+    _updateReward(0, _assetHash);
+
+    if (block.timestamp >= periodFinish[_assetHash]) {
+      rewardRate[_assetHash] = reward.div(rewardsDuration);
+    } else {
+      uint256 remaining = periodFinish[_assetHash].sub(block.timestamp);
+      uint256 leftover = remaining.mul(rewardRate[_assetHash]);
+      rewardRate[_assetHash] = reward.add(leftover).div(rewardsDuration);
+    }
+
+    // Ensure the provided reward amount is not more than the balance in the contract.
+    // This keeps the reward rate in the right range, preventing overflows due to
+    // very high values of rewardRate in the earned and rewardsPerToken functions;
+    // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
+    uint256 balance = rewardsToken.balanceOf(address(this));
+    require(rewardRate[_assetHash] <= balance.div(rewardsDuration), 'Provided reward too high');
+
+    lastUpdateTime[_assetHash] = block.timestamp;
+    periodFinish[_assetHash] = block.timestamp.add(rewardsDuration);
+    emit RewardAdded(_assetHash, reward);
+  }
+
+  function _updateReward(uint256 _tokenId, bytes32 _assetHash) internal {
+    rewardPerTokenStored[_assetHash] = rewardPerToken(_assetHash);
+    lastUpdateTime[_assetHash] = lastTimeRewardApplicable(_assetHash);
+    if (_tokenId != 0) {
+      rewards[_tokenId][_assetHash] = earned(_tokenId, _assetHash);
+      userRewardPerTokenPaid[_tokenId][_assetHash] = rewardPerTokenStored[_assetHash];
+    }
+  }
+
+  function assetHash(address pool, address asset, bool isDebt) public pure returns (bytes32) {
+    return keccak256(abi.encode(pool, asset, isDebt));
+  }
+
+  //// @inheritdoc IRewardsController
+  function _handleSupplies(address pool, address asset, uint256 id) internal {
+    bytes32 _assetHash = assetHash(pool, asset, false);
+    _updateReward(id, _assetHash);
+
+    // todo
+  }
+
+  function _handleDebt(address pool, address asset, uint256 id) internal {
+    bytes32 _assetHash = assetHash(pool, asset, true);
+    _updateReward(id, _assetHash);
+
+    // todo
+  }
+}

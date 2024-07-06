@@ -46,7 +46,7 @@ library BorrowLogic {
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
     DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteBorrowParams memory params
-  ) public {
+  ) public returns (DataTypes.SharesType memory borrowed) {
     DataTypes.ReserveData storage reserve = reservesData[params.asset];
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
 
@@ -69,7 +69,8 @@ library BorrowLogic {
 
     // mint debt tokens
     DataTypes.PositionBalance storage b = _balances[params.asset][params.position];
-    (bool isFirstBorrowing,) = b.borrowDebt(totalSupplies, params.amount, cache.nextBorrowIndex);
+    bool isFirstBorrowing;
+    (isFirstBorrowing, borrowed.shares) = b.borrowDebt(totalSupplies, params.amount, cache.nextBorrowIndex);
     cache.nextDebtShares = totalSupplies.debtShares;
 
     // if first borrowing, flag that
@@ -86,18 +87,11 @@ library BorrowLogic {
       params.data.interestRateData
     );
 
-    // DataTypes.ReserveData storage _reserve,
-    // DataTypes.ReserveCache memory _cache,
-    // address _reserveAddress,
-    // uint256 _reserveFactor,
-    // uint256 _liquidityAdded,
-    // uint256 _liquidityTaken,
-    // bytes32 _position,
-    // bytes memory _data
-
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
     emit Borrow(params.asset, params.user, params.position, params.amount, reserve.borrowRate);
+
+    borrowed.assets = params.amount;
   }
 
   /**
@@ -108,46 +102,46 @@ library BorrowLogic {
    * @param balances The balance of the position
    * @param totalSupplies The total supply of the reserve
    * @param params The additional parameters needed to execute the repay function
-   * @return paybackAmount The actual amount being repaid
+   * @return payback The actual amount being repaid
    */
   function executeRepay(
     DataTypes.ReserveData storage reserve,
     DataTypes.PositionBalance storage balances,
     DataTypes.ReserveSupplies storage totalSupplies,
     DataTypes.ExecuteRepayParams memory params
-  ) external returns (uint256 paybackAmount) {
+  ) external returns (DataTypes.SharesType memory payback) {
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
-    paybackAmount = balances.debtShares;
+    payback.assets = balances.getDebtBalance(cache.nextBorrowIndex);
 
     // Allows a user to max repay without leaving dust from interest.
     if (params.amount == type(uint256).max) {
       params.amount = balances.getDebtBalance(cache.nextBorrowIndex);
-      paybackAmount = params.amount;
+      payback.assets = params.amount;
     }
 
-    ValidationLogic.validateRepay(params.amount, paybackAmount);
+    ValidationLogic.validateRepay(params.amount, payback.assets);
 
     // If paybackAmount is more than what the user wants to payback, the set it to the
     // user input (ie params.amount)
-    if (params.amount < paybackAmount) paybackAmount = params.amount;
+    if (params.amount < payback.assets) payback.assets = params.amount;
 
     reserve.updateInterestRates(
       totalSupplies,
       cache,
       params.asset,
       IPool(params.pool).getReserveFactor(),
-      paybackAmount,
+      payback.assets,
       0,
       params.position,
       params.data.interestRateData
     );
 
     // update balances and total supplies
-    balances.repayDebt(totalSupplies, paybackAmount, cache.nextBorrowIndex);
+    payback.shares = balances.repayDebt(totalSupplies, payback.assets, cache.nextBorrowIndex);
     cache.nextDebtShares = totalSupplies.debtShares;
 
-    IERC20(params.asset).safeTransferFrom(msg.sender, address(this), paybackAmount);
-    emit Repay(params.asset, params.position, msg.sender, paybackAmount);
+    IERC20(params.asset).safeTransferFrom(msg.sender, address(this), payback.assets);
+    emit Repay(params.asset, params.position, msg.sender, payback.assets);
   }
 }

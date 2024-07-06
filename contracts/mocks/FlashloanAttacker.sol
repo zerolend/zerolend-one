@@ -36,7 +36,7 @@ contract FlashloanAttacker {
 
   function supplyAsset(address asset, uint256 amount) public {
     MintableERC20 token = MintableERC20(asset);
-    token.mint(amount);
+    token.mint(address(this), amount);
     token.approve(address(_pool), type(uint256).max);
     // _pool.supply(asset, amount, address(this), 0);
   }

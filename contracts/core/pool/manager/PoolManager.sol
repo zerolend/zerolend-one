@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IPoolManager} from '../../../interfaces/IPoolManager.sol';
+import {IPool, IPoolManager} from '../../../interfaces/IPoolManager.sol';
 import {Errors} from '../utils/Errors.sol';
 import {TimelockedActions} from './TimelockedActions.sol';
 
@@ -29,9 +29,9 @@ contract PoolManager is IPoolManager, TimelockedActions {
     _setupRole(DEFAULT_ADMIN_ROLE, _governance);
   }
 
-  function _scheduleAction(address pool, bytes calldata data) internal {
+  function _scheduleAction(IPool pool, bytes calldata data) internal {
     _schedule(
-      pool, // address target,
+      address(pool), // address target,
       0, // uint256 value,
       data, // bytes calldata data,
       keccak256(abi.encode(block.timestamp)), // bytes32 salt,
@@ -39,84 +39,86 @@ contract PoolManager is IPoolManager, TimelockedActions {
     );
   }
 
-  function cancelAction(address pool, bytes32 id) external {
-    require(isPoolAdmin(pool, msg.sender) || isRiskAdmin(pool, msg.sender) || isRiskAdmin(address(0), msg.sender), 'not pool or risk admin');
+  function cancelAction(IPool pool, bytes32 id) external {
+    require(
+      isPoolAdmin(pool, msg.sender) || isRiskAdmin(pool, msg.sender) || isRiskAdmin(IPool(address(0)), msg.sender), 'not pool or risk admin'
+    );
     _cancel(id);
   }
 
   /// @inheritdoc IPoolManager
-  function addPoolAdmin(address pool, address admin) public {
+  function addPoolAdmin(IPool pool, address admin) public {
     grantRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
   }
 
   /// @inheritdoc IPoolManager
-  function addEmergencyAdmin(address pool, address admin) public {
+  function addEmergencyAdmin(IPool pool, address admin) public {
     grantRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
   }
 
   /// @inheritdoc IPoolManager
-  function addRiskAdmin(address pool, address admin) public {
+  function addRiskAdmin(IPool pool, address admin) public {
     grantRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
   }
 
   /// @inheritdoc IPoolManager
-  function isPoolAdmin(address pool, address admin) public view returns (bool) {
+  function isPoolAdmin(IPool pool, address admin) public view returns (bool) {
     return hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
   }
 
   /// @inheritdoc IPoolManager
-  function isEmergencyAdmin(address pool, address admin) public view returns (bool) {
+  function isEmergencyAdmin(IPool pool, address admin) public view returns (bool) {
     return hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
   }
 
   /// @inheritdoc IPoolManager
-  function isRiskAdmin(address pool, address admin) public view returns (bool) {
+  function isRiskAdmin(IPool pool, address admin) public view returns (bool) {
     return hasRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
   }
 
   /// @inheritdoc IPoolManager
-  function removeEmergencyAdmin(address pool, address admin) public {
+  function removeEmergencyAdmin(IPool pool, address admin) public {
     revokeRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), admin);
   }
 
   /// @inheritdoc IPoolManager
-  function removeRiskAdmin(address pool, address admin) public {
+  function removeRiskAdmin(IPool pool, address admin) public {
     revokeRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), admin);
   }
 
   /// @inheritdoc IPoolManager
-  function removePoolAdmin(address pool, address admin) public {
+  function removePoolAdmin(IPool pool, address admin) public {
     revokeRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
   }
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
    */
-  modifier onlyPoolAdmin(address pool) {
+  modifier onlyPoolAdmin(IPool pool) {
     require(hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender), 'not risk or pool admin');
     _;
   }
 
-  modifier onlyEmergencyAdmin(address pool) {
+  modifier onlyEmergencyAdmin(IPool pool) {
     require(
       hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender)
-        || hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender),
+        || hasRole(getRoleFromPool(IPool(address(0)), EMERGENCY_ADMIN_ROLE), msg.sender),
       'not risk or pool admin'
     );
     _;
   }
 
-  modifier onlyEmergencyOrPoolAdmin(address pool) {
+  modifier onlyEmergencyOrPoolAdmin(IPool pool) {
     require(
       hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender)
-        || hasRole(getRoleFromPool(address(0), EMERGENCY_ADMIN_ROLE), msg.sender)
+        || hasRole(getRoleFromPool(IPool(address(0)), EMERGENCY_ADMIN_ROLE), msg.sender)
         || hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
       'not emergency or pool admin'
     );
     _;
   }
 
-  modifier onlyRiskOrPoolAdmins(address pool) {
+  modifier onlyRiskOrPoolAdmins(IPool pool) {
     require(
       hasRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), msg.sender) || hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
       'not risk or pool admin'
@@ -125,7 +127,7 @@ contract PoolManager is IPoolManager, TimelockedActions {
   }
 
   /// @inheritdoc IPoolManager
-  function getRoleFromPool(address pool, bytes32 role) public pure returns (bytes32) {
+  function getRoleFromPool(IPool pool, bytes32 role) public pure returns (bytes32) {
     return keccak256(abi.encode(pool, role));
   }
 }

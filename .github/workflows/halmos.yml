@@ -1,0 +1,30 @@
+# This workflow will run the halmos formal verification interpreter
+name: Halmos
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-halmos:
+    runs-on: ubuntu-latest
+    name: Run Halmos formal verification tests
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/install-cache
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '>=3.9'
+
+      - name: Install halmos
+        run: pip install halmos
+
+      - name: Run Halmos
+        run: FOUNDRY_PROFILE=test halmos --forge-build-out forge-build

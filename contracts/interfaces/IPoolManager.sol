@@ -13,6 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {IPool} from './IPool.sol';
+
 /**
  * @title IPoolManager
  * @notice Defines the basic interface for the ACL Manager
@@ -40,58 +42,58 @@ interface IPoolManager {
    * @notice Adds a new admin as PoolAdmin
    * @param admin The address of the new admin
    */
-  function addPoolAdmin(address pool, address admin) external;
+  function addPoolAdmin(IPool pool, address admin) external;
 
   /**
    * @notice Removes an admin as PoolAdmin
    * @param admin The address of the admin to remove
    */
-  function removePoolAdmin(address pool, address admin) external;
+  function removePoolAdmin(IPool pool, address admin) external;
 
   /**
    * @notice Returns true if the address is PoolAdmin, false otherwise
    * @param admin The address to check
    * @return True if the given address is PoolAdmin, false otherwise
    */
-  function isPoolAdmin(address pool, address admin) external view returns (bool);
+  function isPoolAdmin(IPool pool, address admin) external view returns (bool);
 
   /**
    * @notice Adds a new admin as EmergencyAdmin
    * @param admin The address of the new admin
    */
-  function addEmergencyAdmin(address pool, address admin) external;
+  function addEmergencyAdmin(IPool pool, address admin) external;
 
   /**
    * @notice Removes an admin as EmergencyAdmin
    * @param admin The address of the admin to remove
    */
-  function removeEmergencyAdmin(address pool, address admin) external;
+  function removeEmergencyAdmin(IPool pool, address admin) external;
 
   /**
    * @notice Returns true if the address is EmergencyAdmin, false otherwise
    * @param admin The address to check
    * @return True if the given address is EmergencyAdmin, false otherwise
    */
-  function isEmergencyAdmin(address pool, address admin) external view returns (bool);
+  function isEmergencyAdmin(IPool pool, address admin) external view returns (bool);
 
   /**
    * @notice Adds a new admin as RiskAdmin
    * @param admin The address of the new admin
    */
-  function addRiskAdmin(address pool, address admin) external;
+  function addRiskAdmin(IPool pool, address admin) external;
 
   /**
    * @notice Removes an admin as RiskAdmin
    * @param admin The address of the admin to remove
    */
-  function removeRiskAdmin(address pool, address admin) external;
+  function removeRiskAdmin(IPool pool, address admin) external;
 
   /**
    * @notice Returns true if the address is RiskAdmin, false otherwise
    * @param admin The address to check
    * @return True if the given address is RiskAdmin, false otherwise
    */
-  function isRiskAdmin(address pool, address admin) external view returns (bool);
+  function isRiskAdmin(IPool pool, address admin) external view returns (bool);
 
-  function getRoleFromPool(address pool, bytes32 role) external pure returns (bytes32);
+  function getRoleFromPool(IPool pool, bytes32 role) external pure returns (bytes32);
 }
