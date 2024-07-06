@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import {console} from './../../lib/forge-std/src/console.sol';
-import {DefaultReserveInterestRateStrategy} from '../../contracts/periphery/ir/DefaultReserveInterestRateStrategy.sol';
+import {DataTypes, Pool} from '../../contracts/core/pool/Pool.sol';
 import {MintableERC20} from '../../contracts/mocks/MintableERC20.sol';
 import {MockAggregator} from '../../contracts/mocks/MockAggregator.sol';
-import {Pool, DataTypes} from '../../contracts/core/pool/Pool.sol';
-import {SymTest} from '../../lib/halmos-cheatcodes/src/SymTest.sol';
+import {DefaultReserveInterestRateStrategy} from '../../contracts/periphery/ir/DefaultReserveInterestRateStrategy.sol';
+
 import {Test} from '../../lib/forge-std/src/Test.sol';
+import {SymTest} from '../../lib/halmos-cheatcodes/src/SymTest.sol';
+import {console} from './../../lib/forge-std/src/console.sol';
 
 /// @title Pool Halmos Tests
 /// @author ZeroLend
@@ -102,17 +103,15 @@ contract PoolHalmosTest is SymTest, Test {
 
   function _callPool(bytes4 selector, address caller) private {
     vm.assume(
-      selector == pool.supplySimple.selector ||
-        selector == pool.repaySimple.selector ||
-        selector == pool.withdrawSimple.selector ||
-        selector == pool.borrowSimple.selector
+      selector == pool.supplySimple.selector || selector == pool.repaySimple.selector || selector == pool.withdrawSimple.selector
+        || selector == pool.borrowSimple.selector
     );
 
     uint256 amount = svm.createUint256('amount');
     uint256 index = svm.createUint256('index');
 
     vm.prank(caller);
-    (bool success, ) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), amount, index)));
+    (bool success,) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), amount, index)));
     vm.assume(success);
   }
 
@@ -120,8 +119,8 @@ contract PoolHalmosTest is SymTest, Test {
   /// @param selector The function selector to call.
   /// @param caller The address of the caller.
   function check_borrowLessThanSupply(bytes4 selector, address caller, uint256 supplyBalance, uint256 debtBalance) public {
-    (uint256 supplyBefore, , , ) = pool.marketBalances(address(loan));
-    (, , uint256 debtBefore, ) = pool.marketBalances(address(collateral));
+    (uint256 supplyBefore,,,) = pool.marketBalances(address(loan));
+    (,, uint256 debtBefore,) = pool.marketBalances(address(collateral));
 
     // fund the caller
     loan.mint(caller, supplyBalance);
@@ -133,8 +132,8 @@ contract PoolHalmosTest is SymTest, Test {
 
     _callPool(selector, caller);
 
-    (uint256 supplyAfter, , , ) = pool.marketBalances(address(loan));
-    (, , uint256 debtAfter, ) = pool.marketBalances(address(collateral));
+    (uint256 supplyAfter,,,) = pool.marketBalances(address(loan));
+    (,, uint256 debtAfter,) = pool.marketBalances(address(collateral));
 
     assert(debtAfter <= supplyAfter); // Borrow should be less than supply
   }
