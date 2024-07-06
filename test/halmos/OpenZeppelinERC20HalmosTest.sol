@@ -19,12 +19,12 @@ contract OpenZeppelinERC20HalmosTest is ERC20HalmosTest {
     holders[1] = address(0x1002);
     holders[2] = address(0x1003);
 
-    for (uint i = 0; i < holders.length; i++) {
+    for (uint256 i = 0; i < holders.length; i++) {
       address account = holders[i];
       uint256 balance = svm.createUint256('balance');
       vm.prank(deployer);
       token_.transfer(account, balance);
-      for (uint j = 0; j < i; j++) {
+      for (uint256 j = 0; j < i; j++) {
         address other = holders[j];
         uint256 amount = svm.createUint256('amount');
         vm.prank(account);

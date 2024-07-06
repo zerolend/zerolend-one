@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import {SymTest} from '../../lib/halmos-cheatcodes/src/SymTest.sol';
 import {Test} from '../../lib/forge-std/src/Test.sol';
+import {SymTest} from '../../lib/halmos-cheatcodes/src/SymTest.sol';
 import {ERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 abstract contract ERC20HalmosTest is SymTest, Test {
@@ -25,7 +25,7 @@ abstract contract ERC20HalmosTest is SymTest, Test {
 
     // consider an arbitrary function call to the token from the caller
     vm.prank(caller);
-    (bool success, ) = address(token).call(abi.encodePacked(selector, args));
+    (bool success,) = address(token).call(abi.encodePacked(selector, args));
     vm.assume(success);
 
     uint256 newBalanceOther = IERC20(token).balanceOf(other);
@@ -83,7 +83,8 @@ abstract contract ERC20HalmosTest is SymTest, Test {
       assert(IERC20(token).balanceOf(to) == oldBalanceTo + amount);
 
       assert(oldAllowance >= amount); // ensure allowance was enough
-      assert(oldAllowance == type(uint256).max || IERC20(token).allowance(from, caller) == oldAllowance - amount); // allowance decreases if not max
+      assert(oldAllowance == type(uint256).max || IERC20(token).allowance(from, caller) == oldAllowance - amount); // allowance decreases if
+        // not max
     } else {
       assert(IERC20(token).balanceOf(from) == oldBalanceFrom);
       assert(IERC20(token).balanceOf(to) == oldBalanceTo);
