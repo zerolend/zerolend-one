@@ -10,17 +10,9 @@ on:
   pull_request:
 
 jobs:
-  test-halmos:
+  build-halmos:
     runs-on: ubuntu-latest
-    name: Run Halmos formal verification tests
-
-    strategy:
-      fail-fast: false
-      matrix:
-        conf:
-          - OpenZeppelinERC20HalmosTest
-          - BorrowSolvencyHalmosTest
-
+    name: Build Halmos
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,5 +26,18 @@ jobs:
       - name: Install halmos
         run: pip install halmos
 
-      - name: Run Halmos on ${{ matrix.conf }}
-        run: FOUNDRY_PROFILE=test halmos --forge-build-out forge-build  --contract ${{ matrix.conf }}
+  test-halmos:
+    runs-on: ubuntu-latest
+    name: Run Halmos
+    needs: build-halmos
+
+    strategy:
+      fail-fast: false
+      matrix:
+        conf:
+          - OpenZeppelinERC20HalmosTest
+          - BorrowSolvencyHalmosTest
+
+    steps:
+      - name: Run Halmos for ${{ matrix.conf }}
+        run: FOUNDRY_PROFILE=test halmos --forge-build-out forge-build --contract ${{ matrix.conf }}
