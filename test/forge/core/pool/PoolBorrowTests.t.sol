@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {PoolSetup} from './Pool.t.sol';
+import {PoolSetup} from './PoolSetup.sol';
 
-contract BorrowPoolTest is PoolSetup {
+contract PoolBorrowTests is PoolSetup {
   event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
 
   /// ------------Borrow------------

@@ -25,5 +25,12 @@ import {IERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/IERC2
 /// @custom:contact contact@zerolend.xyz
 /// @dev Use this interface for a vault to have access to all the functions with the appropriate function signatures.
 interface ICuratedVault is ICuratedVaultStaticTyping, IERC4626, IERC20Permit {
-// Blank
+  /// @notice Returns the current configuration of each market.
+  function config(IPool) external view returns (MarketConfig memory);
+
+  /// @notice Returns the pending cap for each market.
+  function pendingCap(IPool) external view returns (PendingUint192 memory);
+
+  /// @notice Returns the pending timelock.
+  function pendingTimelock() external view returns (PendingUint192 memory);
 }

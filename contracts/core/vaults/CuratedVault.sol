@@ -25,8 +25,6 @@ import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 
-import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
-
 import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
 import {
   ERC20Upgradeable,
@@ -37,6 +35,7 @@ import {
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20, IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
+import {CuratedVaultRoles} from './CuratedVaultRoles.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import 'hardhat/console.sol';
@@ -46,13 +45,7 @@ import 'hardhat/console.sol';
 /// @custom:contact contact@zerolend.xyz
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
 /// @dev This is a proxy contract and is not meant to be deployed directly.
-contract CuratedVault is
-  ERC4626Upgradeable,
-  ERC20PermitUpgradeable,
-  AccessControlEnumerableUpgradeable,
-  MulticallUpgradeable,
-  ICuratedVaultStaticTyping
-{
+contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaultRoles, MulticallUpgradeable {
   using MathUpgradeable for uint256;
   using UtilsLib for uint256;
   using SafeCast for uint256;
@@ -62,30 +55,18 @@ contract CuratedVault is
   using PendingLib for PendingUint192;
   using PendingLib for PendingAddress;
 
-  /// @dev the keccak256 hash of the guardian role.
-  bytes32 public immutable GUARDIAN_ROLE = keccak256('GUARDIAN_ROLE');
-
-  /// @dev the keccak256 hash of the curator role.
-  bytes32 public immutable CURATOR_ROLE = keccak256('GUARDIAN_ROLE');
-
-  /// @dev the keccak256 hash of the allocator role.
-  bytes32 public immutable ALLOCATOR_ROLE = keccak256('GUARDIAN_ROLE');
-
   /// @notice OpenZeppelin decimals offset used by the ERC4626Upgradeable implementation.
   /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
   /// precision between shares and assets.
   uint8 public DECIMALS_OFFSET;
 
-  /// @inheritdoc ICuratedVaultStaticTyping
   mapping(IPool => MarketConfig) public config;
 
   /// @inheritdoc ICuratedVaultBase
   uint256 public timelock;
 
-  /// @inheritdoc ICuratedVaultStaticTyping
   mapping(IPool => PendingUint192) public pendingCap;
 
-  /// @inheritdoc ICuratedVaultStaticTyping
   PendingUint192 public pendingTimelock;
 
   /// @inheritdoc ICuratedVaultBase
@@ -142,57 +123,17 @@ contract CuratedVault is
     __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
     __Multicall_init();
-    __AccessControlEnumerable_init();
+    __CuratedVaultRoles_init(_owner);
 
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
     _checkTimelockBounds(_initialTimelock);
     _setTimelock(_initialTimelock);
-
-    _setupRole(DEFAULT_ADMIN_ROLE, _owner);
 
     positionId = keccak256(abi.encodePacked(address(this), 'index', uint256(0)));
   }
 
   function revision() external pure virtual returns (uint256) {
     return 1;
-  }
-
-  /* MODIFIERS */
-
-  /// @dev Reverts if the caller doesn't have the curator role.
-  modifier onlyCuratorRole() {
-    address sender = _msgSender();
-    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(CURATOR_ROLE, _msgSender())) revert NotGuardianRole();
-    _;
-  }
-
-  /// @dev Reverts if the caller doesn't have the allocator role.
-  modifier onlyAllocator() {
-    address sender = _msgSender();
-    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(ALLOCATOR_ROLE, _msgSender())) {
-      revert NotAllocatorRole();
-    }
-    _;
-  }
-
-  /// @dev Reverts if the caller doesn't have the guardian role.
-  modifier onlyGuardian() {
-    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(GUARDIAN_ROLE, _msgSender())) revert NotGuardianRole();
-    _;
-  }
-
-  /// @dev Reverts if the caller is not eh default admin
-  modifier onlyOwner() {
-    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) revert NotOwnerRole();
-    _;
-  }
-
-  /// @dev Reverts if the caller doesn't have the curator nor the guardian role.
-  modifier onlyCuratorOrGuardian() {
-    if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) && !hasRole(CURATOR_ROLE, _msgSender()) && !hasRole(GUARDIAN_ROLE, _msgSender())) {
-      revert NotCuratorNorGuardianRole();
-    }
-    _;
   }
 
   /// @dev Makes sure conditions are met to accept a pending value.
@@ -527,11 +468,6 @@ contract CuratedVault is
     for (uint256 i; i < withdrawQueue.length; ++i) {
       assets += withdrawQueue[i].getBalanceByPosition(asset(), positionId);
     }
-  }
-
-  /// @inheritdoc ICuratedVaultBase
-  function isAllocator(address who) public view override returns (bool) {
-    return hasRole(ALLOCATOR_ROLE, who);
   }
 
   /* ERC4626Upgradeable (INTERNAL) */
