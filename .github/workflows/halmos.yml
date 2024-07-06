@@ -18,7 +18,7 @@ jobs:
       matrix:
         conf:
           - OpenZeppelinERC20HalmosTest
-          - BorrowSolvencyHalmosTest
+          - PoolHalmosTest
     steps:
       - uses: actions/checkout@v4
         with:
