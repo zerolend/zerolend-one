@@ -10,7 +10,7 @@ on:
   pull_request:
 
 jobs:
-  test-hardhat:
+  test-halmos:
     runs-on: ubuntu-latest
     name: Run Halmos formal verification tests
     steps:
@@ -27,4 +27,4 @@ jobs:
         run: pip install halmos
 
       - name: Run Halmos
-        run: FOUNDRY_PROFILE=test halmos
+        run: FOUNDRY_PROFILE=test halmos --forge-build-out forge-build
