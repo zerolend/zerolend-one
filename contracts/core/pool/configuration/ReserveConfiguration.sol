@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes} from '../configuration/DataTypes.sol';
 import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
+import {DataTypes} from '../configuration/DataTypes.sol';
 
 /**
  * @title ReserveConfiguration library

@@ -13,10 +13,11 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 import {GenericLogic} from './GenericLogic.sol';
@@ -25,7 +26,6 @@ import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 
 /**
  * @title PoolLogic library
@@ -127,12 +127,8 @@ library PoolLogic {
       uint256 healthFactor
     )
   {
-    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor, ) = GenericLogic.calculateUserAccountData(
-      _balances,
-      reservesData,
-      reservesList,
-      params
-    );
+    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor,) =
+      GenericLogic.calculateUserAccountData(_balances, reservesData, reservesList, params);
     availableBorrowsBase = GenericLogic.calculateAvailableBorrows(totalCollateralBase, totalDebtBase, ltv);
   }
 
@@ -170,10 +166,7 @@ library PoolLogic {
       );
 
       emit PoolEventsLib.CollateralConfigurationChanged(
-        asset,
-        config.getLtv(),
-        config.getLiquidationThreshold(),
-        config.getLiquidationThreshold()
+        asset, config.getLtv(), config.getLiquidationThreshold(), config.getLiquidationThreshold()
       );
     }
   }

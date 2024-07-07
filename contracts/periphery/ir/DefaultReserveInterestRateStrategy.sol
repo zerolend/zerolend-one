@@ -14,11 +14,12 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../../core/pool/configuration/DataTypes.sol';
-import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
+
 import {PercentageMath} from '../../core/pool/utils/PercentageMath.sol';
 import {WadRayMath} from '../../core/pool/utils/WadRayMath.sol';
 import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
 import {IReserveInterestRateStrategy} from '../../interfaces/IReserveInterestRateStrategy.sol';
+import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 
 /**

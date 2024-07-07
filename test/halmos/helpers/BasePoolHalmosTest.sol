@@ -7,8 +7,9 @@ import {MockAggregator} from '../../../contracts/mocks/MockAggregator.sol';
 import {DefaultReserveInterestRateStrategy} from '../../../contracts/periphery/ir/DefaultReserveInterestRateStrategy.sol';
 
 import {Test} from '../../../lib/forge-std/src/Test.sol';
-import {SymTest} from '../../../lib/halmos-cheatcodes/src/SymTest.sol';
+
 import {console} from '../../../lib/forge-std/src/console.sol';
+import {SymTest} from '../../../lib/halmos-cheatcodes/src/SymTest.sol';
 
 /// @title Pool Halmos Tests
 /// @author ZeroLend
@@ -103,17 +104,15 @@ contract BasePoolHalmosTest is SymTest, Test {
 
   function _callPool(bytes4 selector, address caller) internal {
     vm.assume(
-      selector == pool.supplySimple.selector ||
-        selector == pool.repaySimple.selector ||
-        selector == pool.withdrawSimple.selector ||
-        selector == pool.borrowSimple.selector
+      selector == pool.supplySimple.selector || selector == pool.repaySimple.selector || selector == pool.withdrawSimple.selector
+        || selector == pool.borrowSimple.selector
     );
 
     uint256 amount = svm.createUint256('amount');
     uint256 index = svm.createUint256('index');
 
     vm.prank(caller);
-    (bool success, ) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), amount, index)));
+    (bool success,) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), amount, index)));
     vm.assume(success);
   }
 }

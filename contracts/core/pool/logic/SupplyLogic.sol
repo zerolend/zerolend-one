@@ -19,16 +19,16 @@ import {DataTypes} from '../configuration/DataTypes.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 
-import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
+import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 
 /**
  * @title SupplyLogic library

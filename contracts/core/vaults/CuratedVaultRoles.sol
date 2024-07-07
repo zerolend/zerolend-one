@@ -15,8 +15,8 @@ pragma solidity 0.8.19;
 
 import {DataTypes, IPool} from '../../interfaces/IPool.sol';
 
-import {ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
 import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
+import {ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
 abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICuratedVaultStaticTyping {

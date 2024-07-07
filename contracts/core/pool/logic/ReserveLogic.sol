@@ -15,18 +15,18 @@ pragma solidity 0.8.19;
 
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveSuppliesConfiguration} from '../configuration/ReserveSuppliesConfiguration.sol';
-import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {MathUtils} from '../utils/MathUtils.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
  * @title ReserveLogic library
@@ -160,16 +160,16 @@ library ReserveLogic {
 
     (vars.nextLiquidityRate, vars.nextBorrowRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
       .calculateInterestRates(
-        _position,
-        _data,
-        DataTypes.CalculateInterestRatesParams({
-          liquidityAdded: _liquidityAdded,
-          liquidityTaken: _liquidityTaken,
-          totalDebt: vars.totalDebt,
-          reserveFactor: _reserveFactor,
-          reserve: _reserveAddress
-        })
-      );
+      _position,
+      _data,
+      DataTypes.CalculateInterestRatesParams({
+        liquidityAdded: _liquidityAdded,
+        liquidityTaken: _liquidityTaken,
+        totalDebt: vars.totalDebt,
+        reserveFactor: _reserveFactor,
+        reserve: _reserveAddress
+      })
+    );
 
     _reserve.liquidityRate = vars.nextLiquidityRate.toUint128();
     _reserve.borrowRate = vars.nextBorrowRate.toUint128();
@@ -178,11 +178,7 @@ library ReserveLogic {
     else if (_liquidityTaken > 0) totalSupplies.underlyingBalance -= _liquidityTaken.toUint128();
 
     emit PoolEventsLib.ReserveDataUpdated(
-      _reserveAddress,
-      vars.nextLiquidityRate,
-      vars.nextBorrowRate,
-      _cache.nextLiquidityIndex,
-      _cache.nextBorrowIndex
+      _reserveAddress, vars.nextLiquidityRate, vars.nextBorrowRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex
     );
   }
 
