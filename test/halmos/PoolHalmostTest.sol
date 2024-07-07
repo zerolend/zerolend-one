@@ -12,8 +12,8 @@ contract PoolHalmosTest is BasePoolHalmosTest {
   /// @param selector The function selector to call.
   /// @param caller The address of the caller.
   function check_borrowLessThanSupply(bytes4 selector, address caller) public {
-    (uint256 supplyBefore, , , ) = pool.marketBalances(address(loan));
-    (, , uint256 debtBefore, ) = pool.marketBalances(address(collateral));
+    (uint256 supplyBefore,,,) = pool.marketBalances(address(loan));
+    (,, uint256 debtBefore,) = pool.marketBalances(address(collateral));
 
     // fund the caller
     loan.mint(caller, 100e18);
@@ -29,8 +29,8 @@ contract PoolHalmosTest is BasePoolHalmosTest {
 
     _callPool(selector, caller);
 
-    (uint256 supplyAfter, , , ) = pool.marketBalances(address(loan));
-    (, , uint256 debtAfter, ) = pool.marketBalances(address(collateral));
+    (uint256 supplyAfter,,,) = pool.marketBalances(address(loan));
+    (,, uint256 debtAfter,) = pool.marketBalances(address(collateral));
 
     assert(debtAfter <= supplyAfter); // Borrow should be less than supply
   }
