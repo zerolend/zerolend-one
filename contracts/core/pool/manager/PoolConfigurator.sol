@@ -123,7 +123,7 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
     address[] memory sources = new address[](reserves.length);
     DataTypes.InitReserveConfig[] memory configurations = new DataTypes.InitReserveConfig[](reserves.length);
 
-    for (uint i = 0; i < reserves.length; i++) {
+    for (uint256 i = 0; i < reserves.length; i++) {
       DataTypes.ReserveData memory data = pool.getReserveData(reserves[i]);
 
       assets[i] = reserves[i];
