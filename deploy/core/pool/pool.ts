@@ -1,5 +1,5 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { getPoolLibraries } from '../../../helpers/contract-getters';
+import { getPoolLibraries } from '../../helpers/contract-getters';
 
 async function main(hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre;
