@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-// import '../../../lib/morpho-blue/src/interfaces/IMorpho.sol';
-
 import {MathLib, WAD} from '../../../../../contracts/core/vaults/libraries/MathLib.sol';
 
 import {IPool} from '../../../../../contracts/interfaces/IPool.sol';
@@ -12,9 +10,11 @@ import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICurated
 import {DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator} from '../../pool/CorePoolTests.sol';
 import {DataTypes, PoolSetup} from '../../pool/PoolSetup.sol';
 
+import {console} from '../../../../../lib/forge-std/src/console.sol';
+
 uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;
-uint256 constant MAX_TEST_ASSETS = 1e28;
+uint256 constant MAX_TEST_ASSETS = 1e18 * 1000;
 uint184 constant CAP = type(uint128).max;
 uint256 constant NB_MARKETS = 30 + 1;
 
@@ -68,7 +68,6 @@ abstract contract BaseVaultTest is PoolSetup {
     // init markets
     for (uint256 i = 0; i < NB_MARKETS; i++) {
       IPool market = IPool(poolFactory.createPool(_basicPoolInitParams()));
-      // allMarkets.push(market);
 
       // give approvals
       vm.startPrank(SUPPLIER);
@@ -81,9 +80,11 @@ abstract contract BaseVaultTest is PoolSetup {
 
       vm.prank(REPAYER);
       loanToken.approve(address(market), type(uint256).max);
+
+      allMarkets.push(market);
     }
 
-    // allMarkets.push(idleMarket); // Must be pushed last.
+    allMarkets.push(idleMarket); // Must be pushed last.
   }
 
   function _setupIdleMarket() private {

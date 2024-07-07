@@ -32,16 +32,24 @@ contract FeeTest is IntegrationVaultTest {
       // Create some debt on the market to accrue interest.
       loanToken.mint(SUPPLIER, MAX_TEST_ASSETS);
 
-      vm.prank(SUPPLIER);
+      vm.startPrank(SUPPLIER);
+      loanToken.approve(address(pool), type(uint256).max);
       pool.supplySimple(address(loanToken), MAX_TEST_ASSETS, 0);
+      vm.stopPrank();
 
       uint256 collateral = uint256(MAX_TEST_ASSETS).wDivUp(2);
       collateralToken.mint(BORROWER, collateral);
 
       vm.startPrank(BORROWER);
+      console.log('borrower', i);
+      collateralToken.approve(address(pool), type(uint256).max);
+      console.log('borrower supply', i);
       pool.supplySimple(address(collateralToken), collateral, 0);
+      console.log('borrower borrow', i);
       pool.borrowSimple(address(loanToken), MAX_TEST_ASSETS, 0);
       vm.stopPrank();
+
+      console.log('done', i);
     }
 
     _setCap(allMarkets[0], CAP);

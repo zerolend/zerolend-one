@@ -78,11 +78,11 @@ abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrateg
     return _stableRateSlope2;
   }
 
-  function getBaseVariableBorrowRate() external view override returns (uint256) {
+  function getBaseBorrowRate() external view override returns (uint256) {
     return _baseVariableBorrowRate;
   }
 
-  function getMaxVariableBorrowRate() external view override returns (uint256) {
+  function getMaxBorrowRate() external view override returns (uint256) {
     return _baseVariableBorrowRate + _variableRateSlope1 + _variableRateSlope2;
   }
 }
