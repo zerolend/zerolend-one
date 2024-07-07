@@ -11,6 +11,6 @@ module.exports = {
     invert: true,
   },
   istanbulFolder: 'coverage/hardhat',
-  skipFiles: ["test"],
+  skipFiles: ["test", "mocks", "governance"],
   istanbulReporter: ["html", "lcov", "text", "json", "cobertura"],
 };
