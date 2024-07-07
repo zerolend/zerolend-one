@@ -205,7 +205,7 @@ library DataTypes {
     uint256 liquidityAdded;
     uint256 liquidityTaken;
     uint256 reserveFactor;
-    uint256 totalVariableDebt;
+    uint256 totalDebt;
   }
 
   struct InitReserveConfig {

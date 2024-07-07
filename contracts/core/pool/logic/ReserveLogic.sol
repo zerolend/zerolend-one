@@ -129,7 +129,7 @@ library ReserveLogic {
   struct UpdateInterestRatesLocalVars {
     uint256 nextLiquidityRate;
     uint256 nextBorrowRate;
-    uint256 totalVariableDebt;
+    uint256 totalDebt;
   }
 
   /**
@@ -156,7 +156,7 @@ library ReserveLogic {
   ) internal {
     UpdateInterestRatesLocalVars memory vars;
 
-    vars.totalVariableDebt = _cache.nextDebtShares.rayMul(_cache.nextBorrowIndex);
+    vars.totalDebt = _cache.nextDebtShares.rayMul(_cache.nextBorrowIndex);
 
     (vars.nextLiquidityRate, vars.nextBorrowRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
       .calculateInterestRates(
@@ -165,7 +165,7 @@ library ReserveLogic {
         DataTypes.CalculateInterestRatesParams({
           liquidityAdded: _liquidityAdded,
           liquidityTaken: _liquidityTaken,
-          totalVariableDebt: vars.totalVariableDebt,
+          totalDebt: vars.totalDebt,
           reserveFactor: _reserveFactor,
           reserve: _reserveAddress
         })
@@ -187,8 +187,8 @@ library ReserveLogic {
   }
 
   struct AccrueToTreasuryLocalVars {
-    uint256 prevTotalVariableDebt;
-    uint256 currTotalVariableDebt;
+    uint256 prevtotalDebt;
+    uint256 currtotalDebt;
     uint256 totalDebtAccrued;
     uint256 amountToMint;
   }
@@ -204,13 +204,13 @@ library ReserveLogic {
     AccrueToTreasuryLocalVars memory vars;
 
     // calculate the total variable debt at moment of the last interaction
-    vars.prevTotalVariableDebt = _cache.currDebtShares.rayMul(_cache.currBorrowIndex);
+    vars.prevtotalDebt = _cache.currDebtShares.rayMul(_cache.currBorrowIndex);
 
     // calculate the new total variable debt after accumulation of the interest on the index
-    vars.currTotalVariableDebt = _cache.currDebtShares.rayMul(_cache.nextBorrowIndex);
+    vars.currtotalDebt = _cache.currDebtShares.rayMul(_cache.nextBorrowIndex);
 
     // debt accrued is the sum of the current debt minus the sum of the debt at the last update
-    vars.totalDebtAccrued = vars.currTotalVariableDebt - vars.prevTotalVariableDebt;
+    vars.totalDebtAccrued = vars.currtotalDebt - vars.prevtotalDebt;
 
     vars.amountToMint = vars.totalDebtAccrued.percentMul(reserveFactor);
 
