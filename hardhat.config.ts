@@ -11,9 +11,23 @@ import 'hardhat-deploy';
 import 'hardhat-tracer';
 import 'solidity-coverage';
 import 'solidity-docgen';
+import { loadTasks } from './tasks/hardhat-config';
 
 import dotenv from 'dotenv';
 dotenv.config();
+
+const defaultAccount = {
+  mnemonic:
+    process.env.SEED_PHRASE || 'test test test test test test test test test test test junk',
+  path: "m/44'/60'/0'/0",
+  initialIndex: 0,
+  count: 20,
+  passphrase: '',
+};
+
+// Prevent to load tasks before compilation and typechain
+const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
+if (!SKIP_LOAD) loadTasks(['tasks']);
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -45,7 +59,12 @@ const config: HardhatUserConfig = {
     },
     sepolia: {
       url: `https://1rpc.io/sepolia`,
-      accounts: process.env.WALLET_PRIVATE_KEY ? [process.env.WALLET_PRIVATE_KEY] : [],
+      accounts: defaultAccount,
+      saveDeployments: true,
+    },
+    linea: {
+      url: `https://rpc.linea.build`,
+      accounts: defaultAccount,
       saveDeployments: true,
     },
   },
@@ -70,9 +89,19 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      sepolia: process.env.ETHERSCAN_KEY || '',
-      mainnet: process.env.ETHERSCAN_KEY || '',
+      manta: process.env.ETHERSCAN_KEY || '',
+      linea: process.env.LINEASCAN_KEY || '',
     },
+    customChains: [
+      {
+        network: 'linea',
+        chainId: 59144,
+        urls: {
+          apiURL: 'https://api.lineascan.build/api',
+          browserURL: 'https://lineascan.build',
+        },
+      },
+    ],
   },
 };
 

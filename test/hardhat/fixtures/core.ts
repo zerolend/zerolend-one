@@ -33,7 +33,7 @@ export async function deployCore() {
     SupplyLogic: supplyLogic.target,
   };
 
-  const Pool = await ethers.getContractFactory('MockPool', { libraries });
+  const Pool = await ethers.getContractFactory('Pool', { libraries });
 
   // deploy pool
   const poolImpl = await Pool.deploy();

@@ -6,6 +6,8 @@ async function main(hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
+  const poolImpl = await deployments.get('Pool');
+
   const deployment = await deploy('PoolFactory', {
     from: deployer,
     contract: 'PoolFactory',

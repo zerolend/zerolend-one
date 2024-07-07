@@ -42,7 +42,7 @@ export async function deployPool() {
 
   // grab the instance and return
   const poolAddr = await factory.pools(0);
-  const pool = await ethers.getContractAt('MockPool', poolAddr);
+  const pool = await ethers.getContractAt('Pool', poolAddr);
 
   return {
     ...fixture,
