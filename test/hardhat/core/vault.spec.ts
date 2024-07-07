@@ -28,10 +28,6 @@ const random = () => {
   return (seed - 1) / 2147483646;
 };
 
-const logProgress = (name: string, i: number, max: number) => {
-  if (i % 10 == 0) console.log('[' + name + ']', Math.floor((100 * i) / max), '%');
-};
-
 const forwardTimestamp = async (elapsed: number) => {
   const timestamp = await latest();
   const newTimestamp = timestamp + elapsed;
@@ -188,8 +184,6 @@ describe('Curated Vault', () => {
     const nbDeposits = nbSuppliers * 2;
 
     for (let i = 0; i < nbDeposits; ++i) {
-      logProgress('main', i, nbDeposits);
-
       const j = i >= nbSuppliers ? nbDeposits - i - 1 : i;
       const supplier = suppliers[j];
 

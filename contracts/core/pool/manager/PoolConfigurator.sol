@@ -91,12 +91,45 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
     emit SupplyCapChanged(asset, oldSupplyCap, newSupplyCap);
   }
 
-  // @inheritdoc IPoolConfigurator
+  /// @inheritdoc IPoolConfigurator
   function setReserveInterestRateStrategyAddress(IPool pool, address asset, address newRateStrategyAddress) external onlyPoolAdmin(pool) {
     DataTypes.ReserveData memory reserve = pool.getReserveData(asset);
     DataTypes.ReserveConfigurationMap memory config = pool.getConfiguration(asset);
     address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
     pool.setReserveConfiguration(asset, newRateStrategyAddress, address(0), config);
     emit ReserveInterestRateStrategyChanged(asset, oldRateStrategyAddress, newRateStrategyAddress);
+  }
+
+  /// @inheritdoc IPoolConfigurator
+  function getPoolAssetConfiguration(IPool pool, address asset) public view returns (DataTypes.InitReserveConfig memory config) {
+    DataTypes.ReserveConfigurationMap memory configRaw = pool.getConfiguration(asset);
+    config.borrowable = configRaw.getBorrowingEnabled();
+    config.frozen = configRaw.getFrozen();
+    config.borrowCap = configRaw.getBorrowCap();
+    config.decimals = configRaw.getDecimals();
+    config.liquidationBonus = configRaw.getLiquidationBonus();
+    config.liquidationThreshold = configRaw.getLiquidationThreshold();
+    config.ltv = configRaw.getLtv();
+    config.supplyCap = configRaw.getSupplyCap();
+  }
+
+  /// @inheritdoc IPoolConfigurator
+  function getPoolFullConfig(IPool pool) external view returns (DataTypes.InitPoolParams memory config) {
+    address[] memory reserves = pool.getReservesList();
+    config.hook = address(pool.getHook());
+
+    address[] memory assets = new address[](reserves.length);
+    address[] memory rateStrategyAddresses = new address[](reserves.length);
+    address[] memory sources = new address[](reserves.length);
+    DataTypes.InitReserveConfig[] memory configurations = new DataTypes.InitReserveConfig[](reserves.length);
+
+    for (uint i = 0; i < reserves.length; i++) {
+      DataTypes.ReserveData memory data = pool.getReserveData(reserves[i]);
+
+      assets[i] = reserves[i];
+      rateStrategyAddresses[i] = data.interestRateStrategyAddress;
+      sources[i] = data.oracle;
+      configurations[i] = getPoolAssetConfiguration(pool, reserves[i]);
+    }
   }
 }

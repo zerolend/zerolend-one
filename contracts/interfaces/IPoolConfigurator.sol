@@ -14,6 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IPool} from './IPool.sol';
+import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
 
 /**
  * @title IPoolConfigurator
@@ -109,4 +110,8 @@ interface IPoolConfigurator {
    * @param newSupplyCap The new supply cap of the reserve
    */
   function setSupplyCap(IPool pool, address asset, uint256 newSupplyCap) external;
+
+  function getPoolAssetConfiguration(IPool pool, address asset) external view returns (DataTypes.InitReserveConfig memory config);
+
+  function getPoolFullConfig(IPool pool) external view returns (DataTypes.InitPoolParams memory config);
 }
