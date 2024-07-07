@@ -14,8 +14,9 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IHook} from '../../interfaces/IHook.sol';
-import {IPool, IPoolSetters} from '../../interfaces/pool/IPool.sol';
+
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+import {IPool, IPoolSetters} from '../../interfaces/pool/IPool.sol';
 import {PoolGetters} from './PoolGetters.sol';
 
 import {PoolSetters} from './PoolSetters.sol';
@@ -131,13 +132,7 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPoolSetters
-  function flashLoan(
-    address receiverAddress,
-    address asset,
-    uint256 amount,
-    bytes calldata params,
-    DataTypes.ExtraData memory data
-  ) public {
+  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) public {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 

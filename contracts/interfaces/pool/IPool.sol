@@ -15,9 +15,10 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from '../../core/pool/configuration/DataTypes.sol';
 import {IHook} from '../IHook.sol';
+
+import {IPoolFactory} from '../IPoolFactory.sol';
 import {IPoolGetters} from './IPoolGetters.sol';
 import {IPoolSetters} from './IPoolSetters.sol';
-import {IPoolFactory} from '../IPoolFactory.sol';
 
 /**
  * @title IPool

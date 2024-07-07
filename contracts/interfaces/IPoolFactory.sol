@@ -14,8 +14,9 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
-import {IPool} from './pool/IPool.sol';
+
 import {IPoolConfigurator} from './IPoolConfigurator.sol';
+import {IPool} from './pool/IPool.sol';
 import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 
 interface IPoolFactory is IBeacon {
