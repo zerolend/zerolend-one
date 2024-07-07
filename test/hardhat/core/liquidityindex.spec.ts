@@ -1,5 +1,5 @@
 import { parseEther as eth, MaxUint256 } from 'ethers';
-import { MintableERC20, MockPool } from '../../../types';
+import { MintableERC20, Pool } from '../../../types';
 import { deployPool, RAY } from '../fixtures/pool';
 import { expect } from 'chai';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
@@ -7,7 +7,7 @@ import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('Pool - Liquidity Index', () => {
-  let pool: MockPool;
+  let pool: Pool;
   let tokenA: MintableERC20;
   let deployer: SignerWithAddress;
 
