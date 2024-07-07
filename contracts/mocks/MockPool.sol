@@ -19,10 +19,4 @@ import {ReserveLogic} from '../core/pool/logic/ReserveLogic.sol';
 contract MockPool is Pool {
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
-
-  function forceUpdateReserve(address asset) public {
-    DataTypes.ReserveData storage reserve = _reserves[asset];
-    DataTypes.ReserveCache memory cache = reserve.cache(_totalSupplies[asset]);
-    reserve.updateState(0, cache);
-  }
 }

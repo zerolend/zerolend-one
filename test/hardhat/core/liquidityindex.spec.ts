@@ -16,7 +16,7 @@ describe('Pool - Liquidity Index', () => {
     ({ tokenA, pool, owner: deployer } = fixture);
 
     // mint some tokens and give approval
-    await tokenA['mint(uint256)'](eth('10'));
+    await tokenA.mint(deployer.address, eth('10'));
     await tokenA.approve(pool.target, eth('3'));
   });
 

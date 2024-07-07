@@ -1,3 +1,4 @@
+# This workflow will build the wiki page for the repository
 name: Build Wiki
 
 concurrency:
@@ -8,13 +9,8 @@ on:
   push:
     branches: [master, develop]
 
-# # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
-# permissions:
-#   pages: write # to deploy to Pages
-#   id-token: write # to verify the deployment originates from an appropriate source
-
 jobs:
-  test-hardhat:
+  wiki-build:
     runs-on: ubuntu-latest
     name: Create the wiki page
     steps:

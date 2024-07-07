@@ -38,24 +38,24 @@ interface IDefaultInterestRateStrategy is IReserveInterestRateStrategy {
    * @dev It's the variable rate when usage ratio > 0 and <= OPTIMAL_USAGE_RATIO
    * @return The variable rate slope, expressed in ray
    */
-  function getVariableRateSlope1() external view returns (uint256);
+  function getDebtSlope1() external view returns (uint256);
 
   /**
    * @notice Returns the variable rate slope above optimal usage ratio
    * @dev It's the variable rate when usage ratio > OPTIMAL_USAGE_RATIO
    * @return The variable rate slope, expressed in ray
    */
-  function getVariableRateSlope2() external view returns (uint256);
+  function getDebtSlope2() external view returns (uint256);
 
   /**
    * @notice Returns the base variable borrow rate
    * @return The base variable borrow rate, expressed in ray
    */
-  function getBaseVariableBorrowRate() external view returns (uint256);
+  function getBaseBorrowRate() external view returns (uint256);
 
   /**
    * @notice Returns the maximum variable borrow rate
    * @return The maximum variable borrow rate, expressed in ray
    */
-  function getMaxVariableBorrowRate() external view returns (uint256);
+  function getMaxBorrowRate() external view returns (uint256);
 }

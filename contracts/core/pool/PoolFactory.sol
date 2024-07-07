@@ -75,7 +75,7 @@ contract PoolFactory is IPoolFactory, Ownable {
     pool.initialize(params);
 
     // give roles to the user
-    configurator.initRoles(address(pool), msg.sender);
+    configurator.initRoles(IPool(address(pool)), msg.sender);
 
     // track the pool
     pools.push(pool);
@@ -100,7 +100,7 @@ contract PoolFactory is IPoolFactory, Ownable {
     emit ConfiguratorUpdated(old, impl, msg.sender);
 
     // give some of the master roles (pool = address(0x0)) to the msg.sender
-    configurator.initRoles(address(0), msg.sender);
+    configurator.initRoles(IPool(address(0)), msg.sender);
   }
 
   /// @inheritdoc IPoolFactory

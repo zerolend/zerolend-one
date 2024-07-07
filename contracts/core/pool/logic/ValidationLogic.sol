@@ -19,9 +19,9 @@ import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterest
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {TokenConfiguration} from '../configuration/TokenConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
-import {Errors} from '../utils/Errors.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 
@@ -75,10 +75,10 @@ library ValidationLogic {
     DataTypes.ExecuteSupplyParams memory params,
     address pool
   ) internal view {
-    require(params.amount != 0, Errors.INVALID_AMOUNT);
+    require(params.amount != 0, PoolErrorsLib.INVALID_AMOUNT);
 
     (bool isFrozen,) = cache.reserveConfiguration.getFlags();
-    require(!isFrozen, Errors.RESERVE_FROZEN);
+    require(!isFrozen, PoolErrorsLib.RESERVE_FROZEN);
 
     uint256 supplyCap = cache.reserveConfiguration.getSupplyCap();
     // todo
@@ -87,7 +87,7 @@ library ValidationLogic {
         || (
           (IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasuryShares)).rayMul(cache.nextLiquidityIndex) + params.amount
         ) <= supplyCap * (10 ** cache.reserveConfiguration.getDecimals()),
-      Errors.SUPPLY_CAP_EXCEEDED
+      PoolErrorsLib.SUPPLY_CAP_EXCEEDED
     );
   }
 
@@ -97,8 +97,8 @@ library ValidationLogic {
    * @param userBalance The balance of the user
    */
   function validateWithdraw(uint256 amount, uint256 userBalance) internal pure {
-    require(amount != 0, Errors.INVALID_AMOUNT);
-    require(amount <= userBalance, Errors.NOT_ENOUGH_AVAILABLE_USER_BALANCE);
+    require(amount != 0, PoolErrorsLib.INVALID_AMOUNT);
+    require(amount <= userBalance, PoolErrorsLib.NOT_ENOUGH_AVAILABLE_USER_BALANCE);
   }
 
   struct ValidateBorrowLocalVars {
@@ -130,14 +130,14 @@ library ValidationLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.ValidateBorrowParams memory params
   ) internal view {
-    require(params.amount != 0, Errors.INVALID_AMOUNT);
+    require(params.amount != 0, PoolErrorsLib.INVALID_AMOUNT);
 
     ValidateBorrowLocalVars memory vars;
 
     (vars.isFrozen, vars.borrowingEnabled) = params.cache.reserveConfiguration.getFlags();
 
-    require(!vars.isFrozen, Errors.RESERVE_FROZEN);
-    require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);
+    require(!vars.isFrozen, PoolErrorsLib.RESERVE_FROZEN);
+    require(vars.borrowingEnabled, PoolErrorsLib.BORROWING_NOT_ENABLED);
 
     vars.reserveDecimals = params.cache.reserveConfiguration.getDecimals();
     vars.borrowCap = params.cache.reserveConfiguration.getBorrowCap();
@@ -151,7 +151,7 @@ library ValidationLogic {
       vars.totalDebt = vars.totalSupplyVariableDebt + params.amount;
 
       unchecked {
-        require(vars.totalDebt <= vars.borrowCap * vars.assetUnit, Errors.BORROW_CAP_EXCEEDED);
+        require(vars.totalDebt <= vars.borrowCap * vars.assetUnit, PoolErrorsLib.BORROW_CAP_EXCEEDED);
       }
     }
 
@@ -168,10 +168,10 @@ library ValidationLogic {
       })
     );
 
-    require(vars.userCollateralInBaseCurrency != 0, Errors.COLLATERAL_BALANCE_IS_ZERO);
-    require(vars.currentLtv != 0, Errors.LTV_VALIDATION_FAILED);
+    require(vars.userCollateralInBaseCurrency != 0, PoolErrorsLib.COLLATERAL_BALANCE_IS_ZERO);
+    require(vars.currentLtv != 0, PoolErrorsLib.LTV_VALIDATION_FAILED);
 
-    require(vars.healthFactor > HEALTH_FACTOR_LIQUIDATION_THRESHOLD, Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
+    require(vars.healthFactor > HEALTH_FACTOR_LIQUIDATION_THRESHOLD, PoolErrorsLib.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
 
     vars.amountInBaseCurrency = IPool(params.pool).getAssetPrice(params.asset) * params.amount;
     unchecked {
@@ -182,7 +182,7 @@ library ValidationLogic {
     vars.collateralNeededInBaseCurrency = (vars.userDebtInBaseCurrency + vars.amountInBaseCurrency).percentDiv(vars.currentLtv); //LTV is
     // calculated in percentage
 
-    require(vars.collateralNeededInBaseCurrency <= vars.userCollateralInBaseCurrency, Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
+    require(vars.collateralNeededInBaseCurrency <= vars.userCollateralInBaseCurrency, PoolErrorsLib.COLLATERAL_CANNOT_COVER_NEW_BORROW);
   }
 
   /**
@@ -191,9 +191,9 @@ library ValidationLogic {
    * @param variableDebt The borrow balance of the user
    */
   function validateRepay(uint256 amountSent, uint256 variableDebt) internal pure {
-    require(amountSent != 0, Errors.INVALID_AMOUNT);
-    require(amountSent != type(uint256).max, Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF);
-    require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
+    require(amountSent != 0, PoolErrorsLib.INVALID_AMOUNT);
+    require(amountSent != type(uint256).max, PoolErrorsLib.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF);
+    require((variableDebt != 0), PoolErrorsLib.NO_DEBT_OF_SELECTED_TYPE);
   }
 
   /**
@@ -202,7 +202,7 @@ library ValidationLogic {
    */
   function validateFlashloanSimple(DataTypes.ReserveData storage reserve) internal view {
     DataTypes.ReserveConfigurationMap memory configuration = reserve.configuration;
-    require(!configuration.getFrozen(), Errors.RESERVE_FROZEN);
+    require(!configuration.getFrozen(), PoolErrorsLib.RESERVE_FROZEN);
   }
 
   struct ValidateLiquidationCallLocalVars {
@@ -226,14 +226,14 @@ library ValidationLogic {
   ) internal view {
     ValidateLiquidationCallLocalVars memory vars;
 
-    require(params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD, Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
+    require(params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD, PoolErrorsLib.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
 
     vars.isCollateralEnabled =
       collateralReserve.configuration.getLiquidationThreshold() != 0 && userConfig.isUsingAsCollateral(collateralReserve.id);
 
     //if collateral isn't enabled as collateral by user, it cannot be liquidated
-    require(vars.isCollateralEnabled, Errors.COLLATERAL_CANNOT_BE_LIQUIDATED);
-    require(params.totalDebt != 0, Errors.SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER);
+    require(vars.isCollateralEnabled, PoolErrorsLib.COLLATERAL_CANNOT_BE_LIQUIDATED);
+    require(params.totalDebt != 0, PoolErrorsLib.SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER);
   }
 
   /**
@@ -261,7 +261,7 @@ library ValidationLogic {
       DataTypes.CalculateUserAccountDataParams({userConfig: userConfig, reservesCount: reservesCount, position: position, pool: oracle})
     );
 
-    require(healthFactor >= HEALTH_FACTOR_LIQUIDATION_THRESHOLD, Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
+    require(healthFactor >= HEALTH_FACTOR_LIQUIDATION_THRESHOLD, PoolErrorsLib.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
 
     return (healthFactor, hasZeroLtvCollateral);
   }
@@ -285,7 +285,7 @@ library ValidationLogic {
     (, bool hasZeroLtvCollateral) =
       validateHealthFactor(_balances, reservesData, reservesList, userConfig, params.position, params.reservesCount, params.pool);
 
-    require(!hasZeroLtvCollateral || reserve.configuration.getLtv() == 0, Errors.LTV_VALIDATION_FAILED);
+    require(!hasZeroLtvCollateral || reserve.configuration.getLtv() == 0, PoolErrorsLib.LTV_VALIDATION_FAILED);
   }
 
   /**

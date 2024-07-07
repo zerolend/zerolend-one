@@ -4,12 +4,13 @@ pragma solidity ^0.8.19;
 import {IFlashLoanSimpleReceiver} from '../../../interfaces/IFlashLoanSimpleReceiver.sol';
 import {IPool} from '../../../interfaces/IPool.sol';
 
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {Errors} from '../utils/Errors.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
@@ -28,9 +29,6 @@ library FlashLoanLogic {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeCast for uint256;
-
-  // See `IPool` for descriptions
-  event FlashLoan(address indexed target, address initiator, address indexed asset, uint256 amount, uint256 premium);
 
   // Helper struct for internal variables used in the `executeFlashLoan` function
   struct FlashLoanLocalVars {
@@ -70,7 +68,7 @@ library FlashLoanLogic {
 
     require(
       receiver.executeOperation(_params.asset, _params.amount, totalPremium, msg.sender, _params.params),
-      Errors.INVALID_FLASHLOAN_EXECUTOR_RETURN
+      PoolErrorsLib.INVALID_FLASHLOAN_EXECUTOR_RETURN
     );
 
     _handleFlashLoanRepayment(
@@ -116,6 +114,6 @@ library FlashLoanLogic {
     //   amountPlusPremium
     // );
 
-    emit FlashLoan(_params.receiverAddress, msg.sender, _params.asset, _params.amount, _params.totalPremium);
+    emit PoolEventsLib.FlashLoan(_params.receiverAddress, msg.sender, _params.asset, _params.amount, _params.totalPremium);
   }
 }

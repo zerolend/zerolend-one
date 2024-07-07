@@ -13,10 +13,11 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {Errors} from '../utils/Errors.sol';
 
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 import {GenericLogic} from './GenericLogic.sol';
@@ -37,11 +38,6 @@ library PoolLogic {
   using ReserveLogic for DataTypes.ReserveData;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  // See `IPool` for descriptions
-  event MintedToTreasury(address indexed reserve, uint256 amountMinted);
-  event CollateralConfigurationChanged(address indexed asset, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus);
-  event ReserveInitialized(address indexed asset, address oracle, address interestRateStrategyAddress);
-
   /**
    * @notice Initialize an asset reserve and add the reserve to the list of reserves
    * @param reservesData The state of all the reserves
@@ -53,9 +49,9 @@ library PoolLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.InitReserveParams memory params
   ) external {
-    require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
-    require(Address.isContract(params.interestRateStrategyAddress), Errors.NOT_CONTRACT);
-    require(Address.isContract(params.oracle), Errors.NOT_CONTRACT);
+    require(Address.isContract(params.asset), PoolErrorsLib.NOT_CONTRACT);
+    require(Address.isContract(params.interestRateStrategyAddress), PoolErrorsLib.NOT_CONTRACT);
+    require(Address.isContract(params.oracle), PoolErrorsLib.NOT_CONTRACT);
 
     DataTypes.ReserveConfigurationMap memory config;
     config.setLtv(params.configuration.ltv);
@@ -72,12 +68,12 @@ library PoolLogic {
     reservesData[params.asset].init(params.interestRateStrategyAddress);
 
     bool reserveAlreadyAdded = reservesData[params.asset].id != 0 || reservesList[0] == params.asset;
-    require(!reserveAlreadyAdded, Errors.RESERVE_ALREADY_ADDED);
+    require(!reserveAlreadyAdded, PoolErrorsLib.RESERVE_ALREADY_ADDED);
 
     reservesData[params.asset].id = params.reservesCount;
     reservesList[params.reservesCount] = params.asset;
 
-    emit ReserveInitialized(params.asset, params.interestRateStrategyAddress, params.oracle);
+    emit PoolEventsLib.ReserveInitialized(params.asset, params.interestRateStrategyAddress, params.oracle);
   }
 
   /**
@@ -98,7 +94,7 @@ library PoolLogic {
       // todo mint and unwrap to treasury
       // IAToken(reserve.aTokenAddress).mintToTreasury(amountToMint, normalizedIncome);
 
-      emit MintedToTreasury(asset, amountToMint);
+      emit PoolEventsLib.MintedToTreasury(asset, amountToMint);
     }
   }
 
@@ -143,7 +139,7 @@ library PoolLogic {
     address source,
     DataTypes.ReserveConfigurationMap memory config
   ) public {
-    require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+    require(asset != address(0), PoolErrorsLib.ZERO_ADDRESS_NOT_VALID);
     _reserves[asset].configuration = config;
 
     // set if values are non-0
@@ -155,21 +151,23 @@ library PoolLogic {
     // validation of the parameters: the LTV can
     // only be lower or equal than the liquidation threshold
     // (otherwise a loan against the asset would cause instantaneous liquidation)
-    require(config.getLtv() <= config.getLiquidationThreshold(), Errors.INVALID_RESERVE_PARAMS);
+    require(config.getLtv() <= config.getLiquidationThreshold(), PoolErrorsLib.INVALID_RESERVE_PARAMS);
 
     if (config.getLiquidationThreshold() != 0) {
       // liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
       // collateral than needed to cover the debt
-      require(config.getLiquidationBonus() > PercentageMath.PERCENTAGE_FACTOR, Errors.INVALID_RESERVE_PARAMS);
+      require(config.getLiquidationBonus() > PercentageMath.PERCENTAGE_FACTOR, PoolErrorsLib.INVALID_RESERVE_PARAMS);
 
       // if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
       // a loan is taken there is enough collateral available to cover the liquidation bonus
       require(
         config.getLiquidationThreshold().percentMul(config.getLiquidationBonus()) <= PercentageMath.PERCENTAGE_FACTOR,
-        Errors.INVALID_RESERVE_PARAMS
+        PoolErrorsLib.INVALID_RESERVE_PARAMS
       );
 
-      emit CollateralConfigurationChanged(asset, config.getLtv(), config.getLiquidationThreshold(), config.getLiquidationThreshold());
+      emit PoolEventsLib.CollateralConfigurationChanged(
+        asset, config.getLtv(), config.getLiquidationThreshold(), config.getLiquidationThreshold()
+      );
     }
   }
 }

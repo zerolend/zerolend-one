@@ -1,5 +1,9 @@
 # ZeroLend One
 
+[![Hardhat Build](https://github.com/zerolend/zerolend-one/actions/workflows/hardhat.yml/badge.svg)](https://github.com/zerolend/zerolend-one/actions/workflows/hardhat.yml)
+[![Foundry Build](https://github.com/zerolend/zerolend-one/actions/workflows/foundry.yml/badge.svg)](https://github.com/zerolend/zerolend-one/actions/workflows/foundry.yml)
+[![codecov](https://codecov.io/github/zerolend/zerolend-one/graph/badge.svg?token=1F8SF7LANW)](https://codecov.io/github/zerolend/zerolend-one)
+
 ZeroLend One is the next version of the ZeroLend protocol and introduces a highly scalable multi-chain lending protocol that is permission-less, isolated and curates risk management.
 
 At the crux of ZeroLend One is Isolated markets. A scalable way for us to address lending demand across many chains and many assets without having to worry about scaling risk management
@@ -8,7 +12,7 @@ At the crux of ZeroLend One is Isolated markets. A scalable way for us to addres
 
 While designing ZeroLend One, we keep the following philosophies in mind.
 
-- **Highly customizable** and Permissionless: Anyone can create isolated lending pools on ZeroLend One with custom parameters and custom assets. Isolated markets are permission-less and inclusive. It enables anyone to lend/borrow assets or design their own isolated pool, regardless of their financial or geographical background.
+- **Highly customizable and Permissionless**: Anyone can create isolated lending pools on ZeroLend One with custom parameters and custom assets. Isolated markets are permission-less and inclusive. It enables anyone to lend/borrow assets or design their own isolated pool, regardless of their financial or geographical background.
 
 - **Minimal Governance**: ZeroLend governance keeps politics to a bare minimum. Voters will play a major role in decisions such as emission voting without the need to have governance votes. Political decisions are kept at a bare minimum and the only governance votes made by $ZERO holders will be regarding protocol-related security.
 

@@ -15,16 +15,17 @@ pragma solidity 0.8.19;
 
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveSuppliesConfiguration} from '../configuration/ReserveSuppliesConfiguration.sol';
-import {Errors} from '../utils/Errors.sol';
 import {MathUtils} from '../utils/MathUtils.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
@@ -39,11 +40,6 @@ library ReserveLogic {
   using ReserveLogic for DataTypes.ReserveData;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using ReserveSuppliesConfiguration for DataTypes.ReserveSupplies;
-
-  // See `IPool` for descriptions
-  event ReserveDataUpdated(
-    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
-  );
 
   /**
    * @notice Returns the ongoing normalized income for the reserve.
@@ -133,7 +129,7 @@ library ReserveLogic {
   struct UpdateInterestRatesLocalVars {
     uint256 nextLiquidityRate;
     uint256 nextBorrowRate;
-    uint256 totalVariableDebt;
+    uint256 totalDebt;
   }
 
   /**
@@ -160,7 +156,7 @@ library ReserveLogic {
   ) internal {
     UpdateInterestRatesLocalVars memory vars;
 
-    vars.totalVariableDebt = _cache.nextDebtShares.rayMul(_cache.nextBorrowIndex);
+    vars.totalDebt = _cache.nextDebtShares.rayMul(_cache.nextBorrowIndex);
 
     (vars.nextLiquidityRate, vars.nextBorrowRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
       .calculateInterestRates(
@@ -169,7 +165,7 @@ library ReserveLogic {
       DataTypes.CalculateInterestRatesParams({
         liquidityAdded: _liquidityAdded,
         liquidityTaken: _liquidityTaken,
-        totalVariableDebt: vars.totalVariableDebt,
+        totalDebt: vars.totalDebt,
         reserveFactor: _reserveFactor,
         reserve: _reserveAddress
       })
@@ -181,12 +177,14 @@ library ReserveLogic {
     if (_liquidityAdded > 0) totalSupplies.underlyingBalance += _liquidityAdded.toUint128();
     else if (_liquidityTaken > 0) totalSupplies.underlyingBalance -= _liquidityTaken.toUint128();
 
-    emit ReserveDataUpdated(_reserveAddress, vars.nextLiquidityRate, vars.nextBorrowRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex);
+    emit PoolEventsLib.ReserveDataUpdated(
+      _reserveAddress, vars.nextLiquidityRate, vars.nextBorrowRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex
+    );
   }
 
   struct AccrueToTreasuryLocalVars {
-    uint256 prevTotalVariableDebt;
-    uint256 currTotalVariableDebt;
+    uint256 prevtotalDebt;
+    uint256 currtotalDebt;
     uint256 totalDebtAccrued;
     uint256 amountToMint;
   }
@@ -202,13 +200,13 @@ library ReserveLogic {
     AccrueToTreasuryLocalVars memory vars;
 
     // calculate the total variable debt at moment of the last interaction
-    vars.prevTotalVariableDebt = _cache.currDebtShares.rayMul(_cache.currBorrowIndex);
+    vars.prevtotalDebt = _cache.currDebtShares.rayMul(_cache.currBorrowIndex);
 
     // calculate the new total variable debt after accumulation of the interest on the index
-    vars.currTotalVariableDebt = _cache.currDebtShares.rayMul(_cache.nextBorrowIndex);
+    vars.currtotalDebt = _cache.currDebtShares.rayMul(_cache.nextBorrowIndex);
 
     // debt accrued is the sum of the current debt minus the sum of the debt at the last update
-    vars.totalDebtAccrued = vars.currTotalVariableDebt - vars.prevTotalVariableDebt;
+    vars.totalDebtAccrued = vars.currtotalDebt - vars.prevtotalDebt;
 
     vars.amountToMint = vars.totalDebtAccrued.percentMul(reserveFactor);
 

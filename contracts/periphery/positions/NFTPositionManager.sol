@@ -14,9 +14,9 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
-import {IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+import {DataTypes, IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
-import {RewardsController, RewardsDataTypes} from './RewardsController.sol';
+import {NFTRewardsDistributor} from './NFTRewardsDistributor.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 import {
@@ -30,7 +30,7 @@ import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/Mu
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721EnumerableUpgradeable, INFTPositionManager {
+contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFTPositionManager {
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
   /**
@@ -78,12 +78,15 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
   /**
    * @notice Initializes the NFTPositionManager contract.
    */
-  function initialize(address _factory, address _staking) external initializer {
+  function initialize(address _factory, address _staking, address _owner, address _zero) external initializer {
     factory = IPoolFactory(_factory);
     __ERC721Enumerable_init();
-    __ERC721_init('ZeroLend Position V2', 'ZL-POS-V2');
-    __RewardsDistributor_init(50_000_000, _staking);
+    __ERC721_init('ZeroLend One Position', 'ZL-POS-ONE');
+    __Ownable_init();
+    __NFTRewardsDistributor_init(50_000_000, _staking, 14 days, _zero);
     _nextId = 1;
+
+    _transferOwnership(_owner);
   }
 
   /**
@@ -113,10 +116,11 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
    * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
    */
-  function increaseLiquidity(LiquidityParams memory params) external isAuthorizedForToken(params.tokenId) {
+  function increaseLiquidity(LiquidityParams memory params) external {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
-
+    if (params.tokenId == 0) params.tokenId = _nextId - 1;
+    _isAuthorizedForToken(params.tokenId);
     _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, params.tokenId, params.data));
   }
 
@@ -199,15 +203,15 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
     asset.forceApprove(userPosition.pool, params.amount);
 
     uint256 previousDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
-    uint256 finalRepayAmout = pool.repay(params.asset, params.amount, params.tokenId, params.data);
+    DataTypes.SharesType memory repaid = pool.repay(params.asset, params.amount, params.tokenId, params.data);
     uint256 currentDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
 
-    if (previousDebtBalance - currentDebtBalance != finalRepayAmout) {
+    if (previousDebtBalance - currentDebtBalance != repaid.assets) {
       revert BalanceMisMatch();
     }
 
-    if (currentDebtBalance == 0 && finalRepayAmout < params.amount) {
-      asset.safeTransfer(msg.sender, params.amount - finalRepayAmout);
+    if (currentDebtBalance == 0 && repaid.assets < params.amount) {
+      asset.safeTransfer(msg.sender, params.amount - repaid.assets);
     }
 
     // update incentives
@@ -275,5 +279,9 @@ contract NFTPositionManager is RewardsController, MulticallUpgradeable, ERC721En
     }
 
     return (assets, isBurnAllowed);
+  }
+
+  function _isAuthorizedForToken(uint256 tokenId) internal view {
+    if (!_isApprovedOrOwner(msg.sender, tokenId)) revert NotTokenIdOwner();
   }
 }

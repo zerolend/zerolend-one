@@ -25,7 +25,7 @@ describe('Pool', () => {
 
   describe('Supply / Withdraw functions', () => {
     beforeEach(async () => {
-      await tokenA['mint(uint256)'](eth('10'));
+      await tokenA.mint(deployer.address, eth('10'));
       await tokenA.approve(pool.target, eth('3'));
     });
 
@@ -61,8 +61,8 @@ describe('Pool', () => {
 
   describe('Borrow / Repay functions', () => {
     beforeEach(async () => {
-      await tokenA['mint(uint256)'](eth('10'));
-      await tokenB['mint(uint256)'](eth('10'));
+      await tokenA.mint(deployer.address, eth('10'));
+      await tokenB.mint(deployer.address, eth('10'));
 
       await tokenA.approve(pool.target, eth('10'));
       await tokenB.approve(pool.target, eth('10'));

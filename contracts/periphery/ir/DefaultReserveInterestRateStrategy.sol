@@ -13,12 +13,13 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {DataTypes} from '../../core/pool/configuration/DataTypes.sol';
+
+import {PercentageMath} from '../../core/pool/utils/PercentageMath.sol';
+import {WadRayMath} from '../../core/pool/utils/WadRayMath.sol';
 import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
 import {IReserveInterestRateStrategy} from '../../interfaces/IReserveInterestRateStrategy.sol';
-import {DataTypes} from './configuration/DataTypes.sol';
-import {Errors} from './utils/Errors.sol';
-import {PercentageMath} from './utils/PercentageMath.sol';
-import {WadRayMath} from './utils/WadRayMath.sol';
+import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 
 /**
@@ -39,50 +40,49 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   /// @inheritdoc IDefaultInterestRateStrategy
   uint256 public immutable MAX_EXCESS_USAGE_RATIO;
 
-  // Base variable borrow rate when usage rate = 0. Expressed in ray
-  uint256 internal immutable _baseVariableBorrowRate;
+  // Base borrow rate when usage rate = 0. Expressed in ray
+  uint256 internal immutable _baseBorrowRate;
 
-  // Slope of the variable interest curve when usage ratio > 0 and <= OPTIMAL_USAGE_RATIO. Expressed in ray
-  uint256 internal immutable _variableRateSlope1;
+  // Slope of the debt interest curve when usage ratio > 0 and <= OPTIMAL_USAGE_RATIO. Expressed in ray
+  uint256 internal immutable _debtSlope1;
 
-  // Slope of the variable interest curve when usage ratio > OPTIMAL_USAGE_RATIO. Expressed in ray
-  uint256 internal immutable _variableRateSlope2;
+  // Slope of the debt interest curve when usage ratio > OPTIMAL_USAGE_RATIO. Expressed in ray
+  uint256 internal immutable _debtSlope2;
 
   /**
    * @dev Constructor.
    * @param optimalUsageRatio The optimal usage ratio
-   * @param baseVariableBorrowRate The base variable borrow rate
-   * @param variableRateSlope1 The variable rate slope below optimal usage ratio
-   * @param variableRateSlope2 The variable rate slope above optimal usage ratio
+   * @param baseBorrowRate The base borrow rate
+   * @param debtSlope1 The debt rate slope below optimal usage ratio
+   * @param debtSlope2 The debt rate slope above optimal usage ratio
    */
-  constructor(uint256 optimalUsageRatio, uint256 baseVariableBorrowRate, uint256 variableRateSlope1, uint256 variableRateSlope2) {
-    require(WadRayMath.RAY >= optimalUsageRatio, Errors.INVALID_OPTIMAL_USAGE_RATIO);
+  constructor(uint256 optimalUsageRatio, uint256 baseBorrowRate, uint256 debtSlope1, uint256 debtSlope2) {
+    require(WadRayMath.RAY >= optimalUsageRatio, PoolErrorsLib.INVALID_OPTIMAL_USAGE_RATIO);
     OPTIMAL_USAGE_RATIO = optimalUsageRatio;
     MAX_EXCESS_USAGE_RATIO = WadRayMath.RAY - optimalUsageRatio;
-
-    _baseVariableBorrowRate = baseVariableBorrowRate;
-    _variableRateSlope1 = variableRateSlope1;
-    _variableRateSlope2 = variableRateSlope2;
+    _baseBorrowRate = baseBorrowRate;
+    _debtSlope1 = debtSlope1;
+    _debtSlope2 = debtSlope2;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
-  function getVariableRateSlope1() external view returns (uint256) {
-    return _variableRateSlope1;
+  function getDebtSlope1() external view returns (uint256) {
+    return _debtSlope1;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
-  function getVariableRateSlope2() external view returns (uint256) {
-    return _variableRateSlope2;
+  function getDebtSlope2() external view returns (uint256) {
+    return _debtSlope2;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
-  function getBaseVariableBorrowRate() external view override returns (uint256) {
-    return _baseVariableBorrowRate;
+  function getBaseBorrowRate() external view override returns (uint256) {
+    return _baseBorrowRate;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
-  function getMaxVariableBorrowRate() external view override returns (uint256) {
-    return _baseVariableBorrowRate + _variableRateSlope1 + _variableRateSlope2;
+  function getMaxBorrowRate() external view override returns (uint256) {
+    return _baseBorrowRate + _debtSlope1 + _debtSlope2;
   }
 
   struct CalcInterestRatesLocalVars {
@@ -103,14 +103,13 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
   ) public view override returns (uint256, uint256) {
     CalcInterestRatesLocalVars memory vars;
 
-    vars.totalDebt = params.totalVariableDebt;
+    vars.totalDebt = params.totalDebt;
 
     vars.currentLiquidityRate = 0;
-    vars.currentBorrowRate = _baseVariableBorrowRate;
+    vars.currentBorrowRate = _baseBorrowRate;
 
     if (vars.totalDebt != 0) {
       vars.availableLiquidity = IERC20(params.reserve).balanceOf(msg.sender) + params.liquidityAdded - params.liquidityTaken;
-
       vars.availableLiquidityPlusDebt = vars.availableLiquidity + vars.totalDebt;
       vars.borrowUsageRatio = vars.totalDebt.rayDiv(vars.availableLiquidityPlusDebt);
       vars.supplyUsageRatio = vars.totalDebt.rayDiv(vars.availableLiquidityPlusDebt);
@@ -119,27 +118,27 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
     if (vars.borrowUsageRatio > OPTIMAL_USAGE_RATIO) {
       uint256 excessBorrowUsageRatio = (vars.borrowUsageRatio - OPTIMAL_USAGE_RATIO).rayDiv(MAX_EXCESS_USAGE_RATIO);
 
-      vars.currentBorrowRate += _variableRateSlope1 + _variableRateSlope2.rayMul(excessBorrowUsageRatio);
+      vars.currentBorrowRate += _debtSlope1 + _debtSlope2.rayMul(excessBorrowUsageRatio);
     } else {
-      vars.currentBorrowRate += _variableRateSlope1.rayMul(vars.borrowUsageRatio).rayDiv(OPTIMAL_USAGE_RATIO);
+      vars.currentBorrowRate += _debtSlope1.rayMul(vars.borrowUsageRatio).rayDiv(OPTIMAL_USAGE_RATIO);
     }
 
-    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalVariableDebt, vars.currentBorrowRate).rayMul(vars.supplyUsageRatio)
-      .percentMul(PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor);
+    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalDebt, vars.currentBorrowRate).rayMul(vars.supplyUsageRatio).percentMul(
+      PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor
+    );
 
     return (vars.currentLiquidityRate, vars.currentBorrowRate);
   }
 
   /**
-   * @dev Calculates the overall borrow rate as the weighted average between the total variable debt
-   * @param totalVariableDebt The total borrowed from the reserve at a variable rate
-   * @param currentBorrowRate The current variable borrow rate of the reserve
+   * @dev Calculates the overall borrow rate as the weighted average between the total debt
+   * @param totalDebt The total borrowed from the reserve at a debt rate
+   * @param currentBorrowRate The current borrow rate of the reserve
    * @return overallBorrowRate The weighted averaged borrow rate
    */
-  function _getOverallBorrowRate(uint256 totalVariableDebt, uint256 currentBorrowRate) internal pure returns (uint256 overallBorrowRate) {
-    uint256 totalDebt = totalVariableDebt;
+  function _getOverallBorrowRate(uint256 totalDebt, uint256 currentBorrowRate) internal pure returns (uint256 overallBorrowRate) {
     if (totalDebt == 0) return 0;
-    uint256 weightedVariableRate = totalVariableDebt.wadToRay().rayMul(currentBorrowRate);
-    overallBorrowRate = (weightedVariableRate).rayDiv(totalDebt.wadToRay());
+    uint256 weightedDebt = totalDebt.wadToRay().rayMul(currentBorrowRate);
+    overallBorrowRate = (weightedDebt).rayDiv(totalDebt.wadToRay());
   }
 }

@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
-import {Errors} from '../utils/Errors.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 
 /**
@@ -42,7 +42,7 @@ library PositionBalanceConfiguration {
     uint128 index
   ) internal returns (bool isFirst, uint256 sharesMinted) {
     sharesMinted = amount.rayDiv(index);
-    require(sharesMinted != 0, Errors.INVALID_MINT_AMOUNT);
+    require(sharesMinted != 0, PoolErrorsLib.INVALID_MINT_AMOUNT);
     uint256 shares = self.supplyShares;
     self.lastSupplyLiquidtyIndex = index;
     self.supplyShares += sharesMinted;
@@ -67,7 +67,7 @@ library PositionBalanceConfiguration {
     uint128 index
   ) internal returns (bool isFirst, uint256 sharesMinted) {
     sharesMinted = amount.rayDiv(index);
-    require(sharesMinted != 0, Errors.INVALID_MINT_AMOUNT);
+    require(sharesMinted != 0, PoolErrorsLib.INVALID_MINT_AMOUNT);
     uint256 shares = self.debtShares;
     self.lastDebtLiquidtyIndex = index;
     self.debtShares += sharesMinted;
@@ -91,7 +91,7 @@ library PositionBalanceConfiguration {
     uint128 index
   ) internal returns (uint256 sharesBurnt) {
     sharesBurnt = amount.rayDiv(index);
-    require(sharesBurnt != 0, Errors.INVALID_BURN_AMOUNT);
+    require(sharesBurnt != 0, PoolErrorsLib.INVALID_BURN_AMOUNT);
     self.lastSupplyLiquidtyIndex = index;
     self.supplyShares -= sharesBurnt;
     supply.supplyShares -= sharesBurnt;
@@ -113,7 +113,7 @@ library PositionBalanceConfiguration {
     uint128 index
   ) internal returns (uint256 sharesBurnt) {
     sharesBurnt = amount.rayDiv(index);
-    require(sharesBurnt != 0, Errors.INVALID_BURN_AMOUNT);
+    require(sharesBurnt != 0, PoolErrorsLib.INVALID_BURN_AMOUNT);
     self.lastDebtLiquidtyIndex = index;
     self.debtShares -= sharesBurnt;
     supply.debtShares -= sharesBurnt;

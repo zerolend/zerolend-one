@@ -16,7 +16,6 @@ import { ethers } from 'hardhat';
 
 describe('Pool Factory', () => {
   let poolFactory: PoolFactory;
-  let poolImpl: any;
 
   let tokenA: MintableERC20;
   let tokenB: MintableERC20;
@@ -29,8 +28,7 @@ describe('Pool Factory', () => {
   let irStrategy: DefaultReserveInterestRateStrategy;
 
   let owner: SignerWithAddress;
-  let addr1: SignerWithAddress;
-  let addr2: SignerWithAddress;
+  let ant: SignerWithAddress;
   let governance: SignerWithAddress;
 
   let libraries: {
@@ -41,13 +39,9 @@ describe('Pool Factory', () => {
     SupplyLogic: string | Addressable;
   };
 
-  before(async () => {
+  beforeEach(async () => {
     const fixture = await deployCore();
-    [, , , , , , , , addr1, addr2] = await ethers.getSigners();
     ({
-      owner,
-      poolImpl,
-      governance,
       poolFactory,
       libraries,
       tokenA,
@@ -57,42 +51,76 @@ describe('Pool Factory', () => {
       oracleC,
       oracleB,
       irStrategy,
+      ant,
+      owner,
+      governance,
     } = fixture);
   });
 
-  it('should create a new pool', async () => {
-    const input: DataTypes.InitPoolParamsStruct = {
-      hook: ZeroAddress,
-      assets: [tokenA.target, tokenB.target, tokenC.target],
-      rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
-      sources: [oracleA.target, oracleB.target, oracleC.target],
-      configurations: [basicConfig, basicConfig, basicConfig],
-    };
+  describe('pool creation & updating', function () {
+    it('should create a new pool', async () => {
+      const input: DataTypes.InitPoolParamsStruct = {
+        hook: ZeroAddress,
+        assets: [tokenA.target, tokenB.target, tokenC.target],
+        rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
+        sources: [oracleA.target, oracleB.target, oracleC.target],
+        configurations: [basicConfig, basicConfig, basicConfig],
+      };
 
-    expect(await poolFactory.poolsLength()).eq(0);
+      await expect(await poolFactory.poolsLength()).eq(0);
+      const tx = await poolFactory.createPool(input);
+      await expect(tx).to.emit(poolFactory, 'PoolCreated');
+      await expect(await poolFactory.poolsLength()).eq(1);
+    });
 
-    const tx = await poolFactory.createPool(input);
-    await expect(tx).to.emit(poolFactory, 'PoolCreated');
+    it('should update pool implementation properly and not allow re-init(..)', async () => {
+      const input: DataTypes.InitPoolParamsStruct = {
+        hook: ZeroAddress,
+        assets: [tokenA.target, tokenB.target, tokenC.target],
+        rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
+        sources: [oracleA.target, oracleB.target, oracleC.target],
+        configurations: [basicConfig, basicConfig, basicConfig],
+      };
 
-    expect(await poolFactory.poolsLength()).eq(1);
+      // should deploy pool
+      const tx = await poolFactory.createPool(input);
+
+      await expect(tx).to.emit(poolFactory, 'PoolCreated');
+      await expect(await poolFactory.poolsLength()).eq(1);
+      const poolAddr = await poolFactory.pools(0);
+
+      const pool = await ethers.getContractAt('Pool', poolAddr);
+      await expect(await pool.revision()).eq('1');
+
+      // now try to upgrade the beacon
+      const UpgradedPool = await ethers.getContractFactory('UpgradedPool', { libraries });
+      const upgradedPool = await UpgradedPool.deploy();
+      const tx2 = await poolFactory.setImplementation(upgradedPool.target);
+      await expect(tx2).to.emit(poolFactory, 'ImplementationUpdated');
+
+      // check if the pool upgraded properly
+      await expect(await pool.revision()).eq('1000');
+      await expect(pool.initialize(input)).to.revertedWith(
+        'Initializable: contract is already initialized'
+      );
+    });
   });
-
   describe('setImplementation', function () {
     it('should update implementation', async function () {
-      await poolFactory.setImplementation(addr1.address);
-      expect(await poolFactory.implementation()).to.equal(addr1.address);
+      await poolFactory.setImplementation(ant.address);
+      expect(await poolFactory.implementation()).to.equal(ant.address);
     });
 
     it('should emit ImplementationUpdated event', async function () {
       const oldImplementation = await poolFactory.implementation();
 
-      await expect(poolFactory.setImplementation(addr1.address))
+      await expect(poolFactory.setImplementation(ant.address))
         .to.emit(poolFactory, 'ImplementationUpdated')
-        .withArgs(oldImplementation, addr1.address, owner.address);
+        .withArgs(oldImplementation, ant.address, owner.address);
     });
 
     it('should only allow owner to set implementation', async function () {
-      await expect(poolFactory.connect(addr1).setImplementation(addr1.address)).to.be.revertedWith(
+      await expect(poolFactory.connect(ant).setImplementation(ant.address)).to.be.revertedWith(
         'Ownable: caller is not the owner'
       );
     });
@@ -117,25 +145,25 @@ describe('Pool Factory', () => {
 
     it('should only allow owner to set configurator', async function () {
       await expect(
-        poolFactory.connect(addr1).setConfigurator(newConfigurator.target)
+        poolFactory.connect(ant).setConfigurator(newConfigurator.target)
       ).to.be.revertedWith('Ownable: caller is not the owner');
     });
   });
 
   describe('setTreasury', function () {
     it('should update treasury', async function () {
-      await poolFactory.setTreasury(addr1.address);
-      expect(await poolFactory.treasury()).to.equal(addr1.address);
+      await poolFactory.setTreasury(ant.address);
+      expect(await poolFactory.treasury()).to.equal(ant.address);
     });
 
     it('should emit TreasuryUpdated event', async function () {
-      await expect(poolFactory.setTreasury(addr1.address))
+      await expect(poolFactory.setTreasury(ant.address))
         .to.emit(poolFactory, 'TreasuryUpdated')
-        .withArgs(await poolFactory.treasury(), addr1.address, owner.address);
+        .withArgs(await poolFactory.treasury(), ant.address, owner.address);
     });
 
     it('should only allow owner to set treasury', async function () {
-      await expect(poolFactory.connect(addr1).setTreasury(addr1.address)).to.be.revertedWith(
+      await expect(poolFactory.connect(ant).setTreasury(ant.address)).to.be.revertedWith(
         'Ownable: caller is not the owner'
       );
     });
@@ -154,7 +182,7 @@ describe('Pool Factory', () => {
     });
 
     it('should only allow owner to set reserve factor', async function () {
-      await expect(poolFactory.connect(addr1).setReserveFactor(50)).to.be.revertedWith(
+      await expect(poolFactory.connect(ant).setReserveFactor(50)).to.be.revertedWith(
         'Ownable: caller is not the owner'
       );
     });
@@ -162,20 +190,20 @@ describe('Pool Factory', () => {
 
   describe('setRewardsController', function () {
     it('should update rewards controller', async function () {
-      await poolFactory.setRewardsController(addr1.address);
-      expect(await poolFactory.rewardsController()).to.equal(addr1.address);
+      await poolFactory.setRewardsController(ant.address);
+      expect(await poolFactory.rewardsController()).to.equal(ant.address);
     });
 
     it('should emit RewardsControllerUpdated event', async function () {
-      await expect(poolFactory.setRewardsController(addr1.address))
+      await expect(poolFactory.setRewardsController(ant.address))
         .to.emit(poolFactory, 'RewardsControllerUpdated')
-        .withArgs(await poolFactory.rewardsController(), addr1.address, owner.address);
+        .withArgs(await poolFactory.rewardsController(), ant.address, owner.address);
     });
 
     it('should only allow owner to set rewards controller', async function () {
-      await expect(
-        poolFactory.connect(addr1).setRewardsController(addr1.address)
-      ).to.be.revertedWith('Ownable: caller is not the owner');
+      await expect(poolFactory.connect(ant).setRewardsController(ant.address)).to.be.revertedWith(
+        'Ownable: caller is not the owner'
+      );
     });
   });
 
@@ -192,7 +220,7 @@ describe('Pool Factory', () => {
     });
 
     it('should only allow owner to set flashloan premium', async function () {
-      await expect(poolFactory.connect(addr1).setFlashloanPremium(100)).to.be.revertedWith(
+      await expect(poolFactory.connect(ant).setFlashloanPremium(100)).to.be.revertedWith(
         'Ownable: caller is not the owner'
       );
     });
