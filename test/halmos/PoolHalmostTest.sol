@@ -65,8 +65,15 @@ contract PoolHalmosTest is BasePoolHalmosTest {
     _callPool(action1, caller1);
     _callPool(action2, caller2);
 
+    // wait for some days (to accure some interest) and update the reserves
+    skip(86400 * 100);
+    pool.forceUpdateReserves();
+
     // ensure that the internal accounting variables always match
-    (uint256 supplyAfter, , uint256 debtAfter, ) = pool.marketBalances(address(loan));
-    assert(loan.balanceOf(address(pool)) <= supplyAfter - debtAfter);
+    (uint256 loanSupply, , uint256 loanDebt, ) = pool.marketBalances(address(loan));
+    assert(loan.balanceOf(address(pool)) == loanSupply - loanDebt);
+
+    (uint256 collateralSupply, , uint256 collateralDebt, ) = pool.marketBalances(address(loan));
+    assert(collateral.balanceOf(address(pool)) <= collateralSupply - collateralDebt);
   }
 }
