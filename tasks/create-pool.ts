@@ -9,6 +9,8 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
  * network
  */
 task(`create-pool`).setAction(async (_, hre: HardhatRuntimeEnvironment) => {
+  if (hre.network.name !== 'linea') throw new Error('invalid network');
+
   const factoryD = await hre.deployments.get('PoolFactory');
   const ir = await hre.deployments.get('DefaultReserveInterestRateStrategy');
   const factory = await hre.ethers.getContractAt('PoolFactory', factoryD.address);
