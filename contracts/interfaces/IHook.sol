@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 interface IHook {
-  function afterInitialize(address sender, address pool) external returns (bytes4);
+  function afterInitialize(address pool) external returns (bytes4);
 
   function beforeSupply(address sender, bytes32 position, address asset, address pool, uint256 amount, bytes calldata hookData) external;
 

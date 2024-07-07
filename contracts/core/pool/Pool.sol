@@ -54,6 +54,7 @@ contract Pool is PoolSetters {
     }
 
     __PoolRentrancyGuard_init();
+    if (address(_hook) != address(0)) _hook.afterInitialize(address(this));
   }
 
   /// @inheritdoc IPool
@@ -132,7 +133,13 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPoolSetters
-  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) public {
+  function flashLoan(
+    address receiverAddress,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    DataTypes.ExtraData memory data
+  ) public {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 
@@ -166,7 +173,8 @@ contract Pool is PoolSetters {
     }
   }
 
+  /// @inheritdoc IPoolSetters
   function setUserUseReserveAsCollateral(address asset, uint256 index, bool useAsCollateral) external {
-    // todo
+    _setUserUseReserveAsCollateral(asset, index, useAsCollateral);
   }
 }
