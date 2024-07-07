@@ -18,7 +18,7 @@ import {IPoolConfigurator} from '../../../interfaces/IPoolConfigurator.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {Errors} from '../utils/Errors.sol';
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {PoolManager} from './PoolManager.sol';
 
 /**

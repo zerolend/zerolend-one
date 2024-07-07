@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../configuration/DataTypes.sol';
-import {Errors} from '../utils/Errors.sol';
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 
 /**
  * @title ReserveConfiguration library
@@ -66,7 +66,7 @@ library ReserveConfiguration {
    * @param ltv The new ltv
    */
   function setLtv(DataTypes.ReserveConfigurationMap memory self, uint256 ltv) internal pure {
-    require(ltv <= MAX_VALID_LTV, Errors.INVALID_LTV);
+    require(ltv <= MAX_VALID_LTV, PoolErrorsLib.INVALID_LTV);
     self.data = (self.data & LTV_MASK) | ltv;
   }
 
@@ -87,7 +87,7 @@ library ReserveConfiguration {
    * @param threshold The new liquidation threshold
    */
   function setLiquidationThreshold(DataTypes.ReserveConfigurationMap memory self, uint256 threshold) internal pure {
-    require(threshold <= MAX_VALID_LIQUIDATION_THRESHOLD, Errors.INVALID_LIQ_THRESHOLD);
+    require(threshold <= MAX_VALID_LIQUIDATION_THRESHOLD, PoolErrorsLib.INVALID_LIQ_THRESHOLD);
 
     self.data = (self.data & LIQUIDATION_THRESHOLD_MASK) | (threshold << LIQUIDATION_THRESHOLD_START_BIT_POSITION);
   }
@@ -107,7 +107,7 @@ library ReserveConfiguration {
    * @param bonus The new liquidation bonus
    */
   function setLiquidationBonus(DataTypes.ReserveConfigurationMap memory self, uint256 bonus) internal pure {
-    require(bonus <= MAX_VALID_LIQUIDATION_BONUS, Errors.INVALID_LIQ_BONUS);
+    require(bonus <= MAX_VALID_LIQUIDATION_BONUS, PoolErrorsLib.INVALID_LIQ_BONUS);
 
     self.data = (self.data & LIQUIDATION_BONUS_MASK) | (bonus << LIQUIDATION_BONUS_START_BIT_POSITION);
   }
@@ -127,7 +127,7 @@ library ReserveConfiguration {
    * @param decimals The decimals
    */
   function setDecimals(DataTypes.ReserveConfigurationMap memory self, uint256 decimals) internal pure {
-    require(decimals <= MAX_VALID_DECIMALS, Errors.INVALID_DECIMALS);
+    require(decimals <= MAX_VALID_DECIMALS, PoolErrorsLib.INVALID_DECIMALS);
     self.data = (self.data & DECIMALS_MASK) | (decimals << RESERVE_DECIMALS_START_BIT_POSITION);
   }
 
@@ -182,7 +182,7 @@ library ReserveConfiguration {
    * @param borrowCap The borrow cap
    */
   function setBorrowCap(DataTypes.ReserveConfigurationMap memory self, uint256 borrowCap) internal pure {
-    require(borrowCap <= MAX_VALID_BORROW_CAP, Errors.INVALID_BORROW_CAP);
+    require(borrowCap <= MAX_VALID_BORROW_CAP, PoolErrorsLib.INVALID_BORROW_CAP);
 
     self.data = (self.data & BORROW_CAP_MASK) | (borrowCap << BORROW_CAP_START_BIT_POSITION);
   }
@@ -202,7 +202,7 @@ library ReserveConfiguration {
    * @param supplyCap The supply cap
    */
   function setSupplyCap(DataTypes.ReserveConfigurationMap memory self, uint256 supplyCap) internal pure {
-    require(supplyCap <= MAX_VALID_SUPPLY_CAP, Errors.INVALID_SUPPLY_CAP);
+    require(supplyCap <= MAX_VALID_SUPPLY_CAP, PoolErrorsLib.INVALID_SUPPLY_CAP);
 
     self.data = (self.data & SUPPLY_CAP_MASK) | (supplyCap << SUPPLY_CAP_START_BIT_POSITION);
   }

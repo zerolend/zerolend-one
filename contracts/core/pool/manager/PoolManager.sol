@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IPool, IPoolManager} from '../../../interfaces/IPoolManager.sol';
-import {Errors} from '../utils/Errors.sol';
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {TimelockedActions} from './TimelockedActions.sol';
 
 contract PoolManager is IPoolManager, TimelockedActions {
@@ -41,7 +41,8 @@ contract PoolManager is IPoolManager, TimelockedActions {
 
   function cancelAction(IPool pool, bytes32 id) external {
     require(
-      isPoolAdmin(pool, msg.sender) || isRiskAdmin(pool, msg.sender) || isRiskAdmin(IPool(address(0)), msg.sender), 'not pool or risk admin'
+      isPoolAdmin(pool, msg.sender) || isRiskAdmin(pool, msg.sender) || isRiskAdmin(IPool(address(0)), msg.sender),
+      'not pool or risk admin'
     );
     _cancel(id);
   }
@@ -101,8 +102,8 @@ contract PoolManager is IPoolManager, TimelockedActions {
 
   modifier onlyEmergencyAdmin(IPool pool) {
     require(
-      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender)
-        || hasRole(getRoleFromPool(IPool(address(0)), EMERGENCY_ADMIN_ROLE), msg.sender),
+      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender) ||
+        hasRole(getRoleFromPool(IPool(address(0)), EMERGENCY_ADMIN_ROLE), msg.sender),
       'not risk or pool admin'
     );
     _;
@@ -110,9 +111,9 @@ contract PoolManager is IPoolManager, TimelockedActions {
 
   modifier onlyEmergencyOrPoolAdmin(IPool pool) {
     require(
-      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender)
-        || hasRole(getRoleFromPool(IPool(address(0)), EMERGENCY_ADMIN_ROLE), msg.sender)
-        || hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
+      hasRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), msg.sender) ||
+        hasRole(getRoleFromPool(IPool(address(0)), EMERGENCY_ADMIN_ROLE), msg.sender) ||
+        hasRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), msg.sender),
       'not emergency or pool admin'
     );
     _;

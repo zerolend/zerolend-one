@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../configuration/DataTypes.sol';
-import {Errors} from '../utils/Errors.sol';
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {ReserveConfiguration} from './ReserveConfiguration.sol';
 
 /**
@@ -53,7 +53,7 @@ library UserConfiguration {
    */
   function setUsingAsCollateral(DataTypes.UserConfigurationMap storage self, uint256 reserveIndex, bool usingAsCollateral) internal {
     unchecked {
-      require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, Errors.INVALID_RESERVE_INDEX);
+      require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, PoolErrorsLib.INVALID_RESERVE_INDEX);
       uint256 bit = 1 << ((reserveIndex << 1) + 1);
       if (usingAsCollateral) {
         self.data |= bit;
@@ -71,7 +71,7 @@ library UserConfiguration {
    */
   function isUsingAsCollateralOrBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex) internal pure returns (bool) {
     unchecked {
-      require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, Errors.INVALID_RESERVE_INDEX);
+      require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, PoolErrorsLib.INVALID_RESERVE_INDEX);
       return (self.data >> (reserveIndex << 1)) & 3 != 0;
     }
   }
@@ -84,7 +84,7 @@ library UserConfiguration {
    */
   function isBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex) internal pure returns (bool) {
     unchecked {
-      require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, Errors.INVALID_RESERVE_INDEX);
+      require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, PoolErrorsLib.INVALID_RESERVE_INDEX);
       return (self.data >> (reserveIndex << 1)) & 1 != 0;
     }
   }
@@ -97,7 +97,7 @@ library UserConfiguration {
    */
   function isUsingAsCollateral(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex) internal pure returns (bool) {
     unchecked {
-      require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, Errors.INVALID_RESERVE_INDEX);
+      require(reserveIndex < ReserveConfiguration.MAX_RESERVES_COUNT, PoolErrorsLib.INVALID_RESERVE_INDEX);
       return (self.data >> ((reserveIndex << 1) + 1)) & 1 != 0;
     }
   }

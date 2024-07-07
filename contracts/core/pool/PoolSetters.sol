@@ -27,7 +27,7 @@ import {FlashLoanLogic} from './logic/FlashLoanLogic.sol';
 import {LiquidationLogic} from './logic/LiquidationLogic.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 import {SupplyLogic} from './logic/SupplyLogic.sol';
-import {Errors} from './utils/Errors.sol';
+import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
 import {PercentageMath} from './utils/PercentageMath.sol';
 
 abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {

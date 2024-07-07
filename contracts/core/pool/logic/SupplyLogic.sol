@@ -20,7 +20,7 @@ import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConf
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
-import {Errors} from '../utils/Errors.sol';
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 
 import {WadRayMath} from '../utils/WadRayMath.sol';
@@ -28,6 +28,7 @@ import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 
 /**
  * @title SupplyLogic library
@@ -42,12 +43,6 @@ library SupplyLogic {
   using SafeERC20 for IERC20;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using WadRayMath for uint256;
-
-  // See `IPool` for descriptions
-  event ReserveUsedAsCollateralEnabled(address indexed reserve, bytes32 indexed position);
-  event ReserveUsedAsCollateralDisabled(address indexed reserve, bytes32 indexed position);
-  event Withdraw(address indexed reserve, bytes32 indexed pos, address indexed to, uint256 amount);
-  event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
 
   /**
    * @notice Implements the supply feature. Through `supply()`, users supply assets to the ZeroLend protocol.
@@ -90,10 +85,10 @@ library SupplyLogic {
     // if this is the user's first deposit, enable the reserve as collateral
     if (isFirst && ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration)) {
       userConfig.setUsingAsCollateral(reserve.id, true);
-      emit ReserveUsedAsCollateralEnabled(params.asset, params.position);
+      emit PoolEventsLib.ReserveUsedAsCollateralEnabled(params.asset, params.position);
     }
 
-    emit Supply(params.asset, params.position, minted.shares);
+    emit PoolEventsLib.Supply(params.asset, params.position, minted.shares);
 
     minted.assets = params.amount;
   }
@@ -143,7 +138,7 @@ library SupplyLogic {
     // if the user is withdrawing everything then disable usage as collateral
     if (isCollateral && params.amount == balance) {
       userConfig.setUsingAsCollateral(reserve.id, false);
-      emit ReserveUsedAsCollateralDisabled(params.asset, params.position);
+      emit PoolEventsLib.ReserveUsedAsCollateralDisabled(params.asset, params.position);
     }
 
     // Burn debt. Which is burn supply, update total supply and send tokens to the user
@@ -155,7 +150,7 @@ library SupplyLogic {
       ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);
     }
 
-    emit Withdraw(params.asset, params.position, params.destination, params.amount);
+    emit PoolEventsLib.Withdraw(params.asset, params.position, params.destination, params.amount);
 
     burnt.assets = params.amount;
   }

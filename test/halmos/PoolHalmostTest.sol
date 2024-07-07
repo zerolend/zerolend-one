@@ -103,15 +103,17 @@ contract PoolHalmosTest is SymTest, Test {
 
   function _callPool(bytes4 selector, address caller) private {
     vm.assume(
-      selector == pool.supplySimple.selector || selector == pool.repaySimple.selector || selector == pool.withdrawSimple.selector
-        || selector == pool.borrowSimple.selector
+      selector == pool.supplySimple.selector ||
+        selector == pool.repaySimple.selector ||
+        selector == pool.withdrawSimple.selector ||
+        selector == pool.borrowSimple.selector
     );
 
     uint256 amount = svm.createUint256('amount');
     uint256 index = svm.createUint256('index');
 
     vm.prank(caller);
-    (bool success,) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), amount, index)));
+    (bool success, ) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), amount, index)));
     vm.assume(success);
   }
 
@@ -119,8 +121,8 @@ contract PoolHalmosTest is SymTest, Test {
   /// @param selector The function selector to call.
   /// @param caller The address of the caller.
   function check_borrowLessThanSupply(bytes4 selector, address caller, uint256 supplyBalance, uint256 debtBalance) public {
-    (uint256 supplyBefore,,,) = pool.marketBalances(address(loan));
-    (,, uint256 debtBefore,) = pool.marketBalances(address(collateral));
+    (uint256 supplyBefore, , , ) = pool.marketBalances(address(loan));
+    (, , uint256 debtBefore, ) = pool.marketBalances(address(collateral));
 
     // fund the caller
     loan.mint(caller, supplyBalance);
@@ -132,8 +134,8 @@ contract PoolHalmosTest is SymTest, Test {
 
     _callPool(selector, caller);
 
-    (uint256 supplyAfter,,,) = pool.marketBalances(address(loan));
-    (,, uint256 debtAfter,) = pool.marketBalances(address(collateral));
+    (uint256 supplyAfter, , , ) = pool.marketBalances(address(loan));
+    (, , uint256 debtAfter, ) = pool.marketBalances(address(collateral));
 
     assert(debtAfter <= supplyAfter); // Borrow should be less than supply
   }

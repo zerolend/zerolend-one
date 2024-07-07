@@ -16,7 +16,7 @@ pragma solidity 0.8.19;
 import {DataTypes, IPool} from '../../interfaces/IPool.sol';
 
 import {ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
-
+import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
 abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICuratedVaultStaticTyping {
@@ -39,7 +39,7 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICura
   /// @dev Reverts if the caller doesn't have the curator role.
   modifier onlyCuratorRole() {
     address sender = _msgSender();
-    if (!isOwner(_msgSender()) && !isCurator(_msgSender())) revert NotGuardianRole();
+    if (!isOwner(_msgSender()) && !isCurator(_msgSender())) revert CuratedErrorsLib.NotGuardianRole();
     _;
   }
 
@@ -47,27 +47,27 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICura
   modifier onlyAllocator() {
     address sender = _msgSender();
     if (!isOwner(_msgSender()) && !isAllocator(_msgSender())) {
-      revert NotAllocatorRole();
+      revert CuratedErrorsLib.NotAllocatorRole();
     }
     _;
   }
 
   /// @dev Reverts if the caller doesn't have the guardian role.
   modifier onlyGuardian() {
-    if (!isOwner(_msgSender()) && !isGuardian(_msgSender())) revert NotGuardianRole();
+    if (!isOwner(_msgSender()) && !isGuardian(_msgSender())) revert CuratedErrorsLib.NotGuardianRole();
     _;
   }
 
   /// @dev Reverts if the caller is not eh default admin
   modifier onlyOwner() {
-    if (!isOwner(_msgSender())) revert NotOwnerRole();
+    if (!isOwner(_msgSender())) revert CuratedErrorsLib.NotOwnerRole();
     _;
   }
 
   /// @dev Reverts if the caller doesn't have the curator nor the guardian role.
   modifier onlyCuratorOrGuardian() {
     if (!isOwner(_msgSender()) && !isCurator(_msgSender()) && !isGuardian(_msgSender())) {
-      revert NotCuratorNorGuardianRole();
+      revert CuratedErrorsLib.NotCuratorNorGuardianRole();
     }
     _;
   }

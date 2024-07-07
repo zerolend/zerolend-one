@@ -6,7 +6,7 @@ import {IPool} from '../../../interfaces/IPool.sol';
 
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {Errors} from '../utils/Errors.sol';
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 
@@ -15,6 +15,7 @@ import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 
 /**
  * @title FlashLoanLogic library
@@ -28,9 +29,6 @@ library FlashLoanLogic {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeCast for uint256;
-
-  // See `IPool` for descriptions
-  event FlashLoan(address indexed target, address initiator, address indexed asset, uint256 amount, uint256 premium);
 
   // Helper struct for internal variables used in the `executeFlashLoan` function
   struct FlashLoanLocalVars {
@@ -70,7 +68,7 @@ library FlashLoanLogic {
 
     require(
       receiver.executeOperation(_params.asset, _params.amount, totalPremium, msg.sender, _params.params),
-      Errors.INVALID_FLASHLOAN_EXECUTOR_RETURN
+      PoolErrorsLib.INVALID_FLASHLOAN_EXECUTOR_RETURN
     );
 
     _handleFlashLoanRepayment(
@@ -105,7 +103,16 @@ library FlashLoanLogic {
 
     _reserve.accruedToTreasuryShares += _params.totalPremium.rayDiv(cache.nextLiquidityIndex).toUint128();
 
-    _reserve.updateInterestRates(_totalSupplies, cache, _params.asset, IPool(_params.pool).getReserveFactor(), amountPlusPremium, 0, '', '');
+    _reserve.updateInterestRates(
+      _totalSupplies,
+      cache,
+      _params.asset,
+      IPool(_params.pool).getReserveFactor(),
+      amountPlusPremium,
+      0,
+      '',
+      ''
+    );
 
     IERC20(_params.asset).safeTransferFrom(_params.receiverAddress, address(_params.pool), amountPlusPremium);
 
@@ -116,6 +123,6 @@ library FlashLoanLogic {
     //   amountPlusPremium
     // );
 
-    emit FlashLoan(_params.receiverAddress, msg.sender, _params.asset, _params.amount, _params.totalPremium);
+    emit PoolEventsLib.FlashLoan(_params.receiverAddress, msg.sender, _params.asset, _params.amount, _params.totalPremium);
   }
 }

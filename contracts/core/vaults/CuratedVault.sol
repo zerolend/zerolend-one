@@ -15,9 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes, IPool} from '../../interfaces/IPool.sol';
 
-import {
-  ICuratedVaultBase, MarketAllocation, MarketConfig, PendingAddress, PendingUint192
-} from '../../interfaces/vaults/ICuratedVaultBase.sol';
+import {ICuratedVaultBase, MarketAllocation, MarketConfig, PendingAddress, PendingUint192} from '../../interfaces/vaults/ICuratedVaultBase.sol';
 import {ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
 
 import {PendingLib} from './libraries/PendingLib.sol';
@@ -26,15 +24,11 @@ import {UtilsLib} from './libraries/UtilsLib.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 
 import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
-import {
-  ERC20Upgradeable,
-  ERC4626Upgradeable,
-  IERC4626Upgradeable,
-  MathUpgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20, IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-
+import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
+import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {CuratedVaultRoles} from './CuratedVaultRoles.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
@@ -141,8 +135,8 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   /// - there's no pending value;
   /// - the timelock has not elapsed since the pending value has been submitted.
   modifier afterTimelock(uint256 validAt) {
-    if (validAt == 0) revert NoPendingValue();
-    if (block.timestamp < validAt) revert TimelockNotElapsed();
+    if (validAt == 0) revert CuratedErrorsLib.NoPendingValue();
+    if (block.timestamp < validAt) revert CuratedErrorsLib.TimelockNotElapsed();
     _;
   }
 
@@ -150,15 +144,15 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
 
   /// @inheritdoc ICuratedVaultBase
   function setSkimRecipient(address newSkimRecipient) external onlyOwner {
-    if (newSkimRecipient == skimRecipient) revert AlreadySet();
+    if (newSkimRecipient == skimRecipient) revert CuratedErrorsLib.AlreadySet();
     skimRecipient = newSkimRecipient;
-    emit SetSkimRecipient(newSkimRecipient);
+    emit CuratedEventsLib.SetSkimRecipient(newSkimRecipient);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function submitTimelock(uint256 newTimelock) external onlyOwner {
-    if (newTimelock == timelock) revert AlreadySet();
-    if (pendingTimelock.validAt != 0) revert AlreadyPending();
+    if (newTimelock == timelock) revert CuratedErrorsLib.AlreadySet();
+    if (pendingTimelock.validAt != 0) revert CuratedErrorsLib.AlreadyPending();
     _checkTimelockBounds(newTimelock);
 
     if (newTimelock > timelock) {
@@ -166,15 +160,15 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     } else {
       // Safe "unchecked" cast because newTimelock <= MAX_TIMELOCK.
       pendingTimelock.update(uint184(newTimelock), timelock);
-      emit SubmitTimelock(newTimelock);
+      emit CuratedEventsLib.SubmitTimelock(newTimelock);
     }
   }
 
   /// @inheritdoc ICuratedVaultBase
   function setFee(uint256 newFee) external onlyOwner {
-    if (newFee == fee) revert AlreadySet();
-    if (newFee > MAX_FEE) revert MaxFeeExceeded();
-    if (newFee != 0 && feeRecipient == address(0)) revert ZeroFeeRecipient();
+    if (newFee == fee) revert CuratedErrorsLib.AlreadySet();
+    if (newFee > MAX_FEE) revert CuratedErrorsLib.MaxFeeExceeded();
+    if (newFee != 0 && feeRecipient == address(0)) revert CuratedErrorsLib.ZeroFeeRecipient();
 
     // Accrue fee using the previous fee set before changing it.
     _updateLastTotalAssets(_accrueFee());
@@ -182,49 +176,49 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     // Safe "unchecked" cast because newFee <= MAX_FEE.
     fee = uint96(newFee);
 
-    emit SetFee(_msgSender(), fee);
+    emit CuratedEventsLib.SetFee(_msgSender(), fee);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function setFeeRecipient(address newFeeRecipient) external onlyOwner {
-    if (newFeeRecipient == feeRecipient) revert AlreadySet();
-    if (newFeeRecipient == address(0) && fee != 0) revert ZeroFeeRecipient();
+    if (newFeeRecipient == feeRecipient) revert CuratedErrorsLib.AlreadySet();
+    if (newFeeRecipient == address(0) && fee != 0) revert CuratedErrorsLib.ZeroFeeRecipient();
 
     // Accrue fee to the previous fee recipient set before changing it.
     _updateLastTotalAssets(_accrueFee());
 
     feeRecipient = newFeeRecipient;
 
-    emit SetFeeRecipient(newFeeRecipient);
+    emit CuratedEventsLib.SetFeeRecipient(newFeeRecipient);
   }
 
   /* ONLY CURATOR FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
   function submitCap(IPool pool, uint256 newSupplyCap) external onlyCuratorRole {
-    if (pendingCap[pool].validAt != 0) revert AlreadyPending();
-    if (config[pool].removableAt != 0) revert PendingRemoval();
+    if (pendingCap[pool].validAt != 0) revert CuratedErrorsLib.AlreadyPending();
+    if (config[pool].removableAt != 0) revert CuratedErrorsLib.PendingRemoval();
     uint256 supplyCap = config[pool].cap;
-    if (newSupplyCap == supplyCap) revert AlreadySet();
+    if (newSupplyCap == supplyCap) revert CuratedErrorsLib.AlreadySet();
 
     if (newSupplyCap < supplyCap) {
       _setCap(pool, newSupplyCap.toUint184());
     } else {
       pendingCap[pool].update(newSupplyCap.toUint184(), timelock);
-      emit SubmitCap(_msgSender(), pool, newSupplyCap);
+      emit CuratedEventsLib.SubmitCap(_msgSender(), pool, newSupplyCap);
     }
   }
 
   /// @inheritdoc ICuratedVaultBase
   function submitMarketRemoval(IPool pool) external onlyCuratorRole {
-    if (config[pool].removableAt != 0) revert AlreadyPending();
-    if (config[pool].cap != 0) revert NonZeroCap();
-    if (!config[pool].enabled) revert MarketNotEnabled(pool);
-    if (pendingCap[pool].validAt != 0) revert PendingCap(pool);
+    if (config[pool].removableAt != 0) revert CuratedErrorsLib.AlreadyPending();
+    if (config[pool].cap != 0) revert CuratedErrorsLib.NonZeroCap();
+    if (!config[pool].enabled) revert CuratedErrorsLib.MarketNotEnabled(pool);
+    if (pendingCap[pool].validAt != 0) revert CuratedErrorsLib.PendingCap(pool);
 
     // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
     config[pool].removableAt = uint64(block.timestamp + timelock);
-    emit SubmitMarketRemoval(_msgSender(), pool);
+    emit CuratedEventsLib.SubmitMarketRemoval(_msgSender(), pool);
   }
 
   /* ONLY ALLOCATOR FUNCTIONS */
@@ -233,15 +227,15 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   function setSupplyQueue(IPool[] calldata newSupplyQueue) external onlyAllocator {
     uint256 length = newSupplyQueue.length;
 
-    if (length > MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
+    if (length > MAX_QUEUE_LENGTH) revert CuratedErrorsLib.MaxQueueLengthExceeded();
 
     for (uint256 i; i < length; ++i) {
       IERC20(asset()).forceApprove(address(newSupplyQueue[i]), type(uint256).max);
-      if (config[newSupplyQueue[i]].cap == 0) revert UnauthorizedMarket(newSupplyQueue[i]);
+      if (config[newSupplyQueue[i]].cap == 0) revert CuratedErrorsLib.UnauthorizedMarket(newSupplyQueue[i]);
     }
 
     supplyQueue = newSupplyQueue;
-    emit SetSupplyQueue(_msgSender(), newSupplyQueue);
+    emit CuratedEventsLib.SetSupplyQueue(_msgSender(), newSupplyQueue);
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -255,9 +249,9 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     for (uint256 i; i < newLength; ++i) {
       uint256 prevIndex = indexes[i];
 
-      // If prevIndex >= currLength, it will revert with native "Index out of bounds".
+      // If prevIndex >= currLength, it will revert CuratedErrorsLib.with native "Index out of bounds".
       IPool pool = withdrawQueue[prevIndex];
-      if (seen[prevIndex]) revert DuplicateMarket(pool);
+      if (seen[prevIndex]) revert CuratedErrorsLib.DuplicateMarket(pool);
       seen[prevIndex] = true;
 
       newWithdrawQueue[i] = pool;
@@ -267,12 +261,12 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       if (!seen[i]) {
         IPool pool = withdrawQueue[i];
 
-        if (config[pool].cap != 0) revert InvalidMarketRemovalNonZeroCap(pool);
-        if (pendingCap[pool].validAt != 0) revert PendingCap(pool);
+        if (config[pool].cap != 0) revert CuratedErrorsLib.InvalidMarketRemovalNonZeroCap(pool);
+        if (pendingCap[pool].validAt != 0) revert CuratedErrorsLib.PendingCap(pool);
         if (pool.supplyShares(asset(), positionId) != 0) {
-          if (config[pool].removableAt == 0) revert InvalidMarketRemovalNonZeroSupply(pool);
+          if (config[pool].removableAt == 0) revert CuratedErrorsLib.InvalidMarketRemovalNonZeroSupply(pool);
           if (block.timestamp < config[pool].removableAt) {
-            revert InvalidMarketRemovalTimelockNotElapsed(pool);
+            revert CuratedErrorsLib.InvalidMarketRemovalTimelockNotElapsed(pool);
           }
         }
 
@@ -281,7 +275,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     }
 
     withdrawQueue = newWithdrawQueue;
-    emit SetWithdrawQueue(_msgSender(), newWithdrawQueue);
+    emit CuratedEventsLib.SetWithdrawQueue(_msgSender(), newWithdrawQueue);
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -297,7 +291,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       uint256 toWithdraw = supplyAssets.zeroFloorSub(allocation.assets);
 
       if (toWithdraw > 0) {
-        if (!config[pool].enabled) revert MarketNotEnabled(pool);
+        if (!config[pool].enabled) revert CuratedErrorsLib.MarketNotEnabled(pool);
 
         // Guarantees that unknown frontrunning donations can be withdrawn, in order to disable a market.
         uint256 shares;
@@ -307,28 +301,29 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
         }
 
         DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), toWithdraw, 0);
-        emit ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
+        emit CuratedEventsLib.ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
         totalWithdrawn += burnt.assets;
       } else {
-        uint256 suppliedAssets =
-          allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets = allocation.assets == type(uint256).max
+          ? totalWithdrawn.zeroFloorSub(totalSupplied)
+          : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
         uint256 supplyCap = config[pool].cap;
-        if (supplyCap == 0) revert UnauthorizedMarket(pool);
+        if (supplyCap == 0) revert CuratedErrorsLib.UnauthorizedMarket(pool);
 
-        if (supplyAssets + suppliedAssets > supplyCap) revert SupplyCapExceeded(pool);
+        if (supplyAssets + suppliedAssets > supplyCap) revert CuratedErrorsLib.SupplyCapExceeded(pool);
 
         // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
         IERC20(asset()).forceApprove(address(pool), type(uint256).max);
         DataTypes.SharesType memory minted = pool.supplySimple(asset(), suppliedAssets, 0);
-        emit ReallocateSupply(_msgSender(), pool, minted.assets, minted.shares);
+        emit CuratedEventsLib.ReallocateSupply(_msgSender(), pool, minted.assets, minted.shares);
         totalSupplied += suppliedAssets;
       }
     }
 
-    if (totalWithdrawn != totalSupplied) revert InconsistentReallocation();
+    if (totalWithdrawn != totalSupplied) revert CuratedErrorsLib.InconsistentReallocation();
   }
 
   /* REVOKE FUNCTIONS */
@@ -336,19 +331,19 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   /// @inheritdoc ICuratedVaultBase
   function revokePendingTimelock() external onlyGuardian {
     delete pendingTimelock;
-    emit RevokePendingTimelock(_msgSender());
+    emit CuratedEventsLib.RevokePendingTimelock(_msgSender());
   }
 
   /// @inheritdoc ICuratedVaultBase
   function revokePendingCap(IPool pool) external onlyCuratorOrGuardian {
     delete pendingCap[pool];
-    emit RevokePendingCap(_msgSender(), pool);
+    emit CuratedEventsLib.RevokePendingCap(_msgSender(), pool);
   }
 
   /// @inheritdoc ICuratedVaultBase
   function revokePendingMarketRemoval(IPool pool) external onlyCuratorOrGuardian {
     delete config[pool].removableAt;
-    emit RevokePendingMarketRemoval(_msgSender(), pool);
+    emit CuratedEventsLib.RevokePendingMarketRemoval(_msgSender(), pool);
   }
 
   /* EXTERNAL */
@@ -376,16 +371,16 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
 
   /// @inheritdoc ICuratedVaultBase
   function skim(address token) external {
-    if (skimRecipient == address(0)) revert ZeroAddress();
+    if (skimRecipient == address(0)) revert CuratedErrorsLib.ZeroAddress();
     uint256 amount = IERC20(token).balanceOf(address(this));
     IERC20(token).safeTransfer(skimRecipient, amount);
-    emit Skim(_msgSender(), token, amount);
+    emit CuratedEventsLib.Skim(_msgSender(), token, amount);
   }
 
   /* ERC4626Upgradeable (PUBLIC) */
 
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override (ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
+  function decimals() public view override(ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
@@ -406,7 +401,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets,,) = _maxWithdraw(owner);
+    (assets, , ) = _maxWithdraw(owner);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -497,7 +492,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       if (supplyCap == 0) continue;
 
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
 
       // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
@@ -575,20 +570,20 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     shares = pool.supplyShares(asset(), positionId);
 
     // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-    (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
     assets = shares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
   }
 
   /// @dev Reverts if `newTimelock` is not within the bounds.
   function _checkTimelockBounds(uint256 newTimelock) internal pure {
-    if (newTimelock > MAX_TIMELOCK) revert AboveMaxTimelock();
-    if (newTimelock < MIN_TIMELOCK) revert BelowMinTimelock();
+    if (newTimelock > MAX_TIMELOCK) revert CuratedErrorsLib.AboveMaxTimelock();
+    if (newTimelock < MIN_TIMELOCK) revert CuratedErrorsLib.BelowMinTimelock();
   }
 
   /// @dev Sets `timelock` to `newTimelock`.
   function _setTimelock(uint256 newTimelock) internal {
     timelock = newTimelock;
-    emit SetTimelock(_msgSender(), newTimelock);
+    emit CuratedEventsLib.SetTimelock(_msgSender(), newTimelock);
     delete pendingTimelock;
   }
 
@@ -600,7 +595,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       if (!marketConfig.enabled) {
         withdrawQueue.push(pool);
 
-        if (withdrawQueue.length > MAX_QUEUE_LENGTH) revert MaxQueueLengthExceeded();
+        if (withdrawQueue.length > MAX_QUEUE_LENGTH) revert CuratedErrorsLib.MaxQueueLengthExceeded();
 
         marketConfig.enabled = true;
 
@@ -609,14 +604,14 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
         uint256 supplyAssets = pool.supplyAssets(asset(), positionId);
         _updateLastTotalAssets(lastTotalAssets + supplyAssets);
 
-        emit SetWithdrawQueue(msg.sender, withdrawQueue);
+        emit CuratedEventsLib.SetWithdrawQueue(msg.sender, withdrawQueue);
       }
 
       marketConfig.removableAt = 0;
     }
 
     marketConfig.cap = supplyCap;
-    emit SetCap(_msgSender(), pool, supplyCap);
+    emit CuratedEventsLib.SetCap(_msgSender(), pool, supplyCap);
     delete pendingCap[pool];
   }
 
@@ -635,7 +630,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
 
       // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
       uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
@@ -650,16 +645,18 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       if (assets == 0) return;
     }
 
-    if (assets != 0) revert AllCapsReached();
+    if (assets != 0) revert CuratedErrorsLib.AllCapsReached();
   }
 
   /// @dev Withdraws `assets` from ZeroLend.
   function _withdrawPool(uint256 withdrawAmount) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool pool = withdrawQueue[i];
-      (uint256 supplyAssets,) = _accruedSupplyBalance(pool);
-      uint256 toWithdraw =
-        UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
+      (uint256 supplyAssets, ) = _accruedSupplyBalance(pool);
+      uint256 toWithdraw = UtilsLib.min(
+        _withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets),
+        withdrawAmount
+      );
       if (toWithdraw > 0) {
         // Using try/catch to skip markets that revert.
         try pool.withdrawSimple(asset(), toWithdraw, 0) {
@@ -670,7 +667,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       if (withdrawAmount == 0) return;
     }
 
-    if (withdrawAmount != 0) revert NotEnoughLiquidity();
+    if (withdrawAmount != 0) revert CuratedErrorsLib.NotEnoughLiquidity();
   }
 
   /// @notice simulates a withdraw of `assets` from ZeroLend.
@@ -684,7 +681,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       uint256 supplyShares = pos.supplyShares;
 
       // get info on how much shares and asset the pool has
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = pool.marketBalances(asset());
 
       // The vault withdrawing from ZeroLend cannot fail because:
       // 1. oracle.price() is never called (the vault doesn't borrow)
@@ -718,7 +715,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   /// @dev Updates `lastTotalAssets` to `updatedTotalAssets`.
   function _updateLastTotalAssets(uint256 updatedTotalAssets) internal {
     lastTotalAssets = updatedTotalAssets;
-    emit UpdateLastTotalAssets(updatedTotalAssets);
+    emit CuratedEventsLib.UpdateLastTotalAssets(updatedTotalAssets);
   }
 
   /// @dev Accrues the fee and mints the fee shares to the fee recipient.
@@ -727,7 +724,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     uint256 feeShares;
     (feeShares, newTotalAssets) = _accruedFeeShares();
     if (feeShares != 0) _mint(feeRecipient, feeShares);
-    emit AccrueInterest(newTotalAssets, feeShares);
+    emit CuratedEventsLib.AccrueInterest(newTotalAssets, feeShares);
   }
 
   /// @dev Computes and returns the fee shares (`feeShares`) to mint and the new vault's total assets

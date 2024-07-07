@@ -18,7 +18,7 @@ import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterest
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveSuppliesConfiguration} from '../configuration/ReserveSuppliesConfiguration.sol';
-import {Errors} from '../utils/Errors.sol';
+import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {MathUtils} from '../utils/MathUtils.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
@@ -26,6 +26,7 @@ import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 
 /**
  * @title ReserveLogic library
@@ -39,11 +40,6 @@ library ReserveLogic {
   using ReserveLogic for DataTypes.ReserveData;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using ReserveSuppliesConfiguration for DataTypes.ReserveSupplies;
-
-  // See `IPool` for descriptions
-  event ReserveDataUpdated(
-    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
-  );
 
   /**
    * @notice Returns the ongoing normalized income for the reserve.
@@ -164,16 +160,16 @@ library ReserveLogic {
 
     (vars.nextLiquidityRate, vars.nextBorrowRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
       .calculateInterestRates(
-      _position,
-      _data,
-      DataTypes.CalculateInterestRatesParams({
-        liquidityAdded: _liquidityAdded,
-        liquidityTaken: _liquidityTaken,
-        totalVariableDebt: vars.totalVariableDebt,
-        reserveFactor: _reserveFactor,
-        reserve: _reserveAddress
-      })
-    );
+        _position,
+        _data,
+        DataTypes.CalculateInterestRatesParams({
+          liquidityAdded: _liquidityAdded,
+          liquidityTaken: _liquidityTaken,
+          totalVariableDebt: vars.totalVariableDebt,
+          reserveFactor: _reserveFactor,
+          reserve: _reserveAddress
+        })
+      );
 
     _reserve.liquidityRate = vars.nextLiquidityRate.toUint128();
     _reserve.borrowRate = vars.nextBorrowRate.toUint128();
@@ -181,7 +177,13 @@ library ReserveLogic {
     if (_liquidityAdded > 0) totalSupplies.underlyingBalance += _liquidityAdded.toUint128();
     else if (_liquidityTaken > 0) totalSupplies.underlyingBalance -= _liquidityTaken.toUint128();
 
-    emit ReserveDataUpdated(_reserveAddress, vars.nextLiquidityRate, vars.nextBorrowRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex);
+    emit PoolEventsLib.ReserveDataUpdated(
+      _reserveAddress,
+      vars.nextLiquidityRate,
+      vars.nextBorrowRate,
+      _cache.nextLiquidityIndex,
+      _cache.nextBorrowIndex
+    );
   }
 
   struct AccrueToTreasuryLocalVars {

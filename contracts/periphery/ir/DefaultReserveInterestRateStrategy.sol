@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../../core/pool/configuration/DataTypes.sol';
-import {Errors} from '../../core/pool/utils/Errors.sol';
+import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
 import {PercentageMath} from '../../core/pool/utils/PercentageMath.sol';
 import {WadRayMath} from '../../core/pool/utils/WadRayMath.sol';
 import {IDefaultInterestRateStrategy} from '../../interfaces/IDefaultInterestRateStrategy.sol';
@@ -56,7 +56,7 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
    * @param variableRateSlope2 The variable rate slope above optimal usage ratio
    */
   constructor(uint256 optimalUsageRatio, uint256 baseVariableBorrowRate, uint256 variableRateSlope1, uint256 variableRateSlope2) {
-    require(WadRayMath.RAY >= optimalUsageRatio, Errors.INVALID_OPTIMAL_USAGE_RATIO);
+    require(WadRayMath.RAY >= optimalUsageRatio, PoolErrorsLib.INVALID_OPTIMAL_USAGE_RATIO);
     OPTIMAL_USAGE_RATIO = optimalUsageRatio;
     MAX_EXCESS_USAGE_RATIO = WadRayMath.RAY - optimalUsageRatio;
 
@@ -124,7 +124,8 @@ contract DefaultReserveInterestRateStrategy is IDefaultInterestRateStrategy {
       vars.currentBorrowRate += _variableRateSlope1.rayMul(vars.borrowUsageRatio).rayDiv(OPTIMAL_USAGE_RATIO);
     }
 
-    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalVariableDebt, vars.currentBorrowRate).rayMul(vars.supplyUsageRatio)
+    vars.currentLiquidityRate = _getOverallBorrowRate(params.totalVariableDebt, vars.currentBorrowRate)
+      .rayMul(vars.supplyUsageRatio)
       .percentMul(PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor);
 
     return (vars.currentLiquidityRate, vars.currentBorrowRate);

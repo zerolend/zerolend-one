@@ -29,6 +29,7 @@ import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 
 /**
  * @title LiquidationLogic library
@@ -44,18 +45,6 @@ library LiquidationLogic {
   using TokenConfiguration for address;
   using UserConfiguration for DataTypes.UserConfigurationMap;
   using WadRayMath for uint256;
-
-  // See `IPool` for descriptions
-  event ReserveUsedAsCollateralEnabled(address indexed reserve, bytes32 indexed position);
-  event ReserveUsedAsCollateralDisabled(address indexed reserve, bytes32 indexed position);
-  event LiquidationCall(
-    address indexed collateralAsset,
-    address indexed debtAsset,
-    bytes32 indexed user,
-    uint256 debtToCover,
-    uint256 liquidatedCollateralAmount,
-    address liquidator
-  );
 
   /**
    * @dev Default percentage of borrower's debt to be repaid in a liquidation.
@@ -118,7 +107,7 @@ library LiquidationLogic {
     vars.debtReserveCache = debtReserve.cache(totalSupplies[params.debtAsset]);
     debtReserve.updateState(params.reserveFactor, vars.debtReserveCache);
 
-    (,,,, vars.healthFactor,) = GenericLogic.calculateUserAccountData(
+    (, , , , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
       balances,
       reservesData,
       reservesList,
@@ -151,8 +140,11 @@ library LiquidationLogic {
 
     vars.userCollateralBalance = balances[vars.asset][params.position].supplyShares;
 
-    (vars.actualCollateralToLiquidate, vars.actualDebtToLiquidate, vars.liquidationProtocolFeeAmount) =
-    _calculateAvailableCollateralToLiquidate(
+    (
+      vars.actualCollateralToLiquidate,
+      vars.actualDebtToLiquidate,
+      vars.liquidationProtocolFeeAmount
+    ) = _calculateAvailableCollateralToLiquidate(
       collateralReserve,
       vars.debtReserveCache,
       vars.actualDebtToLiquidate,
@@ -171,7 +163,7 @@ library LiquidationLogic {
     // we set the currency as not being used as collateral anymore
     if (vars.actualCollateralToLiquidate + vars.liquidationProtocolFeeAmount == vars.userCollateralBalance) {
       userConfig.setUsingAsCollateral(collateralReserve.id, false);
-      emit ReserveUsedAsCollateralDisabled(params.collateralAsset, params.position);
+      emit PoolEventsLib.ReserveUsedAsCollateralDisabled(params.collateralAsset, params.position);
     }
 
     _repayDebtTokens(params, vars, balances[params.debtAsset], totalSupplies[params.debtAsset]);
@@ -188,7 +180,11 @@ library LiquidationLogic {
     );
 
     _burnCollateralTokens(
-      collateralReserve, params, vars, balances[params.collateralAsset][params.position], totalSupplies[params.collateralAsset]
+      collateralReserve,
+      params,
+      vars,
+      balances[params.collateralAsset][params.position],
+      totalSupplies[params.collateralAsset]
     );
 
     // Transfer fee to treasury if it is non-zero
@@ -213,8 +209,13 @@ library LiquidationLogic {
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
     IERC20(params.debtAsset).safeTransferFrom(msg.sender, address(params.pool), vars.actualDebtToLiquidate);
 
-    emit LiquidationCall(
-      params.collateralAsset, params.debtAsset, params.position, vars.actualDebtToLiquidate, vars.actualCollateralToLiquidate, msg.sender
+    emit PoolEventsLib.LiquidationCall(
+      params.collateralAsset,
+      params.debtAsset,
+      params.position,
+      vars.actualDebtToLiquidate,
+      vars.actualCollateralToLiquidate,
+      msg.sender
     );
   }
 
@@ -334,6 +335,7 @@ library LiquidationLogic {
   /**
    * @notice Calculates how much of a specific collateral can be liquidated, given
    * a certain amount of debt asset.
+   *
    * @dev This function needs to be called after all the checks to validate the liquidation have been performed,
    *   otherwise it might fail.
    *
@@ -369,12 +371,6 @@ library LiquidationLogic {
       vars.debtAssetUnit = 10 ** vars.debtAssetDecimals;
     }
 
-    // todo check this
-    vars.liquidationProtocolFeePercentage = liquidationProtocolFeePercentage;
-    // vars.liquidationProtocolFeePercentage = collateralReserve
-    //   .configuration
-    //   .getLiquidationProtocolFee();
-
     // This is the base collateral to liquidate based on the given debt to cover
     vars.baseCollateral = ((vars.debtAssetPrice * debtToCover * vars.collateralAssetUnit)) / (vars.collateralPrice * vars.debtAssetUnit);
 
@@ -382,19 +378,16 @@ library LiquidationLogic {
 
     if (vars.maxCollateralToLiquidate > userCollateralBalance) {
       vars.collateralAmount = userCollateralBalance;
-      vars.debtAmountNeeded = (
-        (vars.collateralPrice * vars.collateralAmount * vars.debtAssetUnit) / (vars.debtAssetPrice * vars.collateralAssetUnit)
-      ).percentDiv(liquidationBonus);
+      vars.debtAmountNeeded = ((vars.collateralPrice * vars.collateralAmount * vars.debtAssetUnit) /
+        (vars.debtAssetPrice * vars.collateralAssetUnit)).percentDiv(liquidationBonus);
     } else {
       vars.collateralAmount = vars.maxCollateralToLiquidate;
       vars.debtAmountNeeded = debtToCover;
     }
 
-    if (vars.liquidationProtocolFeePercentage != 0) {
+    if (liquidationProtocolFeePercentage != 0) {
       vars.bonusCollateral = vars.collateralAmount - vars.collateralAmount.percentDiv(liquidationBonus);
-
-      vars.liquidationProtocolFee = vars.bonusCollateral.percentMul(vars.liquidationProtocolFeePercentage);
-
+      vars.liquidationProtocolFee = vars.bonusCollateral.percentMul(liquidationProtocolFeePercentage);
       return (vars.collateralAmount - vars.liquidationProtocolFee, vars.debtAmountNeeded, vars.liquidationProtocolFee);
     } else {
       return (vars.collateralAmount, vars.debtAmountNeeded, 0);

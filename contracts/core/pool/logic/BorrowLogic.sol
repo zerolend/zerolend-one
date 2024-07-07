@@ -12,6 +12,7 @@ import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {PoolEventsLib} from '../../../interfaces/events/PoolEventsLib.sol';
 
 /**
  * @title BorrowLogic library
@@ -25,10 +26,6 @@ library BorrowLogic {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using PositionBalanceConfiguration for DataTypes.PositionBalance;
   using SafeCast for uint256;
-
-  // See `IPool` for descriptions
-  event Borrow(address indexed reserve, address user, bytes32 indexed position, uint256 amount, uint256 borrowRate);
-  event Repay(address indexed reserve, bytes32 indexed position, address indexed repayer, uint256 amount);
 
   /**
    * @notice Implements the borrow feature. Borrowing allows users that provided collateral to draw liquidity from the
@@ -89,7 +86,7 @@ library BorrowLogic {
 
     IERC20(params.asset).safeTransfer(params.user, params.amount);
 
-    emit Borrow(params.asset, params.user, params.position, params.amount, reserve.borrowRate);
+    emit PoolEventsLib.Borrow(params.asset, params.user, params.position, params.amount, reserve.borrowRate);
 
     borrowed.assets = params.amount;
   }
@@ -142,6 +139,6 @@ library BorrowLogic {
     cache.nextDebtShares = totalSupplies.debtShares;
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), payback.assets);
-    emit Repay(params.asset, params.position, msg.sender, payback.assets);
+    emit PoolEventsLib.Repay(params.asset, params.position, msg.sender, payback.assets);
   }
 }
