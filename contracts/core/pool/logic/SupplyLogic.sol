@@ -154,4 +154,47 @@ library SupplyLogic {
 
     burnt.assets = params.amount;
   }
+
+  /**
+   * @notice Executes the 'set as collateral' feature. A user can choose to activate or deactivate an asset as
+   * collateral at any point in time. Deactivating an asset as collateral is subjected to the usual health factor
+   * checks to ensure collateralization.
+   * @dev Emits the `ReserveUsedAsCollateralEnabled()` event if the asset can be activated as collateral.
+   * @dev In case the asset is being deactivated as collateral, `ReserveUsedAsCollateralDisabled()` is emitted.
+   * @param reservesData The state of all the reserves
+   * @param reservesList The addresses of all the active reserves
+   * @param userConfig The users configuration mapping that track the supplied/borrowed assets
+   * @param useAsCollateral True if the user wants to set the asset as collateral, false otherwise
+   */
+  function executeUseReserveAsCollateral(
+    mapping(address => DataTypes.ReserveData) storage reservesData,
+    mapping(uint256 => address) storage reservesList,
+    DataTypes.UserConfigurationMap storage userConfig,
+    mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage balances,
+    DataTypes.ReserveSupplies storage totalSupplies,
+    bool useAsCollateral,
+    DataTypes.ExecuteWithdrawParams memory params
+  ) external {
+    DataTypes.ReserveData storage reserve = reservesData[params.asset];
+    DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
+
+    uint256 balance = balances[params.asset][params.position].getSupplyBalance(cache.nextLiquidityIndex);
+
+    ValidationLogic.validateSetUseReserveAsCollateral(cache, balance);
+
+    if (useAsCollateral == userConfig.isUsingAsCollateral(reserve.id)) return;
+
+    if (useAsCollateral) {
+      require(
+        ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration), PoolErrorsLib.USER_IN_ISOLATION_MODE_OR_LTV_ZERO
+      );
+
+      userConfig.setUsingAsCollateral(reserve.id, true);
+      emit PoolEventsLib.ReserveUsedAsCollateralEnabled(params.asset, params.position);
+    } else {
+      userConfig.setUsingAsCollateral(reserve.id, false);
+      ValidationLogic.validateHFAndLtv(balances, reservesData, reservesList, userConfig, params);
+      emit PoolEventsLib.ReserveUsedAsCollateralDisabled(params.asset, params.position);
+    }
+  }
 }

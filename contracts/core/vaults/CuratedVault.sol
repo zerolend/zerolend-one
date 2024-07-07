@@ -15,10 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes, IPool} from '../../interfaces/pool/IPool.sol';
 
-import {
-  ICuratedVaultBase, MarketAllocation, MarketConfig, PendingAddress, PendingUint192
-} from '../../interfaces/vaults/ICuratedVaultBase.sol';
-import {ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
+import {ICuratedVaultBase, MarketAllocation, MarketConfig, PendingUint192} from '../../interfaces/vaults/ICuratedVaultBase.sol';
 
 import {PendingLib} from './libraries/PendingLib.sol';
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
@@ -53,7 +50,6 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   using SharesMathLib for uint256;
   using PendingLib for MarketConfig;
   using PendingLib for PendingUint192;
-  using PendingLib for PendingAddress;
 
   /// @notice OpenZeppelin decimals offset used by the ERC4626Upgradeable implementation.
   /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes

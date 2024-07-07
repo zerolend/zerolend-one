@@ -201,4 +201,26 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     });
     FlashLoanLogic.executeFlashLoanSimple(address(this), _reserves[asset], _totalSupplies[asset], flashParams);
   }
+
+  function _setUserUseReserveAsCollateral(address asset, uint256 index, bool useAsCollateral) internal {
+    bytes32 pos = msg.sender.getPositionId(index);
+    SupplyLogic.executeUseReserveAsCollateral(
+      _reserves,
+      _reservesList,
+      _usersConfig[pos],
+      _balances,
+      _totalSupplies[asset],
+      useAsCollateral,
+      DataTypes.ExecuteWithdrawParams({
+        reserveFactor: _factory.reserveFactor(),
+        destination: msg.sender,
+        asset: asset,
+        amount: 0,
+        position: pos,
+        data: DataTypes.ExtraData({hookData: '', interestRateData: ''}),
+        reservesCount: _reservesCount,
+        pool: address(this)
+      })
+    );
+  }
 }

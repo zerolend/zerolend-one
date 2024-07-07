@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {
-  CuratedErrorsLib,
-  CuratedEventsLib,
-  CuratedVault,
-  PendingAddress,
-  PendingUint192
-} from '../../../../../contracts/core/vaults/CuratedVault.sol';
+import {CuratedErrorsLib, CuratedEventsLib, CuratedVault, PendingUint192} from '../../../../../contracts/core/vaults/CuratedVault.sol';
 import {CuratedVaultFactory, ICuratedVaultFactory} from '../../../../../contracts/core/vaults/CuratedVaultFactory.sol';
 import './BaseVaultTest.sol';
 

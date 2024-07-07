@@ -303,4 +303,15 @@ library ValidationLogic {
     if (!userConfig.isUsingAsCollateralAny()) return true;
     return false;
   }
+
+  /**
+   * @notice Validates the action of setting an asset as collateral.
+   * @param cache The cached data of the reserve
+   * @param userBalance The balance of the user
+   */
+  function validateSetUseReserveAsCollateral(DataTypes.ReserveCache memory cache, uint256 userBalance) internal pure {
+    require(userBalance != 0, PoolErrorsLib.UNDERLYING_BALANCE_ZERO);
+    DataTypes.ReserveConfigurationMap memory configuration = cache.reserveConfiguration;
+    require(!configuration.getFrozen(), PoolErrorsLib.RESERVE_FROZEN);
+  }
 }

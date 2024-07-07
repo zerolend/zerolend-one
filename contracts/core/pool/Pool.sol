@@ -54,6 +54,7 @@ contract Pool is PoolSetters {
     }
 
     __PoolRentrancyGuard_init();
+    if (address(_hook) != address(0)) _hook.afterInitialize(address(this));
   }
 
   /// @inheritdoc IPool
@@ -166,7 +167,8 @@ contract Pool is PoolSetters {
     }
   }
 
+  /// @inheritdoc IPoolSetters
   function setUserUseReserveAsCollateral(address asset, uint256 index, bool useAsCollateral) external {
-    // todo
+    _setUserUseReserveAsCollateral(asset, index, useAsCollateral);
   }
 }

@@ -82,8 +82,7 @@ contract PoolFactory is IPoolFactory, Ownable {
     isPool[address(pool)] = true;
     emit PoolCreated(pool, pools.length, msg.sender);
 
-    // TODO: once pool is created ask users to deposit some funds to
-    // set the liquidity index properly
+    // TODO: once pool is created ask users to deposit some funds into it; to avoid liquidity index manipulation attacks
   }
 
   /// @inheritdoc IPoolFactory
