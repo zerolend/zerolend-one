@@ -15,15 +15,11 @@ pragma solidity 0.8.19;
 
 import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
 import {DataTypes, IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
-
+import {IWETH} from '../../interfaces/IWETH.sol';
 import {NFTRewardsDistributor} from './NFTRewardsDistributor.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
-import {
-  ERC721EnumerableUpgradeable,
-  ERC721Upgradeable,
-  IERC721Upgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {ERC721EnumerableUpgradeable, ERC721Upgradeable, IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 
 /**
@@ -46,7 +42,15 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
   /**
    * @notice Mapping from token ID to the Position struct representing the details of the liquidity position.
    */
-  mapping(uint256 tokenId => Position) public positions;
+  mapping(uint256 tokenId => Position position) public positions;
+
+  /// @notice Address for the wrapped ether
+  IWETH public weth;
+
+  /// @custom:oz-upgrades-unsafe-allow constructor
+  constructor() {
+    _disableInitializers();
+  }
 
   /**
    * @dev Modifier to check if the caller is authorized (owner or approved operator) for the given token ID.
@@ -68,11 +72,6 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
       revert NotPool();
     }
     _;
-  }
-
-  /// @custom:oz-upgrades-unsafe-allow constructor
-  constructor() {
-    _disableInitializers();
   }
 
   /**
@@ -220,15 +219,18 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
     emit Repay(params.asset, params.amount, params.tokenId);
   }
 
-  /// @inheritdoc IERC721Upgradeable
-  function getApproved(uint256 tokenId) public view override (ERC721Upgradeable, IERC721Upgradeable) returns (address) {
-    require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
+  function wrapEther() external payable {
+    weth.deposit{value: msg.value}();
+  }
 
+  /// @inheritdoc IERC721Upgradeable
+  function getApproved(uint256 tokenId) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (address) {
+    require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
     return positions[tokenId].operator;
   }
 
   /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-  function _approve(address to, uint256 tokenId) internal override (ERC721Upgradeable) {
+  function _approve(address to, uint256 tokenId) internal override(ERC721Upgradeable) {
     positions[tokenId].operator = to;
     emit Approval(ownerOf(tokenId), to, tokenId);
   }
@@ -265,7 +267,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
     isBurnAllowed = true;
 
     assets = new Asset[](length);
-    for (uint256 i; i < length;) {
+    for (uint256 i; i < length; ) {
       address asset = _assets[i];
       uint256 balance = assets[i].balance = pool.getBalance(asset, address(this), tokenId);
       uint256 debt = assets[i].debt = pool.getDebt(asset, address(this), tokenId);

@@ -9,8 +9,8 @@ export async function deployNftPositionManager(factory: PoolFactory, admin: stri
   const implementation = await NFTPositionManager.deploy();
 
   const proxy = await Proxy.deploy(implementation.target, admin, '0x');
-  const nftPositionManager = await ethers.getContractAt('NFTPositionManager', proxy.target);
+  const manager = await ethers.getContractAt('NFTPositionManager', proxy.target);
+  await manager.initialize(factory.target, ZeroAddress, ZeroAddress, ZeroAddress);
 
-  await nftPositionManager.initialize(factory.target, ZeroAddress, ZeroAddress, ZeroAddress);
-  return nftPositionManager;
+  return manager;
 }
