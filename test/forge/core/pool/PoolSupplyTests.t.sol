@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IPool, PoolSetup} from './PoolSetup.sol';
+import {IPool, PoolSetup, PoolEventsLib} from './PoolSetup.sol';
 
 contract PoolSupplyTests is PoolSetup {
-  event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
-
   /// ------------Supply------------
   function testSupplyAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
@@ -46,8 +44,7 @@ contract PoolSupplyTests is PoolSetup {
     tokenA.approve(address(pool), supplyAmount);
 
     vm.expectEmit(true, true, false, true);
-
-    emit Supply(address(tokenA), pos, supplyAmount);
+    emit PoolEventsLib.Supply(address(tokenA), pos, supplyAmount);
 
     pool.supplySimple(address(tokenA), supplyAmount, index);
 

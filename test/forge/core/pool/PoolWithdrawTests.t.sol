@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {PoolSetup} from './PoolSetup.sol';
+import {PoolEventsLib, PoolSetup} from './PoolSetup.sol';
 
 contract PoolWithdrawTests is PoolSetup {
-  event Withdraw(address indexed reserve, bytes32 indexed pos, address indexed to, uint256 amount);
-  event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
-
   /// ------------Withdraw------------
   function testWithdrawAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
@@ -30,14 +27,14 @@ contract PoolWithdrawTests is PoolSetup {
     tokenA.approve(address(pool), supplyAmount);
 
     vm.expectEmit(true, true, false, true);
-    emit Supply(address(tokenA), pos, supplyAmount);
+    emit PoolEventsLib.Supply(address(tokenA), pos, supplyAmount);
     pool.supplySimple(address(tokenA), supplyAmount, index);
 
     assertEq(tokenA.balanceOf(address(pool)), supplyAmount);
     assertEq(tokenA.balanceOf(owner), mintAmount - supplyAmount);
 
     vm.expectEmit(true, true, true, true);
-    emit Withdraw(address(tokenA), pos, owner, withdrawAmount);
+    emit PoolEventsLib.Withdraw(address(tokenA), pos, owner, withdrawAmount);
 
     pool.withdrawSimple(address(tokenA), withdrawAmount, index);
     vm.stopPrank();

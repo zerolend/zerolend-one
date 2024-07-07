@@ -2,6 +2,8 @@
 pragma solidity 0.8.19;
 
 import {Pool} from '../../../../contracts/core/pool/Pool.sol';
+import {PoolEventsLib} from '../../../../contracts/interfaces/events/PoolEventsLib.sol';
+import {PoolErrorsLib} from '../../../../contracts/interfaces/errors/PoolErrorsLib.sol';
 import {PoolFactory} from '../../../../contracts/core/pool/PoolFactory.sol';
 import {PoolConfigurator} from '../../../../contracts/core/pool/manager/PoolConfigurator.sol';
 import {DefaultReserveInterestRateStrategy} from '../../../../contracts/periphery/ir/DefaultReserveInterestRateStrategy.sol';
