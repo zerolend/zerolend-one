@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {MathLib, WAD} from '../../../../../contracts/core/vaults/libraries/MathLib.sol';
 
-import {IPool} from '../../../../../contracts/interfaces/IPool.sol';
+import {IPool} from '../../../../../contracts/interfaces/pool/IPool.sol';
 import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
 import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
 

@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IPool} from '../IPool.sol';
+import {IPool} from '../pool/IPool.sol';
 import {ICuratedVaultBase, MarketConfig, PendingUint192} from './ICuratedVaultBase.sol';
 
 /// @dev This interface is inherited by ZeroLend so that function signatures are checked by the compiler.

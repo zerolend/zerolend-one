@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IFlashLoanSimpleReceiver} from '../../interfaces/IFlashLoanSimpleReceiver.sol';
-import {IPool} from '../../interfaces/IPool.sol';
+import {IPool} from '../../interfaces/pool/IPool.sol';
 
 /**
  * @title FlashLoanReceiverBase

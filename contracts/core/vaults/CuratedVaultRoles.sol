@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {DataTypes, IPool} from '../../interfaces/IPool.sol';
+import {DataTypes, IPool} from '../../interfaces/pool/IPool.sol';
 
 import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
 import {ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';

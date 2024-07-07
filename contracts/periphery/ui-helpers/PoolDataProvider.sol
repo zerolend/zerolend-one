@@ -17,7 +17,7 @@ import {DataTypes} from '../../core/pool/configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../../core/pool/configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../../core/pool/configuration/UserConfiguration.sol';
 import {WadRayMath} from '../../core/pool/utils/WadRayMath.sol';
-import {IPool} from '../../interfaces/IPool.sol';
+import {IPool} from '../../interfaces/pool/IPool.sol';
 import {IPoolDataProvider} from '../../interfaces/IPoolDataProvider.sol';
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 

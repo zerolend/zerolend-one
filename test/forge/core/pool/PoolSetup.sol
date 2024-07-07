@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import {DataTypes} from '../../../../contracts/core/pool/configuration/DataTypes.sol';
-import {IPool} from '../../../../contracts/interfaces/IPool.sol';
+import {IPool} from '../../../../contracts/interfaces/pool/IPool.sol';
 import './CorePoolTests.sol';
 
 abstract contract PoolSetup is CorePoolTests {

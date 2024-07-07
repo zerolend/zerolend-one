@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IPool} from '../../../interfaces/IPool.sol';
+import {IPool} from '../../../interfaces/pool/IPool.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 
 import {DataTypes} from '../configuration/DataTypes.sol';
@@ -77,16 +77,16 @@ library ValidationLogic {
   ) internal view {
     require(params.amount != 0, PoolErrorsLib.INVALID_AMOUNT);
 
-    (bool isFrozen,) = cache.reserveConfiguration.getFlags();
+    (bool isFrozen, ) = cache.reserveConfiguration.getFlags();
     require(!isFrozen, PoolErrorsLib.RESERVE_FROZEN);
 
     uint256 supplyCap = cache.reserveConfiguration.getSupplyCap();
     // todo
     require(
-      supplyCap == 0
-        || (
-          (IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasuryShares)).rayMul(cache.nextLiquidityIndex) + params.amount
-        ) <= supplyCap * (10 ** cache.reserveConfiguration.getDecimals()),
+      supplyCap == 0 ||
+        ((IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasuryShares)).rayMul(cache.nextLiquidityIndex) +
+          params.amount) <=
+        supplyCap * (10 ** cache.reserveConfiguration.getDecimals()),
       PoolErrorsLib.SUPPLY_CAP_EXCEEDED
     );
   }
@@ -155,18 +155,18 @@ library ValidationLogic {
       }
     }
 
-    (vars.userCollateralInBaseCurrency, vars.userDebtInBaseCurrency, vars.currentLtv,, vars.healthFactor,) = GenericLogic
+    (vars.userCollateralInBaseCurrency, vars.userDebtInBaseCurrency, vars.currentLtv, , vars.healthFactor, ) = GenericLogic
       .calculateUserAccountData(
-      _balances,
-      reservesData,
-      reservesList,
-      DataTypes.CalculateUserAccountDataParams({
-        userConfig: params.userConfig,
-        reservesCount: params.reservesCount,
-        position: params.position,
-        pool: params.pool
-      })
-    );
+        _balances,
+        reservesData,
+        reservesList,
+        DataTypes.CalculateUserAccountDataParams({
+          userConfig: params.userConfig,
+          reservesCount: params.reservesCount,
+          position: params.position,
+          pool: params.pool
+        })
+      );
 
     require(vars.userCollateralInBaseCurrency != 0, PoolErrorsLib.COLLATERAL_BALANCE_IS_ZERO);
     require(vars.currentLtv != 0, PoolErrorsLib.LTV_VALIDATION_FAILED);
@@ -229,7 +229,8 @@ library ValidationLogic {
     require(params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD, PoolErrorsLib.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
 
     vars.isCollateralEnabled =
-      collateralReserve.configuration.getLiquidationThreshold() != 0 && userConfig.isUsingAsCollateral(collateralReserve.id);
+      collateralReserve.configuration.getLiquidationThreshold() != 0 &&
+      userConfig.isUsingAsCollateral(collateralReserve.id);
 
     //if collateral isn't enabled as collateral by user, it cannot be liquidated
     require(vars.isCollateralEnabled, PoolErrorsLib.COLLATERAL_CANNOT_BE_LIQUIDATED);
@@ -254,7 +255,7 @@ library ValidationLogic {
     uint256 reservesCount,
     address oracle
   ) internal view returns (uint256, bool) {
-    (,,,, uint256 healthFactor, bool hasZeroLtvCollateral) = GenericLogic.calculateUserAccountData(
+    (, , , , uint256 healthFactor, bool hasZeroLtvCollateral) = GenericLogic.calculateUserAccountData(
       _balances,
       reservesData,
       reservesList,
@@ -282,8 +283,15 @@ library ValidationLogic {
   ) internal view {
     DataTypes.ReserveData memory reserve = reservesData[params.asset];
 
-    (, bool hasZeroLtvCollateral) =
-      validateHealthFactor(_balances, reservesData, reservesList, userConfig, params.position, params.reservesCount, params.pool);
+    (, bool hasZeroLtvCollateral) = validateHealthFactor(
+      _balances,
+      reservesData,
+      reservesList,
+      userConfig,
+      params.position,
+      params.reservesCount,
+      params.pool
+    );
 
     require(!hasZeroLtvCollateral || reserve.configuration.getLtv() == 0, PoolErrorsLib.LTV_VALIDATION_FAILED);
   }

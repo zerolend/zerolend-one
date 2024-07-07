@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IPool} from '../IPool.sol';
+import {IPool} from '../pool/IPool.sol';
 
 import {ICuratedVaultBase, MarketConfig, PendingAddress, PendingUint192} from './ICuratedVaultBase.sol';
 import {ICuratedVaultStaticTyping} from './ICuratedVaultStaticTyping.sol';

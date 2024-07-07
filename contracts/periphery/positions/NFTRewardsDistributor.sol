@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 import {INFTRewardsDistributor} from '../../interfaces/INFTRewardsDistributor.sol';
-import {IPool} from '../../interfaces/IPool.sol';
+import {IPool} from '../../interfaces/pool/IPool.sol';
 
 import {OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 
@@ -62,11 +62,12 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
     if (_totalSupply[_assetHash] == 0) {
       return rewardPerTokenStored[_assetHash];
     }
-    return rewardPerTokenStored[_assetHash].add(
-      lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
-        _totalSupply[_assetHash]
-      )
-    );
+    return
+      rewardPerTokenStored[_assetHash].add(
+        lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+          _totalSupply[_assetHash]
+        )
+      );
   }
 
   function getReward(uint256 tokenId, bytes32 _assetHash) public /* nonReentrant */ {
@@ -80,9 +81,10 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
   }
 
   function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
-    return _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
-      rewards[tokenId][_assetHash]
-    );
+    return
+      _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+        rewards[tokenId][_assetHash]
+      );
   }
 
   function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {

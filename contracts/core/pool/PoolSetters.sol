@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IPool} from '../../interfaces/IPool.sol';
+import {IPool} from '../../interfaces/pool/IPool.sol';
 
 import {PoolGetters} from './PoolGetters.sol';
 

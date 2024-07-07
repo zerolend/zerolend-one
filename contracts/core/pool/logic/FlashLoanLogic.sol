@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {IFlashLoanSimpleReceiver} from '../../../interfaces/IFlashLoanSimpleReceiver.sol';
-import {IPool} from '../../../interfaces/IPool.sol';
+import {IPool} from '../../../interfaces/pool/IPool.sol';
 
 import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
@@ -103,7 +103,16 @@ library FlashLoanLogic {
 
     _reserve.accruedToTreasuryShares += _params.totalPremium.rayDiv(cache.nextLiquidityIndex).toUint128();
 
-    _reserve.updateInterestRates(_totalSupplies, cache, _params.asset, IPool(_params.pool).getReserveFactor(), amountPlusPremium, 0, '', '');
+    _reserve.updateInterestRates(
+      _totalSupplies,
+      cache,
+      _params.asset,
+      IPool(_params.pool).getReserveFactor(),
+      amountPlusPremium,
+      0,
+      '',
+      ''
+    );
 
     IERC20(_params.asset).safeTransferFrom(_params.receiverAddress, address(_params.pool), amountPlusPremium);
 

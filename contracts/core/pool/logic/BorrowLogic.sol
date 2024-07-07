@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {IPool} from '../../../interfaces/IPool.sol';
+import {IPool} from '../../../interfaces/pool/IPool.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {PositionBalanceConfiguration} from '../configuration/PositionBalanceConfiguration.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';

@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IHook} from '../../interfaces/IHook.sol';
-import {IPool} from '../../interfaces/IPool.sol';
+import {IPool, IPoolSetters} from '../../interfaces/pool/IPool.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {PoolGetters} from './PoolGetters.sol';
 
@@ -60,7 +60,7 @@ contract Pool is PoolSetters {
     return 1;
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function supply(
     address asset,
     uint256 amount,
@@ -70,12 +70,12 @@ contract Pool is PoolSetters {
     return _supply(asset, amount, index, data);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function supplySimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
     return _supply(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function withdraw(
     address asset,
     uint256 amount,
@@ -85,12 +85,12 @@ contract Pool is PoolSetters {
     return _withdraw(asset, amount, index, data);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function withdrawSimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
     return _withdraw(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function borrow(
     address asset,
     uint256 amount,
@@ -100,12 +100,12 @@ contract Pool is PoolSetters {
     return _borrow(asset, amount, index, data);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function borrowSimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
     return _borrow(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function repay(
     address asset,
     uint256 amount,
@@ -115,32 +115,38 @@ contract Pool is PoolSetters {
     return _repay(asset, amount, index, data);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function repaySimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
     return _repay(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function liquidate(address collat, address debt, bytes32 pos, uint256 debtAmt, DataTypes.ExtraData memory data) public {
     _liquidate(collat, debt, pos, debtAmt, data);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function liquidateSimple(address collat, address debt, bytes32 pos, uint256 debtAmt) public {
     _liquidate(collat, debt, pos, debtAmt, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  /// @inheritdoc IPool
-  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) public {
+  /// @inheritdoc IPoolSetters
+  function flashLoan(
+    address receiverAddress,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    DataTypes.ExtraData memory data
+  ) public {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function flashLoanSimple(address receiverAddress, address asset, uint256 amount, bytes calldata params) public {
     _flashLoan(receiverAddress, asset, amount, params, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function setReserveConfiguration(
     address asset,
     address rateStrategy,
@@ -151,14 +157,14 @@ contract Pool is PoolSetters {
     PoolLogic.setReserveConfiguration(_reserves, asset, rateStrategy, source, config);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function forceUpdateReserve(address asset) public {
     DataTypes.ReserveData storage reserve = _reserves[asset];
     DataTypes.ReserveCache memory cache = reserve.cache(_totalSupplies[asset]);
     reserve.updateState(0, cache);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolSetters
   function forceUpdateReserves() external {
     for (uint256 i = 0; i < _reservesCount; i++) {
       forceUpdateReserve(_reservesList[i]);

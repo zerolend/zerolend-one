@@ -14,7 +14,7 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
-import {IHook, IPool, IPoolFactory} from '../../interfaces/IPool.sol';
+import {IHook, IPool, IPoolGetters, IPoolFactory} from '../../interfaces/pool/IPool.sol';
 
 import {PoolStorage} from './PoolStorage.sol';
 import {DataTypes} from './configuration/DataTypes.sol';
@@ -35,104 +35,108 @@ abstract contract PoolGetters is PoolStorage, IPool {
   using PositionBalanceConfiguration for DataTypes.PositionBalance;
   using ReserveLogic for DataTypes.ReserveCache;
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getReserveData(address asset) external view virtual override returns (DataTypes.ReserveData memory) {
     return _reserves[asset];
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getBalanceByPosition(address asset, bytes32 positionId) external view returns (uint256 balance) {
     return _balances[asset][positionId].getSupplyBalance(_reserves[asset].liquidityIndex);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getHook() external view returns (IHook) {
     return _hook;
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getBalance(address asset, address who, uint256 index) external view returns (uint256 balance) {
     bytes32 positionId = who.getPositionId(index);
     return _balances[asset][positionId].getSupplyBalance(_reserves[asset].liquidityIndex);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getBalanceRawByPositionId(address asset, bytes32 positionId) external view returns (DataTypes.PositionBalance memory) {
     return _balances[asset][positionId];
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getBalanceRaw(address asset, address who, uint256 index) external view returns (DataTypes.PositionBalance memory) {
     bytes32 positionId = who.getPositionId(index);
     return _balances[asset][positionId];
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getTotalSupplyRaw(address asset) external view returns (DataTypes.ReserveSupplies memory) {
     return _totalSupplies[asset];
   }
 
-  //// @inheritdoc IPool
+  //// @inheritdoc IPoolGetters
   function totalAssets(address asset) external view returns (uint256 balance) {
     balance = _totalSupplies[asset].getSupplyBalance(_reserves[asset].liquidityIndex);
   }
 
-  //// @inheritdoc IPool
+  //// @inheritdoc IPoolGetters
   function totalDebt(address asset) external view returns (uint256 balance) {
     balance = _totalSupplies[asset].getDebtBalance(_reserves[asset].borrowIndex);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getDebtByPosition(address asset, bytes32 positionId) external view returns (uint256 debt) {
     return _balances[asset][positionId].getDebtBalance(_reserves[asset].borrowIndex);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getDebt(address asset, address who, uint256 index) external view returns (uint256 debt) {
     bytes32 positionId = who.getPositionId(index);
     return _balances[asset][positionId].getDebtBalance(_reserves[asset].borrowIndex);
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getUserAccountData(
     address user,
     uint256 index
   ) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
     bytes32 positionId = user.getPositionId(index);
-    return PoolLogic.executeGetUserAccountData(
-      _balances,
-      _reserves,
-      _reservesList,
-      DataTypes.CalculateUserAccountDataParams({
-        userConfig: _usersConfig[positionId],
-        reservesCount: _reservesCount,
-        position: positionId,
-        pool: address(this)
-      })
-    );
+    return
+      PoolLogic.executeGetUserAccountData(
+        _balances,
+        _reserves,
+        _reservesList,
+        DataTypes.CalculateUserAccountDataParams({
+          userConfig: _usersConfig[positionId],
+          reservesCount: _reservesCount,
+          position: positionId,
+          pool: address(this)
+        })
+      );
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getConfiguration(address asset) external view virtual override returns (DataTypes.ReserveConfigurationMap memory) {
     return _reserves[asset].configuration;
   }
 
-  /// @inheritdoc IPool
-  function getUserConfiguration(address user, uint256 index) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
+  /// @inheritdoc IPoolGetters
+  function getUserConfiguration(
+    address user,
+    uint256 index
+  ) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
     return _usersConfig[user.getPositionId(index)];
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getReserveNormalizedIncome(address reserve) external view virtual override returns (uint256) {
     return _reserves[reserve].getNormalizedIncome();
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getReserveNormalizedVariableDebt(address reserve) external view virtual override returns (uint256) {
     return _reserves[reserve].getNormalizedDebt();
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getReservesList() external view virtual override returns (address[] memory) {
     address[] memory reservesList = new address[](_reservesCount);
     for (uint256 i = 0; i < _reservesCount; i++) {
@@ -141,32 +145,32 @@ abstract contract PoolGetters is PoolStorage, IPool {
     return reservesList;
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getReservesCount() external view virtual override returns (uint256) {
     return _reservesCount;
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getConfigurator() external view override returns (address) {
     return address(_factory.configurator());
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getReserveAddressById(uint16 id) external view returns (address) {
     return _reservesList[id];
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getAssetPrice(address reserve) public view override returns (uint256) {
     return uint256(IAggregatorInterface(_reserves[reserve].oracle).latestAnswer());
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function factory() external view returns (IPoolFactory) {
     return _factory;
   }
 
-  /// @inheritdoc IPool
+  /// @inheritdoc IPoolGetters
   function getReserveFactor() external view returns (uint256 reseveFactor) {
     return _factory.reserveFactor();
   }

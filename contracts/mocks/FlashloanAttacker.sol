@@ -20,7 +20,7 @@ import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
 // import {FlashLoanSimpleReceiverBase} from '../core/FlashLoanSimpleReceiverBase.sol';
 
 import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
-import {IPool} from '../interfaces/IPool.sol';
+import {IPool} from '../interfaces/pool/IPool.sol';
 import {MintableERC20} from './MintableERC20.sol';
 
 contract FlashloanAttacker {
