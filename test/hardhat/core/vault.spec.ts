@@ -8,7 +8,6 @@ import {
 } from '../../../types';
 import { MaxUint256, ZeroAddress, keccak256 } from 'ethers';
 import { basicConfig, deployPool } from '../fixtures/pool';
-import { expect } from 'chai';
 import _range from 'lodash/range';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import hre, { ethers } from 'hardhat';
@@ -135,7 +134,6 @@ describe('Curated Vault', () => {
     );
 
     supplyCap = (e18 * BigInt(50 * suppliers.length * 2)) / BigInt(Math.floor(marketsCount / 2));
-    console.log('suppl', supplyCap);
 
     const vaultAddr = await factory.vaults(0);
     vault = await ethers.getContractAt('CuratedVault', vaultAddr);
