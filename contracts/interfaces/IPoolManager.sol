@@ -14,12 +14,13 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IPool} from './pool/IPool.sol';
+import {IAccessControlEnumerable} from '@openzeppelin/contracts/access/IAccessControlEnumerable.sol';
 
 /**
  * @title IPoolManager
  * @notice Defines the basic interface for the ACL Manager
  */
-interface IPoolManager {
+interface IPoolManager is IAccessControlEnumerable {
   /**
    * @notice Returns the identifier of the PoolAdmin role
    * @return The id of the PoolAdmin role

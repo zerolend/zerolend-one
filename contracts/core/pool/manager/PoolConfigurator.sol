@@ -131,5 +131,10 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
       sources[i] = data.oracle;
       configurations[i] = getPoolAssetConfiguration(pool, reserves[i]);
     }
+
+    config.assets = assets;
+    config.rateStrategyAddresses = rateStrategyAddresses;
+    config.sources = sources;
+    config.configurations = configurations;
   }
 }
