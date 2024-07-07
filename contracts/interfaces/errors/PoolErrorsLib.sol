@@ -20,7 +20,8 @@ pragma solidity 0.8.19;
 library PoolErrorsLib {
   string public constant CALLER_NOT_POOL_ADMIN = 'CALLER_NOT_POOL_ADMIN'; // 'The caller of the function is not a pool admin'
   string public constant CALLER_NOT_EMERGENCY_ADMIN = 'CALLER_NOT_EMERGENCY_ADMIN'; // 'The caller of the function is not an emergency
-  string public constant USER_IN_ISOLATION_MODE_OR_LTV_ZERO = 'USER_IN_ISOLATION_MODE_OR_LTV_ZERO'; // 'The caller of the function is not an emergency
+  string public constant USER_IN_ISOLATION_MODE_OR_LTV_ZERO = 'USER_IN_ISOLATION_MODE_OR_LTV_ZERO'; // 'The caller of the function is not an
+    // emergency
   // admin'
   string public constant CALLER_NOT_POOL_OR_EMERGENCY_ADMIN = 'CALLER_NOT_POOL_OR_EMERGENCY_ADMIN'; // 'The caller of the function is not a
   // pool or emergency admin'

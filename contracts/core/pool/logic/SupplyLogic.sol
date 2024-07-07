@@ -186,8 +186,7 @@ library SupplyLogic {
 
     if (useAsCollateral) {
       require(
-        ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration),
-        PoolErrorsLib.USER_IN_ISOLATION_MODE_OR_LTV_ZERO
+        ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration), PoolErrorsLib.USER_IN_ISOLATION_MODE_OR_LTV_ZERO
       );
 
       userConfig.setUsingAsCollateral(reserve.id, true);
