@@ -21,7 +21,6 @@
     "test:forge": "forge test",
     "test:hardhat": "hardhat test",
     "prepublishOnly": "npm run clean && npm run compile && npm run lint && npm run docs && npm run test",
-    "postinstall": "forge install",
     "test:certora": "bash ./certora.sh",
     "prepare": "husky"
   },
