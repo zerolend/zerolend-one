@@ -80,7 +80,7 @@ library ReserveLogic {
   }
 
   /**
-   * @notice Updates the liquidity cumulative index and the variable borrow index.
+   * @notice Updates the liquidity cumulative index and the borrow index.
    * @param self The reserve object
    * @param _cache The caching layer for the reserve data
    * @param _reserveFactor The reserve factor that is used to calculate how much revenue gets shared
@@ -133,7 +133,7 @@ library ReserveLogic {
   }
 
   /**
-   * @notice Updates the current variable borrow rate and the current liquidity rate.
+   * @notice Updates the current borrow rate and the current liquidity rate.
    * @param _reserve The reserve reserve to be updated
    * @param _cache The caching layer for the reserve data
    * @param _reserveAddress The address of the reserve to be updated
@@ -160,16 +160,16 @@ library ReserveLogic {
 
     (vars.nextLiquidityRate, vars.nextBorrowRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
       .calculateInterestRates(
-      _position,
-      _data,
-      DataTypes.CalculateInterestRatesParams({
-        liquidityAdded: _liquidityAdded,
-        liquidityTaken: _liquidityTaken,
-        totalDebt: vars.totalDebt,
-        reserveFactor: _reserveFactor,
-        reserve: _reserveAddress
-      })
-    );
+        _position,
+        _data,
+        DataTypes.CalculateInterestRatesParams({
+          liquidityAdded: _liquidityAdded,
+          liquidityTaken: _liquidityTaken,
+          totalDebt: vars.totalDebt,
+          reserveFactor: _reserveFactor,
+          reserve: _reserveAddress
+        })
+      );
 
     _reserve.liquidityRate = vars.nextLiquidityRate.toUint128();
     _reserve.borrowRate = vars.nextBorrowRate.toUint128();
@@ -178,7 +178,11 @@ library ReserveLogic {
     else if (_liquidityTaken > 0) totalSupplies.underlyingBalance -= _liquidityTaken.toUint128();
 
     emit PoolEventsLib.ReserveDataUpdated(
-      _reserveAddress, vars.nextLiquidityRate, vars.nextBorrowRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex
+      _reserveAddress,
+      vars.nextLiquidityRate,
+      vars.nextBorrowRate,
+      _cache.nextLiquidityIndex,
+      _cache.nextBorrowIndex
     );
   }
 

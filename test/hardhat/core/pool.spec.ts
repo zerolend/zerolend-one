@@ -110,7 +110,7 @@ describe('Pool', () => {
       expect(await irStrategy.MAX_EXCESS_USAGE_RATIO()).to.equal(MAX_EXCESS_USAGE_RATIO);
     });
 
-    it('should return the correct base variable borrow rate', async function () {
+    it('should return the correct base borrow rate', async function () {
       expect(await irStrategy.getBaseBorrowRate()).to.equal(BASE_VARIABLE_BORROW_RATE);
     });
 
@@ -122,7 +122,7 @@ describe('Pool', () => {
       expect(await irStrategy.getDebtSlope2()).to.equal(VARIABLE_RATE_SLOPE_2);
     });
 
-    it('should return the correct max variable borrow rate', async function () {
+    it('should return the correct max borrow rate', async function () {
       const MAX_VARIABLE_BORROW_RATE =
         BASE_VARIABLE_BORROW_RATE + VARIABLE_RATE_SLOPE_1 + VARIABLE_RATE_SLOPE_2;
       expect(await irStrategy.getMaxBorrowRate()).to.equal(MAX_VARIABLE_BORROW_RATE);

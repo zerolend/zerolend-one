@@ -21,7 +21,7 @@ library DataTypes {
     uint128 liquidityIndex;
     // the current supply rate. Expressed in ray
     uint128 liquidityRate;
-    // variable borrow index. Expressed in ray
+    // borrow index. Expressed in ray
     uint128 borrowIndex;
     // the current borrow rate. Expressed in ray
     uint128 borrowRate;

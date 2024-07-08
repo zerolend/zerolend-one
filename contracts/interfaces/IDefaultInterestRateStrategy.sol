@@ -48,14 +48,14 @@ interface IDefaultInterestRateStrategy is IReserveInterestRateStrategy {
   function getDebtSlope2() external view returns (uint256);
 
   /**
-   * @notice Returns the base variable borrow rate
-   * @return The base variable borrow rate, expressed in ray
+   * @notice Returns the base borrow rate
+   * @return The base borrow rate, expressed in ray
    */
   function getBaseBorrowRate() external view returns (uint256);
 
   /**
-   * @notice Returns the maximum variable borrow rate
-   * @return The maximum variable borrow rate, expressed in ray
+   * @notice Returns the maximum borrow rate
+   * @return The maximum borrow rate, expressed in ray
    */
   function getMaxBorrowRate() external view returns (uint256);
 }
