@@ -13,12 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
-        id: release
         with:
           # token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           release-type: node
 
-      # setup env
       - name: Checkout
         uses: actions/checkout@v4
         with:
