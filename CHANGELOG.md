@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/zerolend/zerolend-one/compare/v0.7.0...v0.7.1) (2024-07-08)
+
+
+### Bug Fixes
+
+* renamed variable borrow to just borrow ([8329028](https://github.com/zerolend/zerolend-one/commit/8329028bf0eb230e3477361bb9be850acf768700))
+
 ## [0.7.0](https://github.com/zerolend/zerolend-one/compare/v0.6.0...v0.7.0) (2024-07-08)
 
 
