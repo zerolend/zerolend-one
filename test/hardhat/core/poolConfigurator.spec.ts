@@ -12,11 +12,14 @@ describe('PoolConfigurator', () => {
   let admin: SignerWithAddress;
   let emergencyAdmin: SignerWithAddress;
   let riskAdmin: SignerWithAddress;
+  let randWallet: SignerWithAddress;
+  let randWallet2: SignerWithAddress;
 
   let tokenA: MintableERC20;
 
   beforeEach(async () => {
     const fixture = await deployPool();
+    [, , , , , , , randWallet, randWallet2] = await ethers.getSigners();
     ({ configurator, pool, tokenA, owner: admin, ant: emergencyAdmin, whale: riskAdmin } = fixture);
     await configurator.addEmergencyAdmin(pool.target, emergencyAdmin);
     await configurator.addRiskAdmin(pool.target, riskAdmin);
@@ -49,6 +52,10 @@ describe('PoolConfigurator', () => {
     }
   });
 
+  it('should not allow anyone other than the emergency admin to set pool freeze', async function () {
+    await expect(configurator.setPoolFreeze(pool.target, true)).to.be.revertedWith("not risk or pool admin");
+  });
+
   it('should allow the risk or pool admin to set borrow cap', async function () {
     const newBorrowCap = 1000;
     await configurator.connect(riskAdmin).setBorrowCap(pool.target, tokenA.target, newBorrowCap);
@@ -70,5 +77,33 @@ describe('PoolConfigurator', () => {
       .setReserveInterestRateStrategyAddress(pool.target, tokenA.target, newRateStrategyAddress);
     const reserveData = await pool.getReserveData(tokenA.target);
     expect(reserveData.interestRateStrategyAddress).to.equal(newRateStrategyAddress);
+  });
+
+  describe('Pool Manager', () => {
+    describe('Admin Role Management', function () {
+      it('should add and remove PoolAdmin', async function () {
+        await configurator.addPoolAdmin(pool.target, randWallet.address);
+        expect(await configurator.isPoolAdmin(pool.target, randWallet)).to.be.true;
+
+        await configurator.removePoolAdmin(pool.target, randWallet.address);
+        expect(await configurator.isPoolAdmin(pool.target, randWallet.address)).to.be.false;
+      });
+
+      it('should add and remove EmergencyAdmin', async function () {
+        await configurator.addEmergencyAdmin(pool.target, randWallet.address);
+        expect(await configurator.isEmergencyAdmin(pool.target, randWallet.address)).to.be.true;
+
+        await configurator.removeEmergencyAdmin(pool.target, randWallet.address);
+        expect(await configurator.isEmergencyAdmin(pool.target, randWallet.address)).to.be.false;
+      });
+
+      it('should add and remove RiskAdmin', async function () {
+        await configurator.addRiskAdmin(pool.target, randWallet.address);
+        expect(await configurator.isRiskAdmin(pool.target, randWallet.address)).to.be.true;
+
+        await configurator.removeRiskAdmin(pool.target, randWallet.address);
+        expect(await configurator.isRiskAdmin(pool.target, randWallet.address)).to.be.false;
+      });
+    });
   });
 });
