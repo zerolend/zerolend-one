@@ -53,7 +53,9 @@ describe('PoolConfigurator', () => {
   });
 
   it('should not allow anyone other than the emergency admin to set pool freeze', async function () {
-    await expect(configurator.setPoolFreeze(pool.target, true)).to.be.revertedWith("not risk or pool admin");
+    await expect(configurator.setPoolFreeze(pool.target, true)).to.be.revertedWith(
+      'not risk or pool admin'
+    );
   });
 
   it('should allow the risk or pool admin to set borrow cap', async function () {
