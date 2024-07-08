@@ -33,9 +33,6 @@ contract PoolFactory is IPoolFactory, Ownable {
   address public treasury;
 
   /// @inheritdoc IPoolFactory
-  address public rewardsController;
-
-  /// @inheritdoc IPoolFactory
   IPool[] public pools;
 
   /// @inheritdoc IPoolFactory
@@ -114,13 +111,6 @@ contract PoolFactory is IPoolFactory, Ownable {
     uint256 old = reserveFactor;
     reserveFactor = updated;
     emit ReserveFactorUpdated(old, updated, msg.sender);
-  }
-
-  /// @inheritdoc IPoolFactory
-  function setRewardsController(address _controller) external onlyOwner {
-    address old = rewardsController;
-    rewardsController = _controller;
-    emit RewardsControllerUpdated(old, _controller, msg.sender);
   }
 
   /// @inheritdoc IPoolFactory

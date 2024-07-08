@@ -188,25 +188,6 @@ describe('Pool Factory', () => {
     });
   });
 
-  describe('setRewardsController', function () {
-    it('should update rewards controller', async function () {
-      await poolFactory.setRewardsController(ant.address);
-      expect(await poolFactory.rewardsController()).to.equal(ant.address);
-    });
-
-    it('should emit RewardsControllerUpdated event', async function () {
-      await expect(poolFactory.setRewardsController(ant.address))
-        .to.emit(poolFactory, 'RewardsControllerUpdated')
-        .withArgs(await poolFactory.rewardsController(), ant.address, owner.address);
-    });
-
-    it('should only allow owner to set rewards controller', async function () {
-      await expect(poolFactory.connect(ant).setRewardsController(ant.address)).to.be.revertedWith(
-        'Ownable: caller is not the owner'
-      );
-    });
-  });
-
   describe('setFlashloanPremium', function () {
     it('should update flashloan premium', async function () {
       await poolFactory.setFlashloanPremium(100);
