@@ -160,16 +160,16 @@ library ReserveLogic {
 
     (vars.nextLiquidityRate, vars.nextBorrowRate) = IReserveInterestRateStrategy(_reserve.interestRateStrategyAddress)
       .calculateInterestRates(
-        _position,
-        _data,
-        DataTypes.CalculateInterestRatesParams({
-          liquidityAdded: _liquidityAdded,
-          liquidityTaken: _liquidityTaken,
-          totalDebt: vars.totalDebt,
-          reserveFactor: _reserveFactor,
-          reserve: _reserveAddress
-        })
-      );
+      _position,
+      _data,
+      DataTypes.CalculateInterestRatesParams({
+        liquidityAdded: _liquidityAdded,
+        liquidityTaken: _liquidityTaken,
+        totalDebt: vars.totalDebt,
+        reserveFactor: _reserveFactor,
+        reserve: _reserveAddress
+      })
+    );
 
     _reserve.liquidityRate = vars.nextLiquidityRate.toUint128();
     _reserve.borrowRate = vars.nextBorrowRate.toUint128();
@@ -178,11 +178,7 @@ library ReserveLogic {
     else if (_liquidityTaken > 0) totalSupplies.underlyingBalance -= _liquidityTaken.toUint128();
 
     emit PoolEventsLib.ReserveDataUpdated(
-      _reserveAddress,
-      vars.nextLiquidityRate,
-      vars.nextBorrowRate,
-      _cache.nextLiquidityIndex,
-      _cache.nextBorrowIndex
+      _reserveAddress, vars.nextLiquidityRate, vars.nextBorrowRate, _cache.nextLiquidityIndex, _cache.nextBorrowIndex
     );
   }
 
