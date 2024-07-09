@@ -1,4 +1,5 @@
 name: Install repository with compilation cache
+description: Install the repository dependencies and restore the compilation cache
 
 runs:
   using: composite
