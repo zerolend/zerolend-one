@@ -182,4 +182,19 @@ contract UIHelper {
       positions[i].isBurnAllowed = _isBurnAllowed;
     }
   }
+
+  /**
+   * @notice Returns the balances of the user for the given tokens
+   * @dev If the token address is 0x0, it will return the balance of the user in ETH
+   * @param user The user to get the balances for
+   * @param tokens The tokens to get the balances for
+   */
+  function getBalances(address user, address[] memory tokens) public view returns (uint256[] memory balances) {
+    balances = new uint256[](tokens.length);
+
+    for (uint256 i = 0; i < tokens.length; i++) {
+      if (tokens[i] == address(0)) balances[i] = user.balance;
+      else balances[i] = IERC20(tokens[i]).balanceOf(user);
+    }
+  }
 }
