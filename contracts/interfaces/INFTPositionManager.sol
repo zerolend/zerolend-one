@@ -14,8 +14,9 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
+import {INFTRewardsDistributor} from './INFTRewardsDistributor.sol';
 
-interface INFTPositionManager {
+interface INFTPositionManager is INFTRewardsDistributor {
   /**
    * @notice Error indicating that the caller is not the owner or approved operator of the token ID.
    */
@@ -146,4 +147,74 @@ interface INFTPositionManager {
     uint256 tokenId;
     DataTypes.ExtraData data;
   }
+
+  /**
+   * @notice Initializes the NFTPositionManager contract.
+   */
+  function initialize(address _factory, address _staking, address _owner, address _zero) external;
+
+  /**
+   * @notice Retrieves the details of a position identified by the given token ID.
+   * @param tokenId The ID of the position token.
+   * @return assets An array of Asset structs representing the balances and debts of the position's assets.
+   */
+  function getPosition(uint256 tokenId) external view returns (Asset[] memory assets, bool isBurnAllowed);
+
+  /**
+   * @notice Mints a new NFT representing a liquidity position.
+   * @param params The parameters required for minting the position, including the pool,token and amount.
+   * @return tokenId The ID of the newly minted token.
+   * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   */
+  function mint(MintParams calldata params) external returns (uint256 tokenId);
+
+  /**
+   * @notice Allow User to increase liquidity in the postion
+   * @param params  The parameters required for increase liquidity the position, including the token, pool, amount and asset.
+   * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   */
+  function supply(AssetOperationParams memory params) external;
+
+  /**
+   * @notice Allow user to borrow the underlying assets
+   * @param params The params required for borrow the position which includes tokenId, market and amount
+   * @custom:error ZeroAddressNotAllowed error thrown asset address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   * @custom:error BalanceMisMatch error thrown if difference of currentDebtBalance and previousDebtBalance is not equal to amount
+   * @custom:event BorrowIncreased emitted whenever user borrows asset
+   */
+  function borrow(AssetOperationParams memory params) external;
+
+  /**
+   * @notice Allow user to withdraw their underlying assets.
+   * @param params The parameters required for withdrawing from the position, including tokenId, asset, and amount.
+   * @custom:error ZeroAddressNotAllowed error thrown if asset or user address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   * @custom:error BalanceMisMatch error thrown if difference of previousSupplyBalance currentSupplyBalance and  is not equal to amount
+   * @custom:event Withdrawal emitted whenever user withdraws asset
+   */
+  function withdraw(AssetOperationParams memory params) external;
+
+  /**
+   * @notice Burns a token, removing it from existence.
+   * @param tokenId The ID of the token to burn.
+   * @custom:error PositionNotCleared thrown if user postion is not cleared in the position map
+   */
+  function burn(uint256 tokenId) external;
+
+  /**
+   * @notice Allow user to repay thier debt.
+   * @param params The params required for repaying the position which includes tokenId, asset and amount.
+   * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
+   * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
+   * @custom:error BalanceMisMatch error thrown if difference of previousDebtBalance currentDebtBalance and is not equal to amount
+   * @custom:event Repay emitted whenever user repays asset
+   */
+  function repay(AssetOperationParams memory params) external;
+
+  function wrapEther() external payable;
+
+  function positions(uint256 tokenId) external view returns (Position memory);
 }

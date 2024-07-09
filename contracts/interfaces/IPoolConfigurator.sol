@@ -14,13 +14,15 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
+
+import {IPoolManager} from './IPoolManager.sol';
 import {IPool} from './pool/IPool.sol';
 
 /**
  * @title IPoolConfigurator
  * @notice Defines the basic interface for a Pool configurator.
  */
-interface IPoolConfigurator {
+interface IPoolConfigurator is IPoolManager {
   /**
    * @dev Emitted when borrowing is enabled or disabled on a reserve.
    * @param asset The address of the underlying asset of the reserve
