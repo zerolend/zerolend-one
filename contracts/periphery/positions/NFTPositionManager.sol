@@ -119,12 +119,14 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
    * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
    */
-  function increaseLiquidity(LiquidityParams memory params) external {
+  function supply(AssetOperationParams memory params) external {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
+    IPool pool = IPool(positions[params.tokenId].pool);
+
     _isAuthorizedForToken(params.tokenId);
-    _handleLiquidity(LiquidityParams(params.asset, params.pool, params.amount, params.tokenId, params.data));
+    _handleLiquidity(LiquidityParams(params.asset, address(pool), params.amount, params.tokenId, params.data));
   }
 
   /**

@@ -52,10 +52,9 @@ describe('NFT position manager - multicall', () => {
       },
     ]);
 
-    const liqiuidityIncreaseCall = manager.interface.encodeFunctionData('increaseLiquidity', [
+    const liqiuidityIncreaseCall = manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenB.target,
-        pool: pool.target,
         amount: incLiquidityAmount,
         tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },

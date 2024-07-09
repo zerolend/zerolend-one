@@ -144,7 +144,7 @@ describe('NFT Position Manager', () => {
         tokenId: 1,
         data: { interestRateData: '0x', hookData: '0x' },
       };
-      await expect(manager.increaseLiquidity(liquidityParams)).to.be.revertedWithCustomError(
+      await expect(manager.supply(liquidityParams)).to.be.revertedWithCustomError(
         manager,
         'ZeroAddressNotAllowed'
       );
@@ -174,7 +174,7 @@ describe('NFT Position Manager', () => {
         tokenId: 1,
         data: { interestRateData: '0x', hookData: '0x' },
       };
-      await expect(manager.increaseLiquidity(liquidityParams)).to.be.revertedWithCustomError(
+      await expect(manager.supply(liquidityParams)).to.be.revertedWithCustomError(
         manager,
         'ZeroValueNotAllowed'
       );
@@ -201,9 +201,10 @@ describe('NFT Position Manager', () => {
         tokenId: 1,
         data: { interestRateData: '0x', hookData: '0x' },
       };
-      await expect(
-        manager.connect(bob).increaseLiquidity(liquidityParams)
-      ).to.be.revertedWithCustomError(manager, 'NotTokenIdOwner');
+      await expect(manager.connect(bob).supply(liquidityParams)).to.be.revertedWithCustomError(
+        manager,
+        'NotTokenIdOwner'
+      );
     });
     it('_handleLiquidity should transfer asset from user to NFT-Position-Manager', async () => {
       const mintAmount = ethers.parseUnits('100', 18);
@@ -233,17 +234,16 @@ describe('NFT Position Manager', () => {
       // Bob should be the owner of the nft
       expect(await manager.ownerOf(1)).to.be.equals(await bob.getAddress());
 
-      // Now call the increaseLiquidity and supply the asset to the pool
+      // Now supply the asset to the pool
       await tokenA.connect(bob).approve(manager.target, supplyAmount);
       let liquidityParams = {
         asset: tokenA,
-        pool,
         amount: supplyAmount,
         tokenId: 1,
         data: { interestRateData: '0x', hookData: '0x' },
       };
 
-      await manager.connect(bob).increaseLiquidity(liquidityParams);
+      await manager.connect(bob).supply(liquidityParams);
       let balanceAfterLiquidity = await tokenA.balanceOf(pool.target);
 
       expect(await tokenA.balanceOf(pool.target)).to.be.equals(balanceAfterLiquidity);
