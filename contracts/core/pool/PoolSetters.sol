@@ -139,6 +139,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _reserves[asset],
       _balances[asset][pos],
       _totalSupplies[asset],
+      _usersConfig[pos],
       DataTypes.ExecuteRepayParams({
         reserveFactor: _factory.reserveFactor(),
         asset: asset,

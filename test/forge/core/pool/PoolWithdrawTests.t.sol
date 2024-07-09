@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {MintableERC20} from '../../../../contracts/mocks/MintableERC20.sol';
 import {PoolEventsLib, PoolSetup} from './PoolSetup.sol';
 
 contract PoolWithdrawTests is PoolSetup {
@@ -12,6 +13,23 @@ contract PoolWithdrawTests is PoolSetup {
 
   function testFailWithdrawZeroAssetAddress() external {
     pool.withdrawSimple(address(0), 50 ether, 0);
+  }
+
+  function testFailWithdrawNonExistingToken() external {
+    MintableERC20 randomToken = new MintableERC20('TOKEN D', 'TOKEND');
+
+    pool.withdrawSimple(address(randomToken), 50 ether, 0);
+  }
+
+  function testRevertsWithdrawInvalidBalance() public {
+    uint256 amount = 100e18;
+
+    tokenA.mint(owner, amount);
+    tokenA.approve(address(pool), amount);
+    pool.supplySimple(address(tokenA), amount, 0);
+
+    vm.expectRevert(bytes('Insufficient Balance!'));
+    pool.withdrawSimple(address(tokenA), 2 * amount, 0);
   }
 
   function testWithdrawEventEmit() external {

@@ -99,12 +99,14 @@ library BorrowLogic {
    * @param balances The balance of the position
    * @param totalSupplies The total supply of the reserve
    * @param params The additional parameters needed to execute the repay function
+   * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
    * @return payback The actual amount being repaid
    */
   function executeRepay(
     DataTypes.ReserveData storage reserve,
     DataTypes.PositionBalance storage balances,
     DataTypes.ReserveSupplies storage totalSupplies,
+    DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ExecuteRepayParams memory params
   ) external returns (DataTypes.SharesType memory payback) {
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
@@ -113,8 +115,7 @@ library BorrowLogic {
 
     // Allows a user to max repay without leaving dust from interest.
     if (params.amount == type(uint256).max) {
-      params.amount = balances.getDebtBalance(cache.nextBorrowIndex);
-      payback.assets = params.amount;
+      params.amount = payback.assets;
     }
 
     ValidationLogic.validateRepay(params.amount, payback.assets);
@@ -137,6 +138,10 @@ library BorrowLogic {
     // update balances and total supplies
     payback.shares = balances.repayDebt(totalSupplies, payback.assets, cache.nextBorrowIndex);
     cache.nextDebtShares = totalSupplies.debtShares;
+
+    if (balances.getDebtBalance(cache.nextBorrowIndex) == 0) {
+      userConfig.setBorrowing(reserve.id, false);
+    }
 
     IERC20(params.asset).safeTransferFrom(msg.sender, address(this), payback.assets);
     emit PoolEventsLib.Repay(params.asset, params.position, msg.sender, payback.assets);
