@@ -212,7 +212,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
 
     assets = new Asset[](length);
     for (uint256 i; i < length;) {
-      address asset = _assets[i];
+      address asset = assets[i].asset = _assets[i];
       uint256 balance = assets[i].balance = pool.getBalance(asset, address(this), tokenId);
       uint256 debt = assets[i].debt = pool.getDebt(asset, address(this), tokenId);
       if ((balance > 0 || debt > 0) && isBurnAllowed) {
