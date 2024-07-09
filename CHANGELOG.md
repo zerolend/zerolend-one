@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/zerolend/zerolend-one/compare/v0.8.0...v0.8.1) (2024-07-09)
+
+
+### Bug Fixes
+
+* added deployments folder into git ([4cc30e6](https://github.com/zerolend/zerolend-one/commit/4cc30e679c943d1c72bde7f86a67f2c6287d2bf8))
+
 ## [0.8.0](https://github.com/zerolend/zerolend-one/compare/v0.7.1...v0.8.0) (2024-07-09)
 
 
