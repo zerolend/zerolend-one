@@ -138,6 +138,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
   function borrow(AssetOperationParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
+    if (params.tokenId == 0) params.tokenId = _nextId - 1;
 
     IPool pool = IPool(positions[params.tokenId].pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
@@ -161,6 +162,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
   function withdraw(AssetOperationParams memory params) external isAuthorizedForToken(params.tokenId) {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
+    if (params.tokenId == 0) params.tokenId = _nextId - 1;
 
     IPool pool = IPool(positions[params.tokenId].pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
@@ -179,6 +181,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
    * @custom:error PositionNotCleared thrown if user postion is not cleared in the position map
    */
   function burn(uint256 tokenId) external isAuthorizedForToken(tokenId) {
+    if (tokenId == 0) tokenId = _nextId - 1;
     (, bool isBurnAllowed) = getPosition(tokenId);
     if (!isBurnAllowed) revert PositionNotCleared();
     delete positions[tokenId];
@@ -196,6 +199,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
   function repay(AssetOperationParams memory params) external {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
+    if (params.tokenId == 0) params.tokenId = _nextId - 1;
 
     Position memory userPosition = positions[params.tokenId];
 
