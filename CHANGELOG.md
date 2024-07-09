@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0](https://github.com/zerolend/zerolend-one/compare/v0.7.1...v0.8.0) (2024-07-09)
+
+
+### Features
+
+* added getNftPositions function to ui helper ([3676cff](https://github.com/zerolend/zerolend-one/commit/3676cff5bd77c96cdcbc82a8feec0333aa0c0557))
+
+
+### Bug Fixes
+
+* added nft manager to uihelper deployment script ([a76e48f](https://github.com/zerolend/zerolend-one/commit/a76e48f4145e33234a83cae7fd7e9b86604d2cc4))
+* fixed bug with nft position manger's get asset ([c03d3b3](https://github.com/zerolend/zerolend-one/commit/c03d3b38389f7d13a9c3f348b632e4188efc46f5))
+* fixed up the nft position manager to use interfaces properly ([7ab6cd3](https://github.com/zerolend/zerolend-one/commit/7ab6cd3352973eead11f191fa8957ba58f86ff52))
+* renamed increaseLiquidity to supply on nft position manager ([6cd1c78](https://github.com/zerolend/zerolend-one/commit/6cd1c782aa32a380fc81c69b7015f471e3ca03e2))
+
 ## [0.7.1](https://github.com/zerolend/zerolend-one/compare/v0.7.0...v0.7.1) (2024-07-08)
 
 
