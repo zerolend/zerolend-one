@@ -44,13 +44,12 @@ contract RevokableBeaconProxy is IRevokableBeaconProxy, Proxy {
   constructor(address _beacon, address _admin) {
     StorageSlot.getAddressSlot(_BEACON_SLOT).value = _beacon;
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = _admin;
+
+    emit AdminUpdated(_admin, address(0), msg.sender);
+    emit BeaconUpdated(_beacon, address(0), msg.sender);
   }
 
-  // todo add events for admin and implementation changes
-
-  /**
-   * @inheritdoc Proxy
-   */
+  /// @inheritdoc Proxy
   function _implementation() internal view virtual override returns (address) {
     address _beacon = _getBeacon();
     if (_beacon != address(0)) return IBeacon(_beacon).implementation();
@@ -59,76 +58,59 @@ contract RevokableBeaconProxy is IRevokableBeaconProxy, Proxy {
     return _getFrozenImpl();
   }
 
-  /**
-   * @inheritdoc IRevokableBeaconProxy
-   */
+  /// @inheritdoc IRevokableBeaconProxy
   function setAdmin(address newAdmin) external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
+    address oldAdmin = StorageSlot.getAddressSlot(_ADMIN_SLOT).value;
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = newAdmin;
+
+    emit AdminUpdated(newAdmin, oldAdmin, msg.sender);
   }
 
-  /**
-   * @inheritdoc IRevokableBeaconProxy
-   */
+  /// @inheritdoc IRevokableBeaconProxy
   function revokeBeacon() external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
-    _revokeBeacon();
+    address impl = _implementation();
+
+    address oldAdmin = StorageSlot.getAddressSlot(_ADMIN_SLOT).value;
+    address oldBeacon = StorageSlot.getAddressSlot(_BEACON_SLOT).value;
+
+    StorageSlot.getAddressSlot(_BEACON_SLOT).value = address(0);
+    StorageSlot.getAddressSlot(_ADMIN_SLOT).value = address(0);
+    StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = impl;
+
+    emit ImplementationRevoked(impl, msg.sender);
+    emit BeaconUpdated(address(0), oldBeacon, msg.sender);
+    emit AdminUpdated(address(0), oldAdmin, msg.sender);
   }
 
-  /**
-   * @inheritdoc IRevokableBeaconProxy
-   */
+  /// @inheritdoc IRevokableBeaconProxy
   function revokeAdmin() external {
     require(msg.sender == _getAdmin(), 'not proxy admin');
+    address oldAdmin = StorageSlot.getAddressSlot(_ADMIN_SLOT).value;
     StorageSlot.getAddressSlot(_ADMIN_SLOT).value = address(0);
+
+    emit AdminUpdated(address(0), oldAdmin, msg.sender);
   }
 
-  /**
-   * @inheritdoc IRevokableBeaconProxy
-   */
+  /// @inheritdoc IRevokableBeaconProxy
   function implementation() external view returns (address) {
     return _implementation();
   }
 
-  /**
-   * @inheritdoc IRevokableBeaconProxy
-   */
+  /// @inheritdoc IRevokableBeaconProxy
   function admin() external view returns (address) {
     return _getAdmin();
   }
 
-  /**
-   * @inheritdoc IRevokableBeaconProxy
-   */
+  /// @inheritdoc IRevokableBeaconProxy
   function beacon() external view returns (address) {
     return _getBeacon();
   }
 
-  /**
-   * @inheritdoc IRevokableBeaconProxy
-   */
+  /// @inheritdoc IRevokableBeaconProxy
   function isBeaconRevoked() external view returns (bool revoked) {
     revoked = _getBeacon() == address(0);
-  }
-
-  /**
-   * @notice Stores a new beacon in the EIP1967 beacon slot.
-   */
-  function _setBeacon(address newBeacon) private {
-    require(Address.isContract(newBeacon), '!beacon');
-    require(Address.isContract(IBeacon(newBeacon).implementation()), '!implementation');
-    StorageSlot.getAddressSlot(_BEACON_SLOT).value = newBeacon;
-  }
-
-  /**
-   * @notice Revokes the beacon implementation and stores the implementation
-   * forever into the storage.
-   */
-  function _revokeBeacon() private {
-    address impl = _implementation();
-    StorageSlot.getAddressSlot(_BEACON_SLOT).value = address(0);
-    StorageSlot.getAddressSlot(_ADMIN_SLOT).value = address(0);
-    StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = impl;
   }
 
   function _getBeacon() private view returns (address) {
