@@ -6,9 +6,10 @@ async function main(hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts();
 
   const factory = await deployments.get('PoolFactory');
-  const manager = await deployments.get('PoolConfigurator');
+  const configurator = await deployments.get('PoolConfigurator');
+  const manager = await deployments.get('NFTPositionManager');
 
-  const args = [factory.address, manager.address];
+  const args = [factory.address, configurator.address, manager.address];
 
   const deployment = await deploy('UIHelper', {
     from: deployer,
