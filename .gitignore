@@ -18,7 +18,8 @@ coverage
 .coverage_cache
 .coverage_contracts
 coverage.json
-deployments/
+# deployments/
+solcInputs
 
 #certora
 .certora*
