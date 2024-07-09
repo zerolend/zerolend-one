@@ -1,6 +1,5 @@
 import { task } from 'hardhat/config';
 import { waitForTx } from './utils';
-import { DataTypes } from '../types/contracts/core/pool/Pool';
 import { MaxUint256, parseEther as eth, ZeroAddress } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
@@ -15,7 +14,6 @@ task(`nft-action`).setAction(async (_, hre: HardhatRuntimeEnvironment) => {
   const manager = await hre.ethers.getContractAt('NFTPositionManager', manageraddr);
 
   console.log('manager at', manager.target);
-
   console.log('giving approval');
   await waitForTx(await token.approve(manager.target, MaxUint256));
 
