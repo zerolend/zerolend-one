@@ -69,17 +69,15 @@ contract PoolFactory is IPoolFactory, Ownable {
   function createPool(DataTypes.InitPoolParams memory params) external returns (IPool pool) {
     // create the pool
     pool = IPool(address(new RevokableBeaconProxy(address(this), msg.sender)));
-    pool.initialize(params);
-
-    // give roles to the user
-    configurator.initRoles(IPool(address(pool)), msg.sender);
+    emit PoolCreated(pool, pools.length, msg.sender, params);
 
     // track the pool
     pools.push(pool);
     isPool[address(pool)] = true;
-    emit PoolCreated(pool, pools.length, msg.sender);
 
-    // TODO: once pool is created ask users to deposit some funds into it; to avoid liquidity index manipulation attacks
+    // init the pool and give roles to the user
+    pool.initialize(params);
+    configurator.initRoles(IPool(address(pool)), msg.sender);
   }
 
   /// @inheritdoc IPoolFactory
