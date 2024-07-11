@@ -80,7 +80,7 @@ library ReserveLogic {
   }
 
   /**
-   * @notice Updates the liquidity cumulative index and the variable borrow index.
+   * @notice Updates the liquidity cumulative index and the borrow index.
    * @param self The reserve object
    * @param _cache The caching layer for the reserve data
    * @param _reserveFactor The reserve factor that is used to calculate how much revenue gets shared
@@ -133,7 +133,7 @@ library ReserveLogic {
   }
 
   /**
-   * @notice Updates the current variable borrow rate and the current liquidity rate.
+   * @notice Updates the current borrow rate and the current liquidity rate.
    * @param _reserve The reserve reserve to be updated
    * @param _cache The caching layer for the reserve data
    * @param _reserveAddress The address of the reserve to be updated

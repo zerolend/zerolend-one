@@ -76,9 +76,9 @@ interface IPoolDataProvider {
    * @return totalAToken The total supply of the aToken
    * @return totalVariableDebt The total variable debt of the reserve
    * @return liquidityRate The liquidity rate of the reserve
-   * @return variableBorrowRate The variable borrow rate of the reserve
+   * @return borrowRate The borrow rate of the reserve
    * @return liquidityIndex The liquidity index of the reserve
-   * @return borrowIndex The variable borrow index of the reserve
+   * @return borrowIndex The borrow index of the reserve
    * @return lastUpdateTimestamp The timestamp of the last update of the reserve
    */
   function getReserveData(
@@ -93,7 +93,7 @@ interface IPoolDataProvider {
       uint256 totalAToken,
       uint256 totalVariableDebt,
       uint256 liquidityRate,
-      uint256 variableBorrowRate,
+      uint256 borrowRate,
       uint256 liquidityIndex,
       uint256 borrowIndex,
       uint40 lastUpdateTimestamp

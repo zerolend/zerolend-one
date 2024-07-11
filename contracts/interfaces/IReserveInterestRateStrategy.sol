@@ -24,7 +24,7 @@ interface IReserveInterestRateStrategy {
    * @notice Calculates the interest rates depending on the reserve's state and configurations
    * @param params The parameters needed to calculate interest rates
    * @return liquidityRate The liquidity rate expressed in rays
-   * @return variableBorrowRate The variable borrow rate expressed in rays
+   * @return borrowRate The borrow rate expressed in rays
    */
   function calculateInterestRates(
     bytes32 position,

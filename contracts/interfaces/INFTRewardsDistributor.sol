@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import {IERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721EnumerableUpgradeable.sol';
+
 /**
- * @title IRewardsDistributor
- * @author Aave
+ * @title INFTRewardsDistributor
  * @notice Defines the basic interface for a Rewards Distributor.
  */
-interface INFTRewardsDistributor {
+interface INFTRewardsDistributor is IERC721EnumerableUpgradeable {
   event RewardAdded(bytes32 indexed assetHash, uint256 indexed reward);
   event Staked(address indexed user, uint256 amount);
   event Withdrawn(address indexed user, uint256 amount);

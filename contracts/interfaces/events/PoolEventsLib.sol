@@ -101,13 +101,11 @@ library PoolEventsLib {
    * @dev Emitted when the state of a reserve is updated.
    * @param reserve The address of the underlying asset of the reserve
    * @param liquidityRate The next liquidity rate
-   * @param variableBorrowRate The next variable borrow rate
+   * @param borrowRate The next borrow rate
    * @param liquidityIndex The next liquidity index
-   * @param borrowIndex The next variable borrow index
+   * @param borrowIndex The next borrow index
    */
-  event ReserveDataUpdated(
-    address indexed reserve, uint256 liquidityRate, uint256 variableBorrowRate, uint256 liquidityIndex, uint256 borrowIndex
-  );
+  event ReserveDataUpdated(address indexed reserve, uint256 liquidityRate, uint256 borrowRate, uint256 liquidityIndex, uint256 borrowIndex);
 
   /**
    * @dev Emitted when the protocol treasury receives minted aTokens from the accrued interest.

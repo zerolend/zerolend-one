@@ -107,7 +107,7 @@ abstract contract PoolDataProvider is IPoolDataProvider {
   //     uint256 totalAToken,
   //     uint256 totalVariableDebt,
   //     uint256 liquidityRate,
-  //     uint256 variableBorrowRate,
+  //     uint256 borrowRate,
   //     uint256 liquidityIndex,
   //     uint256 borrowIndex,
   //     uint40 lastUpdateTimestamp

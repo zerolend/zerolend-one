@@ -17,7 +17,9 @@ import {ReserveConfiguration} from '../../core/pool/configuration/ReserveConfigu
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
-import {IPoolManager} from '../../interfaces/IPoolManager.sol';
+
+import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
+import {IPoolConfigurator} from '../../interfaces/IPoolConfigurator.sol';
 import {IRevokableBeaconProxy} from '../../interfaces/IRevokableBeaconProxy.sol';
 import {DataTypes, IPool} from '../../interfaces/pool/IPool.sol';
 
@@ -28,7 +30,8 @@ contract UIHelper {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   IPoolFactory public factory;
-  IPoolManager public manager;
+  INFTPositionManager public manager;
+  IPoolConfigurator public configurator;
 
   struct ReserveConfig {
     address asset;
@@ -70,9 +73,18 @@ contract UIHelper {
     uint16 reservesCount;
   }
 
-  constructor(address _factory, address _manager) {
+  struct NftPositions {
+    uint256 tokenId;
+    address pool;
+    uint256 healthFactor;
+    INFTPositionManager.Asset[] assets;
+    bool isBurnAllowed;
+  }
+
+  constructor(address _factory, address _configurator, address _manager) {
     factory = IPoolFactory(_factory);
-    manager = IPoolManager(_manager);
+    configurator = IPoolConfigurator(_configurator);
+    manager = INFTPositionManager(_manager);
   }
 
   function getPoolAssetConfig(IPool pool, address asset) public view returns (ReserveConfig memory config) {
@@ -141,17 +153,48 @@ contract UIHelper {
     config.proxyRevoked = proxy.isBeaconRevoked();
 
     // find all the admins and send it back
-    config.poolAdmins = getAllRoles(pool, manager, manager.POOL_ADMIN_ROLE());
-    config.emergencyAdmins = getAllRoles(pool, manager, manager.EMERGENCY_ADMIN_ROLE());
-    config.riskAdmins = getAllRoles(pool, manager, manager.RISK_ADMIN_ROLE());
+    config.poolAdmins = getAllRoles(pool, configurator, configurator.POOL_ADMIN_ROLE());
+    config.emergencyAdmins = getAllRoles(pool, configurator, configurator.EMERGENCY_ADMIN_ROLE());
+    config.riskAdmins = getAllRoles(pool, configurator, configurator.RISK_ADMIN_ROLE());
   }
 
-  function getAllRoles(IPool _pool, IPoolManager _manager, bytes32 role) public view returns (address[] memory users) {
-    bytes32 poolRole = manager.getRoleFromPool(_pool, role);
-    uint256 count = _manager.getRoleMemberCount(poolRole);
+  function getAllRoles(IPool _pool, IPoolConfigurator _configurator, bytes32 role) public view returns (address[] memory users) {
+    bytes32 poolRole = _configurator.getRoleFromPool(_pool, role);
+    uint256 count = _configurator.getRoleMemberCount(poolRole);
     users = new address[](count);
     for (uint256 i = 0; i < count; i++) {
-      users[i] = _manager.getRoleMember(poolRole, i);
+      users[i] = _configurator.getRoleMember(poolRole, i);
+    }
+  }
+
+  function getNftPositions(address user) public view returns (NftPositions[] memory positions) {
+    uint256 count = manager.balanceOf(user);
+    positions = new NftPositions[](count);
+
+    for (uint256 i = 0; i < count; i++) {
+      uint256 tokenId = manager.tokenOfOwnerByIndex(user, i);
+      INFTPositionManager.Position memory position = manager.positions(tokenId);
+      (INFTPositionManager.Asset[] memory _assets, bool _isBurnAllowed) = manager.getPosition(tokenId);
+
+      positions[i].pool = position.pool;
+      positions[i].tokenId = tokenId;
+      positions[i].assets = _assets;
+      positions[i].isBurnAllowed = _isBurnAllowed;
+    }
+  }
+
+  /**
+   * @notice Returns the balances of the user for the given tokens
+   * @dev If the token address is 0x0, it will return the balance of the user in ETH
+   * @param user The user to get the balances for
+   * @param tokens The tokens to get the balances for
+   */
+  function getBalances(address user, address[] memory tokens) public view returns (uint256[] memory balances) {
+    balances = new uint256[](tokens.length);
+
+    for (uint256 i = 0; i < tokens.length; i++) {
+      if (tokens[i] == address(0)) balances[i] = user.balance;
+      else balances[i] = IERC20(tokens[i]).balanceOf(user);
     }
   }
 }

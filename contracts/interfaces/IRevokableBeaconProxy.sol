@@ -21,6 +21,9 @@ import {StorageSlot} from '@openzeppelin/contracts/utils/StorageSlot.sol';
 
 interface IRevokableBeaconProxy {
   // todo add events for admin and implementation changes
+  event ImplementationRevoked(address indexed implementation, address indexed admin);
+  event BeaconUpdated(address indexed newBeacon, address indexed oldBeacon, address sender);
+  event AdminUpdated(address indexed newAdmin, address indexed oldAdmin, address sender);
 
   /**
    * @notice Transfer the ownership of the proxy to another address

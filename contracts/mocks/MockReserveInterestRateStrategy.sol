@@ -33,7 +33,7 @@ abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrateg
 
   uint256 internal _liquidityRate;
   uint256 internal _stableBorrowRate;
-  uint256 internal _variableBorrowRate;
+  uint256 internal _borrowRate;
 
   constructor(uint256 optimalUsageRatio, uint256 baseVariableBorrowRate, uint256 variableRateSlope1, uint256 variableRateSlope2) {
     OPTIMAL_USAGE_RATIO = optimalUsageRatio;
@@ -50,16 +50,16 @@ abstract contract MockReserveInterestRateStrategy is IDefaultInterestRateStrateg
     _stableBorrowRate = stableBorrowRate;
   }
 
-  function setVariableBorrowRate(uint256 variableBorrowRate) public {
-    _variableBorrowRate = variableBorrowRate;
+  function setVariableBorrowRate(uint256 borrowRate) public {
+    _borrowRate = borrowRate;
   }
 
   function calculateInterestRates(
     bytes32,
     bytes memory,
     DataTypes.CalculateInterestRatesParams memory
-  ) external view override returns (uint256 liquidityRate, uint256 variableBorrowRate) {
-    return (_liquidityRate, _variableBorrowRate);
+  ) external view override returns (uint256 liquidityRate, uint256 borrowRate) {
+    return (_liquidityRate, _borrowRate);
   }
 
   function getVariableRateSlope1() external view returns (uint256) {
