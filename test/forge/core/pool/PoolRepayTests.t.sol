@@ -27,8 +27,7 @@ contract PoolRepayTests is PoolSetup {
     vm.startPrank(alice);
 
     pool.supplySimple(address(tokenA), amount, 0);
-
-    pool.borrowSimple(address(tokenA), borrowAmount, 0);
+    pool.borrowSimple(address(tokenA), alice, borrowAmount, 0);
     vm.warp(block.timestamp + 10 days);
 
     uint256 tokenBalanceBefore = tokenA.balanceOf(alice);

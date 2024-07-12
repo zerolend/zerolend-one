@@ -107,7 +107,7 @@ library LiquidationLogic {
     vars.debtReserveCache = debtReserve.cache(totalSupplies[params.debtAsset]);
     debtReserve.updateState(params.reserveFactor, vars.debtReserveCache);
 
-    (, , , , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
+    (,,,, vars.healthFactor,) = GenericLogic.calculateUserAccountData(
       balances,
       reservesData,
       reservesList,
@@ -135,11 +135,8 @@ library LiquidationLogic {
 
     vars.userCollateralBalance = balances[vars.asset][params.position].supplyShares;
 
-    (
-      vars.actualCollateralToLiquidate,
-      vars.actualDebtToLiquidate,
-      vars.liquidationProtocolFeeAmount
-    ) = _calculateAvailableCollateralToLiquidate(
+    (vars.actualCollateralToLiquidate, vars.actualDebtToLiquidate, vars.liquidationProtocolFeeAmount) =
+    _calculateAvailableCollateralToLiquidate(
       collateralReserve,
       vars.debtReserveCache,
       vars.actualDebtToLiquidate,
@@ -175,11 +172,7 @@ library LiquidationLogic {
     );
 
     _burnCollateralTokens(
-      collateralReserve,
-      params,
-      vars,
-      balances[params.collateralAsset][params.position],
-      totalSupplies[params.collateralAsset]
+      collateralReserve, params, vars, balances[params.collateralAsset][params.position], totalSupplies[params.collateralAsset]
     );
 
     // Transfer fee to treasury if it is non-zero
@@ -205,12 +198,7 @@ library LiquidationLogic {
     IERC20(params.debtAsset).safeTransferFrom(msg.sender, address(params.pool), vars.actualDebtToLiquidate);
 
     emit PoolEventsLib.LiquidationCall(
-      params.collateralAsset,
-      params.debtAsset,
-      params.position,
-      vars.actualDebtToLiquidate,
-      vars.actualCollateralToLiquidate,
-      msg.sender
+      params.collateralAsset, params.debtAsset, params.position, vars.actualDebtToLiquidate, vars.actualCollateralToLiquidate, msg.sender
     );
   }
 
@@ -373,8 +361,9 @@ library LiquidationLogic {
 
     if (vars.maxCollateralToLiquidate > userCollateralBalance) {
       vars.collateralAmount = userCollateralBalance;
-      vars.debtAmountNeeded = ((vars.collateralPrice * vars.collateralAmount * vars.debtAssetUnit) /
-        (vars.debtAssetPrice * vars.collateralAssetUnit)).percentDiv(liquidationBonus);
+      vars.debtAmountNeeded = (
+        (vars.collateralPrice * vars.collateralAmount * vars.debtAssetUnit) / (vars.debtAssetPrice * vars.collateralAssetUnit)
+      ).percentDiv(liquidationBonus);
     } else {
       vars.collateralAmount = vars.maxCollateralToLiquidate;
       vars.debtAmountNeeded = debtToCover;

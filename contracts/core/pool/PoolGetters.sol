@@ -14,9 +14,10 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
+
+import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IPool, IPoolGetters} from '../../interfaces/pool/IPool.sol';
 import {IHook} from './../../interfaces/IHook.sol';
-import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
 import {PoolStorage} from './PoolStorage.sol';
 import {DataTypes} from './configuration/DataTypes.sol';
@@ -101,13 +102,12 @@ abstract contract PoolGetters is PoolStorage, IPool {
     uint256 index
   ) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
     bytes32 positionId = user.getPositionId(index);
-    return
-      PoolLogic.executeGetUserAccountData(
-        _balances,
-        _reserves,
-        _reservesList,
-        DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], position: positionId, pool: address(this)})
-      );
+    return PoolLogic.executeGetUserAccountData(
+      _balances,
+      _reserves,
+      _reservesList,
+      DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], position: positionId, pool: address(this)})
+    );
   }
 
   /// @inheritdoc IPoolGetters
@@ -116,10 +116,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPoolGetters
-  function getUserConfiguration(
-    address user,
-    uint256 index
-  ) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
+  function getUserConfiguration(address user, uint256 index) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
     return _usersConfig[user.getPositionId(index)];
   }
 

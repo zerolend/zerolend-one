@@ -21,9 +21,10 @@ import {IPool, IPoolSetters} from '../../interfaces/pool/IPool.sol';
 import {PoolSetters} from './PoolSetters.sol';
 
 import {DataTypes} from './configuration/DataTypes.sol';
+
+import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 import {ReserveLogic} from './logic/PoolLogic.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
-import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 
 contract Pool is PoolSetters {
   using ReserveLogic for DataTypes.ReserveCache;
@@ -136,13 +137,7 @@ contract Pool is PoolSetters {
   }
 
   /// @inheritdoc IPoolSetters
-  function flashLoan(
-    address receiverAddress,
-    address asset,
-    uint256 amount,
-    bytes calldata params,
-    DataTypes.ExtraData memory data
-  ) public {
+  function flashLoan(address receiverAddress, address asset, uint256 amount, bytes calldata params, DataTypes.ExtraData memory data) public {
     _flashLoan(receiverAddress, asset, amount, params, data);
   }
 

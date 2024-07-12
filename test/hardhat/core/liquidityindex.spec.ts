@@ -62,11 +62,11 @@ describe('Pool - Liquidity Index', () => {
       const before = await pool.getReserveData(tokenA.target);
 
       await pool.supplySimple(tokenA.target, eth('1'), 0);
-      await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+      await pool.borrowSimple(tokenA.target, deployer.address, eth('0.4'), 0);
       await time.increase(86400); // one day
 
       // trigger a borrow to force increase the borrow index
-      await pool.borrowSimple(tokenA.target, eth('0.1'), 0);
+      await pool.borrowSimple(tokenA.target, deployer.address, eth('0.1'), 0);
 
       const after = await pool.getReserveData(tokenA.target);
 
@@ -79,7 +79,7 @@ describe('Pool - Liquidity Index', () => {
 
   it('after supplying and some borrowing, liquidity index should increase after some time', async () => {
     await pool.supplySimple(tokenA.target, eth('1'), 0);
-    await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+    await pool.borrowSimple(tokenA.target, deployer.address, eth('0.4'), 0);
 
     const reserveBefore = await pool.getReserveData(tokenA.target);
     await time.increase(86400 * 2000); // 2000 days
@@ -94,7 +94,7 @@ describe('Pool - Liquidity Index', () => {
   it.skip('after supplying, borrowing and a full repay. The liquidity rate should be 0', async () => {
     // todo
     await pool.supplySimple(tokenA.target, eth('1'), 0);
-    await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+    await pool.borrowSimple(tokenA.target, deployer.address, eth('0.4'), 0);
 
     const reserveBefore = await pool.getReserveData(tokenA.target);
     await time.increase(86400 * 2000); // 2000 days
@@ -118,7 +118,7 @@ describe('Pool - Liquidity Index', () => {
       const before = await pool.getReserveData(tokenA.target);
 
       await pool.supplySimple(tokenA.target, eth('1'), 0);
-      await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+      await pool.borrowSimple(tokenA.target, deployer.address, eth('0.4'), 0);
 
       const after = await pool.getReserveData(tokenA.target);
       expect(after.liquidityRate).greaterThan(before.liquidityRate);
@@ -128,7 +128,7 @@ describe('Pool - Liquidity Index', () => {
     it('borrowing should increase liquidity rate and liquidity index increases after a few days', async () => {
       const before = await pool.getReserveData(tokenA.target);
       await pool.supplySimple(tokenA.target, eth('1'), 0);
-      await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+      await pool.borrowSimple(tokenA.target, deployer.address, eth('0.4'), 0);
 
       await time.increase(86400 * 2000); // 2000 days
       await pool.forceUpdateReserve(tokenA.target);
@@ -150,7 +150,7 @@ describe('Pool - Liquidity Index', () => {
       const before = await pool.getReserveData(tokenA.target);
 
       await pool.supplySimple(tokenA.target, eth('1'), 0);
-      await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+      await pool.borrowSimple(tokenA.target, deployer.address, eth('0.4'), 0);
 
       const after = await pool.getReserveData(tokenA.target);
       expect(after.borrowRate).greaterThan(before.borrowRate);
@@ -160,7 +160,7 @@ describe('Pool - Liquidity Index', () => {
     it('borrowing should increase borrow rate and borrow index increases after a few days', async () => {
       const before = await pool.getReserveData(tokenA.target);
       await pool.supplySimple(tokenA.target, eth('1'), 0);
-      await pool.borrowSimple(tokenA.target, eth('0.4'), 0);
+      await pool.borrowSimple(tokenA.target, deployer.address, eth('0.4'), 0);
 
       await time.increase(86400 * 2000); // 2000 days
       await pool.forceUpdateReserve(tokenA.target);
