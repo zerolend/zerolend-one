@@ -7,24 +7,26 @@ import {
   Pool,
   PoolConfigurator,
   UIHelper,
+  WETH9Mocked,
 } from '../../../types';
 import { deployNftPositionManager, deployUIHelper } from '../fixtures/periphery';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
-describe.only('NFT position manager - multicall', () => {
+describe('NFT position manager - multicall', () => {
   let manager: NFTPositionManager;
   let poolFactory;
   let pool: Pool;
   let tokenA: MintableERC20;
+  let weth: WETH9Mocked;
   let tokenB: MintableERC20;
   let uiHelper: UIHelper;
   let configurator: PoolConfigurator;
   let governance: SignerWithAddress, ant: SignerWithAddress, whale: SignerWithAddress;
 
   beforeEach(async () => {
-    ({ poolFactory, pool, tokenA, tokenB, governance, ant, configurator, whale } =
+    ({ poolFactory, pool, tokenA, tokenB, governance, ant, configurator, whale, weth } =
       await deployPool());
-    manager = await deployNftPositionManager(poolFactory, await governance.getAddress());
+    manager = await deployNftPositionManager(poolFactory, weth, governance.address);
     uiHelper = await deployUIHelper(poolFactory, configurator, manager);
 
     await tokenA.connect(ant).approve(manager.target, MaxUint256);

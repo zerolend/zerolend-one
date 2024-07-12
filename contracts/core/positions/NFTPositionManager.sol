@@ -18,6 +18,7 @@ import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {NFTPositionManagerSetters} from './NFTPositionManagerSetters.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
+import {IWETH} from '../../interfaces/IWETH.sol';
 
 /**
  * @title NFTPositionManager
@@ -33,7 +34,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
   }
 
   /// @inheritdoc INFTPositionManager
-  function initialize(address _factory, address _staking, address _owner, address _zero) external initializer {
+  function initialize(address _factory, address _staking, address _owner, address _zero, address _weth) external initializer {
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend One Position', 'ZL-POS-ONE');
     __AccessControlEnumerable_init();
@@ -42,6 +43,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
     _grantRole(DEFAULT_ADMIN_ROLE, _owner);
 
     factory = IPoolFactory(_factory);
+    weth = IWETH(_weth);
     _nextId = 1;
   }
 

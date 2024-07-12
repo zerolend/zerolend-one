@@ -153,7 +153,7 @@ interface INFTPositionManager is INFTRewardsDistributor {
   /**
    * @notice Initializes the NFTPositionManager contract.
    */
-  function initialize(address _factory, address _staking, address _owner, address _zero) external;
+  function initialize(address _factory, address _staking, address _owner, address _zero, address _weth) external;
 
   /**
    * @notice Mints a new NFT representing a liquidity position.

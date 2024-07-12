@@ -1,8 +1,8 @@
 import { ethers } from 'hardhat';
-import { NFTPositionManager, PoolConfigurator, PoolFactory } from '../../../types';
+import { IWETH, NFTPositionManager, PoolConfigurator, PoolFactory } from '../../../types';
 import { ZeroAddress } from 'ethers';
 
-export async function deployNftPositionManager(factory: PoolFactory, admin: string) {
+export async function deployNftPositionManager(factory: PoolFactory, weth: IWETH, admin: string) {
   const NFTPositionManager = await ethers.getContractFactory('NFTPositionManager');
   const Proxy = await ethers.getContractFactory('TransparentUpgradeableProxy');
 
@@ -10,7 +10,7 @@ export async function deployNftPositionManager(factory: PoolFactory, admin: stri
 
   const proxy = await Proxy.deploy(implementation.target, admin, '0x');
   const manager = await ethers.getContractAt('NFTPositionManager', proxy.target);
-  await manager.initialize(factory.target, ZeroAddress, ZeroAddress, ZeroAddress);
+  await manager.initialize(factory.target, ZeroAddress, ZeroAddress, ZeroAddress, weth.target);
 
   return manager;
 }
