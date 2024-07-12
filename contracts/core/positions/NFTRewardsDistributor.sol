@@ -5,7 +5,10 @@ import {NFTPositionManagerGetters} from './NFTPositionManagerGetters.sol';
 
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
-import {IERC165Upgradeable, ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {
+  ERC721EnumerableUpgradeable,
+  IERC165Upgradeable
+} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
@@ -31,9 +34,13 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, AccessCo
     rewardsDuration = rewardsDuration_;
   }
 
-  function supportsInterface(
-    bytes4 interfaceId
-  ) public view virtual override(ERC721EnumerableUpgradeable, IERC165Upgradeable, AccessControlEnumerableUpgradeable) returns (bool) {
+  function supportsInterface(bytes4 interfaceId)
+    public
+    view
+    virtual
+    override (ERC721EnumerableUpgradeable, IERC165Upgradeable, AccessControlEnumerableUpgradeable)
+    returns (bool)
+  {
     return super.supportsInterface(interfaceId);
   }
 
@@ -53,12 +60,11 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, AccessCo
     if (_totalSupply[_assetHash] == 0) {
       return rewardPerTokenStored[_assetHash];
     }
-    return
-      rewardPerTokenStored[_assetHash].add(
-        lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
-          _totalSupply[_assetHash]
-        )
-      );
+    return rewardPerTokenStored[_assetHash].add(
+      lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+        _totalSupply[_assetHash]
+      )
+    );
   }
 
   function getReward(uint256 tokenId, bytes32 _assetHash) public /* nonReentrant */ {
@@ -72,10 +78,9 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, AccessCo
   }
 
   function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
-    return
-      _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
-        rewards[tokenId][_assetHash]
-      );
+    return _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+      rewards[tokenId][_assetHash]
+    );
   }
 
   function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {
