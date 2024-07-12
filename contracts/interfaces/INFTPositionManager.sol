@@ -223,4 +223,6 @@ interface INFTPositionManager is INFTRewardsDistributor {
    *
    */
   function withdrawETH(AssetOperationParams memory params) external payable;
+
+  function sweep(address token) external;
 }

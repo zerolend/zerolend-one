@@ -210,9 +210,8 @@ contract UIHelper {
     assets = new INFTPositionManager.Asset[](length);
     for (uint256 i; i < length; ) {
       address asset = assets[i].asset = _assets[i];
-      assets[i].balance = pool.getBalance(asset, address(this), tokenId);
-      assets[i].debt = pool.getDebt(asset, address(this), tokenId);
-
+      assets[i].balance = pool.getBalance(asset, address(manager), tokenId);
+      assets[i].debt = pool.getDebt(asset, address(manager), tokenId);
       unchecked {
         ++i;
       }

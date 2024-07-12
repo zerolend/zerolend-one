@@ -34,12 +34,14 @@ contract NFTPositionManager is NFTPositionManagerSetters {
 
   /// @inheritdoc INFTPositionManager
   function initialize(address _factory, address _staking, address _owner, address _zero) external initializer {
-    factory = IPoolFactory(_factory);
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend One Position', 'ZL-POS-ONE');
     __Ownable_init();
     __NFTRewardsDistributor_init(50_000_000, _staking, 14 days, _zero);
+
     _transferOwnership(_owner);
+
+    factory = IPoolFactory(_factory);
     _nextId = 1;
   }
 
@@ -111,5 +113,16 @@ contract NFTPositionManager is NFTPositionManagerSetters {
     weth.deposit{value: params.amount}();
     require(params.asset == address(weth), 'not weth');
     _repay(params);
+  }
+
+  /// @inheritdoc INFTPositionManager
+  function sweep(address token) external onlyOwner {
+    if (token == address(0)) {
+      uint256 bal = address(this).balance;
+      payable(msg.sender).transfer(bal);
+    } else {
+      IERC20Upgradeable erc20 = IERC20Upgradeable(token);
+      erc20.transfer(msg.sender, erc20.balanceOf(address(this)));
+    }
   }
 }

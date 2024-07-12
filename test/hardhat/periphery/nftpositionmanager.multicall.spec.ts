@@ -19,13 +19,10 @@ describe.only('NFT position manager - multicall', () => {
   let tokenB: MintableERC20;
   let uiHelper: UIHelper;
   let configurator: PoolConfigurator;
-  let governance: SignerWithAddress,
-    ant: SignerWithAddress,
-    whale: SignerWithAddress,
-    owner: SignerWithAddress;
+  let governance: SignerWithAddress, ant: SignerWithAddress, whale: SignerWithAddress;
 
   beforeEach(async () => {
-    ({ poolFactory, pool, tokenA, tokenB, governance, ant, configurator, whale, owner } =
+    ({ poolFactory, pool, tokenA, tokenB, governance, ant, configurator, whale } =
       await deployPool());
     manager = await deployNftPositionManager(poolFactory, await governance.getAddress());
     uiHelper = await deployUIHelper(poolFactory, configurator, manager);
@@ -51,7 +48,7 @@ describe.only('NFT position manager - multicall', () => {
     await manager.connect(whale).multicall([mintCall, supplyCall]);
   });
 
-  it.only('should be able to mint and supply using multicall', async () => {
+  it('should be able to mint and supply using multicall', async () => {
     const supplyAmount = e18('50');
     const incLiquidityAmount = e18('20');
 
@@ -79,8 +76,6 @@ describe.only('NFT position manager - multicall', () => {
 
     const balance = await uiHelper.getNftPosition(2);
 
-    console.log(balance);
-
     // token A
     expect(balance[0].balance).eq(supplyAmount);
     expect(balance[0].debt).eq(0);
@@ -97,11 +92,13 @@ describe.only('NFT position manager - multicall', () => {
     const borrowAmount = e18('20');
 
     // prepare multicall for the ant
-    const mintSupplyCallBob = await manager.interface.encodeFunctionData('mint', [
+    const mintCall = await manager.interface.encodeFunctionData('mint', [pool.target]);
+    const supplyCall = await manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenB.target,
-        pool: pool.target,
+        target: ZeroAddress,
         amount: supplyAmount,
+        tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },
       },
     ]);
@@ -109,22 +106,23 @@ describe.only('NFT position manager - multicall', () => {
       {
         asset: tokenA.target,
         amount: borrowAmount,
-        tokenId: 2,
+        target: ant.address,
+        tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },
       },
     ]);
-    await manager.connect(ant).multicall([mintSupplyCallBob, borrowCall]);
 
-    const balance = await manager.getPosition(2);
+    await manager.connect(ant).multicall([mintCall, supplyCall, borrowCall]);
+    const balance = await uiHelper.getNftPosition(2);
 
     // token A - borrowed
-    expect(balance.assets[0].debt).eq(borrowAmount);
-    expect(balance.assets[0].balance).eq(0);
+    expect(balance[0].debt).eq(borrowAmount);
+    expect(balance[0].balance).eq(0);
     expect(await tokenA.balanceOf(await ant.getAddress())).eq(borrowAmount + e18('100'));
 
     // token B - supplied
-    expect(balance.assets[1].balance).eq(supplyAmount);
-    expect(balance.assets[1].debt).eq(0);
+    expect(balance[1].balance).eq(supplyAmount);
+    expect(balance[1].debt).eq(0);
     expect(await tokenB.balanceOf(pool.target)).eq(supplyAmount);
   });
 

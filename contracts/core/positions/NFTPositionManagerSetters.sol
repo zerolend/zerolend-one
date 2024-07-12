@@ -48,7 +48,6 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     _isAuthorizedForToken(params.tokenId);
 
     IERC20Upgradeable(params.asset).forceApprove(address(pool), params.amount);
-
     pool.supply(params.asset, params.amount, params.tokenId, params.data);
     emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
 
@@ -65,10 +64,8 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     _isAuthorizedForToken(params.tokenId);
 
     IPool pool = IPool(_positions[params.tokenId].pool);
-    IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
-
     pool.borrow(params.asset, params.target, params.amount, params.tokenId, params.data);
-    asset.safeTransfer(msg.sender, params.amount);
+
     emit BorrowIncreased(params.asset, params.amount, params.tokenId);
 
     // update incentives
@@ -84,10 +81,8 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     _isAuthorizedForToken(params.tokenId);
 
     IPool pool = IPool(_positions[params.tokenId].pool);
-    IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
     pool.withdraw(params.asset, params.target, params.amount, params.tokenId, params.data);
-    asset.safeTransfer(msg.sender, params.amount);
     emit Withdrawal(params.asset, params.amount, params.tokenId);
 
     // update incentives
