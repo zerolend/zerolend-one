@@ -22,6 +22,7 @@ import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ER
 
 /**
  * @title NFTPositionManager
+ * @author ZeroLend
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
 contract NFTPositionManagerStorage is NFTPositionManagerSetters {
@@ -44,7 +45,7 @@ contract NFTPositionManagerStorage is NFTPositionManagerSetters {
   }
 
   receive() external payable {
-    weth.deposit{value: msg.value}();
+    // nothing
   }
 
   /// @inheritdoc INFTPositionManager
@@ -63,9 +64,10 @@ contract NFTPositionManagerStorage is NFTPositionManagerSetters {
     _supply(params);
   }
 
-  function supplyETH(AssetOperationParams memory params) external {
+  /// @inheritdoc INFTPositionManager
+  function supplyETH(AssetOperationParams memory params) external payable {
+    weth.deposit{value: params.amount}();
     require(params.asset == address(weth), 'not weth');
-    require(params.amount > IWETH(weth).balanceOf(address(this)), 'not enough weth');
     _supply(params);
   }
 
@@ -74,7 +76,8 @@ contract NFTPositionManagerStorage is NFTPositionManagerSetters {
     _borrow(params);
   }
 
-  function borrowETH(AssetOperationParams memory params) external {
+  /// @inheritdoc INFTPositionManager
+  function borrowETH(AssetOperationParams memory params) external payable {
     address dest = params.target;
     params.target = address(this);
 
@@ -88,7 +91,8 @@ contract NFTPositionManagerStorage is NFTPositionManagerSetters {
     _withdraw(params);
   }
 
-  function withdrawETH(AssetOperationParams memory params) external {
+  /// @inheritdoc INFTPositionManager
+  function withdrawETH(AssetOperationParams memory params) external payable {
     address dest = params.target;
     params.target = address(this);
 
@@ -103,9 +107,10 @@ contract NFTPositionManagerStorage is NFTPositionManagerSetters {
     _repay(params);
   }
 
-  function repayETH(AssetOperationParams memory params) external {
+  /// @inheritdoc INFTPositionManager
+  function repayETH(AssetOperationParams memory params) external payable {
+    weth.deposit{value: params.amount}();
     require(params.asset == address(weth), 'not weth');
-    require(params.amount > IWETH(weth).balanceOf(address(this)), 'not enough weth');
     _repay(params);
   }
 }

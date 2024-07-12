@@ -203,4 +203,24 @@ interface INFTPositionManager is INFTRewardsDistributor {
   function repay(AssetOperationParams memory params) external;
 
   function positions(uint256 tokenId) external view returns (Position memory);
+
+  /**
+   *
+   */
+  function repayETH(AssetOperationParams memory params) external payable;
+
+  /**
+   *
+   */
+  function borrowETH(AssetOperationParams memory params) external payable;
+
+  /**
+   *
+   */
+  function supplyETH(AssetOperationParams memory params) external payable;
+
+  /**
+   *
+   */
+  function withdrawETH(AssetOperationParams memory params) external payable;
 }
