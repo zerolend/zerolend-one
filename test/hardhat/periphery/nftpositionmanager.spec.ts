@@ -30,22 +30,18 @@ describe('NFT Position Manager', () => {
 
   describe('mint', () => {
     it('should revert if the pool are not deployed through factory', async () => {
-      const mintParams = {
-        asset: await tokenA.getAddress(),
-        pool: ZeroAddress,
-        amount: 10,
-        data: { interestRateData: '0x', hookData: '0x' },
-      };
-      await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(manager, 'NotPool');
+      await expect(manager.mint(ZeroAddress)).to.be.revertedWithCustomError(manager, 'NotPool');
     });
     it('should revert if user pass invalid asset address', async () => {
       const mintParams = {
         asset: ZeroAddress,
-        pool,
+        target: ZeroAddress,
         amount: 0,
+        tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },
       };
-      await expect(manager.mint(mintParams)).to.be.revertedWithCustomError(
+      await manager.mint(pool);
+      await expect(manager.supply(mintParams)).to.be.revertedWithCustomError(
         manager,
         'ZeroAddressNotAllowed'
       );

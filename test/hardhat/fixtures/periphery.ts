@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { PoolFactory } from '../../../types';
+import { NFTPositionManager, PoolConfigurator, PoolFactory } from '../../../types';
 import { ZeroAddress } from 'ethers';
 
 export async function deployNftPositionManager(factory: PoolFactory, admin: string) {
@@ -13,4 +13,13 @@ export async function deployNftPositionManager(factory: PoolFactory, admin: stri
   await manager.initialize(factory.target, ZeroAddress, ZeroAddress, ZeroAddress);
 
   return manager;
+}
+
+export async function deployUIHelper(
+  factory: PoolFactory,
+  configurator: PoolConfigurator,
+  manager: NFTPositionManager
+) {
+  const UIHelper = await ethers.getContractFactory('UIHelper');
+  return await UIHelper.deploy(factory.target, configurator.target, manager.target);
 }

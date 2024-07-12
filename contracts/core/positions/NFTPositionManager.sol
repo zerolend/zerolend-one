@@ -15,7 +15,6 @@ pragma solidity 0.8.19;
 
 import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
-import {IWETH} from '../../interfaces/IWETH.sol';
 import {NFTPositionManagerSetters} from './NFTPositionManagerSetters.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
@@ -25,7 +24,7 @@ import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ER
  * @author ZeroLend
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-contract NFTPositionManagerStorage is NFTPositionManagerSetters {
+contract NFTPositionManager is NFTPositionManagerSetters {
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
   /// @custom:oz-upgrades-unsafe-allow constructor

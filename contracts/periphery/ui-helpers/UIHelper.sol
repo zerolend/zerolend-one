@@ -38,6 +38,7 @@ contract UIHelper {
     address interestRateStrategy;
     address oracle;
     bool borrowable;
+    bool collateral;
     bool frozen;
     string name;
     string symbol;
@@ -100,6 +101,8 @@ contract UIHelper {
     config.liquidationThreshold = configRaw.getLiquidationThreshold();
     config.ltv = configRaw.getLtv();
     config.supplyCap = configRaw.getSupplyCap();
+
+    config.collateral = config.ltv > 0;
 
     config.name = IERC20Metadata(asset).name();
     config.symbol = IERC20Metadata(asset).symbol();
@@ -205,7 +208,7 @@ contract UIHelper {
     uint256 length = _assets.length;
 
     assets = new INFTPositionManager.Asset[](length);
-    for (uint256 i; i < length;) {
+    for (uint256 i; i < length; ) {
       address asset = assets[i].asset = _assets[i];
       assets[i].balance = pool.getBalance(asset, address(this), tokenId);
       assets[i].debt = pool.getDebt(asset, address(this), tokenId);

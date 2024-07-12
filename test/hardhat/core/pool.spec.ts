@@ -52,13 +52,13 @@ describe('Pool', () => {
     it('should revert if withdraw after another index', async () => {
       await pool.supplySimple(tokenA.target, eth('1'), 0);
       const t = pool.withdrawSimple(tokenA.target, deployer.address, eth('1'), 1);
-      await expect(t).to.revertedWith('Insufficient Balance!');
+      await expect(t).to.revertedWith('NOT_ENOUGH_AVAILABLE_USER_BALANCE');
     });
 
     it('should revert if withdraw more than supplied', async () => {
       await pool.supplySimple(tokenA.target, eth('1'), 0);
       const t = pool.withdrawSimple(tokenA.target, deployer.address, eth('10'), 0);
-      await expect(t).to.revertedWith('Insufficient Balance!');
+      await expect(t).to.revertedWith('NOT_ENOUGH_AVAILABLE_USER_BALANCE');
     });
   });
 
