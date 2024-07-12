@@ -13,8 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {IWETH} from './../interfaces/IWETH.sol';
+import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract WETH9Mocked is IWETH, ERC20 {
   function mint(uint256 value) public returns (bool) {
