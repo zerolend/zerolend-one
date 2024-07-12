@@ -13,13 +13,11 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
-import {DataTypes, IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
-import {IWETH} from '../../interfaces/IWETH.sol';
+import {DataTypes, IPool} from '../../interfaces/IPoolFactory.sol';
 import {NFTRewardsDistributor} from './NFTRewardsDistributor.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
-import {ERC721Upgradeable, IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {ERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 
 abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
   using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -70,7 +68,7 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     IPool pool = IPool(_positions[params.tokenId].pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
-    pool.borrow(params.asset, params.amount, params.tokenId, params.data);
+    pool.borrow(params.asset, params.target, params.amount, params.tokenId, params.data);
     asset.safeTransfer(msg.sender, params.amount);
     emit BorrowIncreased(params.asset, params.amount, params.tokenId);
 
@@ -89,7 +87,7 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     IPool pool = IPool(_positions[params.tokenId].pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
-    pool.withdraw(params.asset, params.amount, params.tokenId, params.data);
+    pool.withdraw(params.asset, params.target, params.amount, params.tokenId, params.data);
     asset.safeTransfer(msg.sender, params.amount);
     emit Withdrawal(params.asset, params.amount, params.tokenId);
 
@@ -107,7 +105,6 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     IPool pool = IPool(userPosition.pool);
     IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
 
-    asset.safeTransferFrom(msg.sender, address(this), params.amount);
     asset.forceApprove(userPosition.pool, params.amount);
 
     uint256 previousDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);

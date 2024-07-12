@@ -35,10 +35,9 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
   function _supply(
     address asset,
     uint256 amount,
-    uint256 index,
+    bytes32 pos,
     DataTypes.ExtraData memory data
   ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
-    bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeSupply(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     res = SupplyLogic.executeSupply(
@@ -61,45 +60,38 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
 
   function _withdraw(
     address asset,
+    address to,
     uint256 amount,
-    uint256 index,
+    bytes32 pos,
     DataTypes.ExtraData memory data
   ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
-    bytes32 pos = msg.sender.getPositionId(index);
-    require(amount <= _balances[asset][pos].supplyShares, 'Insufficient Balance!');
+    // bytes32 pos = msg.sender.getPositionId(index);
 
-    if (address(_hook) != address(0)) _hook.beforeWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
+    DataTypes.ExecuteWithdrawParams memory params = DataTypes.ExecuteWithdrawParams({
+      reserveFactor: _factory.reserveFactor(),
+      asset: asset,
+      amount: amount,
+      position: pos,
+      destination: to,
+      data: data,
+      pool: address(this)
+    });
 
-    res = SupplyLogic.executeWithdraw(
-      _reserves,
-      _reservesList,
-      _usersConfig[pos],
-      _balances,
-      _totalSupplies[asset],
-      DataTypes.ExecuteWithdrawParams({
-        reserveFactor: _factory.reserveFactor(),
-        destination: msg.sender,
-        asset: asset,
-        amount: amount,
-        position: pos,
-        data: data,
-        reservesCount: _reservesCount,
-        pool: address(this)
-      })
-    );
+    if (address(_hook) != address(0)) _hook.beforeWithdraw(params);
 
+    res = SupplyLogic.executeWithdraw(_reserves, _reservesList, _usersConfig[pos], _balances, _totalSupplies[asset], params);
     PoolLogic.executeMintToTreasury(_reserves, asset);
 
-    if (address(_hook) != address(0)) _hook.afterWithdraw(msg.sender, pos, asset, address(this), amount, data.hookData);
+    if (address(_hook) != address(0)) _hook.afterWithdraw(params);
   }
 
   function _borrow(
     address asset,
+    address to,
     uint256 amount,
-    uint256 index,
+    bytes32 pos,
     DataTypes.ExtraData memory data
   ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
-    bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     res = BorrowLogic.executeBorrow(
@@ -114,6 +106,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
         user: msg.sender,
         position: pos,
         amount: amount,
+        destination: to,
         data: data,
         reservesCount: _reservesCount,
         pool: address(this)
@@ -126,10 +119,9 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
   function _repay(
     address asset,
     uint256 amount,
-    uint256 index,
+    bytes32 pos,
     DataTypes.ExtraData memory data
   ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
-    bytes32 pos = msg.sender.getPositionId(index);
     if (address(_hook) != address(0)) _hook.beforeRepay(msg.sender, pos, asset, address(this), amount, data.hookData);
 
     res = BorrowLogic.executeRepay(
@@ -216,7 +208,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
         amount: 0,
         position: pos,
         data: DataTypes.ExtraData({hookData: '', interestRateData: ''}),
-        reservesCount: _reservesCount,
+        // reservesCount: _reservesCount,
         pool: address(this)
       })
     );

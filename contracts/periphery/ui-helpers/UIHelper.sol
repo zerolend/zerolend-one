@@ -174,12 +174,11 @@ contract UIHelper {
     for (uint256 i = 0; i < count; i++) {
       uint256 tokenId = manager.tokenOfOwnerByIndex(user, i);
       INFTPositionManager.Position memory position = manager.positions(tokenId);
-      (INFTPositionManager.Asset[] memory _assets, bool _isBurnAllowed) = manager.getPosition(tokenId);
+      INFTPositionManager.Asset[] memory _assets = getNftPosition(tokenId);
 
       positions[i].pool = position.pool;
       positions[i].tokenId = tokenId;
       positions[i].assets = _assets;
-      positions[i].isBurnAllowed = _isBurnAllowed;
     }
   }
 
@@ -196,5 +195,26 @@ contract UIHelper {
       if (tokens[i] == address(0)) balances[i] = user.balance;
       else balances[i] = IERC20(tokens[i]).balanceOf(user);
     }
+  }
+
+  function getNftPosition(uint256 tokenId) public view returns (INFTPositionManager.Asset[] memory assets) {
+    INFTPositionManager.Position memory position = manager.positions(tokenId);
+
+    IPool pool = IPool(position.pool);
+    address[] memory _assets = pool.getReservesList();
+    uint256 length = _assets.length;
+
+    assets = new INFTPositionManager.Asset[](length);
+    for (uint256 i; i < length; ) {
+      address asset = assets[i].asset = _assets[i];
+      assets[i].balance = pool.getBalance(asset, address(this), tokenId);
+      assets[i].debt = pool.getDebt(asset, address(this), tokenId);
+
+      unchecked {
+        ++i;
+      }
+    }
+
+    return assets;
   }
 }
