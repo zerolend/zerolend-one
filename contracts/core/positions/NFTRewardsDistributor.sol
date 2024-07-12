@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.12;
 
-import {INFTRewardsDistributor} from '../../interfaces/INFTRewardsDistributor.sol';
-import {IPool} from '../../interfaces/pool/IPool.sol';
+import {NFTPositionManagerGetters} from './NFTPositionManagerGetters.sol';
 
 import {OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 
@@ -17,22 +16,8 @@ import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
  */
-abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableUpgradeable, INFTRewardsDistributor {
+abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableUpgradeable, NFTPositionManagerGetters {
   using SafeMath for uint256;
-
-  IERC20 public rewardsToken;
-  IVotes internal _staking;
-  mapping(address pool => address[] assets) internal _poolAssetList;
-  mapping(bytes32 assetHash => uint256 supply) private _totalSupply;
-  mapping(bytes32 assetHash => uint256) public lastUpdateTime;
-  mapping(bytes32 assetHash => uint256) public periodFinish;
-  mapping(bytes32 assetHash => uint256) public rewardPerTokenStored;
-  mapping(bytes32 assetHash => uint256) public rewardRate;
-  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 balance)) private _balances;
-  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewardPerTokenStored)) public userRewardPerTokenPaid;
-  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewards)) public rewards;
-  uint256 internal _maxBoostRequirement;
-  uint256 public rewardsDuration;
 
   function __NFTRewardsDistributor_init(
     uint256 maxBoostRequirement_,
@@ -62,11 +47,12 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
     if (_totalSupply[_assetHash] == 0) {
       return rewardPerTokenStored[_assetHash];
     }
-    return rewardPerTokenStored[_assetHash].add(
-      lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
-        _totalSupply[_assetHash]
-      )
-    );
+    return
+      rewardPerTokenStored[_assetHash].add(
+        lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+          _totalSupply[_assetHash]
+        )
+      );
   }
 
   function getReward(uint256 tokenId, bytes32 _assetHash) public /* nonReentrant */ {
@@ -80,9 +66,10 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
   }
 
   function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
-    return _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
-      rewards[tokenId][_assetHash]
-    );
+    return
+      _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+        rewards[tokenId][_assetHash]
+      );
   }
 
   function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {

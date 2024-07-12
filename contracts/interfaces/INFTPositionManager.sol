@@ -137,12 +137,14 @@ interface INFTPositionManager is INFTRewardsDistributor {
   /**
    * @notice Parameters required for various asset operations (add liquidity, borrow, repay, withdraw) against a position.
    * @param asset The address of the asset involved in the operation.
+   * @param target Optional argument. For withdraw it is the address of the user receiving the asset.
    * @param amount The amount of the asset involved in the operation.
    * @param tokenId The ID of the position token involved in the operation.
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   struct AssetOperationParams {
     address asset;
+    address target;
     uint256 amount;
     uint256 tokenId;
     DataTypes.ExtraData data;
@@ -158,16 +160,16 @@ interface INFTPositionManager is INFTRewardsDistributor {
    * @param tokenId The ID of the position token.
    * @return assets An array of Asset structs representing the balances and debts of the position's assets.
    */
-  function getPosition(uint256 tokenId) external view returns (Asset[] memory assets, bool isBurnAllowed);
+  function getPosition(uint256 tokenId) external view returns (Asset[] memory assets);
 
   /**
    * @notice Mints a new NFT representing a liquidity position.
-   * @param params The parameters required for minting the position, including the pool,token and amount.
+   * @param pool The pool to mint a position ID for
    * @return tokenId The ID of the newly minted token.
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
    * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
    */
-  function mint(MintParams calldata params) external returns (uint256 tokenId);
+  function mint(address pool) external returns (uint256 tokenId);
 
   /**
    * @notice Allow User to increase liquidity in the postion
