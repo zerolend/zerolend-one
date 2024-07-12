@@ -36,10 +36,10 @@ contract NFTPositionManager is NFTPositionManagerSetters {
   function initialize(address _factory, address _staking, address _owner, address _zero) external initializer {
     __ERC721Enumerable_init();
     __ERC721_init('ZeroLend One Position', 'ZL-POS-ONE');
-    __Ownable_init();
+    __AccessControlEnumerable_init();
     __NFTRewardsDistributor_init(50_000_000, _staking, 14 days, _zero);
 
-    _transferOwnership(_owner);
+    _grantRole(DEFAULT_ADMIN_ROLE, _owner);
 
     factory = IPoolFactory(_factory);
     _nextId = 1;
@@ -116,7 +116,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
   }
 
   /// @inheritdoc INFTPositionManager
-  function sweep(address token) external onlyOwner {
+  function sweep(address token) external onlyRole(DEFAULT_ADMIN_ROLE) {
     if (token == address(0)) {
       uint256 bal = address(this).balance;
       payable(msg.sender).transfer(bal);

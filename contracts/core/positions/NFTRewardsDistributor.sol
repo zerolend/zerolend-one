@@ -3,9 +3,9 @@ pragma solidity ^0.8.12;
 
 import {NFTPositionManagerGetters} from './NFTPositionManagerGetters.sol';
 
-import {OwnableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
-import {ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {IERC165Upgradeable, ERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
@@ -16,7 +16,7 @@ import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
  */
-abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableUpgradeable, NFTPositionManagerGetters {
+abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, NFTPositionManagerGetters {
   using SafeMath for uint256;
 
   function __NFTRewardsDistributor_init(
@@ -25,10 +25,16 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
     uint256 rewardsDuration_,
     address rewardsToken_
   ) internal onlyInitializing {
-    _maxBoostRequirement = maxBoostRequirement_;
-    _staking = IVotes(staking_);
+    maxBoostRequirement = maxBoostRequirement_;
+    stakingToken = IVotes(staking_);
     rewardsToken = IERC20(rewardsToken_);
     rewardsDuration = rewardsDuration_;
+  }
+
+  function supportsInterface(
+    bytes4 interfaceId
+  ) public view virtual override(ERC721EnumerableUpgradeable, IERC165Upgradeable, AccessControlEnumerableUpgradeable) returns (bool) {
+    return super.supportsInterface(interfaceId);
   }
 
   function totalSupplyAssetForRewards(bytes32 _assetHash) external view returns (uint256) {
@@ -47,11 +53,12 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
     if (_totalSupply[_assetHash] == 0) {
       return rewardPerTokenStored[_assetHash];
     }
-    return rewardPerTokenStored[_assetHash].add(
-      lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
-        _totalSupply[_assetHash]
-      )
-    );
+    return
+      rewardPerTokenStored[_assetHash].add(
+        lastTimeRewardApplicable(_assetHash).sub(lastUpdateTime[_assetHash]).mul(rewardRate[_assetHash]).mul(1e18).div(
+          _totalSupply[_assetHash]
+        )
+      );
   }
 
   function getReward(uint256 tokenId, bytes32 _assetHash) public /* nonReentrant */ {
@@ -65,9 +72,10 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
   }
 
   function earned(uint256 tokenId, bytes32 _assetHash) public view returns (uint256) {
-    return _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
-      rewards[tokenId][_assetHash]
-    );
+    return
+      _balances[tokenId][_assetHash].mul(rewardPerToken(_assetHash).sub(userRewardPerTokenPaid[tokenId][_assetHash])).div(1e18).add(
+        rewards[tokenId][_assetHash]
+      );
   }
 
   function getRewardForDuration(bytes32 _assetHash) external view returns (uint256) {
@@ -82,16 +90,16 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, OwnableU
    */
   function boostedBalance(address account, uint256 balance) public view returns (uint256) {
     uint256 _boosted = (balance * 20) / 100;
-    uint256 _stake = _staking.getVotes(account);
+    uint256 _stake = stakingToken.getVotes(account);
 
-    uint256 _adjusted = ((balance * _stake * 80) / _maxBoostRequirement) / 100;
+    uint256 _adjusted = ((balance * _stake * 80) / maxBoostRequirement) / 100;
 
     // because of this we are able to max out the boost by 5x
     uint256 _boostedBalance = _boosted + _adjusted;
     return _boostedBalance > balance ? balance : _boostedBalance;
   }
 
-  function notifyRewardAmount(uint256 reward, address pool, address asset, bool isDebt) external onlyOwner {
+  function notifyRewardAmount(uint256 reward, address pool, address asset, bool isDebt) external onlyRole(REWARDS_ALLOCATOR_ROLE) {
     rewardsToken.transferFrom(msg.sender, address(this), reward);
 
     bytes32 _assetHash = assetHash(pool, asset, isDebt);

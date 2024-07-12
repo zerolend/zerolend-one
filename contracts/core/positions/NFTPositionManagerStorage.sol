@@ -20,6 +20,9 @@ import {IVotes} from '@openzeppelin/contracts/governance/utils/IVotes.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 abstract contract NFTPositionManagerStorage is INFTPositionManager {
+  /// @dev the keccak256 hash of the allocator role.
+  bytes32 public immutable REWARDS_ALLOCATOR_ROLE = keccak256('REWARDS_ALLOCATOR_ROLE');
+
   /// @notice The pool factory contract that is used to create pools.
   IPoolFactory public factory;
 
@@ -38,19 +41,20 @@ abstract contract NFTPositionManagerStorage is INFTPositionManager {
   IERC20 public rewardsToken;
 
   /// @notice The contract that holds the votes.
-  IVotes internal _staking;
+  IVotes internal stakingToken;
 
   /// @notice The list of assets for a pool that is eligible for rewards
   mapping(address pool => address[] assets) internal _poolAssetList;
 
-  mapping(bytes32 assetHash => uint256 supply) internal _totalSupply;
+  mapping(bytes32 assetHash => uint256) internal _totalSupply;
   mapping(bytes32 assetHash => uint256) public lastUpdateTime;
   mapping(bytes32 assetHash => uint256) public periodFinish;
   mapping(bytes32 assetHash => uint256) public rewardPerTokenStored;
   mapping(bytes32 assetHash => uint256) public rewardRate;
-  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 balance)) internal _balances;
-  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewardPerTokenStored)) public userRewardPerTokenPaid;
-  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256 rewards)) public rewards;
-  uint256 internal _maxBoostRequirement;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256)) internal _balances;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256)) public userRewardPerTokenPaid;
+  mapping(uint256 tokenId => mapping(bytes32 assetHash => uint256)) public rewards;
+
+  uint256 public maxBoostRequirement;
   uint256 public rewardsDuration;
 }
