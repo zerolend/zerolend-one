@@ -9,6 +9,10 @@ import {PoolSetup} from './PoolSetup.sol';
 contract PoolRepayTests is PoolSetup {
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
+  uint256 amount = 2000e18;
+  uint256 borrowAmount = 800e18;
+  address alice = address(10);
+
   function testRepayAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
     pool.repaySimple(address(tokenA), 0, 0);
@@ -19,11 +23,6 @@ contract PoolRepayTests is PoolSetup {
   }
 
   function testRepayFullBorrow() external {
-    uint256 amount = 2000e18;
-    uint256 borrowAmount = 800e18;
-    address alice = address(10);
-    bytes32 pos = keccak256(abi.encodePacked(alice, 'index', uint256(0)));
-
     _mintAndApprove(alice, tokenA, 2 * amount, address(pool));
     vm.startPrank(alice);
 
@@ -57,5 +56,37 @@ contract PoolRepayTests is PoolSetup {
     // greater than the actual borrow amount as interest accrued
     assertGt(tokenBalanceBefore - tokenBalanceAfter, borrowAmount);
     assertEq(pool.getUserConfiguration(alice, 0).isBorrowing(pool.getReserveData(address(tokenA)).id), false);
+  }
+
+  function testRepayPartialBorrow() external {
+    bytes32 pos = keccak256(abi.encodePacked(alice, 'index', uint256(0)));
+
+    _mintAndApprove(alice, tokenA, 2 * amount, address(pool));
+    vm.startPrank(alice);
+
+    pool.supplySimple(address(tokenA), amount, 0);
+
+    pool.borrowSimple(address(tokenA), borrowAmount, 0);
+    vm.warp(block.timestamp + 10 days);
+
+    uint256 tokenBalanceBefore = tokenA.balanceOf(alice);
+    assertGt(pool.getDebt(address(tokenA), alice, 0), 0);
+
+    tokenA.approve(address(pool), UINT256_MAX);
+
+    // This event can not be tested as the borrowAmount changes each block.
+    vm.expectEmit(address(pool));
+    emit PoolEventsLib.Repay(address(tokenA), pos, alice, borrowAmount);
+
+    pool.repaySimple(address(tokenA), borrowAmount, 0);
+    uint256 tokenBalanceAfter = tokenA.balanceOf(alice);
+
+    vm.stopPrank();
+
+    uint256 debtBalanceAfter = pool.getDebt(address(tokenA), alice, 0);
+    assertGt(debtBalanceAfter, 0);
+
+    assertEq(tokenBalanceBefore - tokenBalanceAfter, borrowAmount);
+    assertEq(pool.getUserConfiguration(alice, 0).isBorrowing(pool.getReserveData(address(tokenA)).id), true);
   }
 }
