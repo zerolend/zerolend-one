@@ -156,13 +156,6 @@ interface INFTPositionManager is INFTRewardsDistributor {
   function initialize(address _factory, address _staking, address _owner, address _zero) external;
 
   /**
-   * @notice Retrieves the details of a position identified by the given token ID.
-   * @param tokenId The ID of the position token.
-   * @return assets An array of Asset structs representing the balances and debts of the position's assets.
-   */
-  function getPosition(uint256 tokenId) external view returns (Asset[] memory assets);
-
-  /**
    * @notice Mints a new NFT representing a liquidity position.
    * @param pool The pool to mint a position ID for
    * @return tokenId The ID of the newly minted token.
@@ -200,13 +193,6 @@ interface INFTPositionManager is INFTRewardsDistributor {
   function withdraw(AssetOperationParams memory params) external;
 
   /**
-   * @notice Burns a token, removing it from existence.
-   * @param tokenId The ID of the token to burn.
-   * @custom:error PositionNotCleared thrown if user postion is not cleared in the position map
-   */
-  function burn(uint256 tokenId) external;
-
-  /**
    * @notice Allow user to repay thier debt.
    * @param params The params required for repaying the position which includes tokenId, asset and amount.
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
@@ -215,8 +201,6 @@ interface INFTPositionManager is INFTRewardsDistributor {
    * @custom:event Repay emitted whenever user repays asset
    */
   function repay(AssetOperationParams memory params) external;
-
-  function wrapEther() external payable;
 
   function positions(uint256 tokenId) external view returns (Position memory);
 }
