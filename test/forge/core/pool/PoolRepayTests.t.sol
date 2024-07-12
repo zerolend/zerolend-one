@@ -22,7 +22,6 @@ contract PoolRepayTests is PoolSetup {
     uint256 amount = 2000e18;
     uint256 borrowAmount = 800e18;
     address alice = address(10);
-    bytes32 pos = keccak256(abi.encodePacked(alice, 'index', uint256(0)));
 
     _mintAndApprove(alice, tokenA, 2 * amount, address(pool));
     vm.startPrank(alice);

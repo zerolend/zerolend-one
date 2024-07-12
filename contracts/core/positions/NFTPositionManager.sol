@@ -19,11 +19,7 @@ import {IWETH} from '../../interfaces/IWETH.sol';
 import {NFTRewardsDistributor} from './NFTRewardsDistributor.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
-import {
-  ERC721EnumerableUpgradeable,
-  ERC721Upgradeable,
-  IERC721Upgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {ERC721EnumerableUpgradeable, ERC721Upgradeable, IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 
 /**
@@ -36,7 +32,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
   /**
    * @notice The pool factory contract that is used to create pools.
    */
-  IPoolFactory factory;
+  IPoolFactory public factory;
 
   /**
    * @notice The ID of the next token that will be minted. Starts from 1 to avoid using 0 as a token ID.
@@ -196,7 +192,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
   }
 
   /// @inheritdoc IERC721Upgradeable
-  function getApproved(uint256 tokenId) public view override (ERC721Upgradeable, IERC721Upgradeable) returns (address) {
+  function getApproved(uint256 tokenId) public view override(ERC721Upgradeable, IERC721Upgradeable) returns (address) {
     require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
     return _positions[tokenId].operator;
   }
@@ -211,7 +207,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
     isBurnAllowed = true;
 
     assets = new Asset[](length);
-    for (uint256 i; i < length;) {
+    for (uint256 i; i < length; ) {
       address asset = assets[i].asset = _assets[i];
       uint256 balance = assets[i].balance = pool.getBalance(asset, address(this), tokenId);
       uint256 debt = assets[i].debt = pool.getDebt(asset, address(this), tokenId);
@@ -233,7 +229,7 @@ contract NFTPositionManager is NFTRewardsDistributor, MulticallUpgradeable, INFT
   }
 
   /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-  function _approve(address to, uint256 tokenId) internal override (ERC721Upgradeable) {
+  function _approve(address to, uint256 tokenId) internal override(ERC721Upgradeable) {
     _positions[tokenId].operator = to;
     emit Approval(ownerOf(tokenId), to, tokenId);
   }
