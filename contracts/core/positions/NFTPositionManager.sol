@@ -14,19 +14,17 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
-import {DataTypes, IPool, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IWETH} from '../../interfaces/IWETH.sol';
 import {NFTPositionManagerSetters} from './NFTPositionManagerSetters.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
-import {ERC721Upgradeable, IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
-import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 
 /**
  * @title NFTPositionManager
  * @dev Manages the minting and burning of NFT positions, which represent liquidity positions in a pool.
  */
-abstract contract NFTPositionManagerStorage is NFTPositionManagerSetters {
+contract NFTPositionManagerStorage is NFTPositionManagerSetters {
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
   /// @custom:oz-upgrades-unsafe-allow constructor
@@ -45,6 +43,10 @@ abstract contract NFTPositionManagerStorage is NFTPositionManagerSetters {
     _nextId = 1;
   }
 
+  receive() external payable {
+    weth.deposit{value: msg.value}();
+  }
+
   /// @inheritdoc INFTPositionManager
   function mint(address pool) external returns (uint256 tokenId) {
     require(factory.isPool(pool), 'not a pool');
@@ -57,6 +59,13 @@ abstract contract NFTPositionManagerStorage is NFTPositionManagerSetters {
 
   /// @inheritdoc INFTPositionManager
   function supply(AssetOperationParams memory params) external {
+    IERC20Upgradeable(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
+    _supply(params);
+  }
+
+  function supplyETH(AssetOperationParams memory params) external {
+    require(params.asset == address(weth), 'not weth');
+    require(params.amount > IWETH(weth).balanceOf(address(this)), 'not enough weth');
     _supply(params);
   }
 
@@ -65,21 +74,38 @@ abstract contract NFTPositionManagerStorage is NFTPositionManagerSetters {
     _borrow(params);
   }
 
+  function borrowETH(AssetOperationParams memory params) external {
+    address dest = params.target;
+    params.target = address(this);
+
+    _borrow(params);
+    weth.withdraw(params.amount);
+    payable(dest).transfer(params.amount);
+  }
+
   /// @inheritdoc INFTPositionManager
   function withdraw(AssetOperationParams memory params) external {
     _withdraw(params);
   }
 
+  function withdrawETH(AssetOperationParams memory params) external {
+    address dest = params.target;
+    params.target = address(this);
+
+    _withdraw(params);
+    weth.withdraw(params.amount);
+    payable(dest).transfer(params.amount);
+  }
+
   /// @inheritdoc INFTPositionManager
   function repay(AssetOperationParams memory params) external {
+    IERC20Upgradeable(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
     _repay(params);
   }
 
-  function wrapEther() external payable {
-    weth.deposit{value: msg.value}();
-  }
-
-  function unwrapEther() external payable {
-    weth.deposit{value: msg.value}();
+  function repayETH(AssetOperationParams memory params) external {
+    require(params.asset == address(weth), 'not weth');
+    require(params.amount > IWETH(weth).balanceOf(address(this)), 'not enough weth');
+    _repay(params);
   }
 }

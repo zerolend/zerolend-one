@@ -35,6 +35,11 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     _;
   }
 
+  /**
+   * @notice Handles the liquidity operations including transferring tokens, approving the pool, and updating balances.
+   * @param params The liquidity parameters including asset, pool, user, amount, and tokenId.
+   * @custom:event LiquidityIncreased emitted whenever user supply asset
+   */
   function _supply(AssetOperationParams memory params) internal {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
@@ -44,7 +49,14 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     // check permissions
     _isAuthorizedForToken(params.tokenId);
 
-    _handleLiquidity(LiquidityParams(params.asset, address(pool), params.amount, params.tokenId, params.data));
+    IERC20Upgradeable(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
+    IERC20Upgradeable(params.asset).forceApprove(address(pool), params.amount);
+
+    pool.supply(params.asset, params.amount, params.tokenId, params.data);
+    emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
+
+    // update incentives
+    _handleSupplies(address(pool), params.asset, params.tokenId);
   }
 
   function _borrow(AssetOperationParams memory params) internal {
@@ -120,24 +132,6 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
   function _approve(address to, uint256 tokenId) internal override(ERC721Upgradeable) {
     _positions[tokenId].operator = to;
     emit Approval(ownerOf(tokenId), to, tokenId);
-  }
-
-  /**
-   * @notice Handles the liquidity operations including transferring tokens, approving the pool, and updating balances.
-   * @param params The liquidity parameters including asset, pool, user, amount, and tokenId.
-   * @custom:event LiquidityIncreased emitted whenever user supply asset
-   */
-  function _handleLiquidity(LiquidityParams memory params) private {
-    IERC20Upgradeable(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
-    IERC20Upgradeable(params.asset).forceApprove(params.pool, params.amount);
-
-    IPool pool = IPool(params.pool);
-
-    pool.supply(params.asset, params.amount, params.tokenId, params.data);
-    emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
-
-    // update incentives
-    _handleSupplies(params.pool, params.asset, params.tokenId);
   }
 
   function _isAuthorizedForToken(uint256 tokenId) internal view {
