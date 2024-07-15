@@ -83,7 +83,7 @@ library SupplyLogic {
     (isFirst, minted.shares) = balance.depositCollateral(totalSupplies, params.amount, cache.nextLiquidityIndex);
 
     // if this is the user's first deposit, enable the reserve as collateral
-    if (isFirst && ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration)) {
+    if (isFirst && ValidationLogic.validateUseAsCollateral(cache.reserveConfiguration)) {
       userConfig.setUsingAsCollateral(reserve.id, true);
       emit PoolEventsLib.ReserveUsedAsCollateralEnabled(params.asset, params.position);
     }
@@ -185,10 +185,7 @@ library SupplyLogic {
     if (useAsCollateral == userConfig.isUsingAsCollateral(reserve.id)) return;
 
     if (useAsCollateral) {
-      require(
-        ValidationLogic.validateUseAsCollateral(userConfig, cache.reserveConfiguration), PoolErrorsLib.USER_IN_ISOLATION_MODE_OR_LTV_ZERO
-      );
-
+      require(ValidationLogic.validateUseAsCollateral(cache.reserveConfiguration), PoolErrorsLib.LTV_ZERO);
       userConfig.setUsingAsCollateral(reserve.id, true);
       emit PoolEventsLib.ReserveUsedAsCollateralEnabled(params.asset, params.position);
     } else {
