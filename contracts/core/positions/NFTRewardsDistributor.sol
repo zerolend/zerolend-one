@@ -5,6 +5,7 @@ import {NFTPositionManagerGetters} from './NFTPositionManagerGetters.sol';
 
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
+import {ReentrancyGuardUpgradeable} from '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
 import {
   ERC721EnumerableUpgradeable,
   IERC165Upgradeable
@@ -19,7 +20,12 @@ import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
  * @notice Accounting contract to manage multiple staking distributions with multiple rewards
  * @author ZeroLend
  */
-abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, NFTPositionManagerGetters {
+abstract contract NFTRewardsDistributor is
+  ReentrancyGuardUpgradeable,
+  ERC721EnumerableUpgradeable,
+  AccessControlEnumerableUpgradeable,
+  NFTPositionManagerGetters
+{
   using SafeMath for uint256;
 
   function __NFTRewardsDistributor_init(
@@ -67,7 +73,7 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, AccessCo
     );
   }
 
-  function getReward(uint256 tokenId, bytes32 _assetHash) public /* nonReentrant */ {
+  function getReward(uint256 tokenId, bytes32 _assetHash) public nonReentrant {
     _updateReward(tokenId, _assetHash);
     uint256 reward = rewards[tokenId][_assetHash];
     if (reward > 0) {
@@ -144,17 +150,23 @@ abstract contract NFTRewardsDistributor is ERC721EnumerableUpgradeable, AccessCo
   }
 
   //// @inheritdoc IRewardsController
-  function _handleSupplies(address pool, address asset, uint256 id) internal {
+  function _handleSupplies(address pool, address asset, uint256 tokenId, uint256 balance) internal {
     bytes32 _assetHash = assetHash(pool, asset, false);
-    _updateReward(id, _assetHash);
+    uint256 _currentBalance = _balances[tokenId][_assetHash];
 
-    // todo
+    _updateReward(tokenId, _assetHash);
+
+    _balances[tokenId][_assetHash] = balance;
+    _totalSupply[_assetHash] = _totalSupply[_assetHash] - _currentBalance + balance;
   }
 
-  function _handleDebt(address pool, address asset, uint256 id) internal {
+  function _handleDebt(address pool, address asset, uint256 tokenId, uint256 balance) internal {
     bytes32 _assetHash = assetHash(pool, asset, true);
-    _updateReward(id, _assetHash);
+    uint256 _currentBalance = _balances[tokenId][_assetHash];
 
-    // todo
+    _updateReward(tokenId, _assetHash);
+
+    _balances[tokenId][_assetHash] = balance;
+    _totalSupply[_assetHash] = _totalSupply[_assetHash] - _currentBalance + balance;
   }
 }

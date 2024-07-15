@@ -38,7 +38,7 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
    * @param params The liquidity parameters including asset, pool, user, amount, and tokenId.
    * @custom:event LiquidityIncreased emitted whenever user supply asset
    */
-  function _supply(AssetOperationParams memory params) internal {
+  function _supply(AssetOperationParams memory params) internal nonReentrant {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
@@ -52,10 +52,11 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
 
     // update incentives
-    _handleSupplies(address(pool), params.asset, params.tokenId);
+    uint256 balance = pool.getBalance(params.asset, address(this), params.tokenId);
+    _handleSupplies(address(pool), params.asset, params.tokenId, balance);
   }
 
-  function _borrow(AssetOperationParams memory params) internal {
+  function _borrow(AssetOperationParams memory params) internal nonReentrant {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
@@ -69,10 +70,11 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     emit BorrowIncreased(params.asset, params.amount, params.tokenId);
 
     // update incentives
-    _handleDebt(address(pool), params.asset, params.tokenId);
+    uint256 balance = pool.getDebt(params.asset, address(this), params.tokenId);
+    _handleDebt(address(pool), params.asset, params.tokenId, balance);
   }
 
-  function _withdraw(AssetOperationParams memory params) internal {
+  function _withdraw(AssetOperationParams memory params) internal nonReentrant {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
@@ -86,10 +88,11 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     emit Withdrawal(params.asset, params.amount, params.tokenId);
 
     // update incentives
-    _handleSupplies(address(pool), params.asset, params.tokenId);
+    uint256 balance = pool.getBalance(params.asset, address(this), params.tokenId);
+    _handleSupplies(address(pool), params.asset, params.tokenId, balance);
   }
 
-  function _repay(AssetOperationParams memory params) internal {
+  function _repay(AssetOperationParams memory params) internal nonReentrant {
     if (params.asset == address(0)) revert ZeroAddressNotAllowed();
     if (params.amount == 0) revert ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
@@ -114,7 +117,7 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     }
 
     // update incentives
-    _handleDebt(address(pool), params.asset, params.tokenId);
+    _handleDebt(address(pool), params.asset, params.tokenId, currentDebtBalance);
 
     emit Repay(params.asset, params.amount, params.tokenId);
   }
