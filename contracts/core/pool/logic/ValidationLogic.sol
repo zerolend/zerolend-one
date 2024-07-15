@@ -288,26 +288,12 @@ library ValidationLogic {
 
   /**
    * @notice Validates the action of activating the asset as collateral.
-   * @dev Only possible if the asset has non-zero LTV and the user is not in isolation mode
-   * @param userConfig the user configuration
+   * @dev Only possible if the asset has non-zero LTV
    * @param reserveConfig The reserve configuration
    * @return True if the asset can be activated as collateral, false otherwise
    */
-  function validateUseAsCollateral(
-    DataTypes.UserConfigurationMap storage userConfig,
-    DataTypes.ReserveConfigurationMap memory reserveConfig
-  ) internal view returns (bool) {
-    if (reserveConfig.getLtv() == 0) {
-      console.log('GET LTV');
-      return false;
-    }
-    if (!userConfig.isUsingAsCollateralAny()) {
-      console.log('GET IS SDsad');
-      return true;
-    }
-    console.log('GET');
-
-    return false;
+  function validateUseAsCollateral(DataTypes.ReserveConfigurationMap memory reserveConfig) internal pure returns (bool) {
+    return reserveConfig.getLtv() > 0;
   }
 
   /**

@@ -29,10 +29,11 @@ contract PoolBasicTests is PoolSetup {
   }
 
   function testSetReserveConfigurationByNonOwner() external {
-    vm.startPrank(alice);
+    DataTypes.ReserveConfigurationMap memory config = pool.getReserveData(address(tokenA)).configuration;
 
+    vm.startPrank(alice);
     vm.expectRevert(bytes('only configurator'));
-    pool.setReserveConfiguration(address(tokenA), address(irStrategy), address(oracleA), pool.getReserveData(address(tokenA)).configuration);
+    pool.setReserveConfiguration(address(tokenA), address(irStrategy), address(oracleA), config);
     vm.stopPrank();
   }
 
@@ -89,20 +90,24 @@ contract PoolBasicTests is PoolSetup {
 
     userConfig = pool.getUserConfiguration(alice, 0);
     assertEq(userConfig.isUsingAsCollateral(0), true);
+    assertEq(userConfig.isUsingAsCollateral(2), false);
     assertEq(userConfig.isUsingAsCollateralAny(), true);
 
     pool.supplySimple(address(tokenC), mintAmount, 0);
 
     userConfig = pool.getUserConfiguration(alice, 0);
     assertEq(userConfig.isUsingAsCollateral(0), true);
-    assertEq(userConfig.isUsingAsCollateral(2), false);
+    assertEq(userConfig.isUsingAsCollateral(2), true);
     assertEq(userConfig.isUsingAsCollateralAny(), true);
 
-    console.log('2222');
-    pool.setUserUseReserveAsCollateral(address(tokenC), 0, true);
+    pool.setUserUseReserveAsCollateral(address(tokenC), 0, false);
+    userConfig = pool.getUserConfiguration(alice, 0);
+    assertEq(userConfig.isUsingAsCollateral(2), false);
 
+    pool.setUserUseReserveAsCollateral(address(tokenC), 0, true);
     userConfig = pool.getUserConfiguration(alice, 0);
     assertEq(userConfig.isUsingAsCollateral(2), true);
+
     vm.stopPrank();
   }
 }
