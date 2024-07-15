@@ -13,7 +13,6 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 import {IPool} from '../../../interfaces/pool/IPool.sol';
 
 import {DataTypes} from '../configuration/DataTypes.sol';
@@ -25,13 +24,12 @@ import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 
+import {console} from './../../../../lib/forge-std/src/console.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
-import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 
 /**
@@ -299,8 +297,16 @@ library ValidationLogic {
     DataTypes.UserConfigurationMap storage userConfig,
     DataTypes.ReserveConfigurationMap memory reserveConfig
   ) internal view returns (bool) {
-    if (reserveConfig.getLtv() == 0) return false;
-    if (!userConfig.isUsingAsCollateralAny()) return true;
+    if (reserveConfig.getLtv() == 0) {
+      console.log('GET LTV');
+      return false;
+    }
+    if (!userConfig.isUsingAsCollateralAny()) {
+      console.log('GET IS SDsad');
+      return true;
+    }
+    console.log('GET');
+
     return false;
   }
 

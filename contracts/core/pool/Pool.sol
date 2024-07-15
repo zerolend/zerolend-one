@@ -17,8 +17,6 @@ import {IHook} from '../../interfaces/IHook.sol';
 
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IPool, IPoolSetters} from '../../interfaces/pool/IPool.sol';
-import {PoolGetters} from './PoolGetters.sol';
-
 import {PoolSetters} from './PoolSetters.sol';
 
 import {DataTypes} from './configuration/DataTypes.sol';

@@ -5,7 +5,6 @@ import {DataTypes} from './../../../../contracts/core/pool/configuration/DataTyp
 import {UserConfiguration} from './../../../../contracts/core/pool/configuration/UserConfiguration.sol';
 
 import {IPoolFactory} from './../../../../contracts/interfaces/IPoolFactory.sol';
-import {console} from './../../../../lib/forge-std/src/console.sol';
 import {PoolSetup} from './PoolSetup.sol';
 
 contract PoolGetterTests is PoolSetup {
@@ -44,7 +43,7 @@ contract PoolGetterTests is PoolSetup {
     assertEq(balanceData.debtShares, 0);
   }
 
-  function testGetBalanceRaw() public {
+  function testGetBalanceRaw() public view {
     DataTypes.PositionBalance memory balanceData = pool.getBalanceRaw(address(tokenA), address(1), 0);
     assertEq(balanceData.supplyShares, 0);
     assertEq(balanceData.debtShares, 0);
