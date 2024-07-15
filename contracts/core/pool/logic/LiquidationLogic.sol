@@ -30,7 +30,7 @@ import {ReserveLogic} from './ReserveLogic.sol';
 import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-
+import "hardhat/console.sol";
 /**
  * @title LiquidationLogic library
  * @notice Implements actions involving management of collateral in the protocol, the main one being the liquidations
@@ -138,7 +138,7 @@ library LiquidationLogic {
 
     (vars.collateralPriceSource, vars.debtPriceSource, vars.liquidationBonus) = _getConfigurationData(collateralReserve, params);
 
-    vars.userCollateralBalance = balances[vars.asset][params.position].supplyShares;
+    vars.userCollateralBalance = balances[params.debtAsset][params.position].supplyShares;
 
     (vars.actualCollateralToLiquidate, vars.actualDebtToLiquidate, vars.liquidationProtocolFeeAmount) =
     _calculateAvailableCollateralToLiquidate(

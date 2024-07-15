@@ -49,13 +49,8 @@ library GenericLogic {
     uint256 totalDebtInBaseCurrency;
     uint256 avgLtv;
     uint256 avgLiquidationThreshold;
-    uint256 eModeAssetPrice;
-    uint256 eModeLtv;
-    uint256 eModeLiqThreshold;
-    uint256 eModeAssetCategory;
     address currentReserveAddress;
     bool hasZeroLtvCollateral;
-    bool isInEModeCategory;
   }
 
   /**
@@ -125,7 +120,7 @@ library GenericLogic {
         }
 
         vars.avgLiquidationThreshold +=
-          vars.PositionBalanceInBaseCurrency * (vars.isInEModeCategory ? vars.eModeLiqThreshold : vars.liquidationThreshold);
+          vars.PositionBalanceInBaseCurrency * vars.liquidationThreshold;
       }
 
       if (params.userConfig.isBorrowing(vars.i)) {
