@@ -24,7 +24,6 @@ import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 
-import {console} from './../../../../lib/forge-std/src/console.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
