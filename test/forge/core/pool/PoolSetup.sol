@@ -62,4 +62,11 @@ abstract contract PoolSetup is CorePoolTests {
       supplyCap: 0
     });
   }
+
+  function _mintAndApprove(address user, MintableERC20 token, uint256 amount, address toApprove) public {
+    vm.startPrank(user);
+    token.mint(user, amount);
+    token.approve(toApprove, amount);
+    vm.stopPrank();
+  }
 }

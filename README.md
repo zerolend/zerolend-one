@@ -3,6 +3,7 @@
 [![Hardhat Build](https://github.com/zerolend/zerolend-one/actions/workflows/hardhat.yml/badge.svg)](https://github.com/zerolend/zerolend-one/actions/workflows/hardhat.yml)
 [![Foundry Build](https://github.com/zerolend/zerolend-one/actions/workflows/foundry.yml/badge.svg)](https://github.com/zerolend/zerolend-one/actions/workflows/foundry.yml)
 [![codecov](https://codecov.io/github/zerolend/zerolend-one/graph/badge.svg?token=1F8SF7LANW)](https://codecov.io/github/zerolend/zerolend-one)
+[![NPM Version](https://img.shields.io/npm/v/%40zerolendxyz%2Fone)](https://www.npmjs.com/package/@zerolendxyz/one)
 
 ZeroLend One is the next version of the ZeroLend protocol and introduces a highly scalable multi-chain lending protocol that is permission-less, isolated and curates risk management.
 

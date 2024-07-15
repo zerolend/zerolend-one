@@ -20,7 +20,7 @@ import {IPool} from './pool/IPool.sol';
 import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 
 interface IPoolFactory is IBeacon {
-  event PoolCreated(IPool indexed pool, uint256 indexed index, address creator);
+  event PoolCreated(IPool indexed pool, uint256 indexed index, address indexed creator, DataTypes.InitPoolParams params);
   event ImplementationUpdated(address indexed old, address indexed updated, address owner);
   event TreasuryUpdated(address indexed old, address indexed updated, address owner);
   event ReserveFactorUpdated(uint256 indexed old, uint256 indexed updated, address owner);

@@ -13,15 +13,12 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IPool} from '../../interfaces/pool/IPool.sol';
-
 import {PoolGetters} from './PoolGetters.sol';
 
 import {PoolRentrancyGuard} from './PoolRentrancyGuard.sol';
 import {DataTypes} from './configuration/DataTypes.sol';
 import {ReserveConfiguration} from './configuration/ReserveConfiguration.sol';
 
-import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
 import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 import {BorrowLogic} from './logic/BorrowLogic.sol';
 import {FlashLoanLogic} from './logic/FlashLoanLogic.sol';
@@ -139,6 +136,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       _reserves[asset],
       _balances[asset][pos],
       _totalSupplies[asset],
+      _usersConfig[pos],
       DataTypes.ExecuteRepayParams({
         reserveFactor: _factory.reserveFactor(),
         asset: asset,
