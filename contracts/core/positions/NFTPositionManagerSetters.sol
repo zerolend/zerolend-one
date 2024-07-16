@@ -123,7 +123,7 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
   }
 
   /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-  function _approve(address to, uint256 tokenId) internal override(ERC721Upgradeable) {
+  function _approve(address to, uint256 tokenId) internal override (ERC721Upgradeable) {
     _positions[tokenId].operator = to;
     emit Approval(ownerOf(tokenId), to, tokenId);
   }
