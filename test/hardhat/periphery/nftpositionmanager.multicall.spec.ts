@@ -41,7 +41,7 @@ describe('NFT position manager - multicall', () => {
     const supplyCall = await manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenA.target,
-        target: ZeroAddress,
+        target: whale.address,
         tokenId: 0,
         amount: e18('100'),
         data: { interestRateData: '0x', hookData: '0x' },
@@ -58,7 +58,7 @@ describe('NFT position manager - multicall', () => {
     const supplyCallA = await manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenA.target,
-        target: ZeroAddress,
+        target: ant.address,
         tokenId: 0,
         amount: supplyAmount,
         data: { interestRateData: '0x', hookData: '0x' },
@@ -67,7 +67,7 @@ describe('NFT position manager - multicall', () => {
     const supplyCallB = await manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenB.target,
-        target: ZeroAddress,
+        target: ant.address,
         tokenId: 0,
         amount: incLiquidityAmount,
         data: { interestRateData: '0x', hookData: '0x' },
@@ -98,7 +98,7 @@ describe('NFT position manager - multicall', () => {
     const supplyCall = await manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenB.target,
-        target: ZeroAddress,
+        target: ant.address,
         amount: supplyAmount,
         tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },
