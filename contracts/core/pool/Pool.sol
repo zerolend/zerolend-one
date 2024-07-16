@@ -66,16 +66,17 @@ contract Pool is PoolSetters {
   /// @inheritdoc IPoolSetters
   function supply(
     address asset,
+    address to,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
   ) public returns (DataTypes.SharesType memory) {
-    return _supply(asset, amount, msg.sender.getPositionId(index), data);
+    return _supply(asset, amount, to.getPositionId(index), data);
   }
 
   /// @inheritdoc IPoolSetters
-  function supplySimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
-    return _supply(asset, amount, msg.sender.getPositionId(index), DataTypes.ExtraData({interestRateData: '', hookData: ''}));
+  function supplySimple(address asset, address to, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
+    return _supply(asset, amount, to.getPositionId(index), DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPoolSetters

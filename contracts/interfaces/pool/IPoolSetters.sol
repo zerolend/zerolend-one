@@ -35,6 +35,7 @@ interface IPoolSetters {
    * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
    * - E.g. User supplies 100 USDC and gets in return 100 aUSDC
    * @param asset The address of the underlying asset to supply
+   * @param to The address to supply for
    * @param amount The amount to be supplied
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
@@ -42,6 +43,7 @@ interface IPoolSetters {
    */
   function supply(
     address asset,
+    address to,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
@@ -51,7 +53,7 @@ interface IPoolSetters {
    * @dev See [supply(...)](#supply) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function supplySimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
+  function supplySimple(address asset, address to, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
 
   /**
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned

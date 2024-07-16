@@ -7,7 +7,7 @@ contract PoolSupplyTests is PoolSetup {
   /// ------------Supply------------
   function testSupplyAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
-    pool.supplySimple(address(tokenA), 0, 0);
+    pool.supplySimple(address(tokenA), address(1), 0, 0);
   }
 
   function testSupplyFrozenEnabled() external {
@@ -18,7 +18,7 @@ contract PoolSupplyTests is PoolSetup {
     tokenA.approve(address(pool), 1e18);
 
     vm.expectRevert(bytes('RESERVE_FROZEN'));
-    pool.supplySimple(address(tokenA), 1e18, 0);
+    pool.supplySimple(address(tokenA), address(1), 1e18, 0);
   }
 
   function testSupplyCapExceed() external {
@@ -29,7 +29,7 @@ contract PoolSupplyTests is PoolSetup {
     tokenA.approve(address(pool), 1e18);
 
     vm.expectRevert(bytes('SUPPLY_CAP_EXCEEDED'));
-    pool.supplySimple(address(tokenA), 101e18, 0);
+    pool.supplySimple(address(tokenA), address(1), 101e18, 0);
   }
 
   function testSupplyEventEmit() external {
@@ -46,13 +46,13 @@ contract PoolSupplyTests is PoolSetup {
     vm.expectEmit(true, true, false, true);
     emit PoolEventsLib.Supply(address(tokenA), pos, supplyAmount);
 
-    pool.supplySimple(address(tokenA), supplyAmount, index);
+    pool.supplySimple(address(tokenA), owner, supplyAmount, index);
 
     vm.stopPrank();
   }
 
   function testFailSupplyZeroAssetAddress() external {
-    pool.supplySimple(address(0), 50 ether, 0);
+    pool.supplySimple(address(0), owner, 50 ether, 0);
   }
 
   function testPoolSupply() external {
@@ -65,7 +65,7 @@ contract PoolSupplyTests is PoolSetup {
     tokenA.mint(owner, mintAmount);
     tokenA.approve(address(pool), supplyAmount);
 
-    pool.supplySimple(address(tokenA), supplyAmount, index);
+    pool.supplySimple(address(tokenA), owner, supplyAmount, index);
 
     assertEq(tokenA.balanceOf(address(pool)), supplyAmount);
     assertEq(tokenA.balanceOf(owner), mintAmount - supplyAmount);

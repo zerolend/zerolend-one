@@ -51,7 +51,7 @@ contract PoolBasicTests is PoolSetup {
     _mintAndApprove(alice, tokenA, mintAmount, address(pool));
     vm.startPrank(alice);
 
-    pool.supplySimple(address(tokenA), mintAmount, 0);
+    pool.supplySimple(address(tokenA), alice, mintAmount, 0);
 
     userConfig = pool.getUserConfiguration(alice, 0);
     assertEq(userConfig.isUsingAsCollateral(0), true);
@@ -68,9 +68,8 @@ contract PoolBasicTests is PoolSetup {
     _mintAndApprove(alice, tokenC, mintAmount, address(pool));
     vm.startPrank(alice);
 
-    pool.supplySimple(address(tokenA), mintAmount, 0);
-
-    pool.supplySimple(address(tokenC), mintAmount, 0);
+    pool.supplySimple(address(tokenA), alice, mintAmount, 0);
+    pool.supplySimple(address(tokenC), alice, mintAmount, 0);
     vm.stopPrank();
 
     configurator.setReserveFreeze(IPool(address(pool)), address(tokenC), true);
@@ -86,14 +85,14 @@ contract PoolBasicTests is PoolSetup {
     _mintAndApprove(alice, tokenC, mintAmount, address(pool));
     vm.startPrank(alice);
 
-    pool.supplySimple(address(tokenA), mintAmount, 0);
+    pool.supplySimple(address(tokenA), alice, mintAmount, 0);
 
     userConfig = pool.getUserConfiguration(alice, 0);
     assertEq(userConfig.isUsingAsCollateral(0), true);
     assertEq(userConfig.isUsingAsCollateral(2), false);
     assertEq(userConfig.isUsingAsCollateralAny(), true);
 
-    pool.supplySimple(address(tokenC), mintAmount, 0);
+    pool.supplySimple(address(tokenC), alice, mintAmount, 0);
 
     userConfig = pool.getUserConfiguration(alice, 0);
     assertEq(userConfig.isUsingAsCollateral(0), true);
