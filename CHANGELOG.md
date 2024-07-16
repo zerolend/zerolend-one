@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.9.0](https://github.com/zerolend/zerolend-one/compare/v0.8.0...v0.9.0) (2024-07-16)
+
+
+### Features
+
+* added `to` address to supply function ([b72de29](https://github.com/zerolend/zerolend-one/commit/b72de29672dae65ea92cc8b96bce177bd30a3cbd))
+
+
+### Bug Fixes
+
+* added deployments folder into git ([4cc30e6](https://github.com/zerolend/zerolend-one/commit/4cc30e679c943d1c72bde7f86a67f2c6287d2bf8))
+* added npm badge to readme.md ([6a46aa3](https://github.com/zerolend/zerolend-one/commit/6a46aa32ff8270486e5f83061816bc0f89c1257a))
+* broke down nft position manager into mulitple files ([3254b09](https://github.com/zerolend/zerolend-one/commit/3254b0930d0c6fc98269a75584bc14307317d54a))
+* changed the config order of the pool init events ([e9882b3](https://github.com/zerolend/zerolend-one/commit/e9882b346b7901df527e9ce8ccc948459ffab0e6))
+* fixed bugs with the nft position manager ([678e09a](https://github.com/zerolend/zerolend-one/commit/678e09a26c3efd5e493aba0f8f3d6bd2a06acbef))
+* moved nft position manager to core ([6b8f765](https://github.com/zerolend/zerolend-one/commit/6b8f7652059253f4181757c213e27ae597e4ed46))
+* Pool Foundry Tests FollowUp ([#25](https://github.com/zerolend/zerolend-one/issues/25)) ([f68b80c](https://github.com/zerolend/zerolend-one/commit/f68b80c82de130147f506a7433e206b241a103b6))
+* removed github token from the CI workflow ([7206590](https://github.com/zerolend/zerolend-one/commit/7206590b518bbf8b493b4461bf96b4abb43ea8a3))
+* removed redudant action triggers ([1f702e9](https://github.com/zerolend/zerolend-one/commit/1f702e99e1f49f77291393711893d4d726f39fc0))
+* updated the deploy scripts ([062597e](https://github.com/zerolend/zerolend-one/commit/062597ed4567e232d8a807a9c6bafc690a38e6e6))
+
 ## [0.8.0](https://github.com/zerolend/zerolend-one/compare/v0.7.1...v0.8.0) (2024-07-09)
 
 
