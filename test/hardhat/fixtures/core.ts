@@ -39,7 +39,7 @@ export async function deployCore() {
   // deploy pool
   const poolImpl = await Pool.deploy();
   const poolFactory = await PoolFactory.deploy(poolImpl.target);
-  const configurator = await PoolConfigurator.deploy(poolFactory.target, governance.address);
+  const configurator = await PoolConfigurator.deploy(poolFactory.target);
   await poolFactory.setConfigurator(configurator.target);
 
   // deploy vault

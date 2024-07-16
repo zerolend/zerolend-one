@@ -100,6 +100,9 @@ describe('Curated Vault', () => {
 
     // create 5 pools and a vault
     const input: DataTypes.InitPoolParamsStruct = {
+      admins: [],
+      emergencyAdmins: [],
+      riskAdmins: [],
       hook: ZeroAddress,
       assets: [loan.target, collateral.target],
       rateStrategyAddresses: [irStrategy.target, irStrategy.target],

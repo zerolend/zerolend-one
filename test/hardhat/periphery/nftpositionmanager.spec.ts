@@ -80,7 +80,7 @@ describe.skip('NFT Position Manager', () => {
       // Approve the NFT Position Manager
       await tokenA.approve(manager.target, mintAmount);
 
-      await expect(manager.mint(mintParams))
+      await expect(manager.mint(pool))
         .to.emit(manager, 'LiquidityIncreased')
         .withArgs(tokenA.target, 1, supplyAmount);
     });
@@ -138,13 +138,13 @@ describe.skip('NFT Position Manager', () => {
       await tokenA.approve(manager.target, supplyAmount);
 
       // mint a postion for tokenId 1 by alice
-      await manager.mint(mintParams);
+      await manager.mint(pool);
 
       const liquidityParams = {
         asset: ZeroAddress,
-        pool,
         amount: supplyAmount,
-        tokenId: 1,
+        target: alice.address,
+        tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },
       };
       await expect(manager.supply(liquidityParams)).to.be.revertedWithCustomError(
@@ -157,23 +157,15 @@ describe.skip('NFT Position Manager', () => {
       const supplyAmount = ethers.parseUnits('10', 18);
       await tokenA.mint(alice.address, mintAmount);
       expect(await tokenA.balanceOf(await alice.getAddress())).to.be.equals(mintAmount);
-      const mintParams = {
-        asset: tokenA,
-        target: alice.address,
-        tokenId: 0,
-        amount: supplyAmount,
-        data: { interestRateData: '0x', hookData: '0x' },
-      };
-
       // Approve the NFT Position Manager
       await tokenA.approve(manager.target, supplyAmount);
 
       // mint a postion for tokenId 1 by alice
-      await manager.mint(mintParams);
+      await manager.mint(pool);
 
       const liquidityParams = {
         asset: tokenA,
-        pool,
+        target: alice.address,
         amount: 0,
         tokenId: 1,
         data: { interestRateData: '0x', hookData: '0x' },

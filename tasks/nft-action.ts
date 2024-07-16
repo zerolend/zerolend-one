@@ -6,8 +6,10 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 task(`nft-action`).setAction(async (_, hre: HardhatRuntimeEnvironment) => {
   if (hre.network.name !== 'linea') throw new Error('invalid network');
 
+  const [deployer] = await hre.ethers.getSigners();
+
   const weth = '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f';
-  const pool = await hre.ethers.getContractAt('Pool', '0x1f3bb379a6d1beb067cd033a4304e135f0174269');
+  const pool = await hre.ethers.getContractAt('Pool', '0x9BD573a2ae22c41A12310030c5121Bf74BE79Dc5');
   const token = await hre.ethers.getContractAt('ERC20', weth);
 
   const manageraddr = (await hre.deployments.get('NFTPositionManager')).address;
@@ -18,19 +20,41 @@ task(`nft-action`).setAction(async (_, hre: HardhatRuntimeEnvironment) => {
   await waitForTx(await token.approve(manager.target, MaxUint256));
 
   console.log('supplying asset');
-  const supply = await manager.mint.populateTransaction({
+  const mint = await manager.mint.populateTransaction(pool.target);
+
+  const supply = await manager.supply.populateTransaction({
     asset: weth,
-    pool: pool.target,
+    tokenId: 0,
+    target: deployer.address,
     amount: eth('0.001'),
     data: { interestRateData: '0x', hookData: '0x' },
   });
 
   const borrow = await manager.borrow.populateTransaction({
     asset: weth,
-    tokenId: 1,
+    target: deployer.address,
+    tokenId: 0,
     amount: eth('0.0001'),
     data: { interestRateData: '0x', hookData: '0x' },
   });
 
-  await waitForTx(await manager.multicall([supply.data, borrow.data]));
+  const repay = await manager.repay.populateTransaction({
+    asset: weth,
+    target: deployer.address,
+    tokenId: 0,
+    amount: eth('0.0001'),
+    data: { interestRateData: '0x', hookData: '0x' },
+  });
+
+  const withdraw = await manager.withdraw.populateTransaction({
+    asset: weth,
+    target: deployer.address,
+    tokenId: 0,
+    amount: eth('0.0001'),
+    data: { interestRateData: '0x', hookData: '0x' },
+  });
+
+  await waitForTx(
+    await manager.multicall([mint.data, supply.data, borrow.data, repay.data, withdraw.data])
+  );
 });

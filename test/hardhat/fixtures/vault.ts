@@ -30,6 +30,9 @@ export async function deployVault() {
   } = fixture;
 
   const input: DataTypes.InitPoolParamsStruct = {
+    admins: [],
+    emergencyAdmins: [],
+    riskAdmins: [],
     hook: ZeroAddress,
     assets: [tokenA.target, tokenB.target, tokenC.target],
     rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],

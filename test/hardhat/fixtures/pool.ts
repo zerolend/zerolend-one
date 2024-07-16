@@ -27,9 +27,13 @@ export async function deployPool() {
     oracleA,
     oracleB,
     oracleC,
+    owner,
   } = fixture;
 
   const input: DataTypes.InitPoolParamsStruct = {
+    admins: [owner.address],
+    emergencyAdmins: [owner.address],
+    riskAdmins: [owner.address],
     hook: ZeroAddress,
     assets: [tokenA.target, tokenB.target, tokenC.target],
     rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
