@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from './../../../../contracts/core/pool/configuration/DataTypes.sol';
 import {UserConfiguration} from './../../../../contracts/core/pool/configuration/UserConfiguration.sol';
+import {ReserveConfiguration} from './../../../../contracts/core/pool/configuration/ReserveConfiguration.sol';
 
 import {IPool} from './../../../../contracts/interfaces/pool/IPool.sol';
 import {console} from './../../../../lib/forge-std/src/console.sol';
@@ -10,6 +11,7 @@ import {PoolSetup} from './PoolSetup.sol';
 
 contract PoolBasicTests is PoolSetup {
   using UserConfiguration for DataTypes.UserConfigurationMap;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   DataTypes.UserConfigurationMap userConfig;
   address alice = address(1);
@@ -33,6 +35,51 @@ contract PoolBasicTests is PoolSetup {
 
     vm.startPrank(alice);
     vm.expectRevert(bytes('only configurator'));
+    pool.setReserveConfiguration(address(tokenA), address(irStrategy), address(oracleA), config);
+    vm.stopPrank();
+  }
+
+  function testSetReserveConfigurationRevertZeroAddress() external {
+    DataTypes.ReserveConfigurationMap memory config = pool.getReserveData(address(tokenA)).configuration;
+    vm.startPrank(address(configurator));
+    vm.expectRevert(bytes('ZERO_ADDRESS_NOT_VALID'));
+    pool.setReserveConfiguration(address(0), address(irStrategy), address(oracleA), config);
+    vm.stopPrank();
+  }
+
+  function testSetReserveConfigurationRevertLTVGreaterThanLT() external {
+    DataTypes.ReserveConfigurationMap memory config = pool.getReserveData(address(tokenA)).configuration;
+    vm.startPrank(address(configurator));
+    config.setLtv(10_000);
+    vm.expectRevert(bytes('INVALID_RESERVE_PARAMS'));
+    pool.setReserveConfiguration(address(tokenA), address(irStrategy), address(oracleA), config);
+    vm.stopPrank();
+  }
+
+  function testSetReserveConfigurationRevertWhenLBLessThanPF() external {
+    DataTypes.ReserveConfigurationMap memory config = pool.getReserveData(address(tokenA)).configuration;
+    vm.startPrank(address(configurator));
+    config.setLiquidationBonus(1e2);
+    vm.expectRevert(bytes('INVALID_RESERVE_PARAMS'));
+    pool.setReserveConfiguration(address(tokenA), address(irStrategy), address(oracleA), config);
+    vm.stopPrank();
+  }
+
+  function testSetReserveConfigurationRevertWhenLTMultiplyLBGreaterThanPF() external {
+    DataTypes.ReserveConfigurationMap memory config = pool.getReserveData(address(tokenA)).configuration;
+    vm.startPrank(address(configurator));
+    config.setLiquidationBonus(1e2);
+    config.setLiquidationThreshold(1e3);
+    vm.expectRevert(bytes('INVALID_RESERVE_PARAMS'));
+    pool.setReserveConfiguration(address(tokenA), address(irStrategy), address(oracleA), config);
+    vm.stopPrank();
+  }
+
+  function testSetReserveConfigurationRevertWhenDecimalsGreaterThanSix() external {
+    DataTypes.ReserveConfigurationMap memory config = pool.getReserveData(address(tokenA)).configuration;
+    vm.startPrank(address(configurator));
+    config.setDecimals(5);
+    vm.expectRevert(bytes('not enough decimals'));
     pool.setReserveConfiguration(address(tokenA), address(irStrategy), address(oracleA), config);
     vm.stopPrank();
   }
