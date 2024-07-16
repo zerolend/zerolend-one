@@ -84,7 +84,14 @@ interface IPoolConfigurator is IPoolManager {
    */
   function setReserveFreeze(IPool pool, address asset, bool freeze) external;
 
-  function initRoles(IPool pool, address admin) external;
+  /**
+   * @notice Initializes the roles of the pool.
+   * @param pool The address of the pool
+   * @param admins The addresses of the pool admins
+   * @param emergencyAdmins The addresses of the emergency admins
+   * @param riskAdmins The addresses of the risk admins
+   */
+  function initRoles(IPool pool, address[] memory admins, address[] memory emergencyAdmins, address[] memory riskAdmins) external;
 
   /**
    * @notice Sets the interest rate strategy of a reserve.

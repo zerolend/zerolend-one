@@ -30,16 +30,27 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
 
   address public factory;
 
-  constructor(address _factory, address _governance) PoolManager(_governance) {
+  constructor(address _factory) {
     factory = _factory;
   }
 
-  function initRoles(IPool pool, address admin) external override {
+  /// @inheritdoc IPoolConfigurator
+  function initRoles(IPool pool, address[] memory admins, address[] memory emergencyAdmins, address[] memory riskAdmins) external override {
     require(msg.sender == factory, '!factory');
 
-    _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admin);
-    _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), governance);
+    for (uint i = 0; i < admins.length; i++) {
+      _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admins[i]);
+    }
 
+    for (uint i = 0; i < emergencyAdmins.length; i++) {
+      _setupRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), emergencyAdmins[i]);
+    }
+
+    for (uint i = 0; i < riskAdmins.length; i++) {
+      _setupRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), riskAdmins[i]);
+    }
+
+    // setup role admins
     _setRoleAdmin(getRoleFromPool(pool, POOL_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
     _setRoleAdmin(getRoleFromPool(pool, RISK_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));
     _setRoleAdmin(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), getRoleFromPool(pool, POOL_ADMIN_ROLE));

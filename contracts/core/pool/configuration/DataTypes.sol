@@ -228,6 +228,9 @@ library DataTypes {
   }
 
   struct InitPoolParams {
+    address[] admins;
+    address[] emergencyAdmins;
+    address[] riskAdmins;
     address hook;
     address[] assets;
     address[] rateStrategyAddresses;
