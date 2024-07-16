@@ -13,6 +13,8 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {DataTypes} from '../core/pool/configuration/DataTypes.sol';
+
 interface IHook {
   function afterInitialize(address pool) external returns (bytes4);
 
@@ -20,9 +22,9 @@ interface IHook {
 
   function afterSupply(address sender, bytes32 position, address asset, address pool, uint256 amount, bytes calldata hookData) external;
 
-  function beforeWithdraw(address sender, bytes32 position, address asset, address pool, uint256 amount, bytes calldata hookData) external;
+  function beforeWithdraw(DataTypes.ExecuteWithdrawParams memory params) external;
 
-  function afterWithdraw(address sender, bytes32 position, address asset, address pool, uint256 amount, bytes calldata hookData) external;
+  function afterWithdraw(DataTypes.ExecuteWithdrawParams memory params) external;
 
   function beforeRepay(address sender, bytes32 position, address asset, address pool, uint256 amount, bytes calldata hookData) external;
 

@@ -14,8 +14,6 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes} from '../../core/pool/configuration/DataTypes.sol';
-import {IHook} from '../IHook.sol';
-import {IPoolFactory} from '../IPoolFactory.sol';
 
 interface IPoolSetters {
   /**
@@ -59,6 +57,7 @@ interface IPoolSetters {
    * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
    * E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100 aUSDC
    * @param asset The address of the underlying asset to withdraw
+   * @param to The address to send the tokens to
    * @param amount The underlying amount to be withdrawn
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
    * @param index The index of the user's position
@@ -67,6 +66,7 @@ interface IPoolSetters {
    */
   function withdraw(
     address asset,
+    address to,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
@@ -76,7 +76,7 @@ interface IPoolSetters {
    * @dev See [withdraw(...)](#withdraw) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function withdrawSimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory minted);
+  function withdrawSimple(address asset, address to, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory minted);
 
   /**
    * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -85,6 +85,7 @@ interface IPoolSetters {
    * - E.g. User borrows 100 USDC passing as `onBehalfOf` his own address, receiving the 100 USDC in his wallet
    *   and 100 stable/variable debt tokens, depending on the `interestRateMode`
    * @param asset The address of the underlying asset to borrow
+   * @param to The address to send the tokens to
    * @param amount The amount to be borrowed
    * @param index The index of the user's position
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
@@ -92,6 +93,7 @@ interface IPoolSetters {
    */
   function borrow(
     address asset,
+    address to,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
@@ -101,7 +103,7 @@ interface IPoolSetters {
    * @dev See [borrow(...)](#borrow) for the full documentation. This call executes the same function with
    * dummy data params
    */
-  function borrowSimple(address asset, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
+  function borrowSimple(address asset, address to, uint256 amount, uint256 index) external returns (DataTypes.SharesType memory);
 
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned

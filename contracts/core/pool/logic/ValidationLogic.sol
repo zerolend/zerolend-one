@@ -1,3 +1,4 @@
+// require(amount <= _balances[asset][pos].supplyShares, 'Insufficient Balance!');
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
@@ -157,12 +158,7 @@ library ValidationLogic {
       _balances,
       reservesData,
       reservesList,
-      DataTypes.CalculateUserAccountDataParams({
-        userConfig: params.userConfig,
-        reservesCount: params.reservesCount,
-        position: params.position,
-        pool: params.pool
-      })
+      DataTypes.CalculateUserAccountDataParams({userConfig: params.userConfig, position: params.position, pool: params.pool})
     );
 
     require(vars.userCollateralInBaseCurrency != 0, PoolErrorsLib.COLLATERAL_BALANCE_IS_ZERO);
@@ -239,8 +235,7 @@ library ValidationLogic {
    * @param reservesList The addresses of all the active reserves
    * @param userConfig The state of the user for the specific reserve
    * @param position The user to validate health factor of
-   * @param reservesCount The number of available reserves
-   * @param oracle The price oracle
+   * @param pool The pool instance
    */
   function validateHealthFactor(
     mapping(address => mapping(bytes32 => DataTypes.PositionBalance)) storage _balances,
@@ -248,14 +243,13 @@ library ValidationLogic {
     mapping(uint256 => address) storage reservesList,
     DataTypes.UserConfigurationMap memory userConfig,
     bytes32 position,
-    uint256 reservesCount,
-    address oracle
+    address pool
   ) internal view returns (uint256, bool) {
     (,,,, uint256 healthFactor, bool hasZeroLtvCollateral) = GenericLogic.calculateUserAccountData(
       _balances,
       reservesData,
       reservesList,
-      DataTypes.CalculateUserAccountDataParams({userConfig: userConfig, reservesCount: reservesCount, position: position, pool: oracle})
+      DataTypes.CalculateUserAccountDataParams({userConfig: userConfig, position: position, pool: pool})
     );
 
     require(healthFactor >= HEALTH_FACTOR_LIQUIDATION_THRESHOLD, PoolErrorsLib.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
@@ -279,8 +273,7 @@ library ValidationLogic {
   ) internal view {
     DataTypes.ReserveData memory reserve = reservesData[params.asset];
 
-    (, bool hasZeroLtvCollateral) =
-      validateHealthFactor(_balances, reservesData, reservesList, userConfig, params.position, params.reservesCount, params.pool);
+    (, bool hasZeroLtvCollateral) = validateHealthFactor(_balances, reservesData, reservesList, userConfig, params.position, params.pool);
 
     require(!hasZeroLtvCollateral || reserve.configuration.getLtv() == 0, PoolErrorsLib.LTV_VALIDATION_FAILED);
   }

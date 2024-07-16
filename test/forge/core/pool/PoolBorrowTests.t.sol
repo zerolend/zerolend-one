@@ -16,11 +16,11 @@ contract PoolBorrowTests is PoolSetup {
   /// ------------Borrow------------
   function testBorrowAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
-    pool.borrowSimple(address(tokenA), 0, 0);
+    pool.borrowSimple(address(tokenA), address(this), 0, 0);
   }
 
   function testFailBorrowZeroAssetAddress() external {
-    pool.borrowSimple(address(0), 50 ether, 0);
+    pool.borrowSimple(address(0), address(this), 50 ether, 0);
   }
 
   function testBorrowWhenCollateralIsZero() external {

@@ -302,7 +302,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
           toWithdraw = 0;
         }
 
-        DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), toWithdraw, 0);
+        DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), address(this), toWithdraw, 0);
         emit CuratedEventsLib.ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
         totalWithdrawn += burnt.assets;
       } else {
@@ -658,7 +658,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
         UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
       if (toWithdraw > 0) {
         // Using try/catch to skip markets that revert.
-        try pool.withdrawSimple(asset(), toWithdraw, 0) {
+        try pool.withdrawSimple(asset(), address(this), toWithdraw, 0) {
           withdrawAmount -= toWithdraw;
         } catch {}
       }

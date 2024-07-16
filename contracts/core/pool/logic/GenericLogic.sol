@@ -22,7 +22,6 @@ import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 
 /**
  * @title GenericLogic library
@@ -83,8 +82,8 @@ library GenericLogic {
     }
 
     CalculateUserAccountDataVars memory vars;
-
-    while (vars.i < params.reservesCount) {
+    uint256 reservesCount = IPool(params.pool).getReservesCount();
+    while (vars.i < reservesCount) {
       if (!params.userConfig.isUsingAsCollateralOrBorrowing(vars.i)) {
         unchecked {
           ++vars.i;
