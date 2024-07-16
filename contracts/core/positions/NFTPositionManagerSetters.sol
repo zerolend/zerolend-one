@@ -14,13 +14,15 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes, IPool} from '../../interfaces/IPoolFactory.sol';
+import {ERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {NFTEventsLib} from '../../interfaces/events/NFTEventsLib.sol';
+import {NFTErrorsLib} from '../../interfaces/errors/NFTErrorsLib.sol';
 import {NFTRewardsDistributor} from './NFTRewardsDistributor.sol';
-import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
-import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
-import {ERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
-  using SafeERC20Upgradeable for IERC20Upgradeable;
+  using SafeERC20 for IERC20;
 
   /**
    * @dev Modifier to check if the caller is pool or not.
@@ -28,37 +30,37 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
    */
   modifier isPool(address pool) {
     if (!factory.isPool(pool)) {
-      revert NotPool();
+      revert NFTErrorsLib.NotPool();
     }
     _;
   }
 
   /**
    * @notice Handles the liquidity operations including transferring tokens, approving the pool, and updating balances.
+   * @dev Anyone can supply tokens for a user.
    * @param params The liquidity parameters including asset, pool, user, amount, and tokenId.
-   * @custom:event LiquidityIncreased emitted whenever user supply asset
+   * @custom:event Supply emitted whenever user supply asset
    */
   function _supply(AssetOperationParams memory params) internal nonReentrant {
-    if (params.asset == address(0)) revert ZeroAddressNotAllowed();
-    if (params.amount == 0) revert ZeroValueNotAllowed();
+    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
+    if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
     IPool pool = IPool(_positions[params.tokenId].pool);
 
-    // check permissions
-    _isAuthorizedForToken(params.tokenId);
-
-    IERC20Upgradeable(params.asset).forceApprove(address(pool), params.amount);
+    IERC20(params.asset).forceApprove(address(pool), params.amount);
     pool.supply(params.asset, address(this), params.amount, params.tokenId, params.data);
-    emit LiquidityIncreased(params.asset, params.tokenId, params.amount);
 
     // update incentives
     uint256 balance = pool.getBalance(params.asset, address(this), params.tokenId);
     _handleSupplies(address(pool), params.asset, params.tokenId, balance);
+
+    emit NFTEventsLib.Supply(params.asset, params.tokenId, params.amount);
   }
 
   function _borrow(AssetOperationParams memory params) internal nonReentrant {
-    if (params.asset == address(0)) revert ZeroAddressNotAllowed();
-    if (params.amount == 0) revert ZeroValueNotAllowed();
+    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
+    if (params.target == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
+    if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
 
     // check permissions
@@ -67,40 +69,41 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     IPool pool = IPool(_positions[params.tokenId].pool);
     pool.borrow(params.asset, params.target, params.amount, params.tokenId, params.data);
 
-    emit BorrowIncreased(params.asset, params.amount, params.tokenId);
-
     // update incentives
     uint256 balance = pool.getDebt(params.asset, address(this), params.tokenId);
     _handleDebt(address(pool), params.asset, params.tokenId, balance);
+
+    emit NFTEventsLib.Borrow(params.asset, params.amount, params.tokenId);
   }
 
   function _withdraw(AssetOperationParams memory params) internal nonReentrant {
-    if (params.asset == address(0)) revert ZeroAddressNotAllowed();
-    if (params.amount == 0) revert ZeroValueNotAllowed();
+    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
+    if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
+    if (params.target == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
 
     // check permissions
     _isAuthorizedForToken(params.tokenId);
 
     IPool pool = IPool(_positions[params.tokenId].pool);
-
     pool.withdraw(params.asset, params.target, params.amount, params.tokenId, params.data);
-    emit Withdrawal(params.asset, params.amount, params.tokenId);
 
     // update incentives
     uint256 balance = pool.getBalance(params.asset, address(this), params.tokenId);
     _handleSupplies(address(pool), params.asset, params.tokenId, balance);
+
+    emit NFTEventsLib.Withdraw(params.asset, params.amount, params.tokenId);
   }
 
   function _repay(AssetOperationParams memory params) internal nonReentrant {
-    if (params.asset == address(0)) revert ZeroAddressNotAllowed();
-    if (params.amount == 0) revert ZeroValueNotAllowed();
+    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
+    if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
 
     Position memory userPosition = _positions[params.tokenId];
 
     IPool pool = IPool(userPosition.pool);
-    IERC20Upgradeable asset = IERC20Upgradeable(params.asset);
+    IERC20 asset = IERC20(params.asset);
 
     asset.forceApprove(userPosition.pool, params.amount);
 
@@ -109,7 +112,7 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     uint256 currentDebtBalance = pool.getDebt(params.asset, address(this), params.tokenId);
 
     if (previousDebtBalance - currentDebtBalance != repaid.assets) {
-      revert BalanceMisMatch();
+      revert NFTErrorsLib.BalanceMisMatch();
     }
 
     if (currentDebtBalance == 0 && repaid.assets < params.amount) {
@@ -119,16 +122,10 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
     // update incentives
     _handleDebt(address(pool), params.asset, params.tokenId, currentDebtBalance);
 
-    emit Repay(params.asset, params.amount, params.tokenId);
-  }
-
-  /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-  function _approve(address to, uint256 tokenId) internal override (ERC721Upgradeable) {
-    _positions[tokenId].operator = to;
-    emit Approval(ownerOf(tokenId), to, tokenId);
+    emit NFTEventsLib.Repay(params.asset, params.amount, params.tokenId);
   }
 
   function _isAuthorizedForToken(uint256 tokenId) internal view {
-    if (!_isApprovedOrOwner(msg.sender, tokenId)) revert NotTokenIdOwner();
+    if (!_isApprovedOrOwner(msg.sender, tokenId)) revert NFTErrorsLib.NotTokenIdOwner();
   }
 }

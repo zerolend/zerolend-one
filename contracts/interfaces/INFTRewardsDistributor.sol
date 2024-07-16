@@ -32,6 +32,8 @@ interface INFTRewardsDistributor is IERC721EnumerableUpgradeable {
 
   function rewardPerToken(bytes32 _assetHash) external view returns (uint256);
 
+  function getReward(uint256 tokenId, bytes32 _assetHash) external returns (uint256 reward);
+
   function earned(uint256 tokenId, bytes32 _assetHash) external view returns (uint256);
 
   function getRewardForDuration(bytes32 _assetHash) external view returns (uint256);

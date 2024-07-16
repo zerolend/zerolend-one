@@ -18,69 +18,6 @@ import {INFTRewardsDistributor} from './INFTRewardsDistributor.sol';
 
 interface INFTPositionManager is INFTRewardsDistributor {
   /**
-   * @notice Error indicating that the caller is not the owner or approved operator of the token ID.
-   */
-  error NotTokenIdOwner();
-
-  /**
-   * @notice Error indicating that a zero address was provided, which is not allowed.
-   */
-  error ZeroAddressNotAllowed();
-
-  /**
-   * @notice Error indicating that a zero value was provided, which is not allowed.
-   */
-  error ZeroValueNotAllowed();
-
-  /**
-   * @notice Error indicating a mismatch in balance.
-   */
-  error BalanceMisMatch();
-
-  /**
-   * @notice Error indicating that the position is not cleared.
-   */
-  error PositionNotCleared();
-
-  /**
-   * @notice Error indicating that pool is not register in pool factory.
-   */
-  error NotPool();
-
-  /**
-   *
-   * @param asset The address of the asset that we want to borrow.
-   * @param tokenId  The ID of the position token.
-   * @param amount The amount of the asset that we want to borrow.
-   */
-  event BorrowIncreased(address indexed asset, uint256 indexed amount, uint256 indexed tokenId);
-
-  /**
-   *
-   * @param asset The address of the asset that we want to withdraw
-   * @param amount The amount of asset that we want to withdraw
-   * @param tokenId The ID of the NFT.
-   *
-   */
-  event Withdrawal(address indexed asset, uint256 indexed amount, uint256 tokenId);
-
-  /**
-   *
-   * @param asset The address of the asset that we want to repay.
-   * @param tokenId The ID of the NFT.
-   * @param amount The amount of asset that we want to repay
-   */
-  event Repay(address indexed asset, uint256 indexed tokenId, uint256 indexed amount);
-
-  /**
-   * @notice Emitted when liquidity is increased for a specific position token.
-   * @param asset The address of the asset for which liquidity was increased.
-   * @param tokenId The ID of the position token.
-   * @param amount The amount of the asset that was added to the position.
-   */
-  event LiquidityIncreased(address indexed asset, uint256 indexed tokenId, uint256 indexed amount);
-
-  /**
    * @notice Parameters required for minting a new position token.
    * @param asset The address of the asset to be supplied.
    * @param pool The address of the pool where the asset will be supplied.
@@ -108,7 +45,6 @@ interface INFTPositionManager is INFTRewardsDistributor {
     address pool;
     uint256 amount;
     uint256 tokenId;
-    // bytes32 positionId;
     DataTypes.ExtraData data;
   }
 

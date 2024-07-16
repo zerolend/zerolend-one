@@ -58,7 +58,6 @@ contract NFTPositionManager is NFTPositionManagerSetters {
     tokenId = _nextId;
     _nextId++;
     _positions[tokenId].pool = pool;
-    _positions[tokenId].operator = address(0);
     _mint(msg.sender, tokenId);
   }
 
