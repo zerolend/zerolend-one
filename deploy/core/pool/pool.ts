@@ -6,12 +6,17 @@ async function main(hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  await deploy('Pool', {
+  const deployment = await deploy('Pool', {
     from: deployer,
     contract: 'Pool',
     autoMine: true,
     log: true,
     libraries: await getPoolLibraries(hre),
+  });
+
+  await hre.run('verify:verify', {
+    address: deployment.address,
+    libraries: deployment.libraries,
   });
 }
 

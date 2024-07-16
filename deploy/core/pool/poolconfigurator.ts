@@ -16,7 +16,10 @@ async function main(hre: HardhatRuntimeEnvironment) {
     log: true,
   });
 
-  await hre.run('verify:verify', { address: deployment.address, constructorArguments: args });
+  await hre.run('verify:verify', {
+    address: deployment.address,
+    constructorArguments: deployment.args,
+  });
 }
 
 main.tags = ['PoolConfigurator'];
