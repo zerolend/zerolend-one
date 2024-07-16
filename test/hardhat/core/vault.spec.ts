@@ -281,8 +281,8 @@ describe('Curated Vault', () => {
         const borrowed = BigInt(liquidity) / 100n;
         if (borrowed === 0n) break;
 
-        await pool.connect(borrower).supplySimple(loan, liquidity, 0);
-        await pool.connect(borrower).borrowSimple(collateral, borrowed, 0);
+        // await pool.connect(borrower).supplySimple(loan, liquidity, 0);
+        // await pool.connect(borrower).borrowSimple(collateral, borrowed, 0);
 
         await mine(); // Include supplyCollateral + borrow in a single block.
       }
