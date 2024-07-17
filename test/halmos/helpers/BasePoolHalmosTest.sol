@@ -112,10 +112,8 @@ contract BasePoolHalmosTest is SymTest, Test {
 
   function _callPool(bytes4 selector, address caller) internal {
     vm.assume(
-      selector == pool.supplySimple.selector ||
-        selector == pool.repaySimple.selector ||
-        selector == pool.withdrawSimple.selector ||
-        selector == pool.borrowSimple.selector
+      selector == pool.supplySimple.selector || selector == pool.repaySimple.selector || selector == pool.withdrawSimple.selector
+        || selector == pool.borrowSimple.selector
     );
 
     uint256 amount = svm.createUint256('amount');
@@ -123,7 +121,7 @@ contract BasePoolHalmosTest is SymTest, Test {
     address dest = svm.createAddress('dest');
 
     vm.prank(caller);
-    (bool success, ) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), dest, amount, index)));
+    (bool success,) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), dest, amount, index)));
     vm.assume(success);
   }
 }

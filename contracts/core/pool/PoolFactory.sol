@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes, IBeacon, IPool, IPoolConfigurator, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
-import {RevokableBeaconProxy, IRevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
+import {IRevokableBeaconProxy, RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 /**
