@@ -2,11 +2,10 @@
 pragma solidity 0.8.19;
 
 import {DataTypes} from './../../../../contracts/core/pool/configuration/DataTypes.sol';
-import {UserConfiguration} from './../../../../contracts/core/pool/configuration/UserConfiguration.sol';
 import {ReserveConfiguration} from './../../../../contracts/core/pool/configuration/ReserveConfiguration.sol';
+import {UserConfiguration} from './../../../../contracts/core/pool/configuration/UserConfiguration.sol';
 
 import {IPool} from './../../../../contracts/interfaces/pool/IPool.sol';
-import {console} from './../../../../lib/forge-std/src/console.sol';
 import {PoolSetup} from './PoolSetup.sol';
 
 contract PoolBasicTests is PoolSetup {
