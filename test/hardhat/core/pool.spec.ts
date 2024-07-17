@@ -1,9 +1,5 @@
 import { MaxUint256, parseEther as eth, parseUnits } from 'ethers';
-import {
-  DefaultReserveInterestRateStrategy,
-  MintableERC20,
-  MockAggregator,
-} from '../../../types';
+import { DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator } from '../../../types';
 import { Pool } from '../../../types/contracts/core/pool';
 import { deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
@@ -104,52 +100,43 @@ describe('Pool', () => {
 
       await tokenA.mint(ant.address, eth('10'));
       await tokenB.mint(ant.address, eth('10'));
-      
+
       await tokenA.approve(pool.target, eth('10'));
       await tokenB.approve(pool.target, eth('10'));
-      
+
       await tokenA.connect(ant).approve(pool.target, eth('10'));
       await tokenB.connect(ant).approve(pool.target, eth('10'));
-      
+
       await pool.supplySimple(tokenA.target, eth('5'), 0);
       await pool.supplySimple(tokenB.target, eth('5'), 0);
-      
+
       await pool.connect(ant).supplySimple(tokenA.target, eth('5'), 0);
       await pool.connect(ant).supplySimple(tokenB.target, eth('5'), 0);
-      
+
       await pool.borrowSimple(tokenB.target, eth('1'), 0);
     });
 
     it('should not simply liquidate a healthy position', async () => {
       const position = getPositionId(deployer.address, 0);
-      const liquidationTxn = pool.connect(ant).liquidateSimple(
-        tokenB.target,
-        tokenB.target,
-        position,
-        eth('1'),
-      );
-      
+      const liquidationTxn = pool
+        .connect(ant)
+        .liquidateSimple(tokenB.target, tokenB.target, position, eth('1'));
+
       await expect(liquidationTxn).to.be.revertedWith('HEALTH_FACTOR_NOT_BELOW_THRESHOLD');
     });
-    
+
     it('should completely liquidate a non healthy position', async () => {
       const position = getPositionId(deployer.address, 0);
-      
+
       const balanceOfAntBeforeTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntBeforeTokenB = await tokenB.balanceOf(ant.address);
       await oracleB.setAnswer(5e8);
-      await pool.connect(ant).liquidateSimple(
-        tokenA.target,
-        tokenB.target,
-        position,
-        eth('1'),
-      );
+      await pool.connect(ant).liquidateSimple(tokenA.target, tokenB.target, position, eth('1'));
       const balanceOfAntAfterTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntAfterTokenB = await tokenB.balanceOf(ant.address);
 
       expect(balanceOfAntAfterTokenA).to.equal(eth('10'));
       expect(balanceOfAntAfterTokenB).to.be.lessThan(balanceOfAntBeforeTokenB);
-
     });
   });
 
