@@ -42,7 +42,7 @@ abstract contract PoolSetup is CorePoolTests {
     configurationLocal[2] = config;
 
     address[] memory admins = new address[](1);
-    assets[0] = address(owner);
+    admins[0] = address(this);
 
     p = DataTypes.InitPoolParams({
       admins: admins,
