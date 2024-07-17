@@ -14,11 +14,12 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {DataTypes, IPool} from '../../interfaces/IPoolFactory.sol';
+
+import {NFTErrorsLib} from '../../interfaces/errors/NFTErrorsLib.sol';
+import {NFTEventsLib} from '../../interfaces/events/NFTEventsLib.sol';
+import {NFTRewardsDistributor} from './NFTRewardsDistributor.sol';
 import {ERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {NFTEventsLib} from '../../interfaces/events/NFTEventsLib.sol';
-import {NFTErrorsLib} from '../../interfaces/errors/NFTErrorsLib.sol';
-import {NFTRewardsDistributor} from './NFTRewardsDistributor.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {

@@ -13,12 +13,12 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
+import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import {ReentrancyGuard} from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {ERC721} from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
-import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
 
 /// @notice Arithmetic library with operations for fixed-point numbers.
 /// @author Solady (https://github.com/vectorized/solady/blob/main/src/utils/FixedPointMathLib.sol)
@@ -220,7 +220,7 @@ library FixedPointMathLib {
     unchecked {
       // When the result is less than 0.5 we return zero.
       // This happens when `x <= floor(log(0.5e18) * 1e18) ≈ -42e18`.
-      if (x <= -41446531673892822313) return r;
+      if (x <= -41_446_531_673_892_822_313) return r;
 
       /// @solidity memory-safe-assembly
       assembly {
@@ -240,26 +240,26 @@ library FixedPointMathLib {
       // Reduce range of x to (-½ ln 2, ½ ln 2) * 2**96 by factoring out powers
       // of two such that exp(x) = exp(x') * 2**k, where k is an integer.
       // Solving this gives k = round(x / log(2)) and x' = x - k * log(2).
-      int256 k = ((x << 96) / 54916777467707473351141471128 + 2 ** 95) >> 96;
-      x = x - k * 54916777467707473351141471128;
+      int256 k = ((x << 96) / 54_916_777_467_707_473_351_141_471_128 + 2 ** 95) >> 96;
+      x = x - k * 54_916_777_467_707_473_351_141_471_128;
 
       // `k` is in the range `[-61, 195]`.
 
       // Evaluate using a (6, 7)-term rational approximation.
       // `p` is made monic, we'll multiply by a scale factor later.
-      int256 y = x + 1346386616545796478920950773328;
-      y = ((y * x) >> 96) + 57155421227552351082224309758442;
-      int256 p = y + x - 94201549194550492254356042504812;
-      p = ((p * y) >> 96) + 28719021644029726153956944680412240;
-      p = p * x + (4385272521454847904659076985693276 << 96);
+      int256 y = x + 1_346_386_616_545_796_478_920_950_773_328;
+      y = ((y * x) >> 96) + 57_155_421_227_552_351_082_224_309_758_442;
+      int256 p = y + x - 94_201_549_194_550_492_254_356_042_504_812;
+      p = ((p * y) >> 96) + 28_719_021_644_029_726_153_956_944_680_412_240;
+      p = p * x + (4_385_272_521_454_847_904_659_076_985_693_276 << 96);
 
       // We leave `p` in `2**192` basis so we don't need to scale it back up for the division.
-      int256 q = x - 2855989394907223263936484059900;
-      q = ((q * x) >> 96) + 50020603652535783019961831881945;
-      q = ((q * x) >> 96) - 533845033583426703283633433725380;
-      q = ((q * x) >> 96) + 3604857256930695427073651918091429;
-      q = ((q * x) >> 96) - 14423608567350463180887372962807573;
-      q = ((q * x) >> 96) + 26449188498355588339934803723976023;
+      int256 q = x - 2_855_989_394_907_223_263_936_484_059_900;
+      q = ((q * x) >> 96) + 50_020_603_652_535_783_019_961_831_881_945;
+      q = ((q * x) >> 96) - 533_845_033_583_426_703_283_633_433_725_380;
+      q = ((q * x) >> 96) + 3_604_857_256_930_695_427_073_651_918_091_429;
+      q = ((q * x) >> 96) - 14_423_608_567_350_463_180_887_372_962_807_573;
+      q = ((q * x) >> 96) + 26_449_188_498_355_588_339_934_803_723_976_023;
 
       /// @solidity memory-safe-assembly
       assembly {
@@ -277,7 +277,7 @@ library FixedPointMathLib {
       // - The `1e18 / 2**96` factor for base conversion.
       // We do this all at once, with an intermediate result in `2**213`
       // basis, so the final right shift is always by a positive amount.
-      r = int256((uint256(r) * 3822833074963236453042738258902158003155416615667) >> uint256(195 - k));
+      r = int256((uint256(r) * 3_822_833_074_963_236_453_042_738_258_902_158_003_155_416_615_667) >> uint256(195 - k));
     }
   }
 
@@ -477,11 +477,7 @@ library FixedPointMathLib {
   function fullMulDiv(uint256 x, uint256 y, uint256 d) internal pure returns (uint256 result) {
     /// @solidity memory-safe-assembly
     assembly {
-      for {
-
-      } 1 {
-
-      } {
+      for {} 1 {} {
         // 512-bit multiply `[p1 p0] = x * y`.
         // Compute the product mod `2**256` and mod `2**256 - 1`
         // then use the Chinese Remainder Theorem to reconstruct
@@ -534,14 +530,15 @@ library FixedPointMathLib {
         inv := mul(inv, sub(2, mul(d, inv))) // inverse mod 2**32
         inv := mul(inv, sub(2, mul(d, inv))) // inverse mod 2**64
         inv := mul(inv, sub(2, mul(d, inv))) // inverse mod 2**128
-        result := mul(
-          // Divide [p1 p0] by the factors of two.
-          // Shift in bits from `p1` into `p0`. For this we need
-          // to flip `t` such that it is `2**256 / t`.
-          or(mul(sub(p1, gt(r, result)), add(div(sub(0, t), t), 1)), div(sub(result, r), t)),
-          // inverse mod 2**256
-          mul(inv, sub(2, mul(d, inv)))
-        )
+        result :=
+          mul(
+            // Divide [p1 p0] by the factors of two.
+            // Shift in bits from `p1` into `p0`. For this we need
+            // to flip `t` such that it is `2**256 / t`.
+            or(mul(sub(p1, gt(r, result)), add(div(sub(0, t), t), 1)), div(sub(result, r), t)),
+            // inverse mod 2**256
+            mul(inv, sub(2, mul(d, inv)))
+          )
         break
       }
     }
@@ -624,11 +621,7 @@ library FixedPointMathLib {
         z := xor(b, mul(xor(b, x), and(y, 1))) // `z = isEven(y) ? scale : x`
         let half := shr(1, b) // Divide `b` by 2.
         // Divide `y` by 2 every iteration.
-        for {
-          y := shr(1, y)
-        } y {
-          y := shr(1, y)
-        } {
+        for { y := shr(1, y) } y { y := shr(1, y) } {
           let xx := mul(x, x) // Store x squared.
           let xxRound := add(xx, half) // Round to the nearest number.
           // Revert if `xx + half` overflowed, or if `x ** 2` overflows.
@@ -773,13 +766,7 @@ library FixedPointMathLib {
         mstore(0x00, 0xaba0f2a2) // `FactorialOverflow()`.
         revert(0x1c, 0x04)
       }
-      for {
-        result := 1
-      } x {
-        x := sub(x, 1)
-      } {
-        result := mul(result, x)
-      }
+      for { result := 1 } x { x := sub(x, 1) } { result := mul(result, x) }
     }
   }
 
@@ -1023,11 +1010,7 @@ library FixedPointMathLib {
   function gcd(uint256 x, uint256 y) internal pure returns (uint256 z) {
     /// @solidity memory-safe-assembly
     assembly {
-      for {
-        z := x
-      } y {
-
-      } {
+      for { z := x } y {} {
         let t := y
         y := mod(z, y)
         z := t
@@ -1164,9 +1147,10 @@ interface ICakeNfpm {
     uint256 deadline;
   }
 
-  function positions(
-    uint256
-  ) external view returns (uint96, address, address, address, uint24, int24, int24, uint128, uint256, uint256, uint128, uint128);
+  function positions(uint256)
+    external
+    view
+    returns (uint96, address, address, address, uint24, int24, int24, uint128, uint256, uint256, uint128, uint128);
 }
 
 interface IExecutor {
@@ -1184,7 +1168,7 @@ library SafeExecute {
   error CALL_FAILED();
 
   function safeExecute(ILocker locker, address to, uint256 value, bytes memory data) internal returns (bool success) {
-    (success, ) = locker.execute(to, value, data);
+    (success,) = locker.execute(to, value, data);
   }
 }
 
@@ -1290,7 +1274,7 @@ contract StakeDAOStrategy is ReentrancyGuard, UUPSUpgradeable {
 
   modifier onlyPositionOwnerOrClaimer(uint256[] memory tokenIds) {
     if (msg.sender != rewardClaimer) {
-      for (uint256 i; i < tokenIds.length; ) {
+      for (uint256 i; i < tokenIds.length;) {
         if (msg.sender != positionOwner[tokenIds[i]]) revert Unauthorized();
         unchecked {
           ++i;
@@ -1335,7 +1319,7 @@ contract StakeDAOStrategy is ReentrancyGuard, UUPSUpgradeable {
   ) external nonReentrant onlyPositionOwnerOrClaimer(_tokenIds) returns (uint256[] memory) {
     uint256 tokensLength = _tokenIds.length;
     uint256[] memory rewards = new uint256[](tokensLength);
-    for (uint256 i; i < tokensLength; ) {
+    for (uint256 i; i < tokensLength;) {
       rewards[i] = _harvestReward(_tokenIds[i], 0x0, _recipient);
       unchecked {
         ++i;
@@ -1356,7 +1340,7 @@ contract StakeDAOStrategy is ReentrancyGuard, UUPSUpgradeable {
 
     uint256 token0Collected;
     uint256 token1Collected;
-    for (uint256 i; i < tokensLength; ) {
+    for (uint256 i; i < tokensLength;) {
       (token0Collected, token1Collected) = (_collectFee(_tokenIds[i], _recipient));
       _collected[i] = CollectedFees(token0Collected, token1Collected);
 
@@ -1379,7 +1363,7 @@ contract StakeDAOStrategy is ReentrancyGuard, UUPSUpgradeable {
     uint256 token0Collected;
     uint256 token1Collected;
 
-    for (uint256 i; i < tokenLength; ) {
+    for (uint256 i; i < tokenLength;) {
       _rewards[i] = _harvestReward(_tokenIds[i], 0x0, _recipient);
       (token0Collected, token1Collected) = _collectFee(_tokenIds[i], _recipient);
       _collected[i] = CollectedFees(token0Collected, token1Collected);
