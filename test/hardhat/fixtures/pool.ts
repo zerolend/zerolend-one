@@ -31,6 +31,8 @@ export async function deployPool() {
   } = fixture;
 
   const input: DataTypes.InitPoolParamsStruct = {
+    proxyAdmin: ZeroAddress,
+    revokeProxy: false,
     admins: [owner.address],
     emergencyAdmins: [owner.address],
     riskAdmins: [owner.address],
