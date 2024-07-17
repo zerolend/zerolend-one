@@ -112,12 +112,7 @@ library LiquidationLogic {
       balances,
       reservesData,
       reservesList,
-      DataTypes.CalculateUserAccountDataParams({
-        userConfig: userConfig,
-        reservesCount: params.reservesCount,
-        position: params.position,
-        pool: params.pool
-      })
+      DataTypes.CalculateUserAccountDataParams({userConfig: userConfig, position: params.position, pool: params.pool})
     );
 
     (vars.userDebt, vars.actualDebtToLiquidate) = _calculateDebt(

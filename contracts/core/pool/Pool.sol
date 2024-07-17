@@ -20,12 +20,15 @@ import {IPool, IPoolSetters} from '../../interfaces/pool/IPool.sol';
 import {PoolSetters} from './PoolSetters.sol';
 
 import {DataTypes} from './configuration/DataTypes.sol';
+
+import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 import {ReserveLogic} from './logic/PoolLogic.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 
 contract Pool is PoolSetters {
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
+  using TokenConfiguration for address;
 
   /**
    * @notice Initializes the Pool.
@@ -63,46 +66,49 @@ contract Pool is PoolSetters {
   /// @inheritdoc IPoolSetters
   function supply(
     address asset,
+    address to,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
   ) public returns (DataTypes.SharesType memory) {
-    return _supply(asset, amount, index, data);
+    return _supply(asset, amount, to.getPositionId(index), data);
   }
 
   /// @inheritdoc IPoolSetters
-  function supplySimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
-    return _supply(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
+  function supplySimple(address asset, address to, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
+    return _supply(asset, amount, to.getPositionId(index), DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPoolSetters
   function withdraw(
     address asset,
+    address to,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
   ) public returns (DataTypes.SharesType memory) {
-    return _withdraw(asset, amount, index, data);
+    return _withdraw(asset, to, amount, msg.sender.getPositionId(index), data);
   }
 
   /// @inheritdoc IPoolSetters
-  function withdrawSimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
-    return _withdraw(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
+  function withdrawSimple(address asset, address to, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
+    return _withdraw(asset, to, amount, msg.sender.getPositionId(index), DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPoolSetters
   function borrow(
     address asset,
+    address to,
     uint256 amount,
     uint256 index,
     DataTypes.ExtraData memory data
   ) public returns (DataTypes.SharesType memory) {
-    return _borrow(asset, amount, index, data);
+    return _borrow(asset, to, amount, msg.sender.getPositionId(index), data);
   }
 
   /// @inheritdoc IPoolSetters
-  function borrowSimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
-    return _borrow(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
+  function borrowSimple(address asset, address to, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
+    return _borrow(asset, to, amount, msg.sender.getPositionId(index), DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPoolSetters
@@ -112,12 +118,12 @@ contract Pool is PoolSetters {
     uint256 index,
     DataTypes.ExtraData memory data
   ) public returns (DataTypes.SharesType memory) {
-    return _repay(asset, amount, index, data);
+    return _repay(asset, amount, msg.sender.getPositionId(index), data);
   }
 
   /// @inheritdoc IPoolSetters
   function repaySimple(address asset, uint256 amount, uint256 index) public returns (DataTypes.SharesType memory) {
-    return _repay(asset, amount, index, DataTypes.ExtraData({interestRateData: '', hookData: ''}));
+    return _repay(asset, amount, msg.sender.getPositionId(index), DataTypes.ExtraData({interestRateData: '', hookData: ''}));
   }
 
   /// @inheritdoc IPoolSetters

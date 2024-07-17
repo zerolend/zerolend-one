@@ -1,5 +1,17 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
+
+// ███████╗███████╗██████╗  ██████╗
+// ╚══███╔╝██╔════╝██╔══██╗██╔═══██╗
+//   ███╔╝ █████╗  ██████╔╝██║   ██║
+//  ███╔╝  ██╔══╝  ██╔══██╗██║   ██║
+// ███████╗███████╗██║  ██║╚██████╔╝
+// ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝
+
+// Website: https://zerolend.xyz
+// Discord: https://discord.gg/zerolend
+// Twitter: https://twitter.com/zerolendxyz
+// Telegram: https://t.me/zerolendxyz
 
 import {IERC721EnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721EnumerableUpgradeable.sol';
 
@@ -31,6 +43,8 @@ interface INFTRewardsDistributor is IERC721EnumerableUpgradeable {
   function lastTimeRewardApplicable(bytes32 _assetHash) external view returns (uint256);
 
   function rewardPerToken(bytes32 _assetHash) external view returns (uint256);
+
+  function getReward(uint256 tokenId, bytes32 _assetHash) external returns (uint256 reward);
 
   function earned(uint256 tokenId, bytes32 _assetHash) external view returns (uint256);
 

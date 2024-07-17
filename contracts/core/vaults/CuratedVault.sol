@@ -302,7 +302,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
           toWithdraw = 0;
         }
 
-        DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), toWithdraw, 0);
+        DataTypes.SharesType memory burnt = pool.withdrawSimple(asset(), address(this), toWithdraw, 0);
         emit CuratedEventsLib.ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
         totalWithdrawn += burnt.assets;
       } else {
@@ -318,7 +318,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
 
         // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
         IERC20(asset()).forceApprove(address(pool), type(uint256).max);
-        DataTypes.SharesType memory minted = pool.supplySimple(asset(), suppliedAssets, 0);
+        DataTypes.SharesType memory minted = pool.supplySimple(asset(), address(this), suppliedAssets, 0);
         emit CuratedEventsLib.ReallocateSupply(_msgSender(), pool, minted.assets, minted.shares);
         totalSupplied += suppliedAssets;
       }
@@ -638,7 +638,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
 
       if (toSupply > 0) {
         // Using try/catch to skip markets that revert.
-        try pool.supplySimple(asset(), toSupply, 0) {
+        try pool.supplySimple(asset(), address(this), toSupply, 0) {
           assets -= toSupply;
         } catch {}
       }
@@ -658,7 +658,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
         UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
       if (toWithdraw > 0) {
         // Using try/catch to skip markets that revert.
-        try pool.withdrawSimple(asset(), toWithdraw, 0) {
+        try pool.withdrawSimple(asset(), address(this), toWithdraw, 0) {
           withdrawAmount -= toWithdraw;
         } catch {}
       }

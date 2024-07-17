@@ -61,14 +61,6 @@ describe('Curated Vault Factory', () => {
     });
 
     it('should update vault implementation properly and not allow re-init(..)', async () => {
-      const input: DataTypes.InitPoolParamsStruct = {
-        hook: ZeroAddress,
-        assets: [tokenA.target, tokenB.target, tokenC.target],
-        rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
-        sources: [oracleA.target, oracleB.target, oracleC.target],
-        configurations: [basicConfig, basicConfig, basicConfig],
-      };
-
       // should deploy pool
       const tx = await curatedVaultFactory.createVault(
         owner.address, // address initialOwner,

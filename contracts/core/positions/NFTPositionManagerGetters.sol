@@ -13,10 +13,13 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
+import {NFTPositionManagerStorage} from './NFTPositionManagerStorage.sol';
+import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 
-interface IWETH is IERC20 {
-  function deposit() external payable;
-
-  function withdraw(uint256) external;
+abstract contract NFTPositionManagerGetters is MulticallUpgradeable, NFTPositionManagerStorage {
+  /// @inheritdoc INFTPositionManager
+  function positions(uint256 tokenId) external view returns (Position memory) {
+    return _positions[tokenId];
+  }
 }

@@ -1,8 +1,15 @@
 import { deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
-import { MaxUint256, parseEther as e18 } from 'ethers';
-import { MintableERC20, NFTPositionManager, Pool } from '../../../types';
-import { deployNftPositionManager } from '../fixtures/periphery';
+import { MaxUint256, ZeroAddress, parseEther as e18 } from 'ethers';
+import {
+  MintableERC20,
+  NFTPositionManager,
+  Pool,
+  PoolConfigurator,
+  UIHelper,
+  WETH9Mocked,
+} from '../../../types';
+import { deployNftPositionManager, deployUIHelper } from '../fixtures/periphery';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('NFT position manager - multicall', () => {
@@ -10,15 +17,17 @@ describe('NFT position manager - multicall', () => {
   let poolFactory;
   let pool: Pool;
   let tokenA: MintableERC20;
+  let weth: WETH9Mocked;
   let tokenB: MintableERC20;
-  let governance: SignerWithAddress,
-    ant: SignerWithAddress,
-    whale: SignerWithAddress,
-    owner: SignerWithAddress;
+  let uiHelper: UIHelper;
+  let configurator: PoolConfigurator;
+  let governance: SignerWithAddress, ant: SignerWithAddress, whale: SignerWithAddress;
 
   beforeEach(async () => {
-    ({ poolFactory, pool, tokenA, tokenB, governance, ant, whale, owner } = await deployPool());
-    manager = await deployNftPositionManager(poolFactory, await governance.getAddress());
+    ({ poolFactory, pool, tokenA, tokenB, governance, ant, configurator, whale, weth } =
+      await deployPool());
+    manager = await deployNftPositionManager(poolFactory, weth, governance.address);
+    uiHelper = await deployUIHelper(poolFactory, configurator, manager);
 
     await tokenA.connect(ant).approve(manager.target, MaxUint256);
     await tokenA.mint(ant.getAddress(), e18('100'));
@@ -28,91 +37,101 @@ describe('NFT position manager - multicall', () => {
     await tokenB.mint(ant.getAddress(), e18('100'));
 
     // seed some liquidity into the pool
-    const mintSupplyCall = await manager.interface.encodeFunctionData('mint', [
+    const mintCall = await manager.interface.encodeFunctionData('mint', [pool.target]);
+    const supplyCall = await manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenA.target,
-        pool: pool.target,
+        target: whale.address,
+        tokenId: 0,
         amount: e18('100'),
         data: { interestRateData: '0x', hookData: '0x' },
       },
     ]);
-    await manager.connect(whale).multicall([mintSupplyCall]);
+    await manager.connect(whale).multicall([mintCall, supplyCall]);
   });
 
   it('should be able to mint and supply using multicall', async () => {
     const supplyAmount = e18('50');
     const incLiquidityAmount = e18('20');
 
-    const mintSupplyCall = await manager.connect(ant).interface.encodeFunctionData('mint', [
+    const mintSupplyCall = await manager.interface.encodeFunctionData('mint', [pool.target]);
+    const supplyCallA = await manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenA.target,
-        pool: pool.target,
+        target: ant.address,
+        tokenId: 0,
         amount: supplyAmount,
         data: { interestRateData: '0x', hookData: '0x' },
       },
     ]);
-
-    const liqiuidityIncreaseCall = manager.interface.encodeFunctionData('supply', [
+    const supplyCallB = await manager.interface.encodeFunctionData('supply', [
       {
         asset: tokenB.target,
+        target: ant.address,
+        tokenId: 0,
         amount: incLiquidityAmount,
+        data: { interestRateData: '0x', hookData: '0x' },
+      },
+    ]);
+
+    await manager.connect(ant).multicall([mintSupplyCall, supplyCallA, supplyCallB]);
+
+    const balance = await uiHelper.getNftPosition(2);
+
+    // token A
+    expect(balance[0].balance).eq(supplyAmount);
+    expect(balance[0].debt).eq(0);
+    expect(await tokenA.balanceOf(pool.target)).eq(supplyAmount + e18('100'));
+
+    // token B
+    expect(balance[1].balance).eq(incLiquidityAmount);
+    expect(balance[1].debt).eq(0);
+    expect(await tokenB.balanceOf(pool.target)).eq(incLiquidityAmount);
+  });
+
+  it('should be able to supply, borrow, repay and withdraw using multicall', async () => {
+    const supplyAmount = e18('50');
+    const borrowAmount = e18('20');
+
+    // prepare multicall for the ant
+    const mintCall = await manager.interface.encodeFunctionData('mint', [pool.target]);
+    const supply = await manager.interface.encodeFunctionData('supply', [
+      {
+        asset: tokenA.target,
+        target: ant.address,
+        amount: supplyAmount,
+        tokenId: 0,
+        data: { interestRateData: '0x', hookData: '0x' },
+      },
+    ]);
+    const borrow = manager.interface.encodeFunctionData('borrow', [
+      {
+        asset: tokenA.target,
+        amount: borrowAmount,
+        target: ant.address,
+        tokenId: 0,
+        data: { interestRateData: '0x', hookData: '0x' },
+      },
+    ]);
+    const repay = manager.interface.encodeFunctionData('repay', [
+      {
+        asset: tokenA.target,
+        amount: borrowAmount,
+        target: ant.address,
+        tokenId: 0,
+        data: { interestRateData: '0x', hookData: '0x' },
+      },
+    ]);
+    const withdraw = manager.interface.encodeFunctionData('withdraw', [
+      {
+        asset: tokenA.target,
+        amount: borrowAmount,
+        target: ant.address,
         tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },
       },
     ]);
 
-    await manager.connect(ant).multicall([mintSupplyCall, liqiuidityIncreaseCall]);
-
-    const balance = await manager.getPosition(2);
-
-    // token A
-    expect(balance.assets[0].balance).eq(supplyAmount);
-    expect(balance.assets[0].debt).eq(0);
-    expect(await tokenA.balanceOf(pool.target)).eq(supplyAmount + e18('100'));
-
-    // token B
-    expect(balance.assets[1].balance).eq(incLiquidityAmount);
-    expect(balance.assets[1].debt).eq(0);
-    expect(await tokenB.balanceOf(pool.target)).eq(incLiquidityAmount);
-  });
-
-  it('should be able to supply and borrow using multicall', async () => {
-    const supplyAmount = e18('50');
-    const borrowAmount = e18('20');
-
-    // prepare multicall for the ant
-    const mintSupplyCallBob = await manager.interface.encodeFunctionData('mint', [
-      {
-        asset: tokenB.target,
-        pool: pool.target,
-        amount: supplyAmount,
-        data: { interestRateData: '0x', hookData: '0x' },
-      },
-    ]);
-    const borrowCall = manager.interface.encodeFunctionData('borrow', [
-      {
-        asset: tokenA.target,
-        amount: borrowAmount,
-        tokenId: 2,
-        data: { interestRateData: '0x', hookData: '0x' },
-      },
-    ]);
-    await manager.connect(ant).multicall([mintSupplyCallBob, borrowCall]);
-
-    const balance = await manager.getPosition(2);
-
-    // token A - borrowed
-    expect(balance.assets[0].debt).eq(borrowAmount);
-    expect(balance.assets[0].balance).eq(0);
-    expect(await tokenA.balanceOf(await ant.getAddress())).eq(borrowAmount + e18('100'));
-
-    // token B - supplied
-    expect(balance.assets[1].balance).eq(supplyAmount);
-    expect(balance.assets[1].debt).eq(0);
-    expect(await tokenB.balanceOf(pool.target)).eq(supplyAmount);
-  });
-
-  it.skip('should be able to repay and withdraw using multicall', async () => {
-    // todo
+    await manager.connect(ant).multicall([mintCall, supply, borrow, repay, withdraw]);
   });
 });

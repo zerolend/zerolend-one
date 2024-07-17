@@ -58,8 +58,8 @@ contract BasePoolHalmosTest is SymTest, Test {
     loan.approve(address(pool), type(uint256).max);
     collateral.approve(address(pool), type(uint256).max);
 
-    pool.supplySimple(address(loan), loanAmount, 0);
-    pool.supplySimple(address(collateral), collateralAmount, 0);
+    pool.supplySimple(address(loan), owner, loanAmount, 0);
+    pool.supplySimple(address(collateral), owner, collateralAmount, 0);
     vm.stopPrank();
   }
 
@@ -67,6 +67,9 @@ contract BasePoolHalmosTest is SymTest, Test {
     address[] memory assets = new address[](2);
     assets[0] = address(loan);
     assets[1] = address(collateral);
+
+    address[] memory admins = new address[](1);
+    assets[0] = address(owner);
 
     address[] memory rateStrategyAddresses = new address[](2);
     rateStrategyAddresses[0] = address(irStrategy);
@@ -81,6 +84,11 @@ contract BasePoolHalmosTest is SymTest, Test {
     configurationLocal[1] = _config(true);
 
     p = DataTypes.InitPoolParams({
+      proxyAdmin: address(this),
+      revokeProxy: false,
+      admins: admins,
+      emergencyAdmins: new address[](0),
+      riskAdmins: new address[](0),
       hook: address(0),
       assets: assets,
       rateStrategyAddresses: rateStrategyAddresses,
@@ -110,9 +118,10 @@ contract BasePoolHalmosTest is SymTest, Test {
 
     uint256 amount = svm.createUint256('amount');
     uint256 index = svm.createUint256('index');
+    address dest = svm.createAddress('dest');
 
     vm.prank(caller);
-    (bool success,) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), amount, index)));
+    (bool success,) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), dest, amount, index)));
     vm.assume(success);
   }
 }

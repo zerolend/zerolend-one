@@ -16,16 +16,16 @@ contract PoolBorrowTests is PoolSetup {
   /// ------------Borrow------------
   function testBorrowAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
-    pool.borrowSimple(address(tokenA), 0, 0);
+    pool.borrowSimple(address(tokenA), address(this), 0, 0);
   }
 
   function testFailBorrowZeroAssetAddress() external {
-    pool.borrowSimple(address(0), 50 ether, 0);
+    pool.borrowSimple(address(0), address(this), 50 ether, 0);
   }
 
   function testBorrowWhenCollateralIsZero() external {
     vm.expectRevert(bytes('COLLATERAL_BALANCE_IS_ZERO'));
-    pool.borrowSimple(address(tokenA), 50 ether, 0);
+    pool.borrowSimple(address(tokenA), address(this), 50 ether, 0);
   }
 
   function testBorrowMoreThenCollateral() external {
@@ -35,12 +35,12 @@ contract PoolBorrowTests is PoolSetup {
 
     vm.startPrank(alice);
 
-    pool.supplySimple(address(tokenA), supplyAmount, 0);
+    pool.supplySimple(address(tokenA), alice, supplyAmount, 0);
 
     uint256 borrowAmount = supplyAmount;
 
     vm.expectRevert(bytes('COLLATERAL_CANNOT_COVER_NEW_BORROW'));
-    pool.borrowSimple(address(tokenA), borrowAmount, 0);
+    pool.borrowSimple(address(tokenA), alice, borrowAmount, 0);
 
     vm.stopPrank();
   }
@@ -53,7 +53,7 @@ contract PoolBorrowTests is PoolSetup {
     tokenA.approve(address(pool), 1e18);
 
     vm.expectRevert(bytes('RESERVE_FROZEN'));
-    pool.borrowSimple(address(tokenA), 1e18, 0);
+    pool.borrowSimple(address(tokenA), address(1), 1e18, 0);
   }
 
   function testBorrowCapExceed() external {
@@ -64,7 +64,7 @@ contract PoolBorrowTests is PoolSetup {
     tokenA.approve(address(pool), 1e18);
 
     vm.expectRevert(bytes('BORROW_CAP_EXCEEDED'));
-    pool.borrowSimple(address(tokenA), 101e18, 0);
+    pool.borrowSimple(address(tokenA), address(1), 101e18, 0);
   }
 
   function testBorrowNotEnabled() external {
@@ -74,7 +74,7 @@ contract PoolBorrowTests is PoolSetup {
     tokenB.approve(address(pool), 2e18);
 
     vm.expectRevert(bytes('BORROWING_NOT_ENABLED'));
-    pool.borrowSimple(address(tokenB), 2e18, 0);
+    pool.borrowSimple(address(tokenB), address(1), 2e18, 0);
   }
 
   function testBorrowEventEmit() external {
@@ -86,17 +86,17 @@ contract PoolBorrowTests is PoolSetup {
     _mintAndApprove(bob, tokenB, mintAmount, address(pool));
 
     vm.startPrank(bob);
-    pool.supplySimple(address(tokenB), mintAmount, 0);
+    pool.supplySimple(address(tokenB), bob, mintAmount, 0);
     vm.stopPrank();
 
     vm.startPrank(alice);
-    pool.supplySimple(address(tokenA), mintAmount, 0);
+    pool.supplySimple(address(tokenA), alice, mintAmount, 0);
 
     DataTypes.ReserveData memory data = pool.getReserveData(address(tokenA));
     vm.expectEmit(true, true, true, false);
     emit PoolEventsLib.Borrow(address(tokenB), address(alice), pos, borrowAmount, data.borrowRate);
 
-    pool.borrowSimple(address(tokenB), borrowAmount, 0);
+    pool.borrowSimple(address(tokenB), alice, borrowAmount, 0);
     assertEq(tokenB.balanceOf(address(pool)), mintAmount - borrowAmount);
     assertEq(pool.getDebt(address(tokenB), address(alice), 0), borrowAmount);
     assertEq(pool.totalDebt(address(tokenB)), borrowAmount);

@@ -130,6 +130,7 @@ library DataTypes {
     address asset;
     address pool;
     address user;
+    address destination;
     bytes32 position;
     ExtraData data;
     uint256 amount;
@@ -155,7 +156,6 @@ library DataTypes {
     ExtraData data;
     uint256 amount;
     uint256 reserveFactor;
-    uint256 reservesCount;
   }
 
   struct FlashloanSimpleParams {
@@ -180,7 +180,7 @@ library DataTypes {
   struct CalculateUserAccountDataParams {
     address pool;
     bytes32 position;
-    uint256 reservesCount;
+    // uint256 reservesCount;
     UserConfigurationMap userConfig;
   }
 
@@ -228,6 +228,11 @@ library DataTypes {
   }
 
   struct InitPoolParams {
+    bool revokeProxy;
+    address proxyAdmin;
+    address[] admins;
+    address[] emergencyAdmins;
+    address[] riskAdmins;
     address hook;
     address[] assets;
     address[] rateStrategyAddresses;

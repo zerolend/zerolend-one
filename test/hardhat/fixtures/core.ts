@@ -7,6 +7,7 @@ export async function deployCore() {
   const BorrowLogic = await ethers.getContractFactory('BorrowLogic');
   const FlashLoanLogic = await ethers.getContractFactory('FlashLoanLogic');
   const LiquidationLogic = await ethers.getContractFactory('LiquidationLogic');
+  const WETH9Mocked = await ethers.getContractFactory('WETH9Mocked');
   const PoolLogic = await ethers.getContractFactory('PoolLogic');
   const SupplyLogic = await ethers.getContractFactory('SupplyLogic');
   const PoolFactory = await ethers.getContractFactory('PoolFactory');
@@ -38,7 +39,7 @@ export async function deployCore() {
   // deploy pool
   const poolImpl = await Pool.deploy();
   const poolFactory = await PoolFactory.deploy(poolImpl.target);
-  const configurator = await PoolConfigurator.deploy(poolFactory.target, governance.address);
+  const configurator = await PoolConfigurator.deploy(poolFactory.target);
   await poolFactory.setConfigurator(configurator.target);
 
   // deploy vault
@@ -48,6 +49,7 @@ export async function deployCore() {
   // create dummy tokens
   const tokenA = await MintableERC20.deploy('TOKEN A', 'TOKENA');
   const tokenB = await MintableERC20.deploy('TOKEN B', 'TOKENB');
+  const weth = await WETH9Mocked.deploy();
   const tokenC = await MintableERC20.deploy('TOKEN C', 'TOKENC');
 
   // create dummy oracles
@@ -69,6 +71,7 @@ export async function deployCore() {
     configurator,
     governance,
     irStrategy,
+    weth,
     poolImpl,
     poolFactory,
     curatedVaultFactory,

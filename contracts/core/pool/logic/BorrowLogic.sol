@@ -84,7 +84,7 @@ library BorrowLogic {
       params.data.interestRateData
     );
 
-    IERC20(params.asset).safeTransfer(params.user, params.amount);
+    IERC20(params.asset).safeTransfer(params.destination, params.amount);
 
     emit PoolEventsLib.Borrow(params.asset, params.user, params.position, params.amount, reserve.borrowRate);
 

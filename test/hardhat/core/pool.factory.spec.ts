@@ -60,6 +60,11 @@ describe('Pool Factory', () => {
   describe('pool creation & updating', function () {
     it('should create a new pool', async () => {
       const input: DataTypes.InitPoolParamsStruct = {
+        proxyAdmin: ZeroAddress,
+        revokeProxy: false,
+        admins: [],
+        emergencyAdmins: [],
+        riskAdmins: [],
         hook: ZeroAddress,
         assets: [tokenA.target, tokenB.target, tokenC.target],
         rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
@@ -75,6 +80,11 @@ describe('Pool Factory', () => {
 
     it('should update pool implementation properly and not allow re-init(..)', async () => {
       const input: DataTypes.InitPoolParamsStruct = {
+        proxyAdmin: ZeroAddress,
+        revokeProxy: false,
+        admins: [],
+        emergencyAdmins: [],
+        riskAdmins: [],
         hook: ZeroAddress,
         assets: [tokenA.target, tokenB.target, tokenC.target],
         rateStrategyAddresses: [irStrategy.target, irStrategy.target, irStrategy.target],
@@ -130,7 +140,7 @@ describe('Pool Factory', () => {
     let newConfigurator: PoolConfigurator;
     beforeEach(async () => {
       const PoolConfigurator = await ethers.getContractFactory('PoolConfigurator');
-      newConfigurator = await PoolConfigurator.deploy(poolFactory.target, governance.address);
+      newConfigurator = await PoolConfigurator.deploy(poolFactory.target);
     });
     it('should update configurator', async function () {
       await poolFactory.setConfigurator(newConfigurator.target);

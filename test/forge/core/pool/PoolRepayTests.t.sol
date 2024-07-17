@@ -26,9 +26,8 @@ contract PoolRepayTests is PoolSetup {
     _mintAndApprove(alice, tokenA, 2 * amount, address(pool));
     vm.startPrank(alice);
 
-    pool.supplySimple(address(tokenA), amount, 0);
-
-    pool.borrowSimple(address(tokenA), borrowAmount, 0);
+    pool.supplySimple(address(tokenA), alice, amount, 0);
+    pool.borrowSimple(address(tokenA), alice, borrowAmount, 0);
     vm.warp(block.timestamp + 10 days);
 
     uint256 tokenBalanceBefore = tokenA.balanceOf(alice);
@@ -64,9 +63,9 @@ contract PoolRepayTests is PoolSetup {
     _mintAndApprove(alice, tokenA, 2 * amount, address(pool));
     vm.startPrank(alice);
 
-    pool.supplySimple(address(tokenA), amount, 0);
+    pool.supplySimple(address(tokenA), alice, amount, 0);
 
-    pool.borrowSimple(address(tokenA), borrowAmount, 0);
+    pool.borrowSimple(address(tokenA), alice, borrowAmount, 0);
     vm.warp(block.timestamp + 10 days);
 
     uint256 tokenBalanceBefore = tokenA.balanceOf(alice);

@@ -43,7 +43,7 @@ abstract contract CorePoolTests is Test {
     poolImplementation = new Pool();
 
     poolFactory = new PoolFactory(address(poolImplementation));
-    configurator = new PoolConfigurator(address(poolFactory), governance);
+    configurator = new PoolConfigurator(address(poolFactory));
 
     poolFactory.setConfigurator(address(configurator));
 

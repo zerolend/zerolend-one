@@ -6,7 +6,7 @@ async function main(hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const poolImpl = await deployments.get('Pool');
+  // const poolImpl = await deployments.get('Pool');
 
   const deployment = await deploy('PoolFactory', {
     from: deployer,
@@ -16,7 +16,10 @@ async function main(hre: HardhatRuntimeEnvironment) {
     log: true,
   });
 
-  await hre.run('verify:verify', { address: deployment.address });
+  await hre.run('verify:verify', {
+    address: deployment.address,
+    constructorArguments: deployment.args,
+  });
 }
 
 main.tags = ['PoolFactory'];

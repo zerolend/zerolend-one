@@ -14,7 +14,10 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
-import {IHook, IPool, IPoolFactory, IPoolGetters} from '../../interfaces/pool/IPool.sol';
+
+import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
+import {IPool, IPoolGetters} from '../../interfaces/pool/IPool.sol';
+import {IHook} from './../../interfaces/IHook.sol';
 
 import {PoolStorage} from './PoolStorage.sol';
 import {DataTypes} from './configuration/DataTypes.sol';
@@ -103,12 +106,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
       _balances,
       _reserves,
       _reservesList,
-      DataTypes.CalculateUserAccountDataParams({
-        userConfig: _usersConfig[positionId],
-        reservesCount: _reservesCount,
-        position: positionId,
-        pool: address(this)
-      })
+      DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], position: positionId, pool: address(this)})
     );
   }
 

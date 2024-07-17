@@ -18,69 +18,6 @@ import {INFTRewardsDistributor} from './INFTRewardsDistributor.sol';
 
 interface INFTPositionManager is INFTRewardsDistributor {
   /**
-   * @notice Error indicating that the caller is not the owner or approved operator of the token ID.
-   */
-  error NotTokenIdOwner();
-
-  /**
-   * @notice Error indicating that a zero address was provided, which is not allowed.
-   */
-  error ZeroAddressNotAllowed();
-
-  /**
-   * @notice Error indicating that a zero value was provided, which is not allowed.
-   */
-  error ZeroValueNotAllowed();
-
-  /**
-   * @notice Error indicating a mismatch in balance.
-   */
-  error BalanceMisMatch();
-
-  /**
-   * @notice Error indicating that the position is not cleared.
-   */
-  error PositionNotCleared();
-
-  /**
-   * @notice Error indicating that pool is not register in pool factory.
-   */
-  error NotPool();
-
-  /**
-   *
-   * @param asset The address of the asset that we want to borrow.
-   * @param tokenId  The ID of the position token.
-   * @param amount The amount of the asset that we want to borrow.
-   */
-  event BorrowIncreased(address indexed asset, uint256 indexed amount, uint256 indexed tokenId);
-
-  /**
-   *
-   * @param asset The address of the asset that we want to withdraw
-   * @param amount The amount of asset that we want to withdraw
-   * @param tokenId The ID of the NFT.
-   *
-   */
-  event Withdrawal(address indexed asset, uint256 indexed amount, uint256 tokenId);
-
-  /**
-   *
-   * @param asset The address of the asset that we want to repay.
-   * @param tokenId The ID of the NFT.
-   * @param amount The amount of asset that we want to repay
-   */
-  event Repay(address indexed asset, uint256 indexed tokenId, uint256 indexed amount);
-
-  /**
-   * @notice Emitted when liquidity is increased for a specific position token.
-   * @param asset The address of the asset for which liquidity was increased.
-   * @param tokenId The ID of the position token.
-   * @param amount The amount of the asset that was added to the position.
-   */
-  event LiquidityIncreased(address indexed asset, uint256 indexed tokenId, uint256 indexed amount);
-
-  /**
    * @notice Parameters required for minting a new position token.
    * @param asset The address of the asset to be supplied.
    * @param pool The address of the pool where the asset will be supplied.
@@ -108,7 +45,6 @@ interface INFTPositionManager is INFTRewardsDistributor {
     address pool;
     uint256 amount;
     uint256 tokenId;
-    // bytes32 positionId;
     DataTypes.ExtraData data;
   }
 
@@ -137,12 +73,14 @@ interface INFTPositionManager is INFTRewardsDistributor {
   /**
    * @notice Parameters required for various asset operations (add liquidity, borrow, repay, withdraw) against a position.
    * @param asset The address of the asset involved in the operation.
+   * @param target Optional argument. For withdraw it is the address of the user receiving the asset.
    * @param amount The amount of the asset involved in the operation.
    * @param tokenId The ID of the position token involved in the operation.
    * @param data Extra data that gets passed to the hook and to the interest rate strategy
    */
   struct AssetOperationParams {
     address asset;
+    address target;
     uint256 amount;
     uint256 tokenId;
     DataTypes.ExtraData data;
@@ -151,23 +89,16 @@ interface INFTPositionManager is INFTRewardsDistributor {
   /**
    * @notice Initializes the NFTPositionManager contract.
    */
-  function initialize(address _factory, address _staking, address _owner, address _zero) external;
-
-  /**
-   * @notice Retrieves the details of a position identified by the given token ID.
-   * @param tokenId The ID of the position token.
-   * @return assets An array of Asset structs representing the balances and debts of the position's assets.
-   */
-  function getPosition(uint256 tokenId) external view returns (Asset[] memory assets, bool isBurnAllowed);
+  function initialize(address _factory, address _staking, address _owner, address _zero, address _weth) external;
 
   /**
    * @notice Mints a new NFT representing a liquidity position.
-   * @param params The parameters required for minting the position, including the pool,token and amount.
+   * @param pool The pool to mint a position ID for
    * @return tokenId The ID of the newly minted token.
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
    * @custom:error ZeroValueNotAllowed error thrown if the  amount is zero.
    */
-  function mint(MintParams calldata params) external returns (uint256 tokenId);
+  function mint(address pool) external returns (uint256 tokenId);
 
   /**
    * @notice Allow User to increase liquidity in the postion
@@ -198,13 +129,6 @@ interface INFTPositionManager is INFTRewardsDistributor {
   function withdraw(AssetOperationParams memory params) external;
 
   /**
-   * @notice Burns a token, removing it from existence.
-   * @param tokenId The ID of the token to burn.
-   * @custom:error PositionNotCleared thrown if user postion is not cleared in the position map
-   */
-  function burn(uint256 tokenId) external;
-
-  /**
    * @notice Allow user to repay thier debt.
    * @param params The params required for repaying the position which includes tokenId, asset and amount.
    * @custom:error ZeroAddressNotAllowed error thrown if asset address is zero address.
@@ -214,7 +138,27 @@ interface INFTPositionManager is INFTRewardsDistributor {
    */
   function repay(AssetOperationParams memory params) external;
 
-  function wrapEther() external payable;
-
   function positions(uint256 tokenId) external view returns (Position memory);
+
+  /**
+   *
+   */
+  function repayETH(AssetOperationParams memory params) external payable;
+
+  /**
+   *
+   */
+  function borrowETH(AssetOperationParams memory params) external payable;
+
+  /**
+   *
+   */
+  function supplyETH(AssetOperationParams memory params) external payable;
+
+  /**
+   *
+   */
+  function withdrawETH(AssetOperationParams memory params) external payable;
+
+  function sweep(address token) external;
 }

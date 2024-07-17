@@ -16,6 +16,9 @@ task(`create-pool`).setAction(async (_, hre: HardhatRuntimeEnvironment) => {
   const factory = await hre.ethers.getContractAt('PoolFactory', factoryD.address);
 
   const poolParams: DataTypes.InitPoolParamsStruct = {
+    // admins: [], // TODO
+    // emergencyAdmins: [], // TODO
+    // proxyRevokable: false, // TODO
     hook: ZeroAddress,
     assets: [
       '0xe5d7c2a44ffddf6b295a15c148167daaaf5cf34f', // weth

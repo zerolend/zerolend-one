@@ -96,5 +96,10 @@ interface IPoolManager is IAccessControlEnumerable {
    */
   function isRiskAdmin(IPool pool, address admin) external view returns (bool);
 
+  /**
+   * @notice Gets the role for a given pool
+   * @param pool The pool to get the role for
+   * @param role The role to get
+   */
   function getRoleFromPool(IPool pool, bytes32 role) external pure returns (bytes32);
 }

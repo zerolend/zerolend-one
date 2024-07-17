@@ -101,6 +101,11 @@ abstract contract BaseVaultTest is PoolSetup {
     idleMarket = IPool(
       poolFactory.createPool(
         DataTypes.InitPoolParams({
+          proxyAdmin: address(this),
+          revokeProxy: false,
+          admins: new address[](0),
+          emergencyAdmins: new address[](0),
+          riskAdmins: new address[](0),
           hook: address(0),
           assets: idleAssets,
           rateStrategyAddresses: idleStrategies,

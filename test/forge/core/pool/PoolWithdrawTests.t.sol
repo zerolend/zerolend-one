@@ -8,17 +8,17 @@ contract PoolWithdrawTests is PoolSetup {
   /// ------------Withdraw------------
   function testWithdrawAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
-    pool.withdrawSimple(address(tokenA), 0, 0);
+    pool.withdrawSimple(address(tokenA), msg.sender, 0, 0);
   }
 
   function testFailWithdrawZeroAssetAddress() external {
-    pool.withdrawSimple(address(0), 50 ether, 0);
+    pool.withdrawSimple(address(0), msg.sender, 50 ether, 0);
   }
 
   function testFailWithdrawNonExistingToken() external {
     MintableERC20 randomToken = new MintableERC20('TOKEN D', 'TOKEND');
 
-    pool.withdrawSimple(address(randomToken), 50 ether, 0);
+    pool.withdrawSimple(address(randomToken), msg.sender, 50 ether, 0);
   }
 
   function testRevertsWithdrawInvalidBalance() public {
@@ -26,10 +26,10 @@ contract PoolWithdrawTests is PoolSetup {
 
     tokenA.mint(owner, amount);
     tokenA.approve(address(pool), amount);
-    pool.supplySimple(address(tokenA), amount, 0);
+    pool.supplySimple(address(tokenA), owner, amount, 0);
 
-    vm.expectRevert(bytes('Insufficient Balance!'));
-    pool.withdrawSimple(address(tokenA), 2 * amount, 0);
+    vm.expectRevert(bytes('NOT_ENOUGH_AVAILABLE_USER_BALANCE'));
+    pool.withdrawSimple(address(tokenA), owner, 2 * amount, 0);
   }
 
   function testWithdrawEventEmit() external {
@@ -46,7 +46,7 @@ contract PoolWithdrawTests is PoolSetup {
 
     vm.expectEmit(true, true, false, true);
     emit PoolEventsLib.Supply(address(tokenA), pos, supplyAmount);
-    pool.supplySimple(address(tokenA), supplyAmount, index);
+    pool.supplySimple(address(tokenA), owner, supplyAmount, index);
 
     assertEq(tokenA.balanceOf(address(pool)), supplyAmount);
     assertEq(tokenA.balanceOf(owner), mintAmount - supplyAmount);
@@ -54,7 +54,7 @@ contract PoolWithdrawTests is PoolSetup {
     vm.expectEmit(true, true, true, true);
     emit PoolEventsLib.Withdraw(address(tokenA), pos, owner, withdrawAmount);
 
-    pool.withdrawSimple(address(tokenA), withdrawAmount, index);
+    pool.withdrawSimple(address(tokenA), owner, withdrawAmount, index);
     vm.stopPrank();
   }
 
@@ -68,14 +68,14 @@ contract PoolWithdrawTests is PoolSetup {
     tokenA.mint(owner, mintAmount);
     tokenA.approve(address(pool), supplyAmount);
 
-    pool.supplySimple(address(tokenA), supplyAmount, index);
+    pool.supplySimple(address(tokenA), owner, supplyAmount, index);
 
     assertEq(tokenA.balanceOf(address(pool)), supplyAmount, 'Pool Balance Supply');
     assertEq(tokenA.balanceOf(owner), mintAmount - supplyAmount, 'Owner Balance Supply');
     assertEq(pool.getTotalSupplyRaw(address(tokenA)).supplyShares, supplyAmount);
     assertEq(pool.getBalanceRaw(address(tokenA), owner, index).supplyShares, supplyAmount);
 
-    pool.withdrawSimple(address(tokenA), withdrawAmount, index);
+    pool.withdrawSimple(address(tokenA), owner, withdrawAmount, index);
     assertEq(tokenA.balanceOf(address(pool)), supplyAmount - withdrawAmount, 'Pool Balance Withdraw');
     assertEq(tokenA.balanceOf(owner), (mintAmount - supplyAmount) + withdrawAmount, 'Owner Balance Withdraw');
     assertEq(pool.getTotalSupplyRaw(address(tokenA)).supplyShares, supplyAmount - withdrawAmount);

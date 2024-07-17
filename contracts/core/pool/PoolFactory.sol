@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes, IBeacon, IPool, IPoolConfigurator, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
-import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
+import {IRevokableBeaconProxy, RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 /**
@@ -68,7 +68,14 @@ contract PoolFactory is IPoolFactory, Ownable {
   /// @inheritdoc IPoolFactory
   function createPool(DataTypes.InitPoolParams memory params) external returns (IPool pool) {
     // create the pool
-    pool = IPool(address(new RevokableBeaconProxy(address(this), msg.sender)));
+    if (params.revokeProxy) {
+      pool = IPool(address(new RevokableBeaconProxy(address(this), address(this))));
+      IRevokableBeaconProxy(address(pool)).revokeBeacon();
+    } else {
+      if (params.proxyAdmin == address(0)) params.proxyAdmin = msg.sender;
+      pool = IPool(address(new RevokableBeaconProxy(address(this), params.proxyAdmin)));
+    }
+
     emit PoolCreated(pool, pools.length, msg.sender, params);
 
     // track the pool
@@ -77,7 +84,7 @@ contract PoolFactory is IPoolFactory, Ownable {
 
     // init the pool and give roles to the user
     pool.initialize(params);
-    configurator.initRoles(IPool(address(pool)), msg.sender);
+    configurator.initRoles(IPool(address(pool)), params.admins, params.emergencyAdmins, params.riskAdmins);
   }
 
   /// @inheritdoc IPoolFactory
@@ -92,9 +99,6 @@ contract PoolFactory is IPoolFactory, Ownable {
     address old = address(configurator);
     configurator = IPoolConfigurator(impl);
     emit ConfiguratorUpdated(old, impl, msg.sender);
-
-    // give some of the master roles (pool = address(0x0)) to the msg.sender
-    configurator.initRoles(IPool(address(0)), msg.sender);
   }
 
   /// @inheritdoc IPoolFactory
