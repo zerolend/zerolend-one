@@ -84,6 +84,8 @@ contract BasePoolHalmosTest is SymTest, Test {
     configurationLocal[1] = _config(true);
 
     p = DataTypes.InitPoolParams({
+      proxyAdmin: address(this),
+      revokeProxy: false,
       admins: admins,
       emergencyAdmins: new address[](0),
       riskAdmins: new address[](0),
@@ -118,7 +120,7 @@ contract BasePoolHalmosTest is SymTest, Test {
 
     uint256 amount = svm.createUint256('amount');
     uint256 index = svm.createUint256('index');
-    uint256 dest = svm.createAddress('dest');
+    address dest = svm.createAddress('dest');
 
     vm.prank(caller);
     (bool success, ) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), dest, amount, index)));

@@ -45,6 +45,8 @@ abstract contract PoolSetup is CorePoolTests {
     admins[0] = address(this);
 
     p = DataTypes.InitPoolParams({
+      proxyAdmin: address(this),
+      revokeProxy: false,
       admins: admins,
       emergencyAdmins: new address[](0),
       riskAdmins: new address[](0),

@@ -228,6 +228,8 @@ library DataTypes {
   }
 
   struct InitPoolParams {
+    bool revokeProxy;
+    address proxyAdmin;
     address[] admins;
     address[] emergencyAdmins;
     address[] riskAdmins;

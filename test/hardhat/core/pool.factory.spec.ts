@@ -60,6 +60,8 @@ describe('Pool Factory', () => {
   describe('pool creation & updating', function () {
     it('should create a new pool', async () => {
       const input: DataTypes.InitPoolParamsStruct = {
+        proxyAdmin: ZeroAddress,
+        revokeProxy: false,
         admins: [],
         emergencyAdmins: [],
         riskAdmins: [],
@@ -78,6 +80,8 @@ describe('Pool Factory', () => {
 
     it('should update pool implementation properly and not allow re-init(..)', async () => {
       const input: DataTypes.InitPoolParamsStruct = {
+        proxyAdmin: ZeroAddress,
+        revokeProxy: false,
         admins: [],
         emergencyAdmins: [],
         riskAdmins: [],

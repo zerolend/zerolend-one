@@ -100,6 +100,8 @@ describe('Curated Vault', () => {
 
     // create 5 pools and a vault
     const input: DataTypes.InitPoolParamsStruct = {
+      proxyAdmin: ZeroAddress,
+      revokeProxy: false,
       admins: [],
       emergencyAdmins: [],
       riskAdmins: [],

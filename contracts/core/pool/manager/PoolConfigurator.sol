@@ -38,15 +38,15 @@ contract PoolConfigurator is PoolManager, IPoolConfigurator {
   function initRoles(IPool pool, address[] memory admins, address[] memory emergencyAdmins, address[] memory riskAdmins) external override {
     require(msg.sender == factory, '!factory');
 
-    for (uint i = 0; i < admins.length; i++) {
+    for (uint256 i = 0; i < admins.length; i++) {
       _setupRole(getRoleFromPool(pool, POOL_ADMIN_ROLE), admins[i]);
     }
 
-    for (uint i = 0; i < emergencyAdmins.length; i++) {
+    for (uint256 i = 0; i < emergencyAdmins.length; i++) {
       _setupRole(getRoleFromPool(pool, EMERGENCY_ADMIN_ROLE), emergencyAdmins[i]);
     }
 
-    for (uint i = 0; i < riskAdmins.length; i++) {
+    for (uint256 i = 0; i < riskAdmins.length; i++) {
       _setupRole(getRoleFromPool(pool, RISK_ADMIN_ROLE), riskAdmins[i]);
     }
 
