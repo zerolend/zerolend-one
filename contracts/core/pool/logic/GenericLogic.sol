@@ -98,7 +98,7 @@ library GenericLogic {
 
       DataTypes.ReserveData storage currentReserve = reservesData[vars.currentReserveAddress];
 
-      (vars.ltv, vars.liquidationThreshold,, vars.decimals,) = currentReserve.configuration.getParams();
+      (vars.ltv, vars.liquidationThreshold, , vars.decimals, ) = currentReserve.configuration.getParams();
 
       unchecked {
         vars.assetUnit = 10 ** vars.decimals;
@@ -108,7 +108,10 @@ library GenericLogic {
 
       if (vars.liquidationThreshold != 0 && params.userConfig.isUsingAsCollateral(vars.i)) {
         vars.PositionBalanceInBaseCurrency = _getPositionBalanceInBaseCurrency(
-          _balances[vars.currentReserveAddress][params.position], currentReserve, vars.assetPrice, vars.assetUnit
+          _balances[vars.currentReserveAddress][params.position],
+          currentReserve,
+          vars.assetPrice,
+          vars.assetUnit
         );
 
         vars.totalCollateralInBaseCurrency += vars.PositionBalanceInBaseCurrency;
@@ -124,7 +127,10 @@ library GenericLogic {
 
       if (params.userConfig.isBorrowing(vars.i)) {
         vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(
-          _balances[vars.currentReserveAddress][params.position], currentReserve, vars.assetPrice, vars.assetUnit
+          _balances[vars.currentReserveAddress][params.position],
+          currentReserve,
+          vars.assetPrice,
+          vars.assetUnit
         );
       }
 
@@ -135,8 +141,9 @@ library GenericLogic {
 
     unchecked {
       vars.avgLtv = vars.totalCollateralInBaseCurrency != 0 ? vars.avgLtv / vars.totalCollateralInBaseCurrency : 0;
-      vars.avgLiquidationThreshold =
-        vars.totalCollateralInBaseCurrency != 0 ? vars.avgLiquidationThreshold / vars.totalCollateralInBaseCurrency : 0;
+      vars.avgLiquidationThreshold = vars.totalCollateralInBaseCurrency != 0
+        ? vars.avgLiquidationThreshold / vars.totalCollateralInBaseCurrency
+        : 0;
     }
 
     vars.healthFactor = (vars.totalDebtInBaseCurrency == 0)

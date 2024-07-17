@@ -67,10 +67,10 @@ describe('Pool Factory', () => {
         configurations: [basicConfig, basicConfig, basicConfig],
       };
 
-      await expect(await poolFactory.poolsLength()).eq(0);
-      const tx = await poolFactory.createPool(input);
+      expect(await poolFactory.poolsLength()).eq(0);
+      const tx = poolFactory.createPool(input);
       await expect(tx).to.emit(poolFactory, 'PoolCreated');
-      await expect(await poolFactory.poolsLength()).eq(1);
+      expect(await poolFactory.poolsLength()).eq(1);
     });
 
     it('should update pool implementation properly and not allow re-init(..)', async () => {
@@ -86,11 +86,11 @@ describe('Pool Factory', () => {
       const tx = await poolFactory.createPool(input);
 
       await expect(tx).to.emit(poolFactory, 'PoolCreated');
-      await expect(await poolFactory.poolsLength()).eq(1);
+      expect(await poolFactory.poolsLength()).eq(1);
       const poolAddr = await poolFactory.pools(0);
 
       const pool = await ethers.getContractAt('Pool', poolAddr);
-      await expect(await pool.revision()).eq('1');
+      expect(await pool.revision()).eq('1');
 
       // now try to upgrade the beacon
       const UpgradedPool = await ethers.getContractFactory('UpgradedPool', { libraries });
@@ -99,7 +99,7 @@ describe('Pool Factory', () => {
       await expect(tx2).to.emit(poolFactory, 'ImplementationUpdated');
 
       // check if the pool upgraded properly
-      await expect(await pool.revision()).eq('1000');
+      expect(await pool.revision()).eq('1000');
       await expect(pool.initialize(input)).to.revertedWith(
         'Initializable: contract is already initialized'
       );
