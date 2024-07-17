@@ -29,7 +29,7 @@ contract PoolLiquidationTest is PoolSetup {
 
   function testLiquidationSimple1() external {
     _generateLiquidationCondition();
-    (, uint256 totalDebtBase,,,,) = pool.getUserAccountData(alice, 0);
+    (, uint256 totalDebtBase, , , , ) = pool.getUserAccountData(alice, 0);
 
     vm.startPrank(bob);
     vm.expectEmit(true, true, true, false);
@@ -38,7 +38,7 @@ contract PoolLiquidationTest is PoolSetup {
 
     vm.stopPrank();
 
-    (, uint256 totalDebtBaseNew,,,,) = pool.getUserAccountData(alice, 0);
+    (, uint256 totalDebtBaseNew, , , , ) = pool.getUserAccountData(alice, 0);
 
     assertTrue(totalDebtBase > totalDebtBaseNew);
   }
@@ -64,15 +64,15 @@ contract PoolLiquidationTest is PoolSetup {
     _mintAndApprove(bob, tokenB, mintAmountB, address(pool)); // bob 2000 tokenB
 
     vm.startPrank(alice);
-    pool.supplySimple(address(tokenA), supplyAmountA, 0); // 550 tokenA alice supply
+    pool.supplySimple(address(tokenA), alice, supplyAmountA, 0); // 550 tokenA alice supply
     vm.stopPrank();
 
     vm.startPrank(bob);
-    pool.supplySimple(address(tokenB), supplyAmountB, 0); // 750 tokenB bob supply
+    pool.supplySimple(address(tokenB), bob, supplyAmountB, 0); // 750 tokenB bob supply
     vm.stopPrank();
 
     vm.startPrank(alice);
-    pool.borrowSimple(address(tokenB), borrowAmountB, 0); // 100 tokenB alice borrow
+    pool.borrowSimple(address(tokenB), alice, borrowAmountB, 0); // 100 tokenB alice borrow
     vm.stopPrank();
 
     assertEq(tokenB.balanceOf(alice), borrowAmountB);

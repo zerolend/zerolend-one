@@ -107,13 +107,11 @@ describe('Pool', () => {
       await tokenA.connect(ant).approve(pool.target, eth('10'));
       await tokenB.connect(ant).approve(pool.target, eth('10'));
 
-      await pool.supplySimple(tokenA.target, eth('5'), 0);
-      await pool.supplySimple(tokenB.target, eth('5'), 0);
+      await pool.connect(ant).supplySimple(tokenA.target, ant.address, eth('5'), 0);
+      await pool.connect(ant).supplySimple(tokenB.target, ant.address, eth('5'), 0);
 
-      await pool.connect(ant).supplySimple(tokenA.target, eth('5'), 0);
-      await pool.connect(ant).supplySimple(tokenB.target, eth('5'), 0);
-
-      await pool.borrowSimple(tokenB.target, eth('1'), 0);
+      await pool.supplySimple(tokenA.target, deployer.address, eth('5'), 0);
+      await pool.borrowSimple(tokenB.target, deployer.address, eth('1'), 0);
     });
 
     it('should not simply liquidate a healthy position', async () => {
@@ -130,7 +128,7 @@ describe('Pool', () => {
 
       const balanceOfAntBeforeTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntBeforeTokenB = await tokenB.balanceOf(ant.address);
-      await oracleB.setAnswer(5e8);
+      await oracleB.setAnswer(50e8);
       await pool.connect(ant).liquidateSimple(tokenA.target, tokenB.target, position, eth('1'));
       const balanceOfAntAfterTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntAfterTokenB = await tokenB.balanceOf(ant.address);
