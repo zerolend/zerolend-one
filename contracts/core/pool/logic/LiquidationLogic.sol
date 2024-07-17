@@ -138,7 +138,7 @@ library LiquidationLogic {
 
     (vars.collateralPriceSource, vars.debtPriceSource, vars.liquidationBonus) = _getConfigurationData(collateralReserve, params);
 
-    vars.userCollateralBalance = balances[vars.asset][params.position].supplyShares;
+    vars.userCollateralBalance = balances[params.collateralAsset][params.position].supplyShares;
 
     (vars.actualCollateralToLiquidate, vars.actualDebtToLiquidate, vars.liquidationProtocolFeeAmount) =
     _calculateAvailableCollateralToLiquidate(
@@ -186,17 +186,12 @@ library LiquidationLogic {
       uint256 scaledDownLiquidationProtocolFee = vars.liquidationProtocolFeeAmount.rayDiv(liquidityIndex);
       // todo
       uint256 scaledDownUserBalance = balances[params.collateralAsset][params.position].supplyShares;
-      // To avoid trying to send more aTokens than available on balance, due to 1 wei imprecision
+
       if (scaledDownLiquidationProtocolFee > scaledDownUserBalance) {
         vars.liquidationProtocolFeeAmount = scaledDownUserBalance.rayMul(liquidityIndex);
       }
 
       IERC20(params.collateralAsset).transfer(IPool(params.pool).factory().treasury(), vars.liquidationProtocolFeeAmount);
-      // vars.collateralAToken.transferOnLiquidation(
-      //   params.position,
-      //   vars.collateralAToken.RESERVE_TREASURY_ADDRESS(),
-      //   vars.liquidationProtocolFeeAmount
-      // );
     }
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
