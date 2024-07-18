@@ -50,12 +50,16 @@ const config: HardhatUserConfig = {
   paths: {
     tests: './test/hardhat',
   },
+  defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
       live: false,
       loggingEnabled: false,
       allowBlocksWithSameTimestamp: true,
       allowUnlimitedContractSize: true,
+      forking: {
+        url: `https://cloudflare-eth.com`,
+      },
     },
     sepolia: {
       url: `https://1rpc.io/sepolia`,

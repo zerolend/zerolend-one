@@ -1,7 +1,10 @@
 import { ethers, keccak256 } from 'ethers';
 
-const buildBytecode = (constructorTypes: any[], constructorArgs: any[], contractBytecode: string) =>
-  `${contractBytecode}${encodeParams(constructorTypes, constructorArgs).slice(2)}`;
+export const buildBytecode = (
+  constructorTypes: any[],
+  constructorArgs: any[],
+  contractBytecode: string
+) => `${contractBytecode}${encodeParams(constructorTypes, constructorArgs).slice(2)}`;
 
 const buildCreate2Address = (factoryAddress: string, saltHex: string, byteCode: string) => {
   return `0x${keccak256(
@@ -11,7 +14,7 @@ const buildCreate2Address = (factoryAddress: string, saltHex: string, byteCode: 
   ).slice(-40)}`.toLowerCase();
 };
 
-const saltToHex = (salt: string | number) => ethers.id(salt.toString());
+export const saltToHex = (salt: string | number) => ethers.id(salt.toString());
 
 const encodeParams = (dataTypes: any[], data: any[]) => {
   const abiCoder = new ethers.AbiCoder();
