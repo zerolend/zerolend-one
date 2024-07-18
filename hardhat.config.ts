@@ -62,6 +62,11 @@ const config: HardhatUserConfig = {
       accounts: defaultAccount,
       saveDeployments: true,
     },
+    mainnet: {
+      url: `https://cloudflare-eth.com`,
+      accounts: defaultAccount,
+      saveDeployments: true,
+    },
     linea: {
       url: `https://rpc.linea.build`,
       accounts: defaultAccount,
@@ -89,7 +94,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      manta: process.env.ETHERSCAN_KEY || '',
+      mainnet: process.env.ETHERSCAN_KEY || '',
       linea: process.env.LINEASCAN_KEY || '',
     },
     customChains: [
