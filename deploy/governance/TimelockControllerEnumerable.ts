@@ -3,14 +3,13 @@ import { buildBytecode, saltToHex } from '../../scripts/create2';
 import { network } from 'hardhat';
 
 async function main(hre: HardhatRuntimeEnvironment) {
-  const { deployments, getNamedAccounts } = hre;
-  const { deployer } = await getNamedAccounts();
+  const { deployments } = hre;
 
   const constructorArgs: any[] = [
     86400 * 5, // uint256 minDelay,
     [], // address[] memory proposers,
     [], // address[] memory executors,
-    deployer, // address admin
+    '0x0F6e98A756A40dD050dC78959f45559F98d3289d', // address admin
   ];
 
   const factory = await hre.ethers.getContractFactory('TimelockControllerEnumerable');
@@ -24,9 +23,7 @@ async function main(hre: HardhatRuntimeEnvironment) {
   const byteCode = buildBytecode(constructorTypes, constructorArgs, factory.bytecode);
   const salt = '0x0eb2e070c46aa7b853dec5326bc7daeda14a46045187b8512279e5d038e552ae';
 
-  // const tx = await create2.deploy(byteCode, saltToHex(salt));
-  const tx = await create2.deploy(byteCode, salt);
-
+  const tx = await create2.deploy(byteCode, saltToHex(salt));
   const txR = await tx.wait(1);
 
   // @ts-ignore
@@ -37,6 +34,7 @@ async function main(hre: HardhatRuntimeEnvironment) {
   if (network.name == 'hardhat') return;
   await deployments.save('TimelockControllerEnumerable', {
     address: address,
+    args: constructorArgs,
     abi: factory.interface.format(),
   });
 
