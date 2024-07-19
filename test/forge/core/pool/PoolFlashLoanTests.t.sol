@@ -9,6 +9,8 @@ contract PoolFlashLoanTests is PoolSetup {
   address alice = address(1);
   address bob = address(2);
 
+  event Transfer(address indexed from, address indexed to, uint256 value);
+
   function test_reverts_flashLoan_simple_invalid_return() public {
     bytes memory emptyParams;
     MockFlashLoanSimpleReceiver mockFlashSimpleReceiver = new MockFlashLoanSimpleReceiver(pool);
@@ -43,16 +45,40 @@ contract PoolFlashLoanTests is PoolSetup {
     pool.flashLoanSimple(alice, address(tokenA), 100 ether, emptyParams);
   }
 
+  function testFailZeroAddress() public {
+    bytes memory emptyParams;
+    _generateFlashloanCondition();
+
+    pool.flashLoanSimple(address(0), address(tokenA), 0, emptyParams);
+  }
+
   function test_simple_flashloan() public {
     bytes memory emptyParams;
     MockFlashLoanSimpleReceiver mockFlashSimpleReceiver = new MockFlashLoanSimpleReceiver(pool);
     _generateFlashloanCondition();
 
-    vm.prank(alice);
-    vm.expectEmit(true, true, true, false);
+    uint256 premium = poolFactory.flashLoanPremiumToProtocol();
+    vm.startPrank(alice);
+
+    vm.expectEmit(true, true, true, true);
     emit PoolEventsLib.FlashLoan(address(mockFlashSimpleReceiver), alice, address(tokenA), 100 ether, 0);
+    emit Transfer(address(0), address(mockFlashSimpleReceiver), 100 ether * premium);
 
     pool.flashLoanSimple(address(mockFlashSimpleReceiver), address(tokenA), 100 ether, emptyParams);
+    vm.stopPrank();
+
+    poolFactory.setFlashloanPremium(2);
+    premium = poolFactory.flashLoanPremiumToProtocol();
+    assertEq(premium, 2);
+
+    vm.startPrank(alice);
+
+    vm.expectEmit(true, true, true, true);
+    emit PoolEventsLib.FlashLoan(address(mockFlashSimpleReceiver), alice, address(tokenA), 100 ether, (100 ether * premium) / 10_000);
+    emit Transfer(address(0), address(mockFlashSimpleReceiver), (100 ether * premium) / 10_000);
+
+    pool.flashLoanSimple(address(mockFlashSimpleReceiver), address(tokenA), 100 ether, emptyParams);
+    vm.stopPrank();
   }
 
   function _generateFlashloanCondition() internal {
