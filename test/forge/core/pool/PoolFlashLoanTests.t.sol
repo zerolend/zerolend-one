@@ -86,8 +86,8 @@ contract PoolFlashLoanTests is PoolSetup {
     _mintAndApprove(bob, tokenC, 2500 ether, address(pool));
 
     vm.startPrank(bob);
-    pool.supplySimple(address(tokenA), 2000 ether, 0);
-    pool.supplySimple(address(tokenC), 1000 ether, 0);
+    pool.supplySimple(address(tokenA), bob, 2000 ether, 0);
+    pool.supplySimple(address(tokenC), bob, 1000 ether, 0);
 
     vm.stopPrank();
   }
