@@ -10,6 +10,7 @@ describe('Pool', () => {
   let pool: Pool;
   let irStrategy: DefaultReserveInterestRateStrategy;
   let oracleB: MockAggregator;
+  let oracleA: MockAggregator;
 
   let tokenA: MintableERC20;
   let tokenB: MintableERC20;
@@ -19,7 +20,7 @@ describe('Pool', () => {
 
   beforeEach(async () => {
     const fixture = await deployPool();
-    ({ tokenA, tokenB, oracleB, pool, owner: deployer, ant, irStrategy } = fixture);
+    ({ tokenA, tokenB, oracleA, oracleB, pool, owner: deployer, ant, irStrategy } = fixture);
   });
 
   describe('Supply / Withdraw functions', () => {
@@ -95,17 +96,13 @@ describe('Pool', () => {
 
   describe('Liquidate function', () => {
     beforeEach(async () => {
-      await tokenA.mint(deployer.address, eth('10'));
-      await tokenB.mint(deployer.address, eth('10'));
+      await tokenA.mint(deployer.address, eth('1000'));
+      await tokenB.mint(ant.address, eth('2000'));
+      await tokenA.mint(ant.address, eth('2000'));
 
-      await tokenA.mint(ant.address, eth('10'));
-      await tokenB.mint(ant.address, eth('10'));
-
-      await tokenA.approve(pool.target, eth('10'));
-      await tokenB.approve(pool.target, eth('10'));
-
-      await tokenA.connect(ant).approve(pool.target, eth('10'));
-      await tokenB.connect(ant).approve(pool.target, eth('10'));
+      await tokenA.approve(pool.target, eth('1000'));
+      await tokenA.connect(ant).approve(pool.target, eth('2000'));
+      await tokenB.connect(ant).approve(pool.target, eth('2000'));
 
       await pool.connect(ant).supplySimple(tokenA.target, ant.address, eth('5'), 0);
       await pool.connect(ant).supplySimple(tokenB.target, ant.address, eth('5'), 0);
@@ -128,12 +125,12 @@ describe('Pool', () => {
 
       const balanceOfAntBeforeTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntBeforeTokenB = await tokenB.balanceOf(ant.address);
-      await oracleB.setAnswer(50e8);
+      await oracleA.setAnswer(5e3);
       await pool.connect(ant).liquidateSimple(tokenA.target, tokenB.target, position, eth('1'));
       const balanceOfAntAfterTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntAfterTokenB = await tokenB.balanceOf(ant.address);
 
-      expect(balanceOfAntAfterTokenA).to.equal(eth('10'));
+      expect(balanceOfAntAfterTokenA).to.equal(eth('2000'));
       expect(balanceOfAntAfterTokenB).to.be.lessThan(balanceOfAntBeforeTokenB);
     });
   });

@@ -57,9 +57,9 @@ const config: HardhatUserConfig = {
       loggingEnabled: false,
       allowBlocksWithSameTimestamp: true,
       allowUnlimitedContractSize: true,
-      forking: {
-        url: `https://cloudflare-eth.com`,
-      },
+      // forking: {
+      //   url: `https://cloudflare-eth.com`,
+      // },
     },
     sepolia: {
       url: `https://1rpc.io/sepolia`,
