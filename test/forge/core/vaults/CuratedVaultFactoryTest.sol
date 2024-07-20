@@ -5,21 +5,9 @@ import './helpers/IntegrationVaultTest.sol';
 
 import '../../../../contracts/core/vaults/CuratedVault.sol';
 import '../../../../contracts/core/vaults/CuratedVaultFactory.sol';
+import '../../../../contracts/interfaces/events/CuratedEventsLib.sol';
 
 contract CuratedVaultFactoryTest is IntegrationVaultTest {
-  event VaultCreated(
-    ICuratedVault indexed vault,
-    uint256 indexed index,
-    address creator,
-    address initialOwner,
-    address initialProxyOwner,
-    uint256 initialTimelock,
-    address asset,
-    string name,
-    string symbol,
-    bytes32 salt
-  );
-
   function setUp() public {
     _setUpVault();
   }
@@ -32,20 +20,9 @@ contract CuratedVaultFactoryTest is IntegrationVaultTest {
     address expectedAddress = computeCreate2Address(salt, initCodeHash, address(vaultFactory));
 
     vm.expectEmit(address(vaultFactory));
-    emit VaultCreated(
-      ICuratedVault(expectedAddress),
-      uint256(2),
-      address(this),
-      initialOwner,
-      initialOwner,
-      initialTimelock,
-      address(loanToken),
-      name,
-      symbol,
-      salt
-    );
+    emit CuratedEventsLib.VaultCreated(ICuratedVault(expectedAddress), uint256(2), defaultVaultParams, address(this));
 
-    ICuratedVault vault = vaultFactory.createVault(initialOwner, initialOwner, initialTimelock, address(loanToken), name, symbol, salt);
+    ICuratedVault vault = vaultFactory.createVault(defaultVaultParams);
 
     assertEq(expectedAddress, address(vault), 'computeCreate2Address');
     assertTrue(vaultFactory.isVault(address(vault)), 'isvault');

@@ -21,7 +21,15 @@ import {ICuratedVaultBase, MarketConfig, PendingUint192} from './ICuratedVaultBa
 interface ICuratedVaultStaticTyping is ICuratedVaultBase {
   /// @notice Initializes the vault with the initial owner and timelock.
   /// @dev Called only by the factory contract
-  function initialize(address initialOwner, uint256 initialTimelock, address asset, string memory name, string memory symbol) external;
+  function initialize(
+    address initialOwner,
+    address[] memory _curators,
+    address[] memory _guardians,
+    uint256 initialTimelock,
+    address asset,
+    string memory name,
+    string memory symbol
+  ) external;
 
   function isCurator(address who) external view returns (bool);
 

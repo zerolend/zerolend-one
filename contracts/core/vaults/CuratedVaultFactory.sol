@@ -15,6 +15,7 @@ pragma solidity 0.8.19;
 
 import {IBeacon, ICuratedVault, ICuratedVaultFactory} from '../../interfaces/vaults/ICuratedVaultFactory.sol';
 import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
+import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 /// @title CuratedVaultFactory
@@ -44,20 +45,20 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   }
 
   /// @inheritdoc ICuratedVaultFactory
-  function createVault(
-    address initialOwner,
-    address initialProxyOwner,
-    uint256 initialTimelock,
-    address asset,
-    string memory name,
-    string memory symbol,
-    bytes32 salt
-  ) external returns (ICuratedVault vault) {
+  function createVault(InitVaultParams memory params) external returns (ICuratedVault vault) {
     // create the vault
-    vault = ICuratedVault(address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner)));
-    emit VaultCreated(vault, vaults.length, msg.sender, initialOwner, initialProxyOwner, initialTimelock, asset, name, symbol, salt);
+    vault = ICuratedVault(address(new RevokableBeaconProxy{salt: params.salt}(address(this), params.initialProxyOwner)));
+    emit CuratedEventsLib.VaultCreated(vault, vaults.length, params, msg.sender);
 
-    vault.initialize(initialOwner, initialTimelock, asset, name, symbol);
+    vault.initialize(
+      params.initialOwner,
+      params.curators,
+      params.guardians,
+      params.initialTimelock,
+      params.asset,
+      params.name,
+      params.symbol
+    );
 
     // track the vault
     vaults.push(vault);
@@ -68,6 +69,6 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   function setImplementation(address impl) external onlyOwner {
     address old = implementation;
     implementation = impl;
-    emit ImplementationUpdated(old, impl, msg.sender);
+    emit CuratedEventsLib.ImplementationUpdated(old, impl, msg.sender);
   }
 }

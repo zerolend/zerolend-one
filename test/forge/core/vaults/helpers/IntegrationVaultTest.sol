@@ -13,21 +13,37 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
   ICuratedVault internal vault;
   ICuratedVaultFactory internal vaultFactory;
 
+  ICuratedVaultFactory.InitVaultParams internal defaultVaultParams;
+
   function _setUpVault() internal {
     _setUpBase();
 
     CuratedVault instance = new CuratedVault();
     vaultFactory = ICuratedVaultFactory(new CuratedVaultFactory(address(instance)));
 
-    vault = vaultFactory.createVault(
-      OWNER, // address initialOwner,
-      OWNER, // address initialProxyOwner,
-      TIMELOCK, // uint256 initialTimelock,
-      address(loanToken), // address asset,
-      'TEST Vault', // string memory name,
-      'TV', // string memory symbol,
-      keccak256('salty') // bytes32 salt
-    );
+    // setup the default vault params
+    address[] memory admins = new address[](1);
+    address[] memory curators = new address[](1);
+    address[] memory guardians = new address[](1);
+    admins[0] = OWNER;
+    curators[0] = CURATOR;
+    guardians[0] = GUARDIAN;
+    defaultVaultParams = ICuratedVaultFactory.InitVaultParams({
+      revokeProxy: true,
+      proxyAdmin: owner,
+      admins: admins,
+      curators: curators,
+      guardians: guardians,
+      initialOwner: owner,
+      initialProxyOwner: owner,
+      initialTimelock: 1 weeks,
+      asset: address(loanToken),
+      name: 'Vault',
+      symbol: 'VLT',
+      salt: keccak256('salty')
+    });
+
+    vault = vaultFactory.createVault(defaultVaultParams);
 
     vm.startPrank(OWNER);
     vault.grantCuratorRole(CURATOR);

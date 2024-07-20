@@ -14,10 +14,11 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IPool} from '../pool/IPool.sol';
+import {ICuratedVault, ICuratedVaultFactory} from '../vaults/ICuratedVaultFactory.sol';
 
 /**
- * @title PoolEventsLib
- * @notice Defines the events for a ZeroLend Pool.
+ * @title CuratedEventsLib
+ * @notice Defines the events for a ZeroLend vault.
  */
 library CuratedEventsLib {
   /// @notice Emitted when a pending `newTimelock` is submitted.
@@ -96,4 +97,8 @@ library CuratedEventsLib {
 
   /// @notice Emitted when an `amount` of `token` is transferred to the skim recipient by `caller`.
   event Skim(address indexed caller, address indexed token, uint256 amount);
+
+  event VaultCreated(ICuratedVault indexed vault, uint256 indexed index, ICuratedVaultFactory.InitVaultParams params, address sender);
+
+  event ImplementationUpdated(address indexed old, address indexed updated, address owner);
 }

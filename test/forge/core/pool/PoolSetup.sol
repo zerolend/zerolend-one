@@ -10,11 +10,8 @@ abstract contract PoolSetup is CorePoolTests {
 
   function _setUpPool() internal {
     _setUpCorePool();
-
     poolFactory.createPool(_basicPoolInitParams());
-
     IPool poolAddr = poolFactory.pools(0);
-
     pool = IPool(address(poolAddr));
   }
 

@@ -26,12 +26,7 @@ import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
 import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {CuratedVaultRoles} from './CuratedVaultRoles.sol';
 import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
-import {
-  ERC20Upgradeable,
-  ERC4626Upgradeable,
-  IERC4626Upgradeable,
-  MathUpgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20, IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
@@ -110,6 +105,8 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   /// @param _symbol The symbol of the vault.
   function initialize(
     address _owner,
+    address[] memory _curators,
+    address[] memory _guardians,
     uint256 _initialTimelock,
     address _asset,
     string memory _name,
@@ -124,6 +121,14 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
     _checkTimelockBounds(_initialTimelock);
     _setTimelock(_initialTimelock);
+
+    for (uint256 i = 0; i < _curators.length; i++) {
+      _setupRole(CURATOR_ROLE, _curators[i]);
+    }
+
+    for (uint256 i = 0; i < _guardians.length; i++) {
+      _setupRole(GUARDIAN_ROLE, _guardians[i]);
+    }
 
     positionId = keccak256(abi.encodePacked(address(this), 'index', uint256(0)));
   }
@@ -306,8 +311,9 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
         emit CuratedEventsLib.ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
         totalWithdrawn += burnt.assets;
       } else {
-        uint256 suppliedAssets =
-          allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets = allocation.assets == type(uint256).max
+          ? totalWithdrawn.zeroFloorSub(totalSupplied)
+          : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
@@ -381,7 +387,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   /* ERC4626Upgradeable (PUBLIC) */
 
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override (ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
+  function decimals() public view override(ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
@@ -402,7 +408,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets,,) = _maxWithdraw(owner);
+    (assets, , ) = _maxWithdraw(owner);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -493,7 +499,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       if (supplyCap == 0) continue;
 
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
 
       // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
@@ -571,7 +577,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     shares = pool.supplyShares(asset(), positionId);
 
     // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-    (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
     assets = shares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
   }
 
@@ -631,7 +637,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
 
       // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
       uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
@@ -653,9 +659,11 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   function _withdrawPool(uint256 withdrawAmount) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool pool = withdrawQueue[i];
-      (uint256 supplyAssets,) = _accruedSupplyBalance(pool);
-      uint256 toWithdraw =
-        UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
+      (uint256 supplyAssets, ) = _accruedSupplyBalance(pool);
+      uint256 toWithdraw = UtilsLib.min(
+        _withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets),
+        withdrawAmount
+      );
       if (toWithdraw > 0) {
         // Using try/catch to skip markets that revert.
         try pool.withdrawSimple(asset(), address(this), toWithdraw, 0) {
@@ -680,7 +688,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
       uint256 supplyShares = pos.supplyShares;
 
       // get info on how much shares and asset the pool has
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = pool.marketBalances(asset());
 
       // The vault withdrawing from ZeroLend cannot fail because:
       // 1. oracle.price() is never called (the vault doesn't borrow)

@@ -5,7 +5,6 @@ import {MathLib, WAD} from '../../../../../contracts/core/vaults/libraries/MathL
 
 import {IPool} from '../../../../../contracts/interfaces/pool/IPool.sol';
 import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
-import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
 
 import {DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator} from '../../pool/CorePoolTests.sol';
 import {DataTypes, PoolSetup} from '../../pool/PoolSetup.sol';

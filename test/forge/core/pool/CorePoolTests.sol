@@ -30,16 +30,12 @@ abstract contract CorePoolTests is Test {
   MockAggregator public oracleC;
 
   address public owner;
-  address public whale;
-  address public ant;
-  address public governance;
+  address public whale = makeAddr('whale');
+  address public ant = makeAddr('ant');
+  address public governance = makeAddr('governance');
 
   function _setUpCorePool() internal {
     owner = address(this);
-    whale = address(1);
-    ant = address(2);
-    governance = address(3);
-
     poolImplementation = new Pool();
 
     poolFactory = new PoolFactory(address(poolImplementation));

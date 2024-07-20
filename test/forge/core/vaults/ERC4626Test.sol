@@ -15,7 +15,7 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
   function setUp() public {
     _setUpVault();
 
-    vault = vaultFactory.createVault(owner, owner, 1 weeks, address(loanToken), 'test', 'test', '');
+    // vault = vaultFactory.createVault(defaultVaultParams);
 
     _setCap(allMarkets[0], CAP);
     _sortSupplyQueueIdleLast();
