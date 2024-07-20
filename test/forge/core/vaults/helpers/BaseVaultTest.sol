@@ -31,8 +31,6 @@ abstract contract BaseVaultTest is PoolSetup {
   address internal guardian = makeAddr('guardian');
   address internal feeRecipient = makeAddr('feeRecipient');
   address internal skimRecipient = makeAddr('skimRecipient');
-  // address internal MORPHO_OWNER = makeAddr('MorphoOwner');
-  // address internal MORPHO_FEE_RECIPIENT = makeAddr('MorphoFeeRecipient');
 
   IPool[] internal allMarkets;
   IPool internal idleMarket;

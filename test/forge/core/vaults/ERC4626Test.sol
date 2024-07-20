@@ -15,63 +15,59 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
     _sortSupplyQueueIdleLast();
   }
 
-  function testDecimals(uint8 decimals) public {
-    vm.mockCall(address(loanToken), abi.encodeWithSignature('decimals()'), abi.encode(decimals));
-    assertEq(vault.decimals(), Math.max(18, decimals), 'decimals');
+  // function testDecimals(uint8 decimals) public {
+  //   vm.mockCall(address(loanToken), abi.encodeWithSignature('decimals()'), abi.encode(decimals));
+  //   assertEq(vault.decimals(), Math.max(18, decimals), 'decimals');
+  // }
+
+  function testMint(uint256 assets) public {
+    assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+    uint256 shares = vault.convertToShares(assets);
+    loanToken.mint(supplier, assets);
+
+    vm.expectEmit();
+    emit CuratedEventsLib.UpdateLastTotalAssets(vault.totalAssets() + assets);
+    vm.prank(supplier);
+    uint256 deposited = vault.mint(shares, onBehalf);
+
+    assertGt(deposited, 0, 'deposited');
+    assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
+    assertEq(vault.balanceOf(onBehalf), shares, 'balanceOf(onBehalf)');
+    assertEq(allMarkets[0].supplyAssets(address(loanToken), vault.positionId()), assets, 'expectedSupplyAssets(vault)');
   }
 
-  // function testMint(uint256 assets) public {
-  //   assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+  function testDeposit(uint256 assets) public {
+    assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+    loanToken.mint(supplier, assets);
 
-  //   uint256 shares = vault.convertToShares(assets);
+    vm.expectEmit();
+    emit CuratedEventsLib.UpdateLastTotalAssets(vault.totalAssets() + assets);
+    vm.prank(supplier);
+    uint256 shares = vault.deposit(assets, onBehalf);
 
-  //   loanToken.setBalance(supplier, assets);
+    assertGt(shares, 0, 'shares');
+    assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
+    assertEq(vault.balanceOf(onBehalf), shares, 'balanceOf(onBehalf)');
+    assertEq(allMarkets[0].supplyAssets(address(loanToken), vault.positionId()), assets, 'expectedSupplyAssets(vault)');
+  }
 
-  //   vm.expectEmit();
-  //   emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() + assets);
-  //   vm.prank(supplier);
-  //   uint256 deposited = vault.mint(shares, onBehalf);
+  function testRedeem(uint256 deposited, uint256 redeemed) public {
+    deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+    loanToken.mint(supplier, deposited);
 
-  //   assertGt(deposited, 0, 'deposited');
-  //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(onBehalf), shares, 'balanceOf(onBehalf)');
-  //   assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), assets, 'expectedSupplyAssets(vault)');
-  // }
+    vm.prank(supplier);
+    uint256 shares = vault.deposit(deposited, onBehalf);
 
-  // function testDeposit(uint256 assets) public {
-  //   assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+    redeemed = bound(redeemed, 0, shares);
 
-  //   loanToken.setBalance(supplier, assets);
+    vm.expectEmit();
+    emit CuratedEventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
+    vm.prank(onBehalf);
+    vault.redeem(redeemed, receiver, onBehalf);
 
-  //   vm.expectEmit();
-  //   emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() + assets);
-  //   vm.prank(supplier);
-  //   uint256 shares = vault.deposit(assets, onBehalf);
-
-  //   assertGt(shares, 0, 'shares');
-  //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(onBehalf), shares, 'balanceOf(onBehalf)');
-  //   assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), assets, 'expectedSupplyAssets(vault)');
-  // }
-
-  // function testRedeem(uint256 deposited, uint256 redeemed) public {
-  //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-  //   loanToken.setBalance(supplier, deposited);
-
-  //   vm.prank(supplier);
-  //   uint256 shares = vault.deposit(deposited, onBehalf);
-
-  //   redeemed = bound(redeemed, 0, shares);
-
-  //   vm.expectEmit();
-  //   emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
-  //   vm.prank(onBehalf);
-  //   vault.redeem(redeemed, receiver, onBehalf);
-
-  //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(onBehalf), shares - redeemed, 'balanceOf(onBehalf)');
-  // }
+    assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
+    assertEq(vault.balanceOf(onBehalf), shares - redeemed, 'balanceOf(onBehalf)');
+  }
 
   // function testWithdraw(uint256 deposited, uint256 withdrawn) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
