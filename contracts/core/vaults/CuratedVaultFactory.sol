@@ -13,9 +13,9 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {IBeacon, ICuratedVault, ICuratedVaultFactory} from '../../interfaces/vaults/ICuratedVaultFactory.sol';
 import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
-import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 /// @title CuratedVaultFactory
@@ -51,13 +51,7 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
     emit CuratedEventsLib.VaultCreated(vault, vaults.length, params, msg.sender);
 
     vault.initialize(
-      params.initialOwner,
-      params.curators,
-      params.guardians,
-      params.initialTimelock,
-      params.asset,
-      params.name,
-      params.symbol
+      params.initialOwner, params.curators, params.guardians, params.initialTimelock, params.asset, params.name, params.symbol
     );
 
     // track the vault

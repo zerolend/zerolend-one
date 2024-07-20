@@ -25,9 +25,9 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
     address[] memory admins = new address[](1);
     address[] memory curators = new address[](1);
     address[] memory guardians = new address[](1);
-    admins[0] = OWNER;
-    curators[0] = CURATOR;
-    guardians[0] = GUARDIAN;
+    admins[0] = owner;
+    curators[0] = curator;
+    guardians[0] = guardian;
     defaultVaultParams = ICuratedVaultFactory.InitVaultParams({
       revokeProxy: true,
       proxyAdmin: owner,
@@ -45,11 +45,11 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
 
     vault = vaultFactory.createVault(defaultVaultParams);
 
-    vm.startPrank(OWNER);
-    vault.grantCuratorRole(CURATOR);
-    vault.grantAllocatorRole(ALLOCATOR);
-    vault.setFeeRecipient(FEE_RECIPIENT);
-    vault.setSkimRecipient(SKIM_RECIPIENT);
+    vm.startPrank(owner);
+    vault.grantCuratorRole(curator);
+    vault.grantAllocatorRole(allocator);
+    vault.setFeeRecipient(feeRecipient);
+    vault.setSkimRecipient(skimRecipient);
     vm.stopPrank();
 
     _setCap(idleMarket, type(uint184).max);
@@ -57,12 +57,12 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
     loanToken.approve(address(vault), type(uint256).max);
     collateralToken.approve(address(vault), type(uint256).max);
 
-    vm.startPrank(SUPPLIER);
+    vm.startPrank(supplier);
     loanToken.approve(address(vault), type(uint256).max);
     collateralToken.approve(address(vault), type(uint256).max);
     vm.stopPrank();
 
-    vm.startPrank(ONBEHALF);
+    vm.startPrank(onBehalf);
     loanToken.approve(address(vault), type(uint256).max);
     collateralToken.approve(address(vault), type(uint256).max);
     vm.stopPrank();
@@ -81,7 +81,7 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
 
     PendingUint192 memory pendingTimelock = vault.pendingTimelock();
     if (pendingTimelock.validAt == 0 || newTimelock != pendingTimelock.value) {
-      vm.prank(OWNER);
+      vm.prank(owner);
       vault.submitTimelock(newTimelock);
     }
 
@@ -93,7 +93,7 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
   }
 
   function _setGuardian(address newGuardian) internal {
-    vm.prank(OWNER);
+    vm.prank(owner);
     vault.grantGuardianRole(newGuardian);
   }
 
@@ -101,7 +101,7 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
     uint256 fee = vault.fee();
     if (newFee == fee) return;
 
-    vm.prank(OWNER);
+    vm.prank(owner);
     vault.setFee(newFee);
 
     assertEq(vault.fee(), newFee, '_setFee');
@@ -114,7 +114,7 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
 
     PendingUint192 memory pendingCap = vault.pendingCap(pool);
     if (pendingCap.validAt == 0 || newCap != pendingCap.value) {
-      vm.prank(CURATOR);
+      vm.prank(curator);
       vault.submitCap(pool, newCap);
     }
 
@@ -133,7 +133,7 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
           newSupplyQueue[k] = vault.supplyQueue(k);
         }
         newSupplyQueue[vault.supplyQueueLength()] = pool;
-        vm.prank(ALLOCATOR);
+        vm.prank(allocator);
         vault.setSupplyQueue(newSupplyQueue);
       }
     }
@@ -158,7 +158,7 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
       mstore(supplyQueue, supplyIndex)
     }
 
-    vm.prank(ALLOCATOR);
+    vm.prank(allocator);
     vault.setSupplyQueue(supplyQueue);
   }
 }

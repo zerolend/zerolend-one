@@ -9,20 +9,14 @@ import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
 import './helpers/IntegrationVaultTest.sol';
 
 contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
-  // using MorphoBalancesLib for IMorpho;
-  // using MarketParamsLib for MarketParams;
-
   function setUp() public {
     _setUpVault();
-
-    // vault = vaultFactory.createVault(defaultVaultParams);
-
     _setCap(allMarkets[0], CAP);
     _sortSupplyQueueIdleLast();
   }
 
   function testDecimals(uint8 decimals) public {
-    // vm.mockCall(address(loanToken), abi.encodeWithSignature('decimals()'), abi.encode(decimals));
+    vm.mockCall(address(loanToken), abi.encodeWithSignature('decimals()'), abi.encode(decimals));
     assertEq(vault.decimals(), Math.max(18, decimals), 'decimals');
   }
 
@@ -31,70 +25,70 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
 
   //   uint256 shares = vault.convertToShares(assets);
 
-  //   loanToken.setBalance(SUPPLIER, assets);
+  //   loanToken.setBalance(supplier, assets);
 
   //   vm.expectEmit();
   //   emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() + assets);
-  //   vm.prank(SUPPLIER);
-  //   uint256 deposited = vault.mint(shares, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 deposited = vault.mint(shares, onBehalf);
 
   //   assertGt(deposited, 0, 'deposited');
   //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(ONBEHALF), shares, 'balanceOf(ONBEHALF)');
+  //   assertEq(vault.balanceOf(onBehalf), shares, 'balanceOf(onBehalf)');
   //   assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), assets, 'expectedSupplyAssets(vault)');
   // }
 
   // function testDeposit(uint256 assets) public {
   //   assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, assets);
+  //   loanToken.setBalance(supplier, assets);
 
   //   vm.expectEmit();
   //   emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() + assets);
-  //   vm.prank(SUPPLIER);
-  //   uint256 shares = vault.deposit(assets, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 shares = vault.deposit(assets, onBehalf);
 
   //   assertGt(shares, 0, 'shares');
   //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(ONBEHALF), shares, 'balanceOf(ONBEHALF)');
+  //   assertEq(vault.balanceOf(onBehalf), shares, 'balanceOf(onBehalf)');
   //   assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), assets, 'expectedSupplyAssets(vault)');
   // }
 
   // function testRedeem(uint256 deposited, uint256 redeemed) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 shares = vault.deposit(deposited, onBehalf);
 
   //   redeemed = bound(redeemed, 0, shares);
 
   //   vm.expectEmit();
   //   emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
-  //   vm.prank(ONBEHALF);
-  //   vault.redeem(redeemed, RECEIVER, ONBEHALF);
+  //   vm.prank(onBehalf);
+  //   vault.redeem(redeemed, receiver, onBehalf);
 
   //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(ONBEHALF), shares - redeemed, 'balanceOf(ONBEHALF)');
+  //   assertEq(vault.balanceOf(onBehalf), shares - redeemed, 'balanceOf(onBehalf)');
   // }
 
   // function testWithdraw(uint256 deposited, uint256 withdrawn) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
   //   withdrawn = bound(withdrawn, 0, deposited);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 shares = vault.deposit(deposited, onBehalf);
 
   //   vm.expectEmit();
   //   emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - withdrawn);
-  //   vm.prank(ONBEHALF);
-  //   uint256 redeemed = vault.withdraw(withdrawn, RECEIVER, ONBEHALF);
+  //   vm.prank(onBehalf);
+  //   uint256 redeemed = vault.withdraw(withdrawn, receiver, onBehalf);
 
   //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(ONBEHALF), shares - redeemed, 'balanceOf(ONBEHALF)');
+  //   assertEq(vault.balanceOf(onBehalf), shares - redeemed, 'balanceOf(onBehalf)');
   // }
 
   // function testWithdrawIdle(uint256 deposited, uint256 withdrawn) public {
@@ -103,256 +97,256 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
 
   //   _setCap(allMarkets[0], 0);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 shares = vault.deposit(deposited, onBehalf);
 
   //   vm.expectEmit();
   //   emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - withdrawn);
-  //   vm.prank(ONBEHALF);
-  //   uint256 redeemed = vault.withdraw(withdrawn, RECEIVER, ONBEHALF);
+  //   vm.prank(onBehalf);
+  //   uint256 redeemed = vault.withdraw(withdrawn, receiver, onBehalf);
 
   //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(ONBEHALF), shares - redeemed, 'balanceOf(ONBEHALF)');
+  //   assertEq(vault.balanceOf(onBehalf), shares - redeemed, 'balanceOf(onBehalf)');
   //   assertEq(_idle(), deposited - withdrawn, 'idle');
   // }
 
   // function testRedeemTooMuch(uint256 deposited) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited * 2);
+  //   loanToken.setBalance(supplier, deposited * 2);
 
-  //   vm.startPrank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited, SUPPLIER);
-  //   vault.deposit(deposited, ONBEHALF);
+  //   vm.startPrank(supplier);
+  //   uint256 shares = vault.deposit(deposited, supplier);
+  //   vault.deposit(deposited, onBehalf);
   //   vm.stopPrank();
 
-  //   vm.prank(SUPPLIER);
-  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, SUPPLIER, shares, shares + 1));
-  //   vault.redeem(shares + 1, RECEIVER, SUPPLIER);
+  //   vm.prank(supplier);
+  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, supplier, shares, shares + 1));
+  //   vault.redeem(shares + 1, receiver, supplier);
   // }
 
   // function testWithdrawAll(uint256 assets) public {
   //   assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, assets);
+  //   loanToken.setBalance(supplier, assets);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 minted = vault.deposit(assets, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 minted = vault.deposit(assets, onBehalf);
 
-  //   assertEq(vault.maxWithdraw(ONBEHALF), assets, 'maxWithdraw(ONBEHALF)');
+  //   assertEq(vault.maxWithdraw(onBehalf), assets, 'maxWithdraw(onBehalf)');
 
-  //   vm.prank(ONBEHALF);
-  //   uint256 shares = vault.withdraw(assets, RECEIVER, ONBEHALF);
+  //   vm.prank(onBehalf);
+  //   uint256 shares = vault.withdraw(assets, receiver, onBehalf);
 
   //   assertEq(shares, minted, 'shares');
-  //   assertEq(vault.balanceOf(ONBEHALF), 0, 'balanceOf(ONBEHALF)');
-  //   assertEq(loanToken.balanceOf(RECEIVER), assets, 'loanToken.balanceOf(RECEIVER)');
+  //   assertEq(vault.balanceOf(onBehalf), 0, 'balanceOf(onBehalf)');
+  //   assertEq(loanToken.balanceOf(receiver), assets, 'loanToken.balanceOf(receiver)');
   //   assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), 0, 'expectedSupplyAssets(vault)');
   // }
 
   // function testRedeemAll(uint256 deposited) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 minted = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 minted = vault.deposit(deposited, onBehalf);
 
-  //   assertEq(vault.maxRedeem(ONBEHALF), minted, 'maxRedeem(ONBEHALF)');
+  //   assertEq(vault.maxRedeem(onBehalf), minted, 'maxRedeem(onBehalf)');
 
-  //   vm.prank(ONBEHALF);
-  //   uint256 assets = vault.redeem(minted, RECEIVER, ONBEHALF);
+  //   vm.prank(onBehalf);
+  //   uint256 assets = vault.redeem(minted, receiver, onBehalf);
 
   //   assertEq(assets, deposited, 'assets');
-  //   assertEq(vault.balanceOf(ONBEHALF), 0, 'balanceOf(ONBEHALF)');
-  //   assertEq(loanToken.balanceOf(RECEIVER), deposited, 'loanToken.balanceOf(RECEIVER)');
+  //   assertEq(vault.balanceOf(onBehalf), 0, 'balanceOf(onBehalf)');
+  //   assertEq(loanToken.balanceOf(receiver), deposited, 'loanToken.balanceOf(receiver)');
   //   assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), 0, 'expectedSupplyAssets(vault)');
   // }
 
   // function testRedeemNotDeposited(uint256 deposited) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 shares = vault.deposit(deposited, onBehalf);
 
-  //   vm.prank(SUPPLIER);
-  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, SUPPLIER, 0, shares));
-  //   vault.redeem(shares, SUPPLIER, SUPPLIER);
+  //   vm.prank(supplier);
+  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, supplier, 0, shares));
+  //   vault.redeem(shares, supplier, supplier);
   // }
 
   // function testRedeemNotApproved(uint256 deposited) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 shares = vault.deposit(deposited, onBehalf);
 
-  //   vm.prank(RECEIVER);
-  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, RECEIVER, 0, shares));
-  //   vault.redeem(shares, RECEIVER, ONBEHALF);
+  //   vm.prank(receiver);
+  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, receiver, 0, shares));
+  //   vault.redeem(shares, receiver, onBehalf);
   // }
 
   // function testWithdrawNotApproved(uint256 assets) public {
   //   assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, assets);
+  //   loanToken.setBalance(supplier, assets);
 
-  //   vm.prank(SUPPLIER);
-  //   vault.deposit(assets, ONBEHALF);
+  //   vm.prank(supplier);
+  //   vault.deposit(assets, onBehalf);
 
   //   uint256 shares = vault.previewWithdraw(assets);
-  //   vm.prank(RECEIVER);
-  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, RECEIVER, 0, shares));
-  //   vault.withdraw(assets, RECEIVER, ONBEHALF);
+  //   vm.prank(receiver);
+  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, receiver, 0, shares));
+  //   vault.withdraw(assets, receiver, onBehalf);
   // }
 
   // function testTransferFrom(uint256 deposited, uint256 toTransfer) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 shares = vault.deposit(deposited, onBehalf);
 
   //   toTransfer = bound(toTransfer, 0, shares);
 
-  //   vm.prank(ONBEHALF);
-  //   vault.approve(SUPPLIER, toTransfer);
+  //   vm.prank(onBehalf);
+  //   vault.approve(supplier, toTransfer);
 
-  //   vm.prank(SUPPLIER);
-  //   vault.transferFrom(ONBEHALF, RECEIVER, toTransfer);
+  //   vm.prank(supplier);
+  //   vault.transferFrom(onBehalf, receiver, toTransfer);
 
-  //   assertEq(vault.balanceOf(ONBEHALF), shares - toTransfer, 'balanceOf(ONBEHALF)');
-  //   assertEq(vault.balanceOf(RECEIVER), toTransfer, 'balanceOf(RECEIVER)');
-  //   assertEq(vault.balanceOf(SUPPLIER), 0, 'balanceOf(SUPPLIER)');
+  //   assertEq(vault.balanceOf(onBehalf), shares - toTransfer, 'balanceOf(onBehalf)');
+  //   assertEq(vault.balanceOf(receiver), toTransfer, 'balanceOf(receiver)');
+  //   assertEq(vault.balanceOf(supplier), 0, 'balanceOf(supplier)');
   // }
 
   // function testTransferFromNotApproved(uint256 deposited, uint256 amount) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 shares = vault.deposit(deposited, onBehalf);
 
   //   amount = bound(amount, 0, shares);
 
-  //   vm.prank(SUPPLIER);
-  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, SUPPLIER, 0, shares));
-  //   vault.transferFrom(ONBEHALF, RECEIVER, shares);
+  //   vm.prank(supplier);
+  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, supplier, 0, shares));
+  //   vault.transferFrom(onBehalf, receiver, shares);
   // }
 
   // function testWithdrawMoreThanBalanceButLessThanTotalAssets(uint256 deposited, uint256 assets) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.startPrank(SUPPLIER);
-  //   uint256 shares = vault.deposit(deposited / 2, ONBEHALF);
-  //   vault.deposit(deposited / 2, SUPPLIER);
+  //   vm.startPrank(supplier);
+  //   uint256 shares = vault.deposit(deposited / 2, onBehalf);
+  //   vault.deposit(deposited / 2, supplier);
   //   vm.stopPrank();
 
   //   assets = bound(assets, deposited / 2 + 1, vault.totalAssets());
 
   //   uint256 sharesBurnt = vault.previewWithdraw(assets);
-  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, ONBEHALF, shares, sharesBurnt));
-  //   vm.prank(ONBEHALF);
-  //   vault.withdraw(assets, RECEIVER, ONBEHALF);
+  //   vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, onBehalf, shares, sharesBurnt));
+  //   vm.prank(onBehalf);
+  //   vault.withdraw(assets, receiver, onBehalf);
   // }
 
   // function testWithdrawMoreThanTotalAssets(uint256 deposited, uint256 assets) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   vault.deposit(deposited, onBehalf);
 
   //   assets = bound(assets, deposited + 1, type(uint256).max / (deposited + 1));
 
-  //   vm.prank(ONBEHALF);
+  //   vm.prank(onBehalf);
   //   vm.expectRevert(ErrorsLib.NotEnoughLiquidity.selector);
-  //   vault.withdraw(assets, RECEIVER, ONBEHALF);
+  //   vault.withdraw(assets, receiver, onBehalf);
   // }
 
   // function testWithdrawMoreThanBalanceAndLiquidity(uint256 deposited, uint256 assets) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   vault.deposit(deposited, onBehalf);
 
   //   assets = bound(assets, deposited + 1, type(uint256).max / (deposited + 1));
 
-  //   collateralToken.setBalance(BORROWER, type(uint128).max);
+  //   collateralToken.setBalance(borrower, type(uint128).max);
 
   //   // Borrow liquidity.
-  //   vm.startPrank(BORROWER);
-  //   morpho.supplyCollateral(allMarkets[0], type(uint128).max, BORROWER, hex'');
-  //   morpho.borrow(allMarkets[0], 1, 0, BORROWER, BORROWER);
+  //   vm.startPrank(borrower);
+  //   morpho.supplyCollateral(allMarkets[0], type(uint128).max, borrower, hex'');
+  //   morpho.borrow(allMarkets[0], 1, 0, borrower, borrower);
 
-  //   vm.startPrank(ONBEHALF);
+  //   vm.startPrank(onBehalf);
   //   vm.expectRevert(ErrorsLib.NotEnoughLiquidity.selector);
-  //   vault.withdraw(assets, RECEIVER, ONBEHALF);
+  //   vault.withdraw(assets, receiver, onBehalf);
   // }
 
   // function testTransfer(uint256 deposited, uint256 toTransfer) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   uint256 minted = vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   uint256 minted = vault.deposit(deposited, onBehalf);
 
   //   toTransfer = bound(toTransfer, 0, minted);
 
-  //   vm.prank(ONBEHALF);
-  //   vault.transfer(RECEIVER, toTransfer);
+  //   vm.prank(onBehalf);
+  //   vault.transfer(receiver, toTransfer);
 
-  //   assertEq(vault.balanceOf(SUPPLIER), 0, 'balanceOf(SUPPLIER)');
-  //   assertEq(vault.balanceOf(ONBEHALF), minted - toTransfer, 'balanceOf(ONBEHALF)');
-  //   assertEq(vault.balanceOf(RECEIVER), toTransfer, 'balanceOf(RECEIVER)');
+  //   assertEq(vault.balanceOf(supplier), 0, 'balanceOf(supplier)');
+  //   assertEq(vault.balanceOf(onBehalf), minted - toTransfer, 'balanceOf(onBehalf)');
+  //   assertEq(vault.balanceOf(receiver), toTransfer, 'balanceOf(receiver)');
   // }
 
   // function testMaxWithdraw(uint256 depositedAssets, uint256 borrowedAssets) public {
   //   depositedAssets = bound(depositedAssets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
   //   borrowedAssets = bound(borrowedAssets, MIN_TEST_ASSETS, depositedAssets);
 
-  //   loanToken.setBalance(SUPPLIER, depositedAssets);
+  //   loanToken.setBalance(supplier, depositedAssets);
 
-  //   vm.prank(SUPPLIER);
-  //   vault.deposit(depositedAssets, ONBEHALF);
+  //   vm.prank(supplier);
+  //   vault.deposit(depositedAssets, onBehalf);
 
-  //   collateralToken.setBalance(BORROWER, type(uint128).max);
+  //   collateralToken.setBalance(borrower, type(uint128).max);
 
-  //   vm.startPrank(BORROWER);
-  //   morpho.supplyCollateral(allMarkets[0], type(uint128).max, BORROWER, hex'');
-  //   morpho.borrow(allMarkets[0], borrowedAssets, 0, BORROWER, BORROWER);
+  //   vm.startPrank(borrower);
+  //   morpho.supplyCollateral(allMarkets[0], type(uint128).max, borrower, hex'');
+  //   morpho.borrow(allMarkets[0], borrowedAssets, 0, borrower, borrower);
 
-  //   assertEq(vault.maxWithdraw(ONBEHALF), depositedAssets - borrowedAssets, 'maxWithdraw(ONBEHALF)');
+  //   assertEq(vault.maxWithdraw(onBehalf), depositedAssets - borrowedAssets, 'maxWithdraw(onBehalf)');
   // }
 
   // function testMaxWithdrawFlashLoan(uint256 supplied, uint256 deposited) public {
   //   supplied = bound(supplied, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-  //   loanToken.setBalance(SUPPLIER, supplied);
+  //   loanToken.setBalance(supplier, supplied);
 
-  //   vm.prank(SUPPLIER);
-  //   morpho.supply(allMarkets[0], supplied, 0, ONBEHALF, hex'');
+  //   vm.prank(supplier);
+  //   morpho.supply(allMarkets[0], supplied, 0, onBehalf, hex'');
 
-  //   loanToken.setBalance(SUPPLIER, deposited);
+  //   loanToken.setBalance(supplier, deposited);
 
-  //   vm.prank(SUPPLIER);
-  //   vault.deposit(deposited, ONBEHALF);
+  //   vm.prank(supplier);
+  //   vault.deposit(deposited, onBehalf);
 
-  //   assertGt(vault.maxWithdraw(ONBEHALF), 0);
+  //   assertGt(vault.maxWithdraw(onBehalf), 0);
 
   //   loanToken.approve(address(morpho), type(uint256).max);
   //   morpho.flashLoan(address(loanToken), loanToken.balanceOf(address(morpho)), hex'');
@@ -364,32 +358,32 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
   //   Id[] memory supplyQueue = new Id[](1);
   //   supplyQueue[0] = allMarkets[0].id();
 
-  //   vm.prank(ALLOCATOR);
+  //   vm.prank(allocator);
   //   vault.setSupplyQueue(supplyQueue);
 
-  //   loanToken.setBalance(SUPPLIER, 1 ether);
-  //   collateralToken.setBalance(BORROWER, 2 ether);
+  //   loanToken.setBalance(supplier, 1 ether);
+  //   collateralToken.setBalance(borrower, 2 ether);
 
-  //   vm.prank(SUPPLIER);
-  //   morpho.supply(allMarkets[0], 1 ether, 0, SUPPLIER, hex'');
+  //   vm.prank(supplier);
+  //   morpho.supply(allMarkets[0], 1 ether, 0, supplier, hex'');
 
-  //   vm.startPrank(BORROWER);
-  //   morpho.supplyCollateral(allMarkets[0], 2 ether, BORROWER, hex'');
-  //   morpho.borrow(allMarkets[0], 1 ether, 0, BORROWER, BORROWER);
+  //   vm.startPrank(borrower);
+  //   morpho.supplyCollateral(allMarkets[0], 2 ether, borrower, hex'');
+  //   morpho.borrow(allMarkets[0], 1 ether, 0, borrower, borrower);
   //   vm.stopPrank();
 
   //   _forward(1_000);
 
-  //   loanToken.setBalance(SUPPLIER, 1 ether);
+  //   loanToken.setBalance(supplier, 1 ether);
 
-  //   vm.prank(SUPPLIER);
-  //   vault.deposit(1 ether, ONBEHALF);
+  //   vm.prank(supplier);
+  //   vault.deposit(1 ether, onBehalf);
 
-  //   assertEq(vault.maxDeposit(SUPPLIER), 0);
+  //   assertEq(vault.maxDeposit(supplier), 0);
   // }
 
   function executeOperation(address, uint256, uint256, address, bytes calldata) external view returns (bool) {
-    assertEq(vault.maxWithdraw(ONBEHALF), 0);
+    assertEq(vault.maxWithdraw(onBehalf), 0);
     return true;
   }
 }

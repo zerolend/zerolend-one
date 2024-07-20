@@ -20,19 +20,19 @@ uint256 constant NB_MARKETS = 30 + 1;
 abstract contract BaseVaultTest is PoolSetup {
   using MathLib for uint256;
 
-  address internal OWNER = makeAddr('Owner');
-  address internal SUPPLIER = makeAddr('Supplier');
-  address internal BORROWER = makeAddr('Borrower');
-  address internal REPAYER = makeAddr('Repayer');
-  address internal ONBEHALF = makeAddr('OnBehalf');
-  address internal RECEIVER = makeAddr('Receiver');
-  address internal ALLOCATOR = makeAddr('Allocator');
-  address internal CURATOR = makeAddr('Curator');
-  address internal GUARDIAN = makeAddr('Guardian');
-  address internal FEE_RECIPIENT = makeAddr('FeeRecipient');
-  address internal SKIM_RECIPIENT = makeAddr('SkimRecipient');
-  address internal MORPHO_OWNER = makeAddr('MorphoOwner');
-  address internal MORPHO_FEE_RECIPIENT = makeAddr('MorphoFeeRecipient');
+  // address internal OWNER = makeAddr('Owner');
+  address internal supplier = makeAddr('supplier');
+  address internal borrower = makeAddr('borrower');
+  address internal repayer = makeAddr('repayer');
+  address internal onBehalf = makeAddr('onBehalf');
+  address internal receiver = makeAddr('receiver');
+  address internal allocator = makeAddr('allocator');
+  address internal curator = makeAddr('curator');
+  address internal guardian = makeAddr('guardian');
+  address internal feeRecipient = makeAddr('feeRecipient');
+  address internal skimRecipient = makeAddr('skimRecipient');
+  // address internal MORPHO_OWNER = makeAddr('MorphoOwner');
+  // address internal MORPHO_FEE_RECIPIENT = makeAddr('MorphoFeeRecipient');
 
   IPool[] internal allMarkets;
   IPool internal idleMarket;
@@ -49,17 +49,11 @@ abstract contract BaseVaultTest is PoolSetup {
     oracle = oracleA;
 
     // vm.label(address(morpho), 'Morpho');
-    vm.label(address(loanToken), 'Loan');
-    vm.label(address(collateralToken), 'Collateral');
-    vm.label(address(oracle), 'Oracle');
-    vm.label(address(irStrategy), 'Irm');
+    vm.label(address(loanToken), 'loanToken');
+    vm.label(address(collateralToken), 'collateralToken');
+    vm.label(address(oracle), 'oracle');
+    vm.label(address(irStrategy), 'irStrategy');
     oracle.setAnswer(1e8);
-
-    // vm.startPrank(MORPHO_OWNER);
-    // morpho.enableIrm(address(irm));
-    // morpho.setFeeRecipient(MORPHO_FEE_RECIPIENT);
-    // morpho.enableLltv(0);
-    // vm.stopPrank();
 
     // init the idle market
     _setupIdleMarket();
@@ -69,15 +63,15 @@ abstract contract BaseVaultTest is PoolSetup {
       IPool market = IPool(poolFactory.createPool(_basicPoolInitParams()));
 
       // give approvals
-      vm.startPrank(SUPPLIER);
+      vm.startPrank(supplier);
       loanToken.approve(address(market), type(uint256).max);
       collateralToken.approve(address(market), type(uint256).max);
       vm.stopPrank();
 
-      vm.prank(BORROWER);
+      vm.prank(borrower);
       collateralToken.approve(address(market), type(uint256).max);
 
-      vm.prank(REPAYER);
+      vm.prank(repayer);
       loanToken.approve(address(market), type(uint256).max);
 
       allMarkets.push(market);

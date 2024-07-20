@@ -22,10 +22,10 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICura
   bytes32 public immutable GUARDIAN_ROLE = keccak256('GUARDIAN_ROLE');
 
   /// @dev the keccak256 hash of the curator role.
-  bytes32 public immutable CURATOR_ROLE = keccak256('GUARDIAN_ROLE');
+  bytes32 public immutable CURATOR_ROLE = keccak256('CURATOR_ROLE');
 
   /// @dev the keccak256 hash of the allocator role.
-  bytes32 public immutable ALLOCATOR_ROLE = keccak256('GUARDIAN_ROLE');
+  bytes32 public immutable ALLOCATOR_ROLE = keccak256('ALLOCATOR_ROLE');
 
   function __CuratedVaultRoles_init(address _owner) internal {
     __AccessControlEnumerable_init();
