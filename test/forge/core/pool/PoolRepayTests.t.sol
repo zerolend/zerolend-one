@@ -13,6 +13,10 @@ contract PoolRepayTests is PoolSetup {
   uint256 borrowAmount = 800e18;
   address alice = address(10);
 
+  function setUp() public {
+    _setUpPool();
+  }
+
   function testRepayAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
     pool.repaySimple(address(tokenA), 0, 0);

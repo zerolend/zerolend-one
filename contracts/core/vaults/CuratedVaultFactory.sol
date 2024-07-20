@@ -55,12 +55,13 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   ) external returns (ICuratedVault vault) {
     // create the vault
     vault = ICuratedVault(address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner)));
+    emit VaultCreated(vault, vaults.length, msg.sender, initialOwner, initialProxyOwner, initialTimelock, asset, name, symbol, salt);
+
     vault.initialize(initialOwner, initialTimelock, asset, name, symbol);
 
     // track the vault
     vaults.push(vault);
     isVault[address(vault)] = true;
-    emit VaultCreated(vault, vaults.length, msg.sender, initialOwner, initialProxyOwner, initialTimelock, asset, name, symbol, salt);
   }
 
   /// @inheritdoc ICuratedVaultFactory

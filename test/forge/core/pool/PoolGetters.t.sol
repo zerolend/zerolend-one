@@ -12,6 +12,10 @@ contract PoolGetterTests is PoolSetup {
 
   bytes32 pos = keccak256(abi.encodePacked(address(1), 'index', uint256(0)));
 
+  function setUp() public {
+    _setUpPool();
+  }
+
   function testFactory() public view {
     IPoolFactory factory = pool.factory();
     assertEq(address(factory), address(poolFactory));
@@ -76,7 +80,7 @@ contract PoolGetterTests is PoolSetup {
   }
 
   function testGetUserAccountData() public view {
-    (uint256 totalCollateralBase, uint256 totalDebtBase,,,,) = pool.getUserAccountData(address(1), 0);
+    (uint256 totalCollateralBase, uint256 totalDebtBase, , , , ) = pool.getUserAccountData(address(1), 0);
     assertEq(totalCollateralBase, 0);
     assertEq(totalDebtBase, 0);
   }

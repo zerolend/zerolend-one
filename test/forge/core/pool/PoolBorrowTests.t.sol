@@ -13,6 +13,10 @@ contract PoolBorrowTests is PoolSetup {
 
   event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
 
+  function setUp() public {
+    _setUpPool();
+  }
+
   /// ------------Borrow------------
   function testBorrowAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));

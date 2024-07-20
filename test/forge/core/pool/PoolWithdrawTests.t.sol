@@ -5,7 +5,10 @@ import {MintableERC20} from '../../../../contracts/mocks/MintableERC20.sol';
 import {PoolEventsLib, PoolSetup} from './PoolSetup.sol';
 
 contract PoolWithdrawTests is PoolSetup {
-  /// ------------Withdraw------------
+  function setUp() public {
+    _setUpPool();
+  }
+
   function testWithdrawAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
     pool.withdrawSimple(address(tokenA), msg.sender, 0, 0);

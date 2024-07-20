@@ -42,8 +42,8 @@ abstract contract BaseVaultTest is PoolSetup {
   MintableERC20 internal collateralToken;
   MockAggregator internal oracle;
 
-  function setUp() public virtual override {
-    super.setUp();
+  function _setUpBase() internal {
+    _setUpPool();
 
     loanToken = tokenA;
     collateralToken = tokenB;

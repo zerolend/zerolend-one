@@ -13,8 +13,8 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
   ICuratedVault internal vault;
   ICuratedVaultFactory internal vaultFactory;
 
-  function setUp() public virtual override {
-    super.setUp();
+  function _setUpVault() internal {
+    _setUpBase();
 
     CuratedVault instance = new CuratedVault();
     vaultFactory = ICuratedVaultFactory(new CuratedVaultFactory(address(instance)));

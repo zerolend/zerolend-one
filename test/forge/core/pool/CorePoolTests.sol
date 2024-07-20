@@ -34,7 +34,7 @@ abstract contract CorePoolTests is Test {
   address public ant;
   address public governance;
 
-  function setUp() public virtual {
+  function _setUpCorePool() internal {
     owner = address(this);
     whale = address(1);
     ant = address(2);

@@ -37,7 +37,7 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICura
   /// @dev Reverts if the caller doesn't have the curator role.
   modifier onlyCuratorRole() {
     address sender = _msgSender();
-    if (!isOwner(_msgSender()) && !isCurator(_msgSender())) revert CuratedErrorsLib.NotGuardianRole();
+    if (!isOwner(_msgSender()) && !isCurator(_msgSender())) revert CuratedErrorsLib.NotCuratorRole();
     _;
   }
 

@@ -20,6 +20,10 @@ contract CuratedVaultFactoryTest is IntegrationVaultTest {
     bytes32 salt
   );
 
+  function setUp() public {
+    _setUpVault();
+  }
+
   function testCreateVault(address initialOwner, uint256 initialTimelock, string memory name, string memory symbol, bytes32 salt) public {
     vm.assume(address(initialOwner) != address(0));
     initialTimelock = bound(initialTimelock, 1 days, 2 weeks);

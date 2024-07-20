@@ -11,6 +11,10 @@ contract PoolFlashLoanTests is PoolSetup {
 
   event Transfer(address indexed from, address indexed to, uint256 value);
 
+  function setUp() public {
+    _setUpPool();
+  }
+
   function test_reverts_flashLoan_simple_invalid_return() public {
     bytes memory emptyParams;
     MockFlashLoanSimpleReceiver mockFlashSimpleReceiver = new MockFlashLoanSimpleReceiver(pool);

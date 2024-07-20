@@ -40,5 +40,5 @@ interface IFlashLoanSimpleReceiver {
     bytes calldata params
   ) external returns (bool);
 
-  function POOL() external view returns (IPool);
+  // function POOL() external view returns (IPool);
 }

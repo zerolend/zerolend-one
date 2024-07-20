@@ -8,8 +8,8 @@ import './CorePoolTests.sol';
 abstract contract PoolSetup is CorePoolTests {
   IPool internal pool;
 
-  function setUp() public virtual override {
-    super.setUp();
+  function _setUpPool() internal {
+    _setUpCorePool();
 
     poolFactory.createPool(_basicPoolInitParams());
 

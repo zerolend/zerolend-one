@@ -21,7 +21,7 @@ import {IPool} from '../../interfaces/pool/IPool.sol';
  * @notice Base contract to develop a flashloan-receiver contract.
  */
 abstract contract FlashLoanReceiverBase is IFlashLoanSimpleReceiver {
-  IPool public immutable override POOL;
+  IPool public immutable POOL;
 
   constructor(IPool pool) {
     POOL = pool;
