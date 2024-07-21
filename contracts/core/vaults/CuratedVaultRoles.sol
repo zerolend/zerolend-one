@@ -99,34 +99,34 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, Curat
   }
 
   function grantCuratorRole(address who) public {
-    _grantRole(CURATOR_ROLE, who);
+    grantRole(CURATOR_ROLE, who);
   }
 
   function grantGuardianRole(address who) public {
-    _grantRole(GUARDIAN_ROLE, who);
+    grantRole(GUARDIAN_ROLE, who);
   }
 
   function grantOwnerRole(address who) public {
-    _grantRole(DEFAULT_ADMIN_ROLE, who);
+    grantRole(DEFAULT_ADMIN_ROLE, who);
   }
 
   function grantAllocatorRole(address who) public {
-    _grantRole(ALLOCATOR_ROLE, who);
+    grantRole(ALLOCATOR_ROLE, who);
   }
 
   function revokeCuratorRole(address who) public {
-    _revokeRole(CURATOR_ROLE, who);
+    revokeRole(CURATOR_ROLE, who);
   }
 
   function revokeGuardianRole(address who) public {
-    _revokeRole(GUARDIAN_ROLE, who);
+    revokeRole(GUARDIAN_ROLE, who);
   }
 
   function revokeOwnerRole(address who) public {
-    _revokeRole(DEFAULT_ADMIN_ROLE, who);
+    revokeRole(DEFAULT_ADMIN_ROLE, who);
   }
 
   function revokeAllocatorRole(address who) public {
-    _revokeRole(ALLOCATOR_ROLE, who);
+    revokeRole(ALLOCATOR_ROLE, who);
   }
 }

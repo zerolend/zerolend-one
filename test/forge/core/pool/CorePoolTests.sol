@@ -31,13 +31,12 @@ abstract contract CorePoolTests is Test {
 
   uint256 internal constant BLOCK_TIME = 1;
 
-  address public owner;
+  address public owner = makeAddr('owner');
   address public whale = makeAddr('whale');
   address public ant = makeAddr('ant');
   address public governance = makeAddr('governance');
 
   function _setUpCorePool() internal {
-    owner = address(this);
     poolImplementation = new Pool();
 
     poolFactory = new PoolFactory(address(poolImplementation));

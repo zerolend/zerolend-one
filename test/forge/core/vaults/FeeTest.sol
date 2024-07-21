@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import './helpers/IntegrationVaultTest.sol';
 import {ConstantsLib} from '../../../../contracts/core/vaults/libraries/ConstantsLib.sol';
+import './helpers/IntegrationVaultTest.sol';
 import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
 
 uint256 constant FEE = 0.2 ether; // 20%
