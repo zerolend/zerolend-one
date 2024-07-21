@@ -75,8 +75,6 @@ abstract contract BaseVaultTest is PoolSetup {
       loanToken.approve(address(market), type(uint256).max);
 
       allMarkets.push(market);
-
-      console.log('generated market', address(market), i);
     }
 
     allMarkets.push(idleMarket); // Must be pushed last.
@@ -110,7 +108,6 @@ abstract contract BaseVaultTest is PoolSetup {
       )
     );
 
-    console.log('idle market is', address(idleMarket));
     vm.label(address(idleMarket), 'market-IDLE');
   }
 

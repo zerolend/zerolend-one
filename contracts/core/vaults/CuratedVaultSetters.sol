@@ -20,7 +20,6 @@ import {ICuratedVaultBase, MarketConfig} from '../../interfaces/vaults/ICuratedV
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
 
-import '../../../lib/forge-std/src/console.sol';
 import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
 import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {CuratedVaultGetters, ERC4626Upgradeable} from './CuratedVaultGetters.sol';
@@ -67,8 +66,6 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
     // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
     (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
     assets = shares.toAssetsDown(totalSupplyAssets, totalSupplyShares);
-    console.log('_accruedSupplyBalance', totalSupplyAssets, totalSupplyShares, shares);
-    console.log('_accruedSupplyBalance', assets);
   }
 
   /// @dev Reverts if `newTimelock` is not within the bounds.
@@ -132,17 +129,12 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
 
       uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
 
-      console.log('looking at pool', address(pool));
-      console.log('performing in supply', assets, toSupply);
-
       if (toSupply > 0) {
         // Using try/catch to skip markets that revert.
         try pool.supplySimple(asset(), address(this), toSupply, 0) {
           assets -= toSupply;
         } catch {}
       }
-
-      console.log('conitnue in supply', assets);
 
       if (assets == 0) return;
     }
@@ -158,22 +150,12 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
       uint256 toWithdraw =
         UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
 
-      console.log('UtilsLib.min', pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets);
-      console.log('looking at pool', address(pool));
-      console.log('pool cap', config[pool].cap);
-      console.log('pool balance', address(pool));
-      console.log('performing withdraw', withdrawAmount, toWithdraw);
-
       if (toWithdraw > 0) {
         // Using try/catch to skip markets that revert.
         try pool.withdrawSimple(asset(), address(this), toWithdraw, 0) {
           withdrawAmount -= toWithdraw;
-        } catch {
-          console.log('error in withdraw');
-        }
+        } catch {}
       }
-
-      console.log('conitnue in withdraw', withdrawAmount);
 
       if (withdrawAmount == 0) return;
     }

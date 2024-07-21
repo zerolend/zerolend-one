@@ -100,14 +100,11 @@ abstract contract PoolSetup is CorePoolTests {
     _mintAndApprove(user, token, amount, address(pool));
     vm.prank(user);
     pool.supplySimple(address(token), user, amount, 0);
-
-    console.log('supply', user, amount);
   }
 
   function _borrow(address user, MintableERC20 token, uint256 amount) internal {
     vm.prank(user);
     pool.borrowSimple(address(token), user, amount, 0);
-    console.log('borrow', user, amount);
   }
 
   function _supplyCollateralForBorrower(MintableERC20 collateral, address borrower) internal {

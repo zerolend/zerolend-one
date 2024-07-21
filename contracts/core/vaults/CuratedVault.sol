@@ -61,6 +61,7 @@ contract CuratedVault is CuratedVaultSetters {
     address[] memory _admins,
     address[] memory _curators,
     address[] memory _guardians,
+    address[] memory _allocators,
     uint256 _initialTimelock,
     address _asset,
     string memory _name,
@@ -70,7 +71,7 @@ contract CuratedVault is CuratedVaultSetters {
     __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
     __Multicall_init();
-    __CuratedVaultRoles_init(_admins, _curators, _guardians);
+    __CuratedVaultRoles_init(_admins, _curators, _guardians, _allocators);
 
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
     _checkTimelockBounds(_initialTimelock);

@@ -17,7 +17,6 @@ import {DataTypes, IPool} from '../../interfaces/pool/IPool.sol';
 
 import {ICuratedVaultBase} from '../../interfaces/vaults/ICuratedVaultBase.sol';
 
-import '../../../lib/forge-std/src/console.sol';
 import {CuratedVaultBase, ERC4626Upgradeable} from './CuratedVaultBase.sol';
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
@@ -125,9 +124,6 @@ abstract contract CuratedVaultGetters is CuratedVaultBase {
   ) internal view returns (uint256) {
     // Inside a flashloan callback, liquidity on the pool may be limited to the singleton's balance.
     uint256 availableLiquidity = UtilsLib.min(totalSupplyAssets - totalBorrowAssets, IERC20(asset()).balanceOf(address(pool)));
-    console.log('pool _withdrawable-1', supplyAssets, availableLiquidity);
-    console.log('pool _withdrawable-2', totalSupplyAssets, totalBorrowAssets, UtilsLib.min(supplyAssets, availableLiquidity));
-    // console.log('pool _withdrawable-3', address(pool));
     return UtilsLib.min(supplyAssets, availableLiquidity);
   }
 

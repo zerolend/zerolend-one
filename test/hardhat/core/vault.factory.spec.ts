@@ -26,7 +26,9 @@ describe('Curated Vault Factory', () => {
 
   let irStrategy: DefaultReserveInterestRateStrategy;
 
-  let owner: SignerWithAddress;
+  let admin: SignerWithAddress;
+  let curator: SignerWithAddress;
+  let allocator: SignerWithAddress;
   let ant: SignerWithAddress;
 
   beforeEach(async () => {
@@ -41,18 +43,21 @@ describe('Curated Vault Factory', () => {
       oracleB,
       irStrategy,
       ant,
-      owner,
+      whale: allocator,
+      ant: curator,
+      owner: admin,
     } = fixture);
   });
 
   describe('vault creation & updating', function () {
     it('should create a new vault', async () => {
       const inputVault: ICuratedVaultFactory.InitVaultParamsStruct = {
-        proxyAdmin: owner.address,
+        proxyAdmin: admin.address,
         revokeProxy: false,
-        admins: [owner.address],
-        curators: [],
+        admins: [admin.address],
+        curators: [curator.address],
         guardians: [],
+        allocators: [allocator.address],
         asset: tokenA.target,
         name: 'TEST',
         symbol: 'TEST-1',
@@ -68,11 +73,12 @@ describe('Curated Vault Factory', () => {
 
     it('should update vault implementation properly and not allow re-init(..)', async () => {
       const inputVault: ICuratedVaultFactory.InitVaultParamsStruct = {
-        proxyAdmin: owner.address,
+        proxyAdmin: admin.address,
         revokeProxy: false,
-        admins: [owner.address],
-        curators: [],
+        admins: [admin.address],
+        curators: [curator.address],
         guardians: [],
+        allocators: [allocator.address],
         asset: tokenA.target,
         name: 'TEST',
         symbol: 'TEST-1',
@@ -94,6 +100,7 @@ describe('Curated Vault Factory', () => {
           inputVault.admins, // address[] memory _admins,
           inputVault.curators, // address[] memory _curators,
           inputVault.guardians, // address[] memory _guardians,
+          inputVault.allocators, // address[] memory _allocators,
           inputVault.timelock, // uint256 _initialTimelock,
           inputVault.asset, // address _asset,
           inputVault.name, // string memory _name,
@@ -114,6 +121,7 @@ describe('Curated Vault Factory', () => {
           inputVault.admins, // address[] memory _admins,
           inputVault.curators, // address[] memory _curators,
           inputVault.guardians, // address[] memory _guardians,
+          inputVault.allocators, // address[] memory _allocators,
           inputVault.timelock, // uint256 _initialTimelock,
           inputVault.asset, // address _asset,
           inputVault.name, // string memory _name,

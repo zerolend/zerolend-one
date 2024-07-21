@@ -45,12 +45,12 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   }
 
   /// @inheritdoc ICuratedVaultFactory
-  function createVault(InitVaultParams memory params) external returns (ICuratedVault vault) {
+  function createVault(InitVaultParams memory p) external returns (ICuratedVault vault) {
     // create the vault
-    vault = ICuratedVault(address(new RevokableBeaconProxy{salt: params.salt}(address(this), params.proxyAdmin)));
-    emit CuratedEventsLib.VaultCreated(vault, vaults.length, params, msg.sender);
+    vault = ICuratedVault(address(new RevokableBeaconProxy{salt: p.salt}(address(this), p.proxyAdmin)));
+    emit CuratedEventsLib.VaultCreated(vault, vaults.length, p, msg.sender);
 
-    vault.initialize(params.admins, params.curators, params.guardians, params.timelock, params.asset, params.name, params.symbol);
+    vault.initialize(p.admins, p.curators, p.guardians, p.allocators, p.timelock, p.asset, p.name, p.symbol);
 
     // track the vault
     vaults.push(vault);

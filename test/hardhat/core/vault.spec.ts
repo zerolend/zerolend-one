@@ -134,6 +134,7 @@ describe('Curated Vault', () => {
       revokeProxy: false,
       admins: [admin],
       curators: [curator],
+      allocators: [allocator],
       guardians: [],
       asset: loan.target,
       name: 'TEST',

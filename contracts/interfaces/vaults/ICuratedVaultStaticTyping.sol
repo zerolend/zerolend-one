@@ -25,6 +25,7 @@ interface ICuratedVaultStaticTyping is ICuratedVaultBase {
     address[] memory _admins,
     address[] memory _curators,
     address[] memory _guardians,
+    address[] memory _allocators,
     uint256 timelock,
     address asset,
     string memory name,

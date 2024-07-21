@@ -18,7 +18,12 @@ import {CuratedVaultStorage, ICuratedVaultBase} from './CuratedVaultStorage.sol'
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
 abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, CuratedVaultStorage {
-  function __CuratedVaultRoles_init(address[] memory _admins, address[] memory _curators, address[] memory _guardians) internal {
+  function __CuratedVaultRoles_init(
+    address[] memory _admins,
+    address[] memory _curators,
+    address[] memory _guardians,
+    address[] memory _allocators
+  ) internal {
     __AccessControlEnumerable_init();
 
     for (uint256 i = 0; i < _admins.length; i++) {
@@ -31,6 +36,10 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, Curat
 
     for (uint256 i = 0; i < _guardians.length; i++) {
       _setupRole(GUARDIAN_ROLE, _guardians[i]);
+    }
+
+    for (uint256 i = 0; i < _allocators.length; i++) {
+      _setupRole(ALLOCATOR_ROLE, _guardians[i]);
     }
   }
 

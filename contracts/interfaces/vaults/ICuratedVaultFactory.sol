@@ -32,6 +32,7 @@ interface ICuratedVaultFactory is IBeacon {
     address[] admins;
     address[] curators;
     address[] guardians;
+    address[] allocators;
     uint256 timelock;
     address asset;
     string name;

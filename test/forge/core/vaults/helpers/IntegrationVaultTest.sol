@@ -24,15 +24,18 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
     address[] memory admins = new address[](1);
     address[] memory curators = new address[](1);
     address[] memory guardians = new address[](1);
+    address[] memory allocators = new address[](1);
     admins[0] = owner;
     curators[0] = curator;
     guardians[0] = guardian;
+    guardians[0] = allocator;
     defaultVaultParams = ICuratedVaultFactory.InitVaultParams({
       revokeProxy: true,
       proxyAdmin: owner,
       admins: admins,
       curators: curators,
       guardians: guardians,
+      allocators: allocators,
       timelock: 1 weeks,
       asset: address(loanToken),
       name: 'Vault',
