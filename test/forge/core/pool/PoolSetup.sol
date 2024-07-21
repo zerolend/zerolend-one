@@ -3,9 +3,10 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from '../../../../contracts/core/pool/configuration/DataTypes.sol';
 import {IPool} from '../../../../contracts/interfaces/pool/IPool.sol';
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {ArrayLib} from './helpers/ArrayLib.sol';
+
 import './CorePoolTests.sol';
+import {ArrayLib} from './helpers/ArrayLib.sol';
+import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
 
 abstract contract PoolSetup is CorePoolTests {
   using ArrayLib for address[];

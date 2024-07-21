@@ -22,10 +22,10 @@ interface ICuratedVaultStaticTyping is ICuratedVaultBase {
   /// @notice Initializes the vault with the initial owner and timelock.
   /// @dev Called only by the factory contract
   function initialize(
-    address initialOwner,
+    address[] memory _admins,
     address[] memory _curators,
     address[] memory _guardians,
-    uint256 initialTimelock,
+    uint256 timelock,
     address asset,
     string memory name,
     string memory symbol

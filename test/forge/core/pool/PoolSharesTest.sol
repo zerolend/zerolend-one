@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IPoolFactory} from './../../../../contracts/interfaces/IPoolFactory.sol';
-import './PoolSetup.sol';
 import {TokenConfiguration} from '../../../../contracts/core/pool/configuration/TokenConfiguration.sol';
 import {WadRayMath} from '../../../../contracts/core/pool/utils/WadRayMath.sol';
+import {IPoolFactory} from './../../../../contracts/interfaces/IPoolFactory.sol';
+import './PoolSetup.sol';
 
 contract PoolSharesTest is PoolSetup {
   using TokenConfiguration for address;

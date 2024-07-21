@@ -18,8 +18,8 @@ import {IBeacon} from '@openzeppelin/contracts/proxy/beacon/IBeacon.sol';
 
 interface ICuratedVaultFactory is IBeacon {
   /**
-   * @param initialOwner The owner of the vault. Used to make admin changes
-   * @param initialProxyOwner The proxy owner of the vault. Used to revoke proxy upgradability.
+   * @param admins The admins of the vault. Used to make admin changes
+   * @param proxyAdmin The proxy owner of the vault. Used to revoke proxy upgradability.
    * @param initialTimelock How many seconds for the timelock. Minimum is 1 day (86400 seconds).
    * @param asset The asset to deposit
    * @param name The name of the vault
@@ -32,9 +32,7 @@ interface ICuratedVaultFactory is IBeacon {
     address[] admins;
     address[] curators;
     address[] guardians;
-    address initialOwner;
-    address initialProxyOwner;
-    uint256 initialTimelock;
+    uint256 timelock;
     address asset;
     string name;
     string symbol;

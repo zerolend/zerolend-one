@@ -19,6 +19,7 @@ import {PoolRentrancyGuard} from './PoolRentrancyGuard.sol';
 import {DataTypes} from './configuration/DataTypes.sol';
 import {ReserveConfiguration} from './configuration/ReserveConfiguration.sol';
 
+import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
 import {TokenConfiguration} from './configuration/TokenConfiguration.sol';
 import {BorrowLogic} from './logic/BorrowLogic.sol';
 import {FlashLoanLogic} from './logic/FlashLoanLogic.sol';
@@ -26,7 +27,6 @@ import {LiquidationLogic} from './logic/LiquidationLogic.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 import {SupplyLogic} from './logic/SupplyLogic.sol';
 import {PercentageMath} from './utils/PercentageMath.sol';
-import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
 
 abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;

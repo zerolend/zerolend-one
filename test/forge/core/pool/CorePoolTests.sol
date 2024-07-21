@@ -86,9 +86,9 @@ abstract contract CorePoolTests is Test {
   }
 
   function _appendUintToString(string memory inStr, uint8 v) internal pure returns (string memory) {
-    uint maxlength = 100;
+    uint256 maxlength = 100;
     bytes memory reversed = new bytes(maxlength);
-    uint i = 0;
+    uint256 i = 0;
     while (v != 0) {
       uint8 remainder = v % 10;
       v = v / 10;
@@ -96,7 +96,7 @@ abstract contract CorePoolTests is Test {
     }
     bytes memory inStrb = bytes(inStr);
     bytes memory s = new bytes(inStrb.length + i);
-    uint j;
+    uint256 j;
     for (j = 0; j < inStrb.length; j++) {
       s[j] = inStrb[j];
     }
