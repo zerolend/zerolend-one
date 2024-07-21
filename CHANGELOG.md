@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.1](https://github.com/zerolend/zerolend-one/compare/v0.9.0...v0.9.1) (2024-07-21)
+
+
+### Bug Fixes
+
+* fixed a bug with the foundry tests ([7f9d4f4](https://github.com/zerolend/zerolend-one/commit/7f9d4f4e93d0a1f597d64931381ec53088ee5355))
+* fixed all curated vault tests ([#30](https://github.com/zerolend/zerolend-one/issues/30)) ([a781892](https://github.com/zerolend/zerolend-one/commit/a78189278a764b153c6f7b593a0f1774f11e56de))
+* fixed the halmos tests ([5394839](https://github.com/zerolend/zerolend-one/commit/539483992db51cb2f65e0702af071b2f86ae36ca))
+* Foundry Test Cases for the Pool ([#26](https://github.com/zerolend/zerolend-one/issues/26)) ([c1a8234](https://github.com/zerolend/zerolend-one/commit/c1a82340826b950eba0865c709626ccbe0ad2f0b))
+
 ## [0.9.0](https://github.com/zerolend/zerolend-one/compare/v0.8.0...v0.9.0) (2024-07-16)
 
 
