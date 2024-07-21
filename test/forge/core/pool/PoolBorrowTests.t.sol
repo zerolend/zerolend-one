@@ -3,13 +3,13 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from './../../../../contracts/core/pool/configuration/DataTypes.sol';
 import {UserConfiguration} from './../../../../contracts/core/pool/configuration/UserConfiguration.sol';
-import {IPool, PoolEventsLib, PoolSetup} from './PoolSetup.sol';
+import './PoolSetup.sol';
 
 contract PoolBorrowTests is PoolSetup {
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
-  address alice = address(1);
-  address bob = address(2);
+  address alice = makeAddr('alice');
+  address bob = makeAddr('bob');
 
   event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
 
@@ -106,5 +106,21 @@ contract PoolBorrowTests is PoolSetup {
     assertEq(pool.totalDebt(address(tokenB)), borrowAmount);
 
     vm.stopPrank();
+  }
+
+  function testBorrowToZeroAddress(address borrowerFuzz, uint256 amount) public {
+    amount = bound(amount, 1, MAX_TEST_AMOUNT);
+
+    _supply(owner, tokenB, amount);
+
+    vm.prank(borrowerFuzz);
+    vm.expectRevert(bytes(PoolErrorsLib.ZERO_ADDRESS_NOT_VALID));
+    pool.borrowSimple(address(tokenB), address(0), amount, 0);
+  }
+
+  function testBorrowZeroAmount(address borrowerFuzz) public {
+    vm.prank(borrowerFuzz);
+    vm.expectRevert(bytes(PoolErrorsLib.INVALID_AMOUNT));
+    pool.borrowSimple(address(tokenA), alice, 0, 0);
   }
 }

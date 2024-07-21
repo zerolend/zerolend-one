@@ -15,7 +15,7 @@ uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;
 uint256 constant MAX_TEST_ASSETS = 1e18 * 1000;
 uint184 constant CAP = type(uint128).max;
-uint256 constant NB_MARKETS = 30 + 1;
+uint256 constant NB_MARKETS = 3 + 1;
 
 abstract contract BaseVaultTest is PoolSetup {
   using MathLib for uint256;
@@ -57,8 +57,10 @@ abstract contract BaseVaultTest is PoolSetup {
     _setupIdleMarket();
 
     // init markets
-    for (uint256 i = 0; i < NB_MARKETS; i++) {
+    for (uint8 i = 0; i < NB_MARKETS; i++) {
       IPool market = IPool(poolFactory.createPool(_basicPoolInitParams()));
+
+      vm.label(address(market), _appendUintToString('market-', i));
 
       // give approvals
       vm.startPrank(supplier);
@@ -135,11 +137,6 @@ abstract contract BaseVaultTest is PoolSetup {
     return allMarkets[seed % (allMarkets.length - 1)];
   }
 
-  function _randomCandidate(address[] memory candidates, uint256 seed) internal pure returns (address) {
-    if (candidates.length == 0) return address(0);
-    return candidates[seed % candidates.length];
-  }
-
   function _removeAll(address[] memory inputs, address removed) internal pure returns (address[] memory result) {
     result = new address[](inputs.length);
 
@@ -157,8 +154,24 @@ abstract contract BaseVaultTest is PoolSetup {
     }
   }
 
-  function _randomNonZero(address[] memory users, uint256 seed) internal pure returns (address) {
-    users = _removeAll(users, address(0));
-    return _randomCandidate(users, seed);
+  function _appendUintToString(string memory inStr, uint8 v) private pure returns (string memory) {
+    uint maxlength = 100;
+    bytes memory reversed = new bytes(maxlength);
+    uint i = 0;
+    while (v != 0) {
+      uint8 remainder = v % 10;
+      v = v / 10;
+      reversed[i++] = bytes1(48 + remainder);
+    }
+    bytes memory inStrb = bytes(inStr);
+    bytes memory s = new bytes(inStrb.length + i);
+    uint j;
+    for (j = 0; j < inStrb.length; j++) {
+      s[j] = inStrb[j];
+    }
+    for (j = 0; j < i; j++) {
+      s[j + inStrb.length] = reversed[i - 1 - j];
+    }
+    return string(s);
   }
 }

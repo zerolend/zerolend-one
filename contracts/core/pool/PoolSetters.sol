@@ -26,6 +26,7 @@ import {LiquidationLogic} from './logic/LiquidationLogic.sol';
 import {PoolLogic} from './logic/PoolLogic.sol';
 import {SupplyLogic} from './logic/SupplyLogic.sol';
 import {PercentageMath} from './utils/PercentageMath.sol';
+import {PoolErrorsLib} from '../../interfaces/errors/PoolErrorsLib.sol';
 
 abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -65,7 +66,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     bytes32 pos,
     DataTypes.ExtraData memory data
   ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
-    // bytes32 pos = msg.sender.getPositionId(index);
+    require(to != address(0), PoolErrorsLib.ZERO_ADDRESS_NOT_VALID);
 
     DataTypes.ExecuteWithdrawParams memory params = DataTypes.ExecuteWithdrawParams({
       reserveFactor: _factory.reserveFactor(),
@@ -93,6 +94,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     DataTypes.ExtraData memory data
   ) internal nonReentrant(RentrancyKind.LENDING) returns (DataTypes.SharesType memory res) {
     if (address(_hook) != address(0)) _hook.beforeBorrow(msg.sender, pos, asset, address(this), amount, data.hookData);
+    require(to != address(0), PoolErrorsLib.ZERO_ADDRESS_NOT_VALID);
 
     res = BorrowLogic.executeBorrow(
       _reserves,
@@ -180,6 +182,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     bytes calldata params,
     DataTypes.ExtraData memory data
   ) public virtual nonReentrant(RentrancyKind.FLASHLOAN) {
+    require(receiverAddress != address(0), PoolErrorsLib.ZERO_ADDRESS_NOT_VALID);
     DataTypes.FlashloanSimpleParams memory flashParams = DataTypes.FlashloanSimpleParams({
       receiverAddress: receiverAddress,
       asset: asset,
@@ -208,7 +211,6 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
         amount: 0,
         position: pos,
         data: DataTypes.ExtraData({hookData: '', interestRateData: ''}),
-        // reservesCount: _reservesCount,
         pool: address(this)
       })
     );

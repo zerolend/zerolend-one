@@ -59,9 +59,13 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
     uint256 shares = vault.deposit(deposited, onBehalf);
 
     redeemed = bound(redeemed, 0, shares);
+    console.log('deposited', deposited);
 
     vm.expectEmit();
     emit CuratedEventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
+    console.log('');
+    console.log('redeeming', redeemed);
+    console.log('totalAssets', vault.totalAssets());
     vm.prank(onBehalf);
     vault.redeem(redeemed, receiver, onBehalf);
 
