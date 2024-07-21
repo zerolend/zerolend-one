@@ -17,7 +17,7 @@ import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
 import {IWETH} from '../../interfaces/IWETH.sol';
-import {NFTPositionManagerSetters, NFTErrorsLib} from './NFTPositionManagerSetters.sol';
+import {NFTErrorsLib, NFTPositionManagerSetters} from './NFTPositionManagerSetters.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 
