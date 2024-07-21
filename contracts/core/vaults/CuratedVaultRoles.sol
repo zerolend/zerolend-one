@@ -39,7 +39,7 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, Curat
     }
 
     for (uint256 i = 0; i < _allocators.length; i++) {
-      _setupRole(ALLOCATOR_ROLE, _guardians[i]);
+      _setupRole(ALLOCATOR_ROLE, _allocators[i]);
     }
   }
 
