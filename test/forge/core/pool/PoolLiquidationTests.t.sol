@@ -20,7 +20,10 @@ contract PoolLiquidationTest is PoolSetup {
   uint256 supplyAmountB = 750 ether;
   uint256 borrowAmountB = 100 ether;
 
-  bytes32 pos = keccak256(abi.encodePacked(alice, 'index', uint256(0)));
+  function setUp() public {
+    _setUpPool();
+    pos = keccak256(abi.encodePacked(alice, 'index', uint256(0)));
+  }
 
   function testLiquidateSimpleRevertWhenHealthFactorBelowThreshold() external {
     vm.expectRevert(bytes('HEALTH_FACTOR_NOT_BELOW_THRESHOLD'));

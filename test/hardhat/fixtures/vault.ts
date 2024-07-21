@@ -30,6 +30,8 @@ export async function deployVault() {
   } = fixture;
 
   const input: DataTypes.InitPoolParamsStruct = {
+    proxyAdmin: ZeroAddress,
+    revokeProxy: false,
     admins: [],
     emergencyAdmins: [],
     riskAdmins: [],

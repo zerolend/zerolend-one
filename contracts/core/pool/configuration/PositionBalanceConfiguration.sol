@@ -43,11 +43,10 @@ library PositionBalanceConfiguration {
   ) internal returns (bool isFirst, uint256 sharesMinted) {
     sharesMinted = amount.rayDiv(index);
     require(sharesMinted != 0, PoolErrorsLib.INVALID_MINT_AMOUNT);
-    uint256 shares = self.supplyShares;
+    isFirst = self.supplyShares == 0;
     self.lastSupplyLiquidtyIndex = index;
     self.supplyShares += sharesMinted;
     totalSupply.supplyShares += sharesMinted;
-    isFirst = shares == 0;
   }
 
   /**
@@ -68,11 +67,10 @@ library PositionBalanceConfiguration {
   ) internal returns (bool isFirst, uint256 sharesMinted) {
     sharesMinted = amount.rayDiv(index);
     require(sharesMinted != 0, PoolErrorsLib.INVALID_MINT_AMOUNT);
-    uint256 shares = self.debtShares;
+    isFirst = self.debtShares == 0;
     self.lastDebtLiquidtyIndex = index;
     self.debtShares += sharesMinted;
     totalSupply.debtShares += sharesMinted;
-    isFirst = shares == 0;
   }
 
   /**
@@ -125,7 +123,7 @@ library PositionBalanceConfiguration {
    * @param self The position to fetch the value for
    * @param index The current liquidity index
    */
-  function getSupplyBalance(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 supply) {
+  function getSupplyBalance(DataTypes.PositionBalance storage self, uint256 index) public view returns (uint256 supply) {
     uint256 increase = self.supplyShares.rayMul(index) - self.supplyShares.rayMul(self.lastSupplyLiquidtyIndex);
     return self.supplyShares + increase;
   }

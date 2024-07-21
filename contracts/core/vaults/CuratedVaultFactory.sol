@@ -13,6 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
+import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {IBeacon, ICuratedVault, ICuratedVaultFactory} from '../../interfaces/vaults/ICuratedVaultFactory.sol';
 import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
@@ -44,29 +45,22 @@ contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
   }
 
   /// @inheritdoc ICuratedVaultFactory
-  function createVault(
-    address initialOwner,
-    address initialProxyOwner,
-    uint256 initialTimelock,
-    address asset,
-    string memory name,
-    string memory symbol,
-    bytes32 salt
-  ) external returns (ICuratedVault vault) {
+  function createVault(InitVaultParams memory p) external returns (ICuratedVault vault) {
     // create the vault
-    vault = ICuratedVault(address(new RevokableBeaconProxy{salt: salt}(address(this), initialProxyOwner)));
-    vault.initialize(initialOwner, initialTimelock, asset, name, symbol);
+    vault = ICuratedVault(address(new RevokableBeaconProxy{salt: p.salt}(address(this), p.proxyAdmin)));
+    emit CuratedEventsLib.VaultCreated(vault, vaults.length, p, msg.sender);
+
+    vault.initialize(p.admins, p.curators, p.guardians, p.allocators, p.timelock, p.asset, p.name, p.symbol);
 
     // track the vault
     vaults.push(vault);
     isVault[address(vault)] = true;
-    emit VaultCreated(vault, vaults.length, msg.sender, initialOwner, initialProxyOwner, initialTimelock, asset, name, symbol, salt);
   }
 
   /// @inheritdoc ICuratedVaultFactory
   function setImplementation(address impl) external onlyOwner {
     address old = implementation;
     implementation = impl;
-    emit ImplementationUpdated(old, impl, msg.sender);
+    emit CuratedEventsLib.ImplementationUpdated(old, impl, msg.sender);
   }
 }

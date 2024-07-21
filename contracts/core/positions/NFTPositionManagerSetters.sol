@@ -43,7 +43,6 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
    * @custom:event Supply emitted whenever user supply asset
    */
   function _supply(AssetOperationParams memory params) internal nonReentrant {
-    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
     IPool pool = IPool(_positions[params.tokenId].pool);
@@ -59,7 +58,6 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
   }
 
   function _borrow(AssetOperationParams memory params) internal nonReentrant {
-    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     if (params.target == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
@@ -78,7 +76,6 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
   }
 
   function _withdraw(AssetOperationParams memory params) internal nonReentrant {
-    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
     if (params.target == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
@@ -97,7 +94,6 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
   }
 
   function _repay(AssetOperationParams memory params) internal nonReentrant {
-    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
     if (params.tokenId == 0) params.tokenId = _nextId - 1;
 

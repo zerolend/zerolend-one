@@ -3,15 +3,19 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from './../../../../contracts/core/pool/configuration/DataTypes.sol';
 import {UserConfiguration} from './../../../../contracts/core/pool/configuration/UserConfiguration.sol';
-import {IPool, PoolEventsLib, PoolSetup} from './PoolSetup.sol';
+import './PoolSetup.sol';
 
 contract PoolBorrowTests is PoolSetup {
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
-  address alice = address(1);
-  address bob = address(2);
+  address alice = makeAddr('alice');
+  address bob = makeAddr('bob');
 
   event Supply(address indexed reserve, bytes32 indexed pos, uint256 amount);
+
+  function setUp() public {
+    _setUpPool();
+  }
 
   /// ------------Borrow------------
   function testBorrowAmountZero() external {
@@ -103,4 +107,49 @@ contract PoolBorrowTests is PoolSetup {
 
     vm.stopPrank();
   }
+
+  function testBorrowToZeroAddress(address borrowerFuzz, uint256 amount) public {
+    amount = bound(amount, 1, MAX_TEST_AMOUNT);
+
+    _supply(owner, tokenB, amount);
+
+    vm.prank(borrowerFuzz);
+    vm.expectRevert(bytes(PoolErrorsLib.ZERO_ADDRESS_NOT_VALID));
+    pool.borrowSimple(address(tokenB), address(0), amount, 0);
+  }
+
+  function testBorrowZeroAmount(address borrowerFuzz) public {
+    vm.prank(borrowerFuzz);
+    vm.expectRevert(bytes(PoolErrorsLib.INVALID_AMOUNT));
+    pool.borrowSimple(address(tokenA), alice, 0, 0);
+  }
+
+  // function testBorrowAssets(uint256 amountCollateral, uint256 amountSupplied, uint256 amountBorrowed, uint256 priceCollateral) public {
+  //   (amountCollateral, amountBorrowed, priceCollateral) = _boundHealthyPosition(amountCollateral, amountBorrowed, priceCollateral);
+
+  //   amountSupplied = bound(amountSupplied, amountBorrowed, MAX_TEST_AMOUNT);
+  //   _supply(amountSupplied);
+
+  //   oracle.setPrice(priceCollateral);
+
+  //   collateralToken.setBalance(BORROWER, amountCollateral);
+
+  //   vm.startPrank(BORROWER);
+  //   morpho.supplyCollateral(marketParams, amountCollateral, BORROWER, hex'');
+
+  //   uint256 expectedBorrowShares = amountBorrowed.toSharesUp(0, 0);
+
+  //   vm.expectEmit(true, true, true, true, address(morpho));
+  //   emit EventsLib.Borrow(id, BORROWER, BORROWER, RECEIVER, amountBorrowed, expectedBorrowShares);
+  //   (uint256 returnAssets, uint256 returnShares) = morpho.borrow(marketParams, amountBorrowed, 0, BORROWER, RECEIVER);
+  //   vm.stopPrank();
+
+  //   assertEq(returnAssets, amountBorrowed, 'returned asset amount');
+  //   assertEq(returnShares, expectedBorrowShares, 'returned shares amount');
+  //   assertEq(morpho.totalBorrowAssets(id), amountBorrowed, 'total borrow');
+  //   assertEq(morpho.borrowShares(id, BORROWER), expectedBorrowShares, 'borrow shares');
+  //   assertEq(morpho.borrowShares(id, BORROWER), expectedBorrowShares, 'total borrow shares');
+  //   assertEq(loanToken.balanceOf(RECEIVER), amountBorrowed, 'borrower balance');
+  //   assertEq(loanToken.balanceOf(address(morpho)), amountSupplied - amountBorrowed, 'morpho balance');
+  // }
 }

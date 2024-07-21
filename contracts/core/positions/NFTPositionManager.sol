@@ -17,7 +17,7 @@ import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
 import {IWETH} from '../../interfaces/IWETH.sol';
-import {NFTPositionManagerSetters} from './NFTPositionManagerSetters.sol';
+import {NFTErrorsLib, NFTPositionManagerSetters} from './NFTPositionManagerSetters.sol';
 import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
 import {SafeERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol';
 
@@ -63,27 +63,29 @@ contract NFTPositionManager is NFTPositionManagerSetters {
 
   /// @inheritdoc INFTPositionManager
   function supply(AssetOperationParams memory params) external {
+    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     IERC20Upgradeable(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
     _supply(params);
   }
 
   /// @inheritdoc INFTPositionManager
   function supplyETH(AssetOperationParams memory params) external payable {
+    params.asset = address(weth);
     weth.deposit{value: params.amount}();
-    require(params.asset == address(weth), 'not weth');
     _supply(params);
   }
 
   /// @inheritdoc INFTPositionManager
   function borrow(AssetOperationParams memory params) external {
+    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     _borrow(params);
   }
 
   /// @inheritdoc INFTPositionManager
   function borrowETH(AssetOperationParams memory params) external payable {
+    params.asset = address(weth);
     address dest = params.target;
     params.target = address(this);
-
     _borrow(params);
     weth.withdraw(params.amount);
     payable(dest).transfer(params.amount);
@@ -91,11 +93,13 @@ contract NFTPositionManager is NFTPositionManagerSetters {
 
   /// @inheritdoc INFTPositionManager
   function withdraw(AssetOperationParams memory params) external {
+    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     _withdraw(params);
   }
 
   /// @inheritdoc INFTPositionManager
   function withdrawETH(AssetOperationParams memory params) external payable {
+    params.asset = address(weth);
     address dest = params.target;
     params.target = address(this);
 
@@ -106,12 +110,14 @@ contract NFTPositionManager is NFTPositionManagerSetters {
 
   /// @inheritdoc INFTPositionManager
   function repay(AssetOperationParams memory params) external {
+    if (params.asset == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     IERC20Upgradeable(params.asset).safeTransferFrom(msg.sender, address(this), params.amount);
     _repay(params);
   }
 
   /// @inheritdoc INFTPositionManager
   function repayETH(AssetOperationParams memory params) external payable {
+    params.asset = address(weth);
     weth.deposit{value: params.amount}();
     require(params.asset == address(weth), 'not weth');
     _repay(params);

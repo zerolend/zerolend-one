@@ -10,7 +10,9 @@ import {PoolSetup} from './PoolSetup.sol';
 contract PoolGetterTests is PoolSetup {
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
-  bytes32 pos = keccak256(abi.encodePacked(address(1), 'index', uint256(0)));
+  function setUp() public {
+    _setUpPool();
+  }
 
   function testFactory() public view {
     IPoolFactory factory = pool.factory();

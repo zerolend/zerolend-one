@@ -5,7 +5,10 @@ import {MintableERC20} from '../../../../contracts/mocks/MintableERC20.sol';
 import {PoolEventsLib, PoolSetup} from './PoolSetup.sol';
 
 contract PoolWithdrawTests is PoolSetup {
-  /// ------------Withdraw------------
+  function setUp() public {
+    _setUpPool();
+  }
+
   function testWithdrawAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
     pool.withdrawSimple(address(tokenA), msg.sender, 0, 0);
@@ -24,12 +27,14 @@ contract PoolWithdrawTests is PoolSetup {
   function testRevertsWithdrawInvalidBalance() public {
     uint256 amount = 100e18;
 
+    vm.startPrank(owner);
     tokenA.mint(owner, amount);
     tokenA.approve(address(pool), amount);
     pool.supplySimple(address(tokenA), owner, amount, 0);
 
     vm.expectRevert(bytes('NOT_ENOUGH_AVAILABLE_USER_BALANCE'));
     pool.withdrawSimple(address(tokenA), owner, 2 * amount, 0);
+    vm.stopPrank();
   }
 
   function testWithdrawEventEmit() external {

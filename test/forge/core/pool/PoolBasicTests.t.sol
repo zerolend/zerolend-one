@@ -18,6 +18,10 @@ contract PoolBasicTests is PoolSetup {
   uint256 mintAmount = 2000 ether;
   uint256 tokenCMintAmount = 1000 ether;
 
+  function setUp() public {
+    _setUpPool();
+  }
+
   function testPoolFactoryLength() external view {
     assertEq(poolFactory.poolsLength(), 1);
   }

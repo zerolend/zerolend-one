@@ -14,22 +14,33 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
-import {ICuratedVaultBase, ICuratedVaultStaticTyping} from '../../interfaces/vaults/ICuratedVaultStaticTyping.sol';
+import {CuratedVaultStorage, ICuratedVaultBase} from './CuratedVaultStorage.sol';
 import {AccessControlEnumerableUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
-abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICuratedVaultStaticTyping {
-  /// @dev the keccak256 hash of the guardian role.
-  bytes32 public immutable GUARDIAN_ROLE = keccak256('GUARDIAN_ROLE');
-
-  /// @dev the keccak256 hash of the curator role.
-  bytes32 public immutable CURATOR_ROLE = keccak256('GUARDIAN_ROLE');
-
-  /// @dev the keccak256 hash of the allocator role.
-  bytes32 public immutable ALLOCATOR_ROLE = keccak256('GUARDIAN_ROLE');
-
-  function __CuratedVaultRoles_init(address _owner) internal {
+abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, CuratedVaultStorage {
+  function __CuratedVaultRoles_init(
+    address[] memory _admins,
+    address[] memory _curators,
+    address[] memory _guardians,
+    address[] memory _allocators
+  ) internal {
     __AccessControlEnumerable_init();
-    _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+
+    for (uint256 i = 0; i < _admins.length; i++) {
+      _setupRole(DEFAULT_ADMIN_ROLE, _admins[i]);
+    }
+
+    for (uint256 i = 0; i < _curators.length; i++) {
+      _setupRole(CURATOR_ROLE, _curators[i]);
+    }
+
+    for (uint256 i = 0; i < _guardians.length; i++) {
+      _setupRole(GUARDIAN_ROLE, _guardians[i]);
+    }
+
+    for (uint256 i = 0; i < _allocators.length; i++) {
+      _setupRole(ALLOCATOR_ROLE, _allocators[i]);
+    }
   }
 
   /* MODIFIERS */
@@ -37,7 +48,7 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICura
   /// @dev Reverts if the caller doesn't have the curator role.
   modifier onlyCuratorRole() {
     address sender = _msgSender();
-    if (!isOwner(_msgSender()) && !isCurator(_msgSender())) revert CuratedErrorsLib.NotGuardianRole();
+    if (!isOwner(_msgSender()) && !isCurator(_msgSender())) revert CuratedErrorsLib.NotCuratorRole();
     _;
   }
 
@@ -88,34 +99,34 @@ abstract contract CuratedVaultRoles is AccessControlEnumerableUpgradeable, ICura
   }
 
   function grantCuratorRole(address who) public {
-    _grantRole(CURATOR_ROLE, who);
+    grantRole(CURATOR_ROLE, who);
   }
 
   function grantGuardianRole(address who) public {
-    _grantRole(GUARDIAN_ROLE, who);
+    grantRole(GUARDIAN_ROLE, who);
   }
 
   function grantOwnerRole(address who) public {
-    _grantRole(DEFAULT_ADMIN_ROLE, who);
+    grantRole(DEFAULT_ADMIN_ROLE, who);
   }
 
   function grantAllocatorRole(address who) public {
-    _grantRole(ALLOCATOR_ROLE, who);
+    grantRole(ALLOCATOR_ROLE, who);
   }
 
   function revokeCuratorRole(address who) public {
-    _revokeRole(CURATOR_ROLE, who);
+    revokeRole(CURATOR_ROLE, who);
   }
 
   function revokeGuardianRole(address who) public {
-    _revokeRole(GUARDIAN_ROLE, who);
+    revokeRole(GUARDIAN_ROLE, who);
   }
 
   function revokeOwnerRole(address who) public {
-    _revokeRole(DEFAULT_ADMIN_ROLE, who);
+    revokeRole(DEFAULT_ADMIN_ROLE, who);
   }
 
   function revokeAllocatorRole(address who) public {
-    _revokeRole(ALLOCATOR_ROLE, who);
+    revokeRole(ALLOCATOR_ROLE, who);
   }
 }

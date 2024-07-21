@@ -13,17 +13,12 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IFlashLoanSimpleReceiver} from '../../interfaces/IFlashLoanSimpleReceiver.sol';
-import {IPool} from '../../interfaces/pool/IPool.sol';
+import {DefaultReserveInterestRateStrategy} from './DefaultReserveInterestRateStrategy.sol';
 
-/**
- * @title FlashLoanReceiverBase
- * @notice Base contract to develop a flashloan-receiver contract.
- */
-abstract contract FlashLoanReceiverBase is IFlashLoanSimpleReceiver {
-  IPool public immutable POOL;
-
-  constructor(IPool pool) {
-    POOL = pool;
-  }
+contract FixedInterestRateStrategy is DefaultReserveInterestRateStrategy {
+  /**
+   * @dev Constructor.
+   * @param baseBorrowRate The base borrow rate
+   */
+  constructor(uint256 baseBorrowRate) DefaultReserveInterestRateStrategy(0, baseBorrowRate, 0, 0) {}
 }

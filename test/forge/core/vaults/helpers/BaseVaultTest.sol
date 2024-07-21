@@ -5,7 +5,6 @@ import {MathLib, WAD} from '../../../../../contracts/core/vaults/libraries/MathL
 
 import {IPool} from '../../../../../contracts/interfaces/pool/IPool.sol';
 import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
-import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
 
 import {DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator} from '../../pool/CorePoolTests.sol';
 import {DataTypes, PoolSetup} from '../../pool/PoolSetup.sol';
@@ -16,24 +15,22 @@ uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;
 uint256 constant MAX_TEST_ASSETS = 1e18 * 1000;
 uint184 constant CAP = type(uint128).max;
-uint256 constant NB_MARKETS = 30 + 1;
+uint256 constant NB_MARKETS = 3 + 1;
 
 abstract contract BaseVaultTest is PoolSetup {
   using MathLib for uint256;
 
-  address internal OWNER = makeAddr('Owner');
-  address internal SUPPLIER = makeAddr('Supplier');
-  address internal BORROWER = makeAddr('Borrower');
-  address internal REPAYER = makeAddr('Repayer');
-  address internal ONBEHALF = makeAddr('OnBehalf');
-  address internal RECEIVER = makeAddr('Receiver');
-  address internal ALLOCATOR = makeAddr('Allocator');
-  address internal CURATOR = makeAddr('Curator');
-  address internal GUARDIAN = makeAddr('Guardian');
-  address internal FEE_RECIPIENT = makeAddr('FeeRecipient');
-  address internal SKIM_RECIPIENT = makeAddr('SkimRecipient');
-  address internal MORPHO_OWNER = makeAddr('MorphoOwner');
-  address internal MORPHO_FEE_RECIPIENT = makeAddr('MorphoFeeRecipient');
+  // address internal OWNER = makeAddr('Owner');
+  address internal supplier = makeAddr('supplier');
+  address internal borrower = makeAddr('borrower');
+  address internal repayer = makeAddr('repayer');
+  address internal onBehalf = makeAddr('onBehalf');
+  address internal receiver = makeAddr('receiver');
+  address internal allocator = makeAddr('allocator');
+  address internal curator = makeAddr('curator');
+  address internal guardian = makeAddr('guardian');
+  address internal feeRecipient = makeAddr('feeRecipient');
+  address internal skimRecipient = makeAddr('skimRecipient');
 
   IPool[] internal allMarkets;
   IPool internal idleMarket;
@@ -42,43 +39,39 @@ abstract contract BaseVaultTest is PoolSetup {
   MintableERC20 internal collateralToken;
   MockAggregator internal oracle;
 
-  function setUp() public virtual override {
-    super.setUp();
+  function _setUpBaseVault() internal {
+    _setUpPool();
 
     loanToken = tokenA;
     collateralToken = tokenB;
     oracle = oracleA;
 
     // vm.label(address(morpho), 'Morpho');
-    vm.label(address(loanToken), 'Loan');
-    vm.label(address(collateralToken), 'Collateral');
-    vm.label(address(oracle), 'Oracle');
-    vm.label(address(irStrategy), 'Irm');
+    vm.label(address(loanToken), 'loanToken');
+    vm.label(address(collateralToken), 'collateralToken');
+    vm.label(address(oracle), 'oracle');
+    vm.label(address(irStrategy), 'irStrategy');
     oracle.setAnswer(1e8);
-
-    // vm.startPrank(MORPHO_OWNER);
-    // morpho.enableIrm(address(irm));
-    // morpho.setFeeRecipient(MORPHO_FEE_RECIPIENT);
-    // morpho.enableLltv(0);
-    // vm.stopPrank();
 
     // init the idle market
     _setupIdleMarket();
 
     // init markets
-    for (uint256 i = 0; i < NB_MARKETS; i++) {
+    for (uint8 i = 0; i < NB_MARKETS; i++) {
       IPool market = IPool(poolFactory.createPool(_basicPoolInitParams()));
 
+      vm.label(address(market), _appendUintToString('market-', i));
+
       // give approvals
-      vm.startPrank(SUPPLIER);
+      vm.startPrank(supplier);
       loanToken.approve(address(market), type(uint256).max);
       collateralToken.approve(address(market), type(uint256).max);
       vm.stopPrank();
 
-      vm.prank(BORROWER);
+      vm.prank(borrower);
       collateralToken.approve(address(market), type(uint256).max);
 
-      vm.prank(REPAYER);
+      vm.prank(repayer);
       loanToken.approve(address(market), type(uint256).max);
 
       allMarkets.push(market);
@@ -114,39 +107,18 @@ abstract contract BaseVaultTest is PoolSetup {
         })
       )
     );
-  }
 
-  /// @dev Rolls & warps the given number of blocks forward the blockchain.
-  function _forward(uint256 blocks) internal {
-    vm.roll(block.number + blocks);
-    vm.warp(block.timestamp + blocks * BLOCK_TIME); // Block speed should depend on test network.
-  }
-
-  /// @dev Bounds the fuzzing input to a realistic number of blocks.
-  function _boundBlocks(uint256 blocks) internal pure returns (uint256) {
-    return bound(blocks, 2, type(uint24).max);
-  }
-
-  /// @dev Bounds the fuzzing input to a non-zero address.
-  /// @dev This function should be used in place of `vm.assume` in invariant test handler functions:
-  /// https://github.com/foundry-rs/foundry/issues/4190.
-  function _boundAddressNotZero(address input) internal view virtual returns (address) {
-    return address(uint160(bound(uint256(uint160(input)), 1, type(uint160).max)));
+    vm.label(address(idleMarket), 'market-IDLE');
   }
 
   function _accrueInterest(IPool pool) internal {
     pool.forceUpdateReserve(address(loanToken));
-    // pool.forceUpdateReserve(address(collateralToken));
+    pool.forceUpdateReserve(address(collateralToken));
   }
 
   /// @dev Returns a random market params from the list of markets enabled on Blue (except the idle market).
   function _randomMarketParams(uint256 seed) internal view returns (IPool) {
     return allMarkets[seed % (allMarkets.length - 1)];
-  }
-
-  function _randomCandidate(address[] memory candidates, uint256 seed) internal pure returns (address) {
-    if (candidates.length == 0) return address(0);
-    return candidates[seed % candidates.length];
   }
 
   function _removeAll(address[] memory inputs, address removed) internal pure returns (address[] memory result) {
@@ -164,10 +136,5 @@ abstract contract BaseVaultTest is PoolSetup {
     assembly {
       mstore(result, nbAddresses)
     }
-  }
-
-  function _randomNonZero(address[] memory users, uint256 seed) internal pure returns (address) {
-    users = _removeAll(users, address(0));
-    return _randomCandidate(users, seed);
   }
 }

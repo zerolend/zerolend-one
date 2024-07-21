@@ -4,7 +4,10 @@ pragma solidity 0.8.19;
 import {IPool, PoolEventsLib, PoolSetup} from './PoolSetup.sol';
 
 contract PoolSupplyTests is PoolSetup {
-  /// ------------Supply------------
+  function setUp() public {
+    _setUpPool();
+  }
+
   function testSupplyAmountZero() external {
     vm.expectRevert(bytes('INVALID_AMOUNT'));
     pool.supplySimple(address(tokenA), address(1), 0, 0);

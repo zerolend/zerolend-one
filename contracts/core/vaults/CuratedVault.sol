@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes, IPool} from '../../interfaces/pool/IPool.sol';
 
-import {ICuratedVaultBase, MarketAllocation, MarketConfig, PendingUint192} from '../../interfaces/vaults/ICuratedVaultBase.sol';
+import {ICuratedVaultBase, MarketAllocation, PendingUint192} from '../../interfaces/vaults/ICuratedVaultBase.sol';
 
 import {PendingLib} from './libraries/PendingLib.sol';
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
@@ -24,15 +24,13 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
 
 import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
 import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
-import {CuratedVaultRoles} from './CuratedVaultRoles.sol';
-import {ERC20PermitUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol';
+import {CuratedVaultSetters} from './CuratedVaultSetters.sol';
 import {
   ERC20Upgradeable,
   ERC4626Upgradeable,
   IERC4626Upgradeable,
   MathUpgradeable
 } from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
-import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol';
 import {IERC20, IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
@@ -42,74 +40,28 @@ import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 /// @custom:contact contact@zerolend.xyz
 /// @notice ERC4626 compliant vault allowing users to deposit assets to ZeroLend One.
 /// @dev This is a proxy contract and is not meant to be deployed directly.
-contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaultRoles, MulticallUpgradeable {
-  using MathUpgradeable for uint256;
+contract CuratedVault is CuratedVaultSetters {
   using UtilsLib for uint256;
   using SafeCast for uint256;
   using SafeERC20 for IERC20;
   using SharesMathLib for uint256;
-  using PendingLib for MarketConfig;
   using PendingLib for PendingUint192;
-
-  /// @notice OpenZeppelin decimals offset used by the ERC4626Upgradeable implementation.
-  /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
-  /// precision between shares and assets.
-  uint8 public DECIMALS_OFFSET;
-
-  mapping(IPool => MarketConfig) public config;
-
-  /// @inheritdoc ICuratedVaultBase
-  uint256 public timelock;
-
-  mapping(IPool => PendingUint192) public pendingCap;
-
-  PendingUint192 public pendingTimelock;
-
-  /// @inheritdoc ICuratedVaultBase
-  uint96 public fee;
-
-  /// @inheritdoc ICuratedVaultBase
-  address public feeRecipient;
-
-  /// @inheritdoc ICuratedVaultBase
-  address public skimRecipient;
-
-  /// @inheritdoc ICuratedVaultBase
-  IPool[] public supplyQueue;
-
-  /// @inheritdoc ICuratedVaultBase
-  IPool[] public withdrawQueue;
-
-  /// @inheritdoc ICuratedVaultBase
-  uint256 public lastTotalAssets;
-
-  /// @inheritdoc ICuratedVaultBase
-  bytes32 public positionId;
-
-  /// @dev The maximum delay of a timelock.
-  uint256 internal immutable MAX_TIMELOCK = 2 weeks;
-
-  /// @dev The minimum delay of a timelock.
-  uint256 internal immutable MIN_TIMELOCK = 1 days;
-
-  /// @dev The maximum number of markets in the supply/withdraw queue.
-  uint256 internal immutable MAX_QUEUE_LENGTH = 30;
-
-  /// @dev The maximum fee the vault can have (50%).
-  uint256 internal immutable MAX_FEE = 0.5e18;
 
   constructor() {
     _disableInitializers();
   }
 
   /// @dev Initializes the contract.
-  /// @param _owner The owner of the contract.
+  /// @param _admins The admins of the contract.
   /// @param _initialTimelock The initial timelock.
   /// @param _asset The address of the underlying asset.
   /// @param _name The name of the vault.
   /// @param _symbol The symbol of the vault.
   function initialize(
-    address _owner,
+    address[] memory _admins,
+    address[] memory _curators,
+    address[] memory _guardians,
+    address[] memory _allocators,
     uint256 _initialTimelock,
     address _asset,
     string memory _name,
@@ -119,17 +71,13 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     __ERC20Permit_init(_name);
     __ERC4626_init(IERC20Upgradeable(_asset));
     __Multicall_init();
-    __CuratedVaultRoles_init(_owner);
+    __CuratedVaultRoles_init(_admins, _curators, _guardians, _allocators);
 
     DECIMALS_OFFSET = uint8(uint256(18).zeroFloorSub(IERC20Metadata(_asset).decimals()));
     _checkTimelockBounds(_initialTimelock);
     _setTimelock(_initialTimelock);
 
     positionId = keccak256(abi.encodePacked(address(this), 'index', uint256(0)));
-  }
-
-  function revision() external pure virtual returns (uint256) {
-    return 1;
   }
 
   /// @dev Makes sure conditions are met to accept a pending value.
@@ -194,7 +142,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     emit CuratedEventsLib.SetFeeRecipient(newFeeRecipient);
   }
 
-  /* ONLY CURATOR FUNCTIONS */
+  /* ONLY curator FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
   function submitCap(IPool pool, uint256 newSupplyCap) external onlyCuratorRole {
@@ -223,7 +171,7 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
     emit CuratedEventsLib.SubmitMarketRemoval(_msgSender(), pool);
   }
 
-  /* ONLY ALLOCATOR FUNCTIONS */
+  /* ONLY allocator FUNCTIONS */
 
   /// @inheritdoc ICuratedVaultBase
   function setSupplyQueue(IPool[] calldata newSupplyQueue) external onlyAllocator {
@@ -350,16 +298,6 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   /* EXTERNAL */
 
   /// @inheritdoc ICuratedVaultBase
-  function supplyQueueLength() external view returns (uint256) {
-    return supplyQueue.length;
-  }
-
-  /// @inheritdoc ICuratedVaultBase
-  function withdrawQueueLength() external view returns (uint256) {
-    return withdrawQueue.length;
-  }
-
-  /// @inheritdoc ICuratedVaultBase
   function acceptTimelock() external afterTimelock(pendingTimelock.validAt) {
     _setTimelock(pendingTimelock.value);
   }
@@ -379,39 +317,6 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   }
 
   /* ERC4626Upgradeable (PUBLIC) */
-
-  /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override (ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
-    return ERC4626Upgradeable.decimals();
-  }
-
-  /// @inheritdoc IERC4626Upgradeable
-  /// @dev Warning: May be higher than the actual max deposit due to duplicate markets in the supplyQueue.
-  function maxDeposit(address) public view override returns (uint256) {
-    return _maxDeposit();
-  }
-
-  /// @inheritdoc IERC4626Upgradeable
-  /// @dev Warning: May be higher than the actual max mint due to duplicate markets in the supplyQueue.
-  function maxMint(address) public view override returns (uint256) {
-    uint256 suppliable = _maxDeposit();
-    return _convertToShares(suppliable, MathUpgradeable.Rounding.Down);
-  }
-
-  /// @inheritdoc IERC4626Upgradeable
-  /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
-  /// roundings between shares and assets.
-  function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets,,) = _maxWithdraw(owner);
-  }
-
-  /// @inheritdoc IERC4626Upgradeable
-  /// @dev Warning: May be lower than the actual amount of shares that can be redeemed by `owner` due to conversion
-  /// roundings between shares and assets.
-  function maxRedeem(address owner) public view override returns (uint256) {
-    (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) = _maxWithdraw(owner);
-    return _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, MathUpgradeable.Rounding.Down);
-  }
 
   /// @inheritdoc IERC4626Upgradeable
   function deposit(uint256 assets, address receiver) public override returns (uint256 shares) {
@@ -463,281 +368,6 @@ contract CuratedVault is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaul
   function totalAssets() public view override returns (uint256 assets) {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       assets += withdrawQueue[i].getBalanceByPosition(asset(), positionId);
-    }
-  }
-
-  /* ERC4626Upgradeable (INTERNAL) */
-
-  /// @inheritdoc ERC4626Upgradeable
-  function _decimalsOffset() internal view override returns (uint8) {
-    return DECIMALS_OFFSET;
-  }
-
-  /// @dev Returns the maximum amount of asset (`assets`) that the `owner` can withdraw from the vault, as well as the
-  /// new vault's total supply (`newTotalSupply`) and total assets (`newTotalAssets`).
-  function _maxWithdraw(address owner) internal view returns (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) {
-    uint256 feeShares;
-    (feeShares, newTotalAssets) = _accruedFeeShares();
-    newTotalSupply = totalSupply() + feeShares;
-
-    assets = _convertToAssetsWithTotals(balanceOf(owner), newTotalSupply, newTotalAssets, MathUpgradeable.Rounding.Down);
-    assets -= _simulateWithdraw(assets);
-  }
-
-  /// @dev Returns the maximum amount of assets that the vault can supply on ZeroLend.
-  function _maxDeposit() internal view returns (uint256 totalSuppliable) {
-    for (uint256 i; i < supplyQueue.length; ++i) {
-      IPool pool = supplyQueue[i];
-
-      uint256 supplyCap = config[pool].cap;
-      if (supplyCap == 0) continue;
-
-      uint256 supplyShares = pool.supplyShares(asset(), positionId);
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
-
-      // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
-      uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
-      totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
-    }
-  }
-
-  /// @inheritdoc ERC4626Upgradeable
-  /// @dev The accrual of performance fees is taken into account in the conversion.
-  function _convertToShares(uint256 assets, MathUpgradeable.Rounding rounding) internal view override returns (uint256) {
-    (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
-    return _convertToSharesWithTotals(assets, totalSupply() + feeShares, newTotalAssets, rounding);
-  }
-
-  /// @inheritdoc ERC4626Upgradeable
-  /// @dev The accrual of performance fees is taken into account in the conversion.
-  function _convertToAssets(uint256 shares, MathUpgradeable.Rounding rounding) internal view override returns (uint256) {
-    (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
-    return _convertToAssetsWithTotals(shares, totalSupply() + feeShares, newTotalAssets, rounding);
-  }
-
-  /// @dev Returns the amount of shares that the vault would exchange for the amount of `assets` provided.
-  /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
-  function _convertToSharesWithTotals(
-    uint256 assets,
-    uint256 newTotalSupply,
-    uint256 newTotalAssets,
-    MathUpgradeable.Rounding rounding
-  ) internal view returns (uint256) {
-    return assets.mulDiv(newTotalSupply + 10 ** _decimalsOffset(), newTotalAssets + 1, rounding);
-  }
-
-  /// @dev Returns the amount of assets that the vault would exchange for the amount of `shares` provided.
-  /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
-  function _convertToAssetsWithTotals(
-    uint256 shares,
-    uint256 newTotalSupply,
-    uint256 newTotalAssets,
-    MathUpgradeable.Rounding rounding
-  ) internal view returns (uint256) {
-    return shares.mulDiv(newTotalAssets + 1, newTotalSupply + 10 ** _decimalsOffset(), rounding);
-  }
-
-  /// @inheritdoc ERC4626Upgradeable
-  /// @dev Used in mint or deposit to deposit the underlying asset to ZeroLend markets.
-  function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
-    super._deposit(caller, receiver, assets, shares);
-
-    _supplyPool(assets);
-
-    // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
-    _updateLastTotalAssets(lastTotalAssets + assets);
-  }
-
-  /// @inheritdoc ERC4626Upgradeable
-  /// @dev Used in redeem or withdraw to withdraw the underlying asset from ZeroLend markets.
-  /// @dev Depending on 3 cases, reverts when withdrawing "too much" with:
-  /// 1. NotEnoughLiquidity when withdrawing more than available liquidity.
-  /// 2. ERC20InsufficientAllowance when withdrawing more than `caller`'s allowance.
-  /// 3. ERC20InsufficientBalance when withdrawing more than `owner`'s balance.
-  function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares) internal override {
-    _withdrawPool(assets);
-    super._withdraw(caller, receiver, owner, assets, shares);
-  }
-
-  /* INTERNAL */
-
-  /// @dev Accrues interest on ZeroLend and returns the vault's assets & corresponding shares supplied on the
-  /// market defined by `pool`, as well as the market's state.
-  /// @dev Assumes that the inputs `marketParams` and `pool` match.
-  function _accruedSupplyBalance(IPool pool) internal returns (uint256 assets, uint256 shares) {
-    // force update the rates and liquidity indexes
-    pool.forceUpdateReserve(asset());
-
-    shares = pool.supplyShares(asset(), positionId);
-
-    // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-    (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
-    assets = shares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
-  }
-
-  /// @dev Reverts if `newTimelock` is not within the bounds.
-  function _checkTimelockBounds(uint256 newTimelock) internal pure {
-    if (newTimelock > MAX_TIMELOCK) revert CuratedErrorsLib.AboveMaxTimelock();
-    if (newTimelock < MIN_TIMELOCK) revert CuratedErrorsLib.BelowMinTimelock();
-  }
-
-  /// @dev Sets `timelock` to `newTimelock`.
-  function _setTimelock(uint256 newTimelock) internal {
-    timelock = newTimelock;
-    emit CuratedEventsLib.SetTimelock(_msgSender(), newTimelock);
-    delete pendingTimelock;
-  }
-
-  /// @dev Sets the cap of the market defined by `pool` to `supplyCap`.
-  function _setCap(IPool pool, uint184 supplyCap) internal {
-    MarketConfig storage marketConfig = config[pool];
-
-    if (supplyCap > 0) {
-      if (!marketConfig.enabled) {
-        withdrawQueue.push(pool);
-
-        if (withdrawQueue.length > MAX_QUEUE_LENGTH) revert CuratedErrorsLib.MaxQueueLengthExceeded();
-
-        marketConfig.enabled = true;
-
-        // Take into account assets of the new market without applying a fee.
-        pool.forceUpdateReserve(asset());
-        uint256 supplyAssets = pool.supplyAssets(asset(), positionId);
-        _updateLastTotalAssets(lastTotalAssets + supplyAssets);
-
-        emit CuratedEventsLib.SetWithdrawQueue(msg.sender, withdrawQueue);
-      }
-
-      marketConfig.removableAt = 0;
-    }
-
-    marketConfig.cap = supplyCap;
-    emit CuratedEventsLib.SetCap(_msgSender(), pool, supplyCap);
-    delete pendingCap[pool];
-  }
-
-  /* LIQUIDITY ALLOCATION */
-
-  /// @dev Supplies `assets` to ZeroLend.
-  function _supplyPool(uint256 assets) internal {
-    for (uint256 i; i < supplyQueue.length; ++i) {
-      IPool pool = supplyQueue[i];
-
-      uint256 supplyCap = config[pool].cap;
-      if (supplyCap == 0) continue;
-
-      pool.forceUpdateReserve(asset());
-
-      uint256 supplyShares = pool.supplyShares(asset(), positionId);
-
-      // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
-      uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
-
-      uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
-
-      if (toSupply > 0) {
-        // Using try/catch to skip markets that revert.
-        try pool.supplySimple(asset(), address(this), toSupply, 0) {
-          assets -= toSupply;
-        } catch {}
-      }
-
-      if (assets == 0) return;
-    }
-
-    if (assets != 0) revert CuratedErrorsLib.AllCapsReached();
-  }
-
-  /// @dev Withdraws `assets` from ZeroLend.
-  function _withdrawPool(uint256 withdrawAmount) internal {
-    for (uint256 i; i < withdrawQueue.length; ++i) {
-      IPool pool = withdrawQueue[i];
-      (uint256 supplyAssets,) = _accruedSupplyBalance(pool);
-      uint256 toWithdraw =
-        UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
-      if (toWithdraw > 0) {
-        // Using try/catch to skip markets that revert.
-        try pool.withdrawSimple(asset(), address(this), toWithdraw, 0) {
-          withdrawAmount -= toWithdraw;
-        } catch {}
-      }
-
-      if (withdrawAmount == 0) return;
-    }
-
-    if (withdrawAmount != 0) revert CuratedErrorsLib.NotEnoughLiquidity();
-  }
-
-  /// @notice simulates a withdraw of `assets` from ZeroLend.
-  /// @return The remaining assets to be withdrawn.
-  function _simulateWithdraw(uint256 assets) internal view returns (uint256) {
-    for (uint256 i; i < withdrawQueue.length; ++i) {
-      IPool pool = withdrawQueue[i];
-
-      // get info on how much shares this contract has
-      DataTypes.PositionBalance memory pos = pool.getBalanceRawByPositionId(asset(), positionId);
-      uint256 supplyShares = pos.supplyShares;
-
-      // get info on how much shares and asset the pool has
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets,) = pool.marketBalances(asset());
-
-      // The vault withdrawing from ZeroLend cannot fail because:
-      // 1. oracle.price() is never called (the vault doesn't borrow)
-      // 2. the amount is capped to the liquidity available on ZeroLend
-      // 3. virtually accruing interest didn't fail
-      assets = assets.zeroFloorSub(
-        _withdrawable(pool, totalSupplyAssets, totalBorrowAssets, supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares))
-      );
-
-      if (assets == 0) break;
-    }
-
-    return assets;
-  }
-
-  /// @dev Returns the withdrawable amount of assets from the market defined by `pool`, given the market's
-  /// total supply and borrow assets and the vault's assets supplied.
-  function _withdrawable(
-    IPool pool,
-    uint256 totalSupplyAssets,
-    uint256 totalBorrowAssets,
-    uint256 supplyAssets
-  ) internal view returns (uint256) {
-    // Inside a flashloan callback, liquidity on the pool may be limited to the singleton's balance.
-    uint256 availableLiquidity = UtilsLib.min(totalSupplyAssets - totalBorrowAssets, IERC20(asset()).balanceOf(address(pool)));
-    return UtilsLib.min(supplyAssets, availableLiquidity);
-  }
-
-  /* FEE MANAGEMENT */
-
-  /// @dev Updates `lastTotalAssets` to `updatedTotalAssets`.
-  function _updateLastTotalAssets(uint256 updatedTotalAssets) internal {
-    lastTotalAssets = updatedTotalAssets;
-    emit CuratedEventsLib.UpdateLastTotalAssets(updatedTotalAssets);
-  }
-
-  /// @dev Accrues the fee and mints the fee shares to the fee recipient.
-  /// @return newTotalAssets The vaults total assets after accruing the interest.
-  function _accrueFee() internal returns (uint256 newTotalAssets) {
-    uint256 feeShares;
-    (feeShares, newTotalAssets) = _accruedFeeShares();
-    if (feeShares != 0) _mint(feeRecipient, feeShares);
-    emit CuratedEventsLib.AccrueInterest(newTotalAssets, feeShares);
-  }
-
-  /// @dev Computes and returns the fee shares (`feeShares`) to mint and the new vault's total assets
-  /// (`newTotalAssets`).
-  function _accruedFeeShares() internal view returns (uint256 feeShares, uint256 newTotalAssets) {
-    newTotalAssets = totalAssets();
-
-    uint256 totalInterest = newTotalAssets.zeroFloorSub(lastTotalAssets);
-    if (totalInterest != 0 && fee != 0) {
-      // It is acknowledged that `feeAssets` may be rounded down to 0 if `totalInterest * fee < WAD`.
-      uint256 feeAssets = totalInterest.mulDiv(fee, 1e18);
-      // The fee assets is subtracted from the total assets in this calculation to compensate for the fact
-      // that total assets is already increased by the total interest (including the fee assets).
-      feeShares = _convertToSharesWithTotals(feeAssets, totalSupply(), newTotalAssets - feeAssets, MathUpgradeable.Rounding.Down);
     }
   }
 }
