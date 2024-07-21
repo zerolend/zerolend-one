@@ -51,27 +51,27 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
     assertEq(allMarkets[0].supplyAssets(address(loanToken), vault.positionId()), assets, 'expectedSupplyAssets(vault)');
   }
 
-  // function testRedeem(uint256 deposited, uint256 redeemed) public {
-  //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-  //   loanToken.mint(supplier, deposited);
+  function testRedeem(uint256 deposited, uint256 redeemed) public {
+    deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+    loanToken.mint(supplier, deposited);
 
-  //   vm.prank(supplier);
-  //   uint256 shares = vault.deposit(deposited, onBehalf);
+    vm.prank(supplier);
+    uint256 shares = vault.deposit(deposited, onBehalf);
 
-  //   redeemed = bound(redeemed, 0, shares);
-  //   console.log('deposited', deposited);
+    redeemed = bound(redeemed, 0, shares);
+    console.log('deposited', deposited);
 
-  //   vm.expectEmit();
-  //   emit CuratedEventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
-  //   console.log('');
-  //   console.log('redeeming', redeemed);
-  //   console.log('totalAssets', vault.totalAssets());
-  //   vm.prank(onBehalf);
-  //   vault.redeem(redeemed, receiver, onBehalf);
+    vm.expectEmit();
+    emit CuratedEventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
+    console.log('');
+    console.log('redeeming', redeemed);
+    console.log('totalAssets', vault.totalAssets());
+    vm.prank(onBehalf);
+    vault.redeem(redeemed, receiver, onBehalf);
 
-  //   assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
-  //   assertEq(vault.balanceOf(onBehalf), shares - redeemed, 'balanceOf(onBehalf)');
-  // }
+    assertEq(loanToken.balanceOf(address(vault)), 0, 'balanceOf(vault)');
+    assertEq(vault.balanceOf(onBehalf), shares - redeemed, 'balanceOf(onBehalf)');
+  }
 
   // function testWithdraw(uint256 deposited, uint256 withdrawn) public {
   //   deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);

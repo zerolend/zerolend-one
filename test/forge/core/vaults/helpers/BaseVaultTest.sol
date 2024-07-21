@@ -39,7 +39,7 @@ abstract contract BaseVaultTest is PoolSetup {
   MintableERC20 internal collateralToken;
   MockAggregator internal oracle;
 
-  function _setUpBase() internal {
+  function _setUpBaseVault() internal {
     _setUpPool();
 
     loanToken = tokenA;
@@ -75,6 +75,8 @@ abstract contract BaseVaultTest is PoolSetup {
       loanToken.approve(address(market), type(uint256).max);
 
       allMarkets.push(market);
+
+      console.log('generated market', address(market), i);
     }
 
     allMarkets.push(idleMarket); // Must be pushed last.
@@ -107,6 +109,9 @@ abstract contract BaseVaultTest is PoolSetup {
         })
       )
     );
+
+    console.log('idle market is', address(idleMarket));
+    vm.label(address(idleMarket), 'market-IDLE');
   }
 
   function _accrueInterest(IPool pool) internal {

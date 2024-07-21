@@ -15,7 +15,7 @@ abstract contract IntegrationVaultTest is BaseVaultTest {
   ICuratedVaultFactory.InitVaultParams internal defaultVaultParams;
 
   function _setUpVault() internal {
-    _setUpBase();
+    _setUpBaseVault();
 
     CuratedVault instance = new CuratedVault();
     vaultFactory = ICuratedVaultFactory(new CuratedVaultFactory(address(instance)));

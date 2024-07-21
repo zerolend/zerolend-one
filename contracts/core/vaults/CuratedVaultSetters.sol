@@ -65,8 +65,10 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
     shares = pool.supplyShares(asset(), positionId);
 
     // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-    (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
     assets = shares.toAssetsDown(totalSupplyAssets, totalSupplyShares);
+    console.log('_accruedSupplyBalance', totalSupplyAssets, totalSupplyShares, shares);
+    console.log('_accruedSupplyBalance', assets);
   }
 
   /// @dev Reverts if `newTimelock` is not within the bounds.
@@ -125,7 +127,7 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
 
       // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
       uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
@@ -152,10 +154,13 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
   function _withdrawPool(uint256 withdrawAmount) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool pool = withdrawQueue[i];
-      (uint256 supplyAssets,) = _accruedSupplyBalance(pool);
-      uint256 toWithdraw =
-        UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
+      (uint256 supplyAssets, ) = _accruedSupplyBalance(pool);
+      uint256 toWithdraw = UtilsLib.min(
+        _withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets),
+        withdrawAmount
+      );
 
+      console.log('UtilsLib.min', pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets);
       console.log('looking at pool', address(pool));
       console.log('pool cap', config[pool].cap);
       console.log('pool balance', address(pool));
