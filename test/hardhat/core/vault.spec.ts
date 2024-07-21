@@ -2,6 +2,7 @@ import {
   CuratedVault,
   CuratedVaultFactory,
   DefaultReserveInterestRateStrategy,
+  ICuratedVaultFactory,
   MintableERC20,
   MockAggregator,
   PoolFactory,
@@ -128,15 +129,19 @@ describe('Curated Vault', () => {
 
     pools = [poolA, poolB, poolC, poolD, poolE, poolIdle];
 
-    await factory.createVault(
-      admin.address,
-      admin.address,
-      86400,
-      loan.target,
-      'TEST',
-      'TEST-1',
-      keccak256('0x')
-    );
+    const inputVault: ICuratedVaultFactory.InitVaultParamsStruct = {
+      proxyAdmin: ZeroAddress,
+      revokeProxy: false,
+      admins: [admin],
+      curators: [curator],
+      guardians: [],
+      asset: loan.target,
+      name: 'TEST',
+      symbol: 'TEST-1',
+      timelock: timelock,
+      salt: keccak256('0x'),
+    };
+    await factory.createVault(inputVault);
 
     supplyCap = (e18 * BigInt(50 * suppliers.length * 2)) / BigInt(Math.floor(marketsCount / 2));
 

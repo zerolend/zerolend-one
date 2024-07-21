@@ -4,12 +4,19 @@ import { ethers } from 'hardhat';
 export async function deployCore() {
   const [owner, whale, ant, governance] = await ethers.getSigners();
 
+  const PositionBalanceConfiguration = await ethers.getContractFactory(
+    'PositionBalanceConfiguration'
+  );
+  const positionBalanceConfiguration = await PositionBalanceConfiguration.deploy();
+
   const BorrowLogic = await ethers.getContractFactory('BorrowLogic');
   const FlashLoanLogic = await ethers.getContractFactory('FlashLoanLogic');
   const LiquidationLogic = await ethers.getContractFactory('LiquidationLogic');
   const WETH9Mocked = await ethers.getContractFactory('WETH9Mocked');
   const PoolLogic = await ethers.getContractFactory('PoolLogic');
-  const SupplyLogic = await ethers.getContractFactory('SupplyLogic');
+  const SupplyLogic = await ethers.getContractFactory('SupplyLogic', {
+    libraries: { PositionBalanceConfiguration: positionBalanceConfiguration.target },
+  });
   const PoolFactory = await ethers.getContractFactory('PoolFactory');
   const CuratedVaultFactory = await ethers.getContractFactory('CuratedVaultFactory');
   const CuratedVault = await ethers.getContractFactory('CuratedVault');
@@ -27,6 +34,7 @@ export async function deployCore() {
   const supplyLogic = await SupplyLogic.deploy();
 
   const libraries = {
+    PositionBalanceConfiguration: positionBalanceConfiguration.target,
     BorrowLogic: borrowLogic.target,
     FlashLoanLogic: flashLoanLogic.target,
     LiquidationLogic: liquidationLogic.target,

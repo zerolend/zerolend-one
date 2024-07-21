@@ -3,6 +3,7 @@ import { DataTypes } from '../../../types/contracts/core/pool/Pool';
 import {
   CuratedVaultFactory,
   DefaultReserveInterestRateStrategy,
+  ICuratedVaultFactory,
   MintableERC20,
   MockAggregator,
 } from '../../../types';
@@ -46,31 +47,41 @@ describe('Curated Vault Factory', () => {
 
   describe('vault creation & updating', function () {
     it('should create a new vault', async () => {
+      const inputVault: ICuratedVaultFactory.InitVaultParamsStruct = {
+        proxyAdmin: owner.address,
+        revokeProxy: false,
+        admins: [owner.address],
+        curators: [],
+        guardians: [],
+        asset: tokenA.target,
+        name: 'TEST',
+        symbol: 'TEST-1',
+        timelock: 86400,
+        salt: keccak256('0x'),
+      };
+
       await expect(await curatedVaultFactory.vaultsLength()).eq(0);
-      const tx = await curatedVaultFactory.createVault(
-        owner.address, // address initialOwner,
-        owner.address, // address initialProxyOwner,
-        86400, // uint256 initialTimelock,
-        tokenA.target, // address asset,
-        'TEST', // string memory name,
-        'TEST-1', // string memory symbol,
-        keccak256('0x') // bytes32 salt
-      );
+      const tx = await curatedVaultFactory.createVault(inputVault);
       await expect(tx).to.emit(curatedVaultFactory, 'VaultCreated');
       await expect(await curatedVaultFactory.vaultsLength()).eq(1);
     });
 
     it('should update vault implementation properly and not allow re-init(..)', async () => {
-      // should deploy pool
-      const tx = await curatedVaultFactory.createVault(
-        owner.address, // address initialOwner,
-        owner.address, // address initialProxyOwner,
-        86400, // uint256 initialTimelock,
-        tokenA.target, // address asset,
-        'TEST', // string memory name,
-        'TEST-1', // string memory symbol,
-        keccak256('0x') // bytes32 salt
-      );
+      const inputVault: ICuratedVaultFactory.InitVaultParamsStruct = {
+        proxyAdmin: owner.address,
+        revokeProxy: false,
+        admins: [owner.address],
+        curators: [],
+        guardians: [],
+        asset: tokenA.target,
+        name: 'TEST',
+        symbol: 'TEST-1',
+        timelock: 86400,
+        salt: keccak256('0x'),
+      };
+
+      // should deploy vault
+      const tx = await curatedVaultFactory.createVault(inputVault);
 
       await expect(tx).to.emit(curatedVaultFactory, 'VaultCreated');
       await expect(await curatedVaultFactory.vaultsLength()).eq(1);
@@ -80,11 +91,13 @@ describe('Curated Vault Factory', () => {
       await expect(await vault.revision()).eq('1');
       await expect(
         vault.initialize(
-          owner.address, // address initialOwner,
-          86400, // uint256 initialTimelock,
-          tokenA.target, // address asset,
-          'TEST', // string memory name,
-          'TEST-1' // string memory symbol,
+          inputVault.admins, // address[] memory _admins,
+          inputVault.curators, // address[] memory _curators,
+          inputVault.guardians, // address[] memory _guardians,
+          inputVault.timelock, // uint256 _initialTimelock,
+          inputVault.asset, // address _asset,
+          inputVault.name, // string memory _name,
+          inputVault.symbol // string memory _symbol
         )
       ).to.revertedWith('Initializable: contract is already initialized');
 
@@ -98,11 +111,13 @@ describe('Curated Vault Factory', () => {
       await expect(await vault.revision()).eq('1000');
       await expect(
         vault.initialize(
-          owner.address, // address initialOwner,
-          86400, // uint256 initialTimelock,
-          tokenA.target, // address asset,
-          'TEST', // string memory name,
-          'TEST-1' // string memory symbol,
+          inputVault.admins, // address[] memory _admins,
+          inputVault.curators, // address[] memory _curators,
+          inputVault.guardians, // address[] memory _guardians,
+          inputVault.timelock, // uint256 _initialTimelock,
+          inputVault.asset, // address _asset,
+          inputVault.name, // string memory _name,
+          inputVault.symbol // string memory _symbol
         )
       ).to.revertedWith('Initializable: contract is already initialized');
     });
