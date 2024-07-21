@@ -504,14 +504,16 @@ describe('NFT Position Manager', () => {
       let borrowAmount = ethers.parseUnits('30', 18);
       const mintParams = {
         asset: await tokenA.getAddress(),
-        pool,
+        tokenId: 0,
+        target: alice.address,
         amount: supplyAmount,
         data: { interestRateData: '0x', hookData: '0x' },
       };
       const borrowParams = {
         asset: await tokenA.getAddress(),
         amount: borrowAmount,
-        tokenId: 1,
+        target: alice.address,
+        tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },
       };
 
@@ -519,7 +521,8 @@ describe('NFT Position Manager', () => {
 
       await tokenA.connect(alice).approve(manager.target, supplyAmount);
 
-      await manager.connect(alice).mint(mintParams);
+      await manager.connect(alice).mint(pool);
+      await manager.connect(alice).supply(mintParams);
 
       await expect(manager.connect(alice).borrow(borrowParams))
         .to.emit(manager, 'BorrowIncreased')

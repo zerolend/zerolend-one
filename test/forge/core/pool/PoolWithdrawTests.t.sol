@@ -27,12 +27,14 @@ contract PoolWithdrawTests is PoolSetup {
   function testRevertsWithdrawInvalidBalance() public {
     uint256 amount = 100e18;
 
+    vm.startPrank(owner);
     tokenA.mint(owner, amount);
     tokenA.approve(address(pool), amount);
     pool.supplySimple(address(tokenA), owner, amount, 0);
 
     vm.expectRevert(bytes('NOT_ENOUGH_AVAILABLE_USER_BALANCE'));
     pool.withdrawSimple(address(tokenA), owner, 2 * amount, 0);
+    vm.stopPrank();
   }
 
   function testWithdrawEventEmit() external {
