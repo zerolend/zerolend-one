@@ -23,6 +23,10 @@ While designing ZeroLend One, we keep the following philosophies in mind.
 
 ## Documentation
 
+![data-flow.png](./data-flow.png)
+
+The following diagram gives a rough overview of the lending pool architecture. For a more in-depth documentation on how the protocol works view the various docs and links below.
+
 - [docs-one.zerolend.xyz](https://docs-one.zerolend.xyz/) - Contains a high level overview of the entire protocol including architecture documentation.
 - [wiki pages](https://github.com/zerolend/zerolend-one/wiki) - The wiki pages contains the technical documentation for each contract and what they do.
 - [test folders](./test) - The unit tests for the protocol are also documented and can be browsed through for insights about how each test works.
