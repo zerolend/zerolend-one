@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.19;
 
 // ███████╗███████╗██████╗  ██████╗
@@ -63,7 +63,7 @@ abstract contract CuratedVaultGetters is CuratedVaultBase {
   /// @dev Warning: May be lower than the actual amount of assets that can be withdrawn by `owner` due to conversion
   /// roundings between shares and assets.
   function maxWithdraw(address owner) public view override returns (uint256 assets) {
-    (assets,,) = _maxWithdraw(owner);
+    (assets, , ) = _maxWithdraw(owner);
   }
 
   /// @inheritdoc IERC4626Upgradeable
@@ -98,7 +98,7 @@ abstract contract CuratedVaultGetters is CuratedVaultBase {
       uint256 supplyShares = pos.supplyShares;
 
       // get info on how much shares and asset the pool has
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = pool.marketBalances(asset());
 
       // The vault withdrawing from ZeroLend cannot fail because:
       // 1. oracle.price() is never called (the vault doesn't borrow)
@@ -136,7 +136,7 @@ abstract contract CuratedVaultGetters is CuratedVaultBase {
       if (supplyCap == 0) continue;
 
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
 
       // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);

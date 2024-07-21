@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.19;
 
 // ███████╗███████╗██████╗  ██████╗
@@ -25,12 +25,7 @@ import {IERC20Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20
 import {CuratedErrorsLib} from '../../interfaces/errors/CuratedErrorsLib.sol';
 import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {CuratedVaultSetters} from './CuratedVaultSetters.sol';
-import {
-  ERC20Upgradeable,
-  ERC4626Upgradeable,
-  IERC4626Upgradeable,
-  MathUpgradeable
-} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
+import {ERC20Upgradeable, ERC4626Upgradeable, IERC4626Upgradeable, MathUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol';
 import {IERC20, IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
@@ -254,8 +249,9 @@ contract CuratedVault is CuratedVaultSetters {
         emit CuratedEventsLib.ReallocateWithdraw(_msgSender(), pool, burnt.assets, burnt.shares);
         totalWithdrawn += burnt.assets;
       } else {
-        uint256 suppliedAssets =
-          allocation.assets == type(uint256).max ? totalWithdrawn.zeroFloorSub(totalSupplied) : allocation.assets.zeroFloorSub(supplyAssets);
+        uint256 suppliedAssets = allocation.assets == type(uint256).max
+          ? totalWithdrawn.zeroFloorSub(totalSupplied)
+          : allocation.assets.zeroFloorSub(supplyAssets);
 
         if (suppliedAssets == 0) continue;
 
