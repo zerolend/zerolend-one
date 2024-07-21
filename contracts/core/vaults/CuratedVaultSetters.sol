@@ -64,7 +64,7 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
     shares = pool.supplyShares(asset(), positionId);
 
     // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-    (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
     assets = shares.toAssetsDown(totalSupplyAssets, totalSupplyShares);
   }
 
@@ -124,7 +124,7 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
       uint256 supplyShares = pool.supplyShares(asset(), positionId);
 
       // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-      (uint256 totalSupplyAssets, uint256 totalSupplyShares, , ) = pool.marketBalances(asset());
+      (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = pool.marketBalances(asset());
       uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
 
       uint256 toSupply = UtilsLib.min(supplyCap.zeroFloorSub(supplyAssets), assets);
@@ -146,11 +146,9 @@ abstract contract CuratedVaultSetters is CuratedVaultGetters {
   function _withdrawPool(uint256 withdrawAmount) internal {
     for (uint256 i; i < withdrawQueue.length; ++i) {
       IPool pool = withdrawQueue[i];
-      (uint256 supplyAssets, ) = _accruedSupplyBalance(pool);
-      uint256 toWithdraw = UtilsLib.min(
-        _withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets),
-        withdrawAmount
-      );
+      (uint256 supplyAssets,) = _accruedSupplyBalance(pool);
+      uint256 toWithdraw =
+        UtilsLib.min(_withdrawable(pool, pool.totalAssets(asset()), pool.totalDebt(asset()), supplyAssets), withdrawAmount);
 
       if (toWithdraw > 0) {
         // Using try/catch to skip markets that revert.

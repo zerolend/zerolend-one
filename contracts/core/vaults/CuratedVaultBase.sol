@@ -20,7 +20,7 @@ import {MulticallUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/Mu
 
 abstract contract CuratedVaultBase is ERC4626Upgradeable, ERC20PermitUpgradeable, CuratedVaultRoles, MulticallUpgradeable {
   /// @inheritdoc ERC20Upgradeable
-  function decimals() public view override(ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
+  function decimals() public view override (ERC20Upgradeable, ERC4626Upgradeable) returns (uint8) {
     return ERC4626Upgradeable.decimals();
   }
 
