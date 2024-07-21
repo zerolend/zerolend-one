@@ -1,6 +1,6 @@
 {
   "name": "@zerolendxyz/one",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "license": "BUSL-1.1",
   "scripts": {
     "clean": "rimraf artifacts artifacts-zk cache cache-zk dist types forge-build",
