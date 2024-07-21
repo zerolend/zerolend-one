@@ -109,27 +109,9 @@ abstract contract BaseVaultTest is PoolSetup {
     );
   }
 
-  /// @dev Rolls & warps the given number of blocks forward the blockchain.
-  function _forward(uint256 blocks) internal {
-    vm.roll(block.number + blocks);
-    vm.warp(block.timestamp + blocks * BLOCK_TIME); // Block speed should depend on test network.
-  }
-
-  /// @dev Bounds the fuzzing input to a realistic number of blocks.
-  function _boundBlocks(uint256 blocks) internal pure returns (uint256) {
-    return bound(blocks, 2, type(uint24).max);
-  }
-
-  /// @dev Bounds the fuzzing input to a non-zero address.
-  /// @dev This function should be used in place of `vm.assume` in invariant test handler functions:
-  /// https://github.com/foundry-rs/foundry/issues/4190.
-  function _boundAddressNotZero(address input) internal view virtual returns (address) {
-    return address(uint160(bound(uint256(uint160(input)), 1, type(uint160).max)));
-  }
-
   function _accrueInterest(IPool pool) internal {
     pool.forceUpdateReserve(address(loanToken));
-    // pool.forceUpdateReserve(address(collateralToken));
+    pool.forceUpdateReserve(address(collateralToken));
   }
 
   /// @dev Returns a random market params from the list of markets enabled on Blue (except the idle market).
@@ -152,26 +134,5 @@ abstract contract BaseVaultTest is PoolSetup {
     assembly {
       mstore(result, nbAddresses)
     }
-  }
-
-  function _appendUintToString(string memory inStr, uint8 v) private pure returns (string memory) {
-    uint maxlength = 100;
-    bytes memory reversed = new bytes(maxlength);
-    uint i = 0;
-    while (v != 0) {
-      uint8 remainder = v % 10;
-      v = v / 10;
-      reversed[i++] = bytes1(48 + remainder);
-    }
-    bytes memory inStrb = bytes(inStr);
-    bytes memory s = new bytes(inStrb.length + i);
-    uint j;
-    for (j = 0; j < inStrb.length; j++) {
-      s[j] = inStrb[j];
-    }
-    for (j = 0; j < i; j++) {
-      s[j + inStrb.length] = reversed[i - 1 - j];
-    }
-    return string(s);
   }
 }

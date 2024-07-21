@@ -125,7 +125,7 @@ library PositionBalanceConfiguration {
    * @param self The position to fetch the value for
    * @param index The current liquidity index
    */
-  function getSupplyBalance(DataTypes.PositionBalance storage self, uint256 index) internal view returns (uint256 supply) {
+  function getSupplyBalance(DataTypes.PositionBalance storage self, uint256 index) public view returns (uint256 supply) {
     uint256 increase = self.supplyShares.rayMul(index) - self.supplyShares.rayMul(self.lastSupplyLiquidtyIndex);
     return self.supplyShares + increase;
   }

@@ -123,4 +123,33 @@ contract PoolBorrowTests is PoolSetup {
     vm.expectRevert(bytes(PoolErrorsLib.INVALID_AMOUNT));
     pool.borrowSimple(address(tokenA), alice, 0, 0);
   }
+
+  // function testBorrowAssets(uint256 amountCollateral, uint256 amountSupplied, uint256 amountBorrowed, uint256 priceCollateral) public {
+  //   (amountCollateral, amountBorrowed, priceCollateral) = _boundHealthyPosition(amountCollateral, amountBorrowed, priceCollateral);
+
+  //   amountSupplied = bound(amountSupplied, amountBorrowed, MAX_TEST_AMOUNT);
+  //   _supply(amountSupplied);
+
+  //   oracle.setPrice(priceCollateral);
+
+  //   collateralToken.setBalance(BORROWER, amountCollateral);
+
+  //   vm.startPrank(BORROWER);
+  //   morpho.supplyCollateral(marketParams, amountCollateral, BORROWER, hex'');
+
+  //   uint256 expectedBorrowShares = amountBorrowed.toSharesUp(0, 0);
+
+  //   vm.expectEmit(true, true, true, true, address(morpho));
+  //   emit EventsLib.Borrow(id, BORROWER, BORROWER, RECEIVER, amountBorrowed, expectedBorrowShares);
+  //   (uint256 returnAssets, uint256 returnShares) = morpho.borrow(marketParams, amountBorrowed, 0, BORROWER, RECEIVER);
+  //   vm.stopPrank();
+
+  //   assertEq(returnAssets, amountBorrowed, 'returned asset amount');
+  //   assertEq(returnShares, expectedBorrowShares, 'returned shares amount');
+  //   assertEq(morpho.totalBorrowAssets(id), amountBorrowed, 'total borrow');
+  //   assertEq(morpho.borrowShares(id, BORROWER), expectedBorrowShares, 'borrow shares');
+  //   assertEq(morpho.borrowShares(id, BORROWER), expectedBorrowShares, 'total borrow shares');
+  //   assertEq(loanToken.balanceOf(RECEIVER), amountBorrowed, 'borrower balance');
+  //   assertEq(loanToken.balanceOf(address(morpho)), amountSupplied - amountBorrowed, 'morpho balance');
+  // }
 }

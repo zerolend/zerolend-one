@@ -102,12 +102,13 @@ abstract contract PoolGetters is PoolStorage, IPool {
     uint256 index
   ) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
     bytes32 positionId = user.getPositionId(index);
-    return PoolLogic.executeGetUserAccountData(
-      _balances,
-      _reserves,
-      _reservesList,
-      DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], position: positionId, pool: address(this)})
-    );
+    return
+      PoolLogic.executeGetUserAccountData(
+        _balances,
+        _reserves,
+        _reservesList,
+        DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], position: positionId, pool: address(this)})
+      );
   }
 
   /// @inheritdoc IPoolGetters
@@ -116,7 +117,10 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPoolGetters
-  function getUserConfiguration(address user, uint256 index) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
+  function getUserConfiguration(
+    address user,
+    uint256 index
+  ) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
     return _usersConfig[user.getPositionId(index)];
   }
 
@@ -170,11 +174,6 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPoolGetters
-  function supplyShares(address asset, bytes32 positionId) external view returns (uint256 shares) {
-    return _balances[asset][positionId].supplyShares;
-  }
-
-  /// @inheritdoc IPoolGetters
   function marketBalances(address asset) public view returns (uint256, uint256, uint256, uint256) {
     DataTypes.ReserveSupplies storage supplies = _totalSupplies[asset];
 
@@ -189,5 +188,20 @@ abstract contract PoolGetters is PoolStorage, IPool {
   /// @inheritdoc IPoolGetters
   function supplyAssets(address asset, bytes32 positionId) external view returns (uint256) {
     return _balances[asset][positionId].getSupplyBalance(_reserves[asset].liquidityIndex);
+  }
+
+  /// @inheritdoc IPoolGetters
+  function supplyShares(address asset, bytes32 positionId) external view returns (uint256 shares) {
+    return _balances[asset][positionId].supplyShares;
+  }
+
+  /// @inheritdoc IPoolGetters
+  function debtAssets(address asset, bytes32 positionId) external view returns (uint256) {
+    return _balances[asset][positionId].getDebtBalance(_reserves[asset].borrowIndex);
+  }
+
+  /// @inheritdoc IPoolGetters
+  function debtShares(address asset, bytes32 positionId) external view returns (uint256 shares) {
+    return _balances[asset][positionId].debtShares;
   }
 }

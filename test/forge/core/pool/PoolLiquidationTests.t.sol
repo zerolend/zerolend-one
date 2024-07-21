@@ -20,10 +20,9 @@ contract PoolLiquidationTest is PoolSetup {
   uint256 supplyAmountB = 750 ether;
   uint256 borrowAmountB = 100 ether;
 
-  bytes32 pos = keccak256(abi.encodePacked(alice, 'index', uint256(0)));
-
   function setUp() public {
     _setUpPool();
+    pos = keccak256(abi.encodePacked(alice, 'index', uint256(0)));
   }
 
   function testLiquidateSimpleRevertWhenHealthFactorBelowThreshold() external {
@@ -33,7 +32,7 @@ contract PoolLiquidationTest is PoolSetup {
 
   function testLiquidationSimple1() external {
     _generateLiquidationCondition();
-    (, uint256 totalDebtBase,,,,) = pool.getUserAccountData(alice, 0);
+    (, uint256 totalDebtBase, , , , ) = pool.getUserAccountData(alice, 0);
 
     vm.startPrank(bob);
     vm.expectEmit(true, true, true, false);
@@ -42,7 +41,7 @@ contract PoolLiquidationTest is PoolSetup {
 
     vm.stopPrank();
 
-    (, uint256 totalDebtBaseNew,,,,) = pool.getUserAccountData(alice, 0);
+    (, uint256 totalDebtBaseNew, , , , ) = pool.getUserAccountData(alice, 0);
 
     assertTrue(totalDebtBase > totalDebtBaseNew);
   }

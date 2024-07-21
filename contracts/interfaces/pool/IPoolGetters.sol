@@ -197,12 +197,15 @@ interface IPoolGetters {
 
   function totalDebt(address asset) external view returns (uint256 balance);
 
+  function marketBalances(
+    address asset
+  ) external view returns (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, uint256 totalBorrowShares);
+
   function supplyShares(address asset, bytes32 positionId) external view returns (uint256 shares);
 
-  function marketBalances(address asset)
-    external
-    view
-    returns (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, uint256 totalBorrowShares);
-
   function supplyAssets(address asset, bytes32 positionId) external view returns (uint256);
+
+  function debtAssets(address asset, bytes32 positionId) external view returns (uint256);
+
+  function debtShares(address asset, bytes32 positionId) external view returns (uint256 shares);
 }
