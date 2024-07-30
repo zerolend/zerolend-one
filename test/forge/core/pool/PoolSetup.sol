@@ -37,27 +37,31 @@ abstract contract PoolSetup is CorePoolTests {
   }
 
   function _basicPoolInitParams() internal view returns (DataTypes.InitPoolParams memory p) {
-    address[] memory assets = new address[](3);
+    address[] memory assets = new address[](4);
     assets[0] = address(tokenA);
     assets[1] = address(tokenB);
     assets[2] = address(tokenC);
+    assets[3] = address(wethToken);
 
-    address[] memory rateStrategyAddresses = new address[](3);
+    address[] memory rateStrategyAddresses = new address[](4);
     rateStrategyAddresses[0] = address(irStrategy);
     rateStrategyAddresses[1] = address(irStrategy);
     rateStrategyAddresses[2] = address(irStrategy);
+    rateStrategyAddresses[3] = address(irStrategy);
 
-    address[] memory sources = new address[](3);
+    address[] memory sources = new address[](4);
     sources[0] = address(oracleA);
     sources[1] = address(oracleB);
     sources[2] = address(oracleC);
+    sources[3] = address(oracleD);
 
     DataTypes.InitReserveConfig memory config = _basicConfig();
 
-    DataTypes.InitReserveConfig[] memory configurationLocal = new DataTypes.InitReserveConfig[](3);
+    DataTypes.InitReserveConfig[] memory configurationLocal = new DataTypes.InitReserveConfig[](4);
     configurationLocal[0] = config;
     configurationLocal[1] = config;
     configurationLocal[2] = config;
+    configurationLocal[3] = config;
 
     address[] memory admins = new address[](1);
     admins[0] = address(this);

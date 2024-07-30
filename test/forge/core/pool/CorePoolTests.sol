@@ -14,6 +14,8 @@ import {MintableERC20} from '../../../../contracts/mocks/MintableERC20.sol';
 import {MockAggregator} from '../../../../contracts/mocks/MockAggregator.sol';
 import {Test, console} from '../../../../lib/forge-std/src/Test.sol';
 
+import {WETH9Mocked} from 'contracts/mocks/WETH9Mocked.sol';
+
 abstract contract CorePoolTests is Test {
   PoolFactory public poolFactory;
   Pool public poolImplementation;
@@ -25,9 +27,12 @@ abstract contract CorePoolTests is Test {
   MintableERC20 public tokenB;
   MintableERC20 public tokenC;
 
+  WETH9Mocked public wethToken;
+
   MockAggregator public oracleA;
   MockAggregator public oracleB;
   MockAggregator public oracleC;
+  MockAggregator public oracleD;
 
   uint256 internal constant BLOCK_TIME = 1;
 
@@ -49,9 +54,12 @@ abstract contract CorePoolTests is Test {
     tokenB = new MintableERC20('TOKEN B', 'TOKENB');
     tokenC = new MintableERC20('TOKEN C', 'TOKENC');
 
+    wethToken = new WETH9Mocked();
+
     oracleA = new MockAggregator(1e8);
     oracleB = new MockAggregator(2 * 1e8);
     oracleC = new MockAggregator(100 * 1e8);
+    oracleD = new MockAggregator(3000 * 1e8);
 
     irStrategy = new DefaultReserveInterestRateStrategy(47 * 1e25, 0, 7 * 1e25, 30 * 1e25);
 
@@ -59,9 +67,11 @@ abstract contract CorePoolTests is Test {
     vm.label(address(tokenA), 'tokenA');
     vm.label(address(tokenB), 'tokenB');
     vm.label(address(tokenC), 'tokenC');
+    vm.label(address(wethToken), 'wethToken');
     vm.label(address(oracleA), 'oracleA');
     vm.label(address(oracleB), 'oracleB');
     vm.label(address(oracleC), 'oracleC');
+    vm.label(address(oracleD), 'oracleD');
     vm.label(address(irStrategy), 'irStrategy');
     vm.label(address(configurator), 'configurator');
   }
