@@ -78,7 +78,7 @@ contract PoolGetterTests is PoolSetup {
   }
 
   function testGetUserAccountData() public view {
-    (uint256 totalCollateralBase, uint256 totalDebtBase,,,,) = pool.getUserAccountData(address(1), 0);
+    (uint256 totalCollateralBase, uint256 totalDebtBase, , , , ) = pool.getUserAccountData(address(1), 0);
     assertEq(totalCollateralBase, 0);
     assertEq(totalDebtBase, 0);
   }
@@ -105,12 +105,12 @@ contract PoolGetterTests is PoolSetup {
 
   function testGetReservesList() public view {
     address[] memory reservesList = pool.getReservesList();
-    assertEq(reservesList.length, 3);
+    assertEq(reservesList.length, 4);
   }
 
   function testGetReservesCount() public view {
     uint256 reservesCount = pool.getReservesCount();
-    assertEq(reservesCount, 3);
+    assertEq(reservesCount, 4);
   }
 
   function testGetConfigurator() public view {
