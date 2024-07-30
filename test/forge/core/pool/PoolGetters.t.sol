@@ -78,7 +78,7 @@ contract PoolGetterTests is PoolSetup {
   }
 
   function testGetUserAccountData() public view {
-    (uint256 totalCollateralBase, uint256 totalDebtBase, , , , ) = pool.getUserAccountData(address(1), 0);
+    (uint256 totalCollateralBase, uint256 totalDebtBase,,,,) = pool.getUserAccountData(address(1), 0);
     assertEq(totalCollateralBase, 0);
     assertEq(totalDebtBase, 0);
   }
