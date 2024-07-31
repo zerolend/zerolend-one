@@ -12,7 +12,7 @@ import {NFTErrorsLib} from 'contracts/interfaces/errors/NFTErrorsLib.sol';
 import {NFTEventsLib} from 'contracts/interfaces/events/NFTEventsLib.sol';
 
 import {console} from 'lib/forge-std/src/console.sol';
-import {DeployNFTPositionManager} from 'test/forge/core/positions/deploynftpositionmanager.t.sol';
+import {DeployNFTPositionManager} from 'test/forge/core/positions/DeployNFTPositionManager.t.sol';
 
 contract NFTPostionManagerTest is DeployNFTPositionManager {
   address alice = address(1);
@@ -60,8 +60,13 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     uint256 tokenId = 1;
 
     DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-    INFTPositionManager.AssetOperationParams memory params =
-      INFTPositionManager.AssetOperationParams(address(tokenA), alice, supplyAmount, tokenId, data);
+    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
+      address(tokenA),
+      alice,
+      supplyAmount,
+      tokenId,
+      data
+    );
 
     _mintAndApprove(alice, tokenA, mintAmount, address(nftPositionManager));
 
@@ -84,8 +89,13 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     uint256 tokenId = 1;
 
     DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-    INFTPositionManager.AssetOperationParams memory params =
-      INFTPositionManager.AssetOperationParams(address(0), alice, supplyAmount, tokenId, data);
+    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
+      address(0),
+      alice,
+      supplyAmount,
+      tokenId,
+      data
+    );
 
     console.log('Manager Balance Before ETH', address(nftPositionManager).balance);
 
@@ -134,8 +144,13 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
   function testShouldRevertCallerNotOwner() external {
     testShouldSupplyAlice();
     DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-    INFTPositionManager.AssetOperationParams memory params =
-      INFTPositionManager.AssetOperationParams(address(tokenA), alice, 10 ether, 1, data);
+    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
+      address(tokenA),
+      alice,
+      10 ether,
+      1,
+      data
+    );
 
     vm.startPrank(bob);
     vm.expectRevert(NFTErrorsLib.NotTokenIdOwner.selector);
@@ -146,8 +161,13 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
   function testShouldWithdraw() external {
     testShouldSupplyAlice();
     DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-    INFTPositionManager.AssetOperationParams memory params =
-      INFTPositionManager.AssetOperationParams(address(tokenA), alice, 10 ether, 1, data);
+    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
+      address(tokenA),
+      alice,
+      10 ether,
+      1,
+      data
+    );
 
     vm.startPrank(alice);
     vm.expectEmit(true, true, true, true);
@@ -190,8 +210,13 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     tokenA.mint(bob, mintAmount);
 
     DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-    INFTPositionManager.AssetOperationParams memory params =
-      INFTPositionManager.AssetOperationParams(address(tokenA), bob, supplyAmount, 0, data);
+    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
+      address(tokenA),
+      bob,
+      supplyAmount,
+      0,
+      data
+    );
 
     vm.startPrank(bob);
     tokenA.approve(address(nftPositionManager), supplyAmount);
@@ -232,8 +257,13 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
   function testRevertBorrowCallerNotOwner() external {
     testShouldSupplyAlice();
     DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-    INFTPositionManager.AssetOperationParams memory params =
-      INFTPositionManager.AssetOperationParams(address(tokenA), alice, 10 ether, 1, data);
+    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
+      address(tokenA),
+      alice,
+      10 ether,
+      1,
+      data
+    );
 
     vm.startPrank(bob);
     vm.expectRevert(NFTErrorsLib.NotTokenIdOwner.selector);
@@ -244,8 +274,13 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
   function testShouldBorrow() external {
     testShouldSupplyAlice();
     DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-    INFTPositionManager.AssetOperationParams memory params =
-      INFTPositionManager.AssetOperationParams(address(tokenA), alice, 30 ether, 1, data);
+    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
+      address(tokenA),
+      alice,
+      30 ether,
+      1,
+      data
+    );
 
     vm.startPrank(alice);
     nftPositionManager.borrow(params);
