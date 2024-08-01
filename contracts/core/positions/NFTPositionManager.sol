@@ -88,7 +88,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
     params.target = address(this);
     _borrow(params);
     weth.withdraw(params.amount);
-    (bool ok, ) = payable(dest).call{value: params.amount}('');
+    (bool ok,) = payable(dest).call{value: params.amount}('');
     if (!ok) revert NFTErrorsLib.SendETHFailed(params.amount);
   }
 
@@ -105,7 +105,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
     params.target = address(this);
     _withdraw(params);
     weth.withdraw(params.amount);
-    (bool ok, ) = payable(dest).call{value: params.amount}('');
+    (bool ok,) = payable(dest).call{value: params.amount}('');
     if (!ok) revert NFTErrorsLib.SendETHFailed(params.amount);
   }
 
