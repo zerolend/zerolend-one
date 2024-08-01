@@ -10,10 +10,11 @@ import {PoolSetup} from 'test/forge/core/pool/PoolSetup.sol';
 
 abstract contract DeployNFTPositionManager is PoolSetup {
   NFTPositionManager nftPositionManager;
+  address admin = makeAddr('ProxyAdmin');
 
   function _setup() public {
     NFTPositionManager _nftPositionManager = new NFTPositionManager();
-    TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(address(_nftPositionManager), owner, bytes(''));
+    TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(address(_nftPositionManager), admin, bytes(''));
     nftPositionManager = NFTPositionManager(payable(address(proxy)));
     nftPositionManager.initialize(address(poolFactory), address(0), owner, address(0), address(wethToken));
   }
