@@ -47,4 +47,9 @@ library NFTErrorsLib {
    * @notice Error indicating that pool is not register in pool factory.
    */
   error NotPool();
+
+  /**
+   * @notice Error indicating that sending ETH is failed
+   */
+  error SendETHFailed(uint256 value);
 }
