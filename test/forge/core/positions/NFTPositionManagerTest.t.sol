@@ -10,8 +10,6 @@ import {NFTPositionManager} from 'contracts/core/positions/NFTPositionManager.so
 import {INFTPositionManager} from 'contracts/interfaces/INFTPositionManager.sol';
 import {NFTErrorsLib} from 'contracts/interfaces/errors/NFTErrorsLib.sol';
 import {NFTEventsLib} from 'contracts/interfaces/events/NFTEventsLib.sol';
-
-import {console} from 'lib/forge-std/src/console.sol';
 import {DeployNFTPositionManager} from 'test/forge/core/positions/DeployNFTPositionManager.t.sol';
 
 contract NFTPostionManagerTest is DeployNFTPositionManager {
@@ -87,8 +85,6 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     INFTPositionManager.AssetOperationParams memory params =
       INFTPositionManager.AssetOperationParams(address(0), alice, supplyAmount, tokenId, data);
 
-    console.log('Manager Balance Before ETH', address(nftPositionManager).balance);
-
     vm.deal(alice, 1000 ether);
 
     vm.startPrank(alice);
@@ -103,8 +99,6 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
 
     assertEq(position.pool, address(pool));
     assertEq(position.operator, address(0));
-
-    console.log('Manager Balance AfterSupply ETH', address(nftPositionManager).balance);
 
     vm.stopPrank();
   }
@@ -156,27 +150,18 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     vm.stopPrank();
   }
 
-  // TODO:
-  // function testShouldWithdrawETH() external {
-  //   testShouldSupplyETHAlice();
-  //   DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-  //   INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
-  //     address(wethToken),
-  //     alice,
-  //     10 ether,
-  //     1,
-  //     data
-  //   );
-
-  //   console.log('Manager Balance ETH', address(nftPositionManager).balance);
-
-  //   vm.startPrank(alice);
-  //   vm.expectEmit(true, true, true, true);
-  //   emit NFTEventsLib.Withdraw(address(wethToken), 10 ether, 1);
-  //   nftPositionManager.withdrawETH(params);
-  //   console.log('Manager Balance After Withdraw ETH', address(nftPositionManager).balance);
-  //   vm.stopPrank();
-  // }
+  function testShouldWithdrawETH() external {
+    testShouldSupplyETHAlice();
+    uint256 withdrawAmount = 10 ether;
+    DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
+    INFTPositionManager.AssetOperationParams memory params =
+      INFTPositionManager.AssetOperationParams(address(wethToken), alice, withdrawAmount, 1, data);
+    vm.startPrank(alice);
+    vm.expectEmit(true, true, true, true);
+    emit NFTEventsLib.Withdraw(address(wethToken), withdrawAmount, 1);
+    nftPositionManager.withdrawETH(params);
+    vm.stopPrank();
+  }
 
   function testShouldRevertTokenIdNotExist() external {
     vm.expectRevert(bytes('ERC721: invalid token ID'));
@@ -241,11 +226,12 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     vm.stopPrank();
   }
 
-  function testShouldBorrow() external {
+  function testShouldBorrowAlice() public {
     testShouldSupplyAlice();
+    uint256 borrowAmount = 30 ether;
     DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
     INFTPositionManager.AssetOperationParams memory params =
-      INFTPositionManager.AssetOperationParams(address(tokenA), alice, 30 ether, 1, data);
+      INFTPositionManager.AssetOperationParams(address(tokenA), alice, borrowAmount, 1, data);
 
     vm.startPrank(alice);
     nftPositionManager.borrow(params);
@@ -254,24 +240,19 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     vm.stopPrank();
   }
 
-  //TODO:
-  // function testShouldBorrowETH() external {
-  //   testShouldSupplyETHAlice();
-  //   DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
-  //   INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams(
-  //     address(wethToken),
-  //     alice,
-  //     30 ether,
-  //     1,
-  //     data
-  //   );
+  function testShouldBorrowETH() external {
+    testShouldSupplyETHAlice();
+    uint256 borrowAmount = 20 ether;
+    DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
+    INFTPositionManager.AssetOperationParams memory params =
+      INFTPositionManager.AssetOperationParams(address(wethToken), alice, borrowAmount, 1, data);
 
-  //   vm.startPrank(alice);
-  //   nftPositionManager.borrowETH(params);
-  //   assertEq(tokenA.balanceOf(address(pool)), 20 ether, 'Pool Revert');
-  //   assertEq(tokenA.balanceOf(alice), 80 ether, 'Alice Revert');
-  //   vm.stopPrank();
-  // }
+    vm.startPrank(alice);
+    nftPositionManager.borrowETH(params);
+    assertEq(address(alice).balance, 970 ether);
+    assertEq(address(wethToken).balance, 30 ether);
+    vm.stopPrank();
+  }
 
   function testRevertRepayInvalidAddress() external {
     testShouldSupplyAlice();
@@ -295,15 +276,47 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     vm.stopPrank();
   }
 
-  function testShouldRevertNonAdmin() external {
+  function testShouldRevertNonAdminToken() external {
     vm.startPrank(bob);
     vm.expectRevert();
     nftPositionManager.sweep(address(tokenA));
+  }
+
+  function testShouldRepayAlice() external {
+    testShouldSupplyAlice();
+    uint256 repayAmount = 10 ether;
+    uint256 borrowAmount = 20 ether;
+    DataTypes.ExtraData memory data = DataTypes.ExtraData(bytes(''), bytes(''));
+    INFTPositionManager.AssetOperationParams memory params =
+      INFTPositionManager.AssetOperationParams(address(tokenA), alice, borrowAmount, 1, data);
+
+    vm.startPrank(alice);
+    nftPositionManager.borrow(params);
+    assertEq(tokenA.balanceOf(address(pool)), 30 ether, 'Pool Revert');
+    assertEq(tokenA.balanceOf(alice), 70 ether, 'Alice Revert');
+
+    params.amount = repayAmount;
+    nftPositionManager.repay(params);
+    vm.stopPrank();
   }
 
   function testShouldRevertNonAdminETH() external {
     vm.startPrank(bob);
     vm.expectRevert();
     nftPositionManager.sweep(address(0));
+  }
+
+  function testShouldAbleWithdrawToken() external {
+    tokenA.mint(address(nftPositionManager), 100 ether);
+    vm.startPrank(owner);
+    nftPositionManager.sweep(address(tokenA));
+    vm.stopPrank();
+  }
+
+  function testShouldAbleWithdrawETH() external {
+    vm.deal(address(nftPositionManager), 1000 ether);
+    vm.startPrank(owner);
+    nftPositionManager.sweep(address(0));
+    vm.stopPrank();
   }
 }
