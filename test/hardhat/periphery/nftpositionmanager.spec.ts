@@ -183,6 +183,35 @@ describe('NFT Position Manager', () => {
       const mintParams = {
         asset: tokenA,
         target: alice.address,
+        tokenId: 1,
+        amount: supplyAmount,
+        data: { interestRateData: '0x', hookData: '0x' },
+      };
+
+      await tokenA.connect(alice).approve(manager.target, supplyAmount);
+      await manager.connect(alice).mint(pool);
+      await manager.connect(alice).supply(mintParams);
+
+      await tokenA.connect(bob).approve(manager.target, supplyAmount);
+
+      const liquidityParams = {
+        asset: tokenA,
+        target: bob.address,
+        amount: supplyAmount,
+        tokenId: 1,
+        data: { interestRateData: '0x', hookData: '0x' },
+      };
+      await manager.connect(bob).supply(liquidityParams);
+    });
+    it('should revert if the caller is not owner for tokenId when supplying with tokenId = 0', async () => {
+      const supplyAmount = ethers.parseUnits('10', 18);
+      const mintAmount = ethers.parseUnits('100', 18);
+      await tokenA.mint(bob.address, mintAmount);
+      await tokenA.mint(alice.address, mintAmount);
+
+      const mintParams = {
+        asset: tokenA,
+        target: alice.address,
         tokenId: 0,
         amount: supplyAmount,
         data: { interestRateData: '0x', hookData: '0x' },
@@ -196,12 +225,15 @@ describe('NFT Position Manager', () => {
 
       const liquidityParams = {
         asset: tokenA,
-        target: ZeroAddress,
+        target: bob.address,
         amount: supplyAmount,
         tokenId: 0,
         data: { interestRateData: '0x', hookData: '0x' },
       };
-      await manager.connect(bob).supply(liquidityParams);
+      await expect(manager.connect(bob).supply(liquidityParams)).to.be.revertedWithCustomError(
+        manager,
+        'NotTokenIdOwner'
+      );
     });
     it('_handleLiquidity should transfer asset from user to NFT-Position-Manager', async () => {
       const mintAmount = ethers.parseUnits('100', 18);

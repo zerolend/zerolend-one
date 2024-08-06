@@ -18,7 +18,6 @@ import {DataTypes, IPool} from '../../interfaces/IPoolFactory.sol';
 import {NFTErrorsLib} from '../../interfaces/errors/NFTErrorsLib.sol';
 import {NFTEventsLib} from '../../interfaces/events/NFTEventsLib.sol';
 import {NFTRewardsDistributor} from './NFTRewardsDistributor.sol';
-import {ERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
@@ -44,7 +43,11 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
    */
   function _supply(AssetOperationParams memory params) internal nonReentrant {
     if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
-    if (params.tokenId == 0) params.tokenId = _nextId - 1;
+    if (params.tokenId == 0) {
+      if (msg.sender != _ownerOf(_nextId - 1)) revert NFTErrorsLib.NotTokenIdOwner();
+      params.tokenId = _nextId - 1;
+    }
+
     IPool pool = IPool(_positions[params.tokenId].pool);
 
     IERC20(params.asset).forceApprove(address(pool), params.amount);
@@ -60,7 +63,10 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
   function _borrow(AssetOperationParams memory params) internal nonReentrant {
     if (params.target == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
     if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
-    if (params.tokenId == 0) params.tokenId = _nextId - 1;
+    if (params.tokenId == 0) {
+      if (msg.sender != _ownerOf(_nextId - 1)) revert NFTErrorsLib.NotTokenIdOwner();
+      params.tokenId = _nextId - 1;
+    }
 
     // check permissions
     _isAuthorizedForToken(params.tokenId);
@@ -78,7 +84,10 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
   function _withdraw(AssetOperationParams memory params) internal nonReentrant {
     if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
     if (params.target == address(0)) revert NFTErrorsLib.ZeroAddressNotAllowed();
-    if (params.tokenId == 0) params.tokenId = _nextId - 1;
+    if (params.tokenId == 0) {
+      if (msg.sender != _ownerOf(_nextId - 1)) revert NFTErrorsLib.NotTokenIdOwner();
+      params.tokenId = _nextId - 1;
+    }
 
     // check permissions
     _isAuthorizedForToken(params.tokenId);
@@ -95,7 +104,10 @@ abstract contract NFTPositionManagerSetters is NFTRewardsDistributor {
 
   function _repay(AssetOperationParams memory params) internal nonReentrant {
     if (params.amount == 0) revert NFTErrorsLib.ZeroValueNotAllowed();
-    if (params.tokenId == 0) params.tokenId = _nextId - 1;
+    if (params.tokenId == 0) {
+      if (msg.sender != _ownerOf(_nextId - 1)) revert NFTErrorsLib.NotTokenIdOwner();
+      params.tokenId = _nextId - 1;
+    }
 
     Position memory userPosition = _positions[params.tokenId];
 
