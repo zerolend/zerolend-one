@@ -121,4 +121,11 @@ contract PoolFactory is IPoolFactory, Ownable {
     flashLoanPremiumToProtocol = updated;
     emit FlashLoanPremiumToProtocolUpdated(old, updated, msg.sender);
   }
+
+  /// @inheritdoc IPoolFactory
+  function setLiquidationProtcolFeePercentage(uint256 updated) external onlyOwner {
+    uint256 old = liquidationProtocolFeePercentage;
+    liquidationProtocolFeePercentage = updated;
+    emit LiquidationProtocolFeePercentageUpdated(old, updated, msg.sender);
+  }
 }

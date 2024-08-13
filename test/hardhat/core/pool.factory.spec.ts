@@ -216,4 +216,23 @@ describe('Pool Factory', () => {
       );
     });
   });
+
+  describe.only('setLiquidationProtcolFeePercentage', function () {
+    it('should update liquidation protocol fee percentage', async function () {
+      await poolFactory.setLiquidationProtcolFeePercentage(100);
+      expect(await poolFactory.liquidationProtocolFeePercentage()).to.equal(100);
+    });
+
+    it('should emit LiquidationProtocolFeePercentageUpdated event', async function () {
+      await expect(poolFactory.setLiquidationProtcolFeePercentage(100))
+        .to.emit(poolFactory, 'LiquidationProtocolFeePercentageUpdated')
+        .withArgs(await poolFactory.liquidationProtocolFeePercentage(), 100, owner.address);
+    });
+
+    it('should only allow owner to set liquidation protocol fee percentage', async function () {
+      await expect(
+        poolFactory.connect(ant).setLiquidationProtcolFeePercentage(100)
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+  });
 });

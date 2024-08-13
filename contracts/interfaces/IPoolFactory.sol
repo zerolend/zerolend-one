@@ -26,6 +26,7 @@ interface IPoolFactory is IBeacon {
   event ReserveFactorUpdated(uint256 indexed old, uint256 indexed updated, address owner);
   event ConfiguratorUpdated(address indexed old, address indexed updated, address owner);
   event FlashLoanPremiumToProtocolUpdated(uint256 indexed old, uint256 indexed updated, address owner);
+  event LiquidationProtocolFeePercentageUpdated(uint256 old, uint256 indexed updated, address owner);
 
   function configurator() external view returns (IPoolConfigurator);
 
@@ -48,6 +49,8 @@ interface IPoolFactory is IBeacon {
   function setFlashloanPremium(uint256 updated) external;
 
   function setImplementation(address updated) external;
+
+  function setLiquidationProtcolFeePercentage(uint256 updated) external;
 
   function setReserveFactor(uint256 updated) external;
 
