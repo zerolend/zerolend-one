@@ -16,12 +16,12 @@ pragma solidity 0.8.19;
 import {CuratedEventsLib} from '../../interfaces/events/CuratedEventsLib.sol';
 import {IBeacon, ICuratedVault, ICuratedVaultFactory} from '../../interfaces/vaults/ICuratedVaultFactory.sol';
 import {RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {Ownable2Step} from '@openzeppelin/contracts/access/Ownable2Step.sol';
 
 /// @title CuratedVaultFactory
 /// @author ZeroLend
 /// @notice Creates and tracks CuratedVaults.
-contract CuratedVaultFactory is ICuratedVaultFactory, Ownable {
+contract CuratedVaultFactory is ICuratedVaultFactory, Ownable2Step {
   /// @inheritdoc IBeacon
   address public implementation;
 
