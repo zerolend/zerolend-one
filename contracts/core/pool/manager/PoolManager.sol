@@ -14,7 +14,6 @@ pragma solidity 0.8.19;
 // Telegram: https://t.me/zerolendxyz
 
 import {IPool, IPoolManager} from '../../../interfaces/IPoolManager.sol';
-import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {AccessControlEnumerable} from '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
 abstract contract PoolManager is AccessControlEnumerable, IPoolManager {

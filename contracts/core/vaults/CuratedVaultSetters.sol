@@ -15,7 +15,7 @@ pragma solidity 0.8.19;
 
 import {IPool} from '../../interfaces/pool/IPool.sol';
 
-import {ICuratedVaultBase, MarketConfig} from '../../interfaces/vaults/ICuratedVaultBase.sol';
+import {MarketConfig} from '../../interfaces/vaults/ICuratedVaultBase.sol';
 
 import {SharesMathLib} from './libraries/SharesMathLib.sol';
 import {UtilsLib} from './libraries/UtilsLib.sol';
