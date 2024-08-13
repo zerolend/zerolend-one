@@ -81,7 +81,12 @@ library PoolLogic {
    * @param reservesData The state of all the reserves
    * @param asset The reserves for which the minting needs to be executed
    */
-  function executeMintToTreasury(mapping(address => DataTypes.ReserveData) storage reservesData, address asset) external {
+  function executeMintToTreasury(
+    DataTypes.ReserveSupplies storage totalSupply,
+    mapping(address => DataTypes.ReserveData) storage reservesData,
+    address treasury,
+    address asset
+  ) external {
     DataTypes.ReserveData storage reserve = reservesData[asset];
 
     uint256 accruedToTreasuryShares = reserve.accruedToTreasuryShares;
@@ -91,8 +96,8 @@ library PoolLogic {
       uint256 normalizedIncome = reserve.getNormalizedIncome();
       uint256 amountToMint = accruedToTreasuryShares.rayMul(normalizedIncome);
 
-      // todo mint and unwrap to treasury
-      // IAToken(reserve.aTokenAddress).mintToTreasury(amountToMint, normalizedIncome);
+      IERC20(asset).safeTransfer(treasury, amountToMint);
+      totalSupply.supplyShares -= accruedToTreasuryShares;
 
       emit PoolEventsLib.MintedToTreasury(asset, amountToMint);
     }
@@ -127,8 +132,12 @@ library PoolLogic {
       uint256 healthFactor
     )
   {
-    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor,) =
-      GenericLogic.calculateUserAccountData(_balances, reservesData, reservesList, params);
+    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor, ) = GenericLogic.calculateUserAccountData(
+      _balances,
+      reservesData,
+      reservesList,
+      params
+    );
     availableBorrowsBase = GenericLogic.calculateAvailableBorrows(totalCollateralBase, totalDebtBase, ltv);
   }
 
@@ -166,7 +175,10 @@ library PoolLogic {
       );
 
       emit PoolEventsLib.CollateralConfigurationChanged(
-        asset, config.getLtv(), config.getLiquidationThreshold(), config.getLiquidationThreshold()
+        asset,
+        config.getLtv(),
+        config.getLiquidationThreshold(),
+        config.getLiquidationThreshold()
       );
     }
   }

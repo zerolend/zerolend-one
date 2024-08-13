@@ -81,7 +81,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     if (address(_hook) != address(0)) _hook.beforeWithdraw(params);
 
     res = SupplyLogic.executeWithdraw(_reserves, _reservesList, _usersConfig[pos], _balances, _totalSupplies[asset], params);
-    PoolLogic.executeMintToTreasury(_reserves, asset);
+    PoolLogic.executeMintToTreasury(_totalSupplies[asset], _reserves, _factory.treasury(), asset);
 
     if (address(_hook) != address(0)) _hook.afterWithdraw(params);
   }
