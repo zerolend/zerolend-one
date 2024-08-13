@@ -4,8 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import {DataTypes, Pool} from '../../../contracts/core/pool/Pool.sol';
 import {MintableERC20} from '../../../contracts/mocks/MintableERC20.sol';
 
-import {MockV3Aggregator} from 'contracts/mocks/MockV3Aggregator.sol';
 import {DefaultReserveInterestRateStrategy} from '../../../contracts/periphery/ir/DefaultReserveInterestRateStrategy.sol';
+import {MockV3Aggregator} from 'contracts/mocks/MockV3Aggregator.sol';
 
 import {Test} from '../../../lib/forge-std/src/Test.sol';
 
@@ -113,10 +113,8 @@ contract BasePoolHalmosTest is SymTest, Test {
 
   function _callPool(bytes4 selector, address caller) internal {
     vm.assume(
-      selector == pool.supplySimple.selector ||
-        selector == pool.repaySimple.selector ||
-        selector == pool.withdrawSimple.selector ||
-        selector == pool.borrowSimple.selector
+      selector == pool.supplySimple.selector || selector == pool.repaySimple.selector || selector == pool.withdrawSimple.selector
+        || selector == pool.borrowSimple.selector
     );
 
     uint256 amount = svm.createUint256('amount');
@@ -124,7 +122,7 @@ contract BasePoolHalmosTest is SymTest, Test {
     address dest = svm.createAddress('dest');
 
     vm.prank(caller);
-    (bool success, ) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), dest, amount, index)));
+    (bool success,) = address(pool).call(abi.encodePacked(selector, abi.encode(address(loan), dest, amount, index)));
     vm.assume(success);
   }
 }

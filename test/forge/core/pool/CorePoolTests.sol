@@ -11,8 +11,9 @@ import {PoolEventsLib} from '../../../../contracts/interfaces/events/PoolEventsL
 import {DefaultReserveInterestRateStrategy} from '../../../../contracts/periphery/ir/DefaultReserveInterestRateStrategy.sol';
 
 import {MintableERC20} from '../../../../contracts/mocks/MintableERC20.sol';
-import {MockV3Aggregator} from 'contracts/mocks/MockV3Aggregator.sol';
+
 import {Test, console} from '../../../../lib/forge-std/src/Test.sol';
+import {MockV3Aggregator} from 'contracts/mocks/MockV3Aggregator.sol';
 
 import {WETH9Mocked} from 'contracts/mocks/WETH9Mocked.sol';
 

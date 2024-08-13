@@ -102,13 +102,12 @@ abstract contract PoolGetters is PoolStorage, IPool {
     uint256 index
   ) external view virtual override returns (uint256, uint256, uint256, uint256, uint256, uint256) {
     bytes32 positionId = user.getPositionId(index);
-    return
-      PoolLogic.executeGetUserAccountData(
-        _balances,
-        _reserves,
-        _reservesList,
-        DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], position: positionId, pool: address(this)})
-      );
+    return PoolLogic.executeGetUserAccountData(
+      _balances,
+      _reserves,
+      _reservesList,
+      DataTypes.CalculateUserAccountDataParams({userConfig: _usersConfig[positionId], position: positionId, pool: address(this)})
+    );
   }
 
   /// @inheritdoc IPoolGetters
@@ -117,10 +116,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
   }
 
   /// @inheritdoc IPoolGetters
-  function getUserConfiguration(
-    address user,
-    uint256 index
-  ) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
+  function getUserConfiguration(address user, uint256 index) external view virtual override returns (DataTypes.UserConfigurationMap memory) {
     return _usersConfig[user.getPositionId(index)];
   }
 
@@ -160,7 +156,7 @@ abstract contract PoolGetters is PoolStorage, IPool {
 
   /// @inheritdoc IPoolGetters
   function getAssetPrice(address reserve) public view override returns (uint256) {
-    (, int256 price, , uint256 updatedAt, ) = IAggregatorV3Interface(_reserves[reserve].oracle).latestRoundData();
+    (, int256 price,, uint256 updatedAt,) = IAggregatorV3Interface(_reserves[reserve].oracle).latestRoundData();
     require(price > 0, 'Invalid price');
     require(block.timestamp <= updatedAt + 1800, 'Stale Price');
     return uint256(price);
