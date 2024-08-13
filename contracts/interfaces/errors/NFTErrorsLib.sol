@@ -52,4 +52,10 @@ library NFTErrorsLib {
    * @notice Error indicating that sending ETH is failed
    */
   error SendETHFailed(uint256 value);
+
+  /**
+   * @notice Error indication that the amount sent and the amount in params
+   * are not equal.
+   */
+  error UnequalAmountNotAllowed();
 }

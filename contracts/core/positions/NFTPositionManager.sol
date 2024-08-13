@@ -71,6 +71,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
   /// @inheritdoc INFTPositionManager
   function supplyETH(AssetOperationParams memory params) external payable {
     params.asset = address(weth);
+    if (msg.value != params.amount) revert NFTErrorsLib.UnequalAmountNotAllowed();
     weth.deposit{value: params.amount}();
     _supply(params);
   }
@@ -119,6 +120,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
   /// @inheritdoc INFTPositionManager
   function repayETH(AssetOperationParams memory params) external payable {
     params.asset = address(weth);
+    if (msg.value != params.amount) revert NFTErrorsLib.UnequalAmountNotAllowed();
     weth.deposit{value: params.amount}();
     require(params.asset == address(weth), 'not weth');
     _repay(params);
