@@ -13,6 +13,9 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
     _setUpVault();
     _setCap(allMarkets[0], CAP);
     _sortSupplyQueueIdleLast();
+
+    oracleB.updateRoundTimestamp();
+    oracle.updateRoundTimestamp();
   }
 
   // todo test decimals
@@ -371,6 +374,7 @@ contract ERC4626Test is IntegrationVaultTest, IFlashLoanSimpleReceiver {
     vm.stopPrank();
 
     _forward(1000);
+    oracleB.updateRoundTimestamp();
 
     loanToken.mint(supplier, 1 ether);
 

@@ -45,6 +45,12 @@ contract MockV3Aggregator {
     getStartedAt[latestRound] = block.timestamp;
   }
 
+  function updateRoundTimestamp() public {
+    latestTimestamp = block.timestamp;
+    getTimestamp[latestRound] = block.timestamp;
+    getStartedAt[latestRound] = block.timestamp;
+  }
+
   function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public {
     latestRound = _roundId;
     latestAnswer = _answer;
@@ -54,11 +60,9 @@ contract MockV3Aggregator {
     getStartedAt[latestRound] = _startedAt;
   }
 
-  function getRoundData(uint80 _roundId)
-    external
-    view
-    returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-  {
+  function getRoundData(
+    uint80 _roundId
+  ) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
     return (_roundId, getAnswer[_roundId], getStartedAt[_roundId], getTimestamp[_roundId], _roundId);
   }
 
