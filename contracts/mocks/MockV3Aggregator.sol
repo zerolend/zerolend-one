@@ -60,9 +60,11 @@ contract MockV3Aggregator {
     getStartedAt[latestRound] = _startedAt;
   }
 
-  function getRoundData(
-    uint80 _roundId
-  ) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
+  function getRoundData(uint80 _roundId)
+    external
+    view
+    returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+  {
     return (_roundId, getAnswer[_roundId], getStartedAt[_roundId], getTimestamp[_roundId], _roundId);
   }
 
