@@ -11,7 +11,7 @@ import {PoolEventsLib} from '../../../../contracts/interfaces/events/PoolEventsL
 import {DefaultReserveInterestRateStrategy} from '../../../../contracts/periphery/ir/DefaultReserveInterestRateStrategy.sol';
 
 import {MintableERC20} from '../../../../contracts/mocks/MintableERC20.sol';
-import {MockAggregator} from '../../../../contracts/mocks/MockAggregator.sol';
+import {MockV3Aggregator} from 'contracts/mocks/MockV3Aggregator.sol';
 import {Test, console} from '../../../../lib/forge-std/src/Test.sol';
 
 import {WETH9Mocked} from 'contracts/mocks/WETH9Mocked.sol';
@@ -29,10 +29,10 @@ abstract contract CorePoolTests is Test {
 
   WETH9Mocked public wethToken;
 
-  MockAggregator public oracleA;
-  MockAggregator public oracleB;
-  MockAggregator public oracleC;
-  MockAggregator public oracleD;
+  MockV3Aggregator public oracleA;
+  MockV3Aggregator public oracleB;
+  MockV3Aggregator public oracleC;
+  MockV3Aggregator public oracleD;
 
   uint256 internal constant BLOCK_TIME = 1;
 
@@ -56,10 +56,10 @@ abstract contract CorePoolTests is Test {
 
     wethToken = new WETH9Mocked();
 
-    oracleA = new MockAggregator(1e8);
-    oracleB = new MockAggregator(2 * 1e8);
-    oracleC = new MockAggregator(100 * 1e8);
-    oracleD = new MockAggregator(3000 * 1e8);
+    oracleA = new MockV3Aggregator(8, 1e8);
+    oracleB = new MockV3Aggregator(18, 2 * 1e8);
+    oracleC = new MockV3Aggregator(8, 100 * 1e8);
+    oracleD = new MockV3Aggregator(6, 3000 * 1e8);
 
     irStrategy = new DefaultReserveInterestRateStrategy(47 * 1e25, 0, 7 * 1e25, 30 * 1e25);
 

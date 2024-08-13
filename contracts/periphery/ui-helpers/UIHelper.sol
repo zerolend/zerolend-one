@@ -16,7 +16,7 @@ pragma solidity 0.8.19;
 import {ReserveConfiguration} from '../../core/pool/configuration/ReserveConfiguration.sol';
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
-import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
+import {IAggregatorV3Interface} from 'contracts/interfaces/IAggregatorV3Interface.sol';
 
 import {INFTPositionManager} from '../../interfaces/INFTPositionManager.sol';
 import {IPoolConfigurator} from '../../interfaces/IPoolConfigurator.sol';
@@ -124,7 +124,9 @@ contract UIHelper {
     config.interestRateStrategy = data.interestRateStrategyAddress;
     config.oracle = data.oracle;
 
-    config.latestPrice = uint256(IAggregatorInterface(data.oracle).latestAnswer());
+    (, int256 price, , , ) = IAggregatorV3Interface(data.oracle).latestRoundData();
+
+    config.latestPrice = uint256(price);
   }
 
   function getPoolFullConfigByIndex(uint256 start, uint256 end) public view returns (PoolConfig[] memory configs) {
@@ -208,7 +210,7 @@ contract UIHelper {
     uint256 length = _assets.length;
 
     assets = new INFTPositionManager.Asset[](length);
-    for (uint256 i; i < length;) {
+    for (uint256 i; i < length; ) {
       address asset = assets[i].asset = _assets[i];
       assets[i].balance = pool.getBalance(asset, address(manager), tokenId);
       assets[i].debt = pool.getDebt(asset, address(manager), tokenId);

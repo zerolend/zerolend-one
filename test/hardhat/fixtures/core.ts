@@ -22,7 +22,7 @@ export async function deployCore() {
   const CuratedVault = await ethers.getContractFactory('CuratedVault');
   const PoolConfigurator = await ethers.getContractFactory('PoolConfigurator');
   const MintableERC20 = await ethers.getContractFactory('MintableERC20');
-  const MockAggregator = await ethers.getContractFactory('MockAggregator');
+  const MockV3Aggregator = await ethers.getContractFactory('MockV3Aggregator');
   const DefaultReserveInterestRateStrategy = await ethers.getContractFactory(
     'DefaultReserveInterestRateStrategy'
   );
@@ -61,9 +61,9 @@ export async function deployCore() {
   const tokenC = await MintableERC20.deploy('TOKEN C', 'TOKENC');
 
   // create dummy oracles
-  const oracleA = await MockAggregator.deploy(1e8);
-  const oracleB = await MockAggregator.deploy(2 * 1e8);
-  const oracleC = await MockAggregator.deploy(100 * 1e8);
+  const oracleA = await MockV3Aggregator.deploy(18, 5000);
+  const oracleB = await MockV3Aggregator.deploy(8, 2000);
+  const oracleC = await MockV3Aggregator.deploy(16, 1500);
 
   const irStrategy = await DefaultReserveInterestRateStrategy.deploy(
     parseUnits('0.45', 27).toString(),

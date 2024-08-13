@@ -167,7 +167,7 @@ describe('Pool - Getters', () => {
   describe('getAssetPrice', function () {
     it('should return asset price from the oracle', async function () {
       const price = await pool.getAssetPrice(tokenA.target);
-      expect(price).to.equal(1e8);
+      expect(price).to.equal(5000);
     });
   });
 

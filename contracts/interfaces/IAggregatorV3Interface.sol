@@ -7,22 +7,25 @@ pragma solidity 0.8.19;
 //  ███╔╝  ██╔══╝  ██╔══██╗██║   ██║
 // ███████╗███████╗██║  ██║╚██████╔╝
 // ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝
+
 // Website: https://zerolend.xyz
 // Discord: https://discord.gg/zerolend
 // Twitter: https://twitter.com/zerolendxyz
+// Telegram: https://t.me/zerolendxyz
 
-contract MockAggregator {
-  int256 public latestAnswer;
+interface IAggregatorV3Interface {
+  function decimals() external view returns (uint8);
 
-  constructor(int256 _answer) {
-    latestAnswer = _answer;
-  }
+  function description() external view returns (string memory);
 
-  function setAnswer(int256 _answer) external {
-    latestAnswer = _answer;
-  }
+  function version() external view returns (uint256);
 
-  function decimals() external pure returns (uint8) {
-    return 8;
-  }
+  function getRoundData(
+    uint80 _roundId
+  ) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);
+
+  function latestRoundData()
+    external
+    view
+    returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);
 }

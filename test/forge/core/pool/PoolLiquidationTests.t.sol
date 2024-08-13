@@ -32,7 +32,7 @@ contract PoolLiquidationTest is PoolSetup {
 
   function testLiquidationSimple1() external {
     _generateLiquidationCondition();
-    (, uint256 totalDebtBase,,,,) = pool.getUserAccountData(alice, 0);
+    (, uint256 totalDebtBase, , , , ) = pool.getUserAccountData(alice, 0);
 
     vm.startPrank(bob);
     vm.expectEmit(true, true, true, false);
@@ -41,7 +41,7 @@ contract PoolLiquidationTest is PoolSetup {
 
     vm.stopPrank();
 
-    (, uint256 totalDebtBaseNew,,,,) = pool.getUserAccountData(alice, 0);
+    (, uint256 totalDebtBaseNew, , , , ) = pool.getUserAccountData(alice, 0);
 
     assertTrue(totalDebtBase > totalDebtBaseNew);
   }
@@ -80,6 +80,6 @@ contract PoolLiquidationTest is PoolSetup {
 
     assertEq(tokenB.balanceOf(alice), borrowAmountB);
 
-    oracleA.setAnswer(5e3);
+    oracleA.updateAnswer(5e3);
   }
 }
