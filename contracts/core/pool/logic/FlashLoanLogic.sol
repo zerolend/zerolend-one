@@ -64,7 +64,7 @@ library FlashLoanLogic {
 
     IFlashLoanSimpleReceiver receiver = IFlashLoanSimpleReceiver(_params.receiverAddress);
     uint256 totalPremium = _params.amount.percentMul(_params.flashLoanPremiumTotal);
-    IERC20(_params.asset).transfer(_params.receiverAddress, _params.amount);
+    IERC20(_params.asset).safeTransfer(_params.receiverAddress, _params.amount);
 
     require(
       receiver.executeOperation(_params.asset, _params.amount, totalPremium, msg.sender, _params.params),
@@ -103,7 +103,16 @@ library FlashLoanLogic {
 
     _reserve.accruedToTreasuryShares += _params.totalPremium.rayDiv(cache.nextLiquidityIndex).toUint128();
 
-    _reserve.updateInterestRates(_totalSupplies, cache, _params.asset, IPool(_params.pool).getReserveFactor(), amountPlusPremium, 0, '', '');
+    _reserve.updateInterestRates(
+      _totalSupplies,
+      cache,
+      _params.asset,
+      IPool(_params.pool).getReserveFactor(),
+      amountPlusPremium,
+      0,
+      '',
+      ''
+    );
 
     IERC20(_params.asset).safeTransferFrom(_params.receiverAddress, address(_params.pool), amountPlusPremium);
 

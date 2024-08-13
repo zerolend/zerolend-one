@@ -107,7 +107,7 @@ library LiquidationLogic {
     vars.debtReserveCache = debtReserve.cache(totalSupplies[params.debtAsset]);
     debtReserve.updateState(params.reserveFactor, vars.debtReserveCache);
 
-    (,,,, vars.healthFactor,) = GenericLogic.calculateUserAccountData(
+    (, , , , vars.healthFactor, ) = GenericLogic.calculateUserAccountData(
       balances,
       reservesData,
       reservesList,
@@ -135,8 +135,11 @@ library LiquidationLogic {
 
     vars.userCollateralBalance = balances[params.collateralAsset][params.position].supplyShares;
 
-    (vars.actualCollateralToLiquidate, vars.actualDebtToLiquidate, vars.liquidationProtocolFeeAmount) =
-    _calculateAvailableCollateralToLiquidate(
+    (
+      vars.actualCollateralToLiquidate,
+      vars.actualDebtToLiquidate,
+      vars.liquidationProtocolFeeAmount
+    ) = _calculateAvailableCollateralToLiquidate(
       collateralReserve,
       vars.debtReserveCache,
       vars.actualDebtToLiquidate,
@@ -172,7 +175,11 @@ library LiquidationLogic {
     );
 
     _burnCollateralTokens(
-      collateralReserve, params, vars, balances[params.collateralAsset][params.position], totalSupplies[params.collateralAsset]
+      collateralReserve,
+      params,
+      vars,
+      balances[params.collateralAsset][params.position],
+      totalSupplies[params.collateralAsset]
     );
 
     // Transfer fee to treasury if it is non-zero
@@ -186,14 +193,19 @@ library LiquidationLogic {
         vars.liquidationProtocolFeeAmount = scaledDownUserBalance.rayMul(liquidityIndex);
       }
 
-      IERC20(params.collateralAsset).transfer(IPool(params.pool).factory().treasury(), vars.liquidationProtocolFeeAmount);
+      IERC20(params.collateralAsset).safeTransfer(IPool(params.pool).factory().treasury(), vars.liquidationProtocolFeeAmount);
     }
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
     IERC20(params.debtAsset).safeTransferFrom(msg.sender, address(params.pool), vars.actualDebtToLiquidate);
 
     emit PoolEventsLib.LiquidationCall(
-      params.collateralAsset, params.debtAsset, params.position, vars.actualDebtToLiquidate, vars.actualCollateralToLiquidate, msg.sender
+      params.collateralAsset,
+      params.debtAsset,
+      params.position,
+      vars.actualDebtToLiquidate,
+      vars.actualCollateralToLiquidate,
+      msg.sender
     );
   }
 
@@ -227,7 +239,7 @@ library LiquidationLogic {
 
     // Burn the equivalent amount of aToken, sending the underlying to the liquidator
     balances.withdrawCollateral(totalSupplies, vars.actualCollateralToLiquidate, collateralReserveCache.nextLiquidityIndex);
-    IERC20(params.collateralAsset).transfer(msg.sender, vars.actualCollateralToLiquidate);
+    IERC20(params.collateralAsset).safeTransfer(msg.sender, vars.actualCollateralToLiquidate);
   }
 
   /**
@@ -356,9 +368,8 @@ library LiquidationLogic {
 
     if (vars.maxCollateralToLiquidate > userCollateralBalance) {
       vars.collateralAmount = userCollateralBalance;
-      vars.debtAmountNeeded = (
-        (vars.collateralPrice * vars.collateralAmount * vars.debtAssetUnit) / (vars.debtAssetPrice * vars.collateralAssetUnit)
-      ).percentDiv(liquidationBonus);
+      vars.debtAmountNeeded = ((vars.collateralPrice * vars.collateralAmount * vars.debtAssetUnit) /
+        (vars.debtAssetPrice * vars.collateralAssetUnit)).percentDiv(liquidationBonus);
     } else {
       vars.collateralAmount = vars.maxCollateralToLiquidate;
       vars.debtAmountNeeded = debtToCover;
