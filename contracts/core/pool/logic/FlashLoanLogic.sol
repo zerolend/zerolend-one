@@ -103,16 +103,7 @@ library FlashLoanLogic {
 
     _reserve.accruedToTreasuryShares += _params.totalPremium.rayDiv(cache.nextLiquidityIndex).toUint128();
 
-    _reserve.updateInterestRates(
-      _totalSupplies,
-      cache,
-      _params.asset,
-      IPool(_params.pool).getReserveFactor(),
-      amountPlusPremium,
-      0,
-      '',
-      ''
-    );
+    _reserve.updateInterestRates(_totalSupplies, cache, _params.asset, IPool(_params.pool).getReserveFactor(), amountPlusPremium, 0, '', '');
 
     IERC20(_params.asset).safeTransferFrom(_params.receiverAddress, address(_params.pool), amountPlusPremium);
 

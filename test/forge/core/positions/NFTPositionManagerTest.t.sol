@@ -103,30 +103,22 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
     vm.stopPrank();
   }
 
- function testSupplyEth_lackOfBalanceCheck() public {
+  function testSupplyEth_lackOfBalanceCheck() public {
     //10 ethers are initially in the NFTPositionManager contract
     vm.deal(address(nftPositionManager), 10 ether);
 
-    DataTypes.ExtraData memory extraData = DataTypes.ExtraData({
-        hookData: "",
-        interestRateData: ""
-    });
+    DataTypes.ExtraData memory extraData = DataTypes.ExtraData({hookData: '', interestRateData: ''});
 
-    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams({
-        asset: address(0),
-        target: alice,
-        amount: 10 ether,
-        tokenId: 1,
-        data: extraData
-    });
+    INFTPositionManager.AssetOperationParams memory params =
+      INFTPositionManager.AssetOperationParams({asset: address(0), target: alice, amount: 10 ether, tokenId: 1, data: extraData});
 
     //Alice mints a new position and and supply 10 eth
     vm.startPrank(alice);
-        nftPositionManager.mint(address(pool));
-        vm.expectRevert(NFTErrorsLib.UnequalAmountNotAllowed.selector);
-        nftPositionManager.supplyETH{value: 0}(params);
+    nftPositionManager.mint(address(pool));
+    vm.expectRevert(NFTErrorsLib.UnequalAmountNotAllowed.selector);
+    nftPositionManager.supplyETH{value: 0}(params);
     vm.stopPrank();
-}
+  }
 
   function testShouldRevertWithdrawInvalidAddress() external {
     testShouldSupplyAlice();
@@ -310,13 +302,8 @@ contract NFTPostionManagerTest is DeployNFTPositionManager {
 
     DataTypes.ExtraData memory extraData = DataTypes.ExtraData(bytes(''), bytes(''));
 
-    INFTPositionManager.AssetOperationParams memory params = INFTPositionManager.AssetOperationParams({
-        asset: address(0),
-        target: alice,
-        amount: 10 ether,
-        tokenId: 1,
-        data: extraData
-    });
+    INFTPositionManager.AssetOperationParams memory params =
+      INFTPositionManager.AssetOperationParams({asset: address(0), target: alice, amount: 10 ether, tokenId: 1, data: extraData});
 
     vm.startPrank(alice);
     vm.expectRevert(NFTErrorsLib.UnequalAmountNotAllowed.selector);
