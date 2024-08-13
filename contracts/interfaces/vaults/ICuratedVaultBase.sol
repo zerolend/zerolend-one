@@ -190,4 +190,55 @@ interface ICuratedVaultBase {
   /// @dev Sender is expected to pass `assets = type(uint256).max` with the last MarketAllocation of `allocations` to
   /// supply all the remaining withdrawn liquidity, which would ensure that `totalWithdrawn` = `totalSupplied`.
   function reallocate(MarketAllocation[] calldata allocations) external;
+
+  /// @notice Deposits assets into the vault with slippage protection
+  /// @param assets The amount of assets to deposit
+  /// @param receiver The address that will receive the minted shares
+  /// @param minSharesOut The minimum number of shares that must be received for the transaction to succeed
+  /// @param deadline The timestamp after which the transaction will revert
+  /// @return sharesOut The actual number of shares minted
+  function depositWithSlippage(
+    uint256 assets,
+    address receiver,
+    uint256 minSharesOut,
+    uint256 deadline
+  ) external returns (uint256 sharesOut);
+
+  /// @notice Mints shares from the vault with slippage protection
+  /// @param shares The number of shares to mint
+  /// @param receiver The address that will receive the minted shares
+  /// @param maxAssetsIn The maximum amount of assets that can be taken for the transaction to succeed
+  /// @param deadline The timestamp after which the transaction will revert
+  /// @return assetsIn The actual amount of assets deposited
+  function mintWithSlippage(uint256 shares, address receiver, uint256 maxAssetsIn, uint256 deadline) external returns (uint256 assetsIn);
+
+  /// @notice Withdraws assets from the vault with slippage protection
+  /// @param assets The amount of assets to withdraw
+  /// @param receiver The address that will receive the withdrawn assets
+  /// @param owner The address that owns the shares to be burned
+  /// @param maxSharesBurned The maximum number of shares that can be burned for the transaction to succeed
+  /// @param deadline The timestamp after which the transaction will revert
+  /// @return sharesBurned The actual number of shares burned
+  function withdrawWithSlippage(
+    uint256 assets,
+    address receiver,
+    address owner,
+    uint256 maxSharesBurned,
+    uint256 deadline
+  ) external returns (uint256 sharesBurned);
+
+  /// @notice Redeems shares from the vault with slippage protection
+  /// @param shares The number of shares to redeem
+  /// @param receiver The address that will receive the redeemed assets
+  /// @param owner The address that owns the shares to be redeemed
+  /// @param minAssetsOut The minimum amount of assets that must be received for the transaction to succeed
+  /// @param deadline The timestamp after which the transaction will revert
+  /// @return assetsOut The actual amount of assets withdrawn
+  function redeemWithSlippage(
+    uint256 shares,
+    address receiver,
+    address owner,
+    uint256 minAssetsOut,
+    uint256 deadline
+  ) external returns (uint256 assetsOut);
 }
