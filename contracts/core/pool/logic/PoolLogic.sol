@@ -22,7 +22,6 @@ import {PercentageMath} from '../utils/PercentageMath.sol';
 import {WadRayMath} from '../utils/WadRayMath.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
-import {ValidationLogic} from './ValidationLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
@@ -132,12 +131,8 @@ library PoolLogic {
       uint256 healthFactor
     )
   {
-    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor, ) = GenericLogic.calculateUserAccountData(
-      _balances,
-      reservesData,
-      reservesList,
-      params
-    );
+    (totalCollateralBase, totalDebtBase, ltv, currentLiquidationThreshold, healthFactor,) =
+      GenericLogic.calculateUserAccountData(_balances, reservesData, reservesList, params);
     availableBorrowsBase = GenericLogic.calculateAvailableBorrows(totalCollateralBase, totalDebtBase, ltv);
   }
 
@@ -175,10 +170,7 @@ library PoolLogic {
       );
 
       emit PoolEventsLib.CollateralConfigurationChanged(
-        asset,
-        config.getLtv(),
-        config.getLiquidationThreshold(),
-        config.getLiquidationThreshold()
+        asset, config.getLtv(), config.getLiquidationThreshold(), config.getLiquidationThreshold()
       );
     }
   }
