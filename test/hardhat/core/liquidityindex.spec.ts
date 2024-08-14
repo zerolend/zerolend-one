@@ -1,5 +1,5 @@
 import { parseEther as eth, MaxUint256 } from 'ethers';
-import { MintableERC20, Pool } from '../../../types';
+import { MintableERC20, MockV3Aggregator, Pool } from '../../../types';
 import { deployPool, RAY } from '../fixtures/pool';
 import { expect } from 'chai';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
@@ -10,10 +10,11 @@ describe('Pool - Liquidity Index', () => {
   let pool: Pool;
   let tokenA: MintableERC20;
   let deployer: SignerWithAddress;
+  let oracleA: MockV3Aggregator;
 
   beforeEach(async () => {
     const fixture = await deployPool();
-    ({ tokenA, pool, owner: deployer } = fixture);
+    ({ tokenA, pool, owner: deployer, oracleA } = fixture);
 
     // mint some tokens and give approval
     await tokenA.mint(deployer.address, eth('10'));
@@ -66,6 +67,7 @@ describe('Pool - Liquidity Index', () => {
       await time.increase(86400); // one day
 
       // trigger a borrow to force increase the borrow index
+      await oracleA.updateRoundTimestamp();
       await pool.borrowSimple(tokenA.target, deployer.address, eth('0.1'), 0);
 
       const after = await pool.getReserveData(tokenA.target);

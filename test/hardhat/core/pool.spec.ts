@@ -129,7 +129,7 @@ describe('Pool', () => {
 
       const balanceOfAntBeforeTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntBeforeTokenB = await tokenB.balanceOf(ant.address);
-      await oracleA.updateAnswer(5e3);
+      await oracleA.updateAnswer(50);
       await pool.connect(ant).liquidateSimple(tokenA.target, tokenB.target, position, eth('1'));
       const balanceOfAntAfterTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntAfterTokenB = await tokenB.balanceOf(ant.address);

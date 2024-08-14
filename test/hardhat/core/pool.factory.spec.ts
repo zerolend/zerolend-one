@@ -3,7 +3,7 @@ import { DataTypes } from '../../../types/contracts/core/pool/Pool';
 import {
   DefaultReserveInterestRateStrategy,
   MintableERC20,
-  MockAggregator,
+  MockV3Aggregator as MockAggregator,
   PoolConfigurator,
 } from '../../../types';
 import { deployCore } from '../fixtures/core';
@@ -217,7 +217,7 @@ describe('Pool Factory', () => {
     });
   });
 
-  describe.only('setLiquidationProtcolFeePercentage', function () {
+  describe('setLiquidationProtcolFeePercentage', function () {
     it('should update liquidation protocol fee percentage', async function () {
       await poolFactory.setLiquidationProtcolFeePercentage(100);
       expect(await poolFactory.liquidationProtocolFeePercentage()).to.equal(100);
