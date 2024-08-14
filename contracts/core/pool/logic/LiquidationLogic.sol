@@ -179,7 +179,6 @@ library LiquidationLogic {
     if (vars.liquidationProtocolFeeAmount != 0) {
       uint256 liquidityIndex = collateralReserve.getNormalizedIncome();
       uint256 scaledDownLiquidationProtocolFee = vars.liquidationProtocolFeeAmount.rayDiv(liquidityIndex);
-      // todo
       uint256 scaledDownUserBalance = balances[params.collateralAsset][params.position].supplyShares;
 
       if (scaledDownLiquidationProtocolFee > scaledDownUserBalance) {

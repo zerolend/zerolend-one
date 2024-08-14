@@ -119,13 +119,6 @@ library FlashLoanLogic {
 
     IERC20(_params.asset).safeTransferFrom(_params.receiverAddress, address(_params.pool), amountPlusPremium);
 
-    // todo
-    // IAToken(cache.aTokenAddress).handleRepayment(
-    //   params.receiverAddress,
-    //   params.receiverAddress,
-    //   amountPlusPremium
-    // );
-
     emit PoolEventsLib.FlashLoan(_params.receiverAddress, msg.sender, _params.asset, _params.amount, _params.totalPremium);
   }
 }

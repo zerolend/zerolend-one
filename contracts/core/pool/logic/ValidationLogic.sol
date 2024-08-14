@@ -79,7 +79,7 @@ library ValidationLogic {
     require(!isFrozen, PoolErrorsLib.RESERVE_FROZEN);
 
     uint256 supplyCap = cache.reserveConfiguration.getSupplyCap();
-    // todo
+
     require(
       supplyCap == 0
         || (
