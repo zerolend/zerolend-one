@@ -6,7 +6,7 @@ import {MathLib, WAD} from '../../../../../contracts/core/vaults/libraries/MathL
 import {IPool} from '../../../../../contracts/interfaces/pool/IPool.sol';
 import {ICuratedVault} from '../../../../../contracts/interfaces/vaults/ICuratedVault.sol';
 
-import {DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator} from '../../pool/CorePoolTests.sol';
+import {DefaultReserveInterestRateStrategy, MintableERC20, MockV3Aggregator} from '../../pool/CorePoolTests.sol';
 import {DataTypes, PoolSetup} from '../../pool/PoolSetup.sol';
 
 import {console} from '../../../../../lib/forge-std/src/console.sol';
@@ -37,7 +37,7 @@ abstract contract BaseVaultTest is PoolSetup {
 
   MintableERC20 internal loanToken;
   MintableERC20 internal collateralToken;
-  MockAggregator internal oracle;
+  MockV3Aggregator internal oracle;
 
   function _setUpBaseVault() internal {
     _setUpPool();
@@ -51,7 +51,7 @@ abstract contract BaseVaultTest is PoolSetup {
     vm.label(address(collateralToken), 'collateralToken');
     vm.label(address(oracle), 'oracle');
     vm.label(address(irStrategy), 'irStrategy');
-    oracle.setAnswer(1e8);
+    oracle.updateAnswer(1e8);
 
     // init the idle market
     _setupIdleMarket();

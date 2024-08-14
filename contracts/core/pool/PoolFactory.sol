@@ -16,7 +16,7 @@ pragma solidity 0.8.19;
 import {DataTypes, IBeacon, IPool, IPoolConfigurator, IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 
 import {IRevokableBeaconProxy, RevokableBeaconProxy} from '../proxy/RevokableBeaconProxy.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {Ownable2Step} from '@openzeppelin/contracts/access/Ownable2Step.sol';
 
 /**
  * @title Pool Factory Contract
@@ -25,7 +25,7 @@ import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
  * @dev This is a beacon contract that holds the latest implementation of a pool. Pools once created need to also
  * have some deposit added into it else it will be vulnerable to a liquidity index manipulation attack.
  */
-contract PoolFactory is IPoolFactory, Ownable {
+contract PoolFactory is IPoolFactory, Ownable2Step {
   /// @inheritdoc IBeacon
   address public implementation;
 
@@ -120,5 +120,12 @@ contract PoolFactory is IPoolFactory, Ownable {
     uint256 old = flashLoanPremiumToProtocol;
     flashLoanPremiumToProtocol = updated;
     emit FlashLoanPremiumToProtocolUpdated(old, updated, msg.sender);
+  }
+
+  /// @inheritdoc IPoolFactory
+  function setLiquidationProtcolFeePercentage(uint256 updated) external onlyOwner {
+    uint256 old = liquidationProtocolFeePercentage;
+    liquidationProtocolFeePercentage = updated;
+    emit LiquidationProtocolFeePercentageUpdated(old, updated, msg.sender);
   }
 }

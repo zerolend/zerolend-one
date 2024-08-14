@@ -71,7 +71,7 @@ library ValidationLogic {
     DataTypes.ReserveCache memory cache,
     DataTypes.ReserveData storage reserve,
     DataTypes.ExecuteSupplyParams memory params,
-    address pool
+    DataTypes.ReserveSupplies storage totalSupplies
   ) internal view {
     require(params.amount != 0, PoolErrorsLib.INVALID_AMOUNT);
 
@@ -79,12 +79,11 @@ library ValidationLogic {
     require(!isFrozen, PoolErrorsLib.RESERVE_FROZEN);
 
     uint256 supplyCap = cache.reserveConfiguration.getSupplyCap();
-    // todo
+
     require(
       supplyCap == 0
-        || (
-          (IERC20(params.asset).balanceOf(pool) + uint256(reserve.accruedToTreasuryShares)).rayMul(cache.nextLiquidityIndex) + params.amount
-        ) <= supplyCap * (10 ** cache.reserveConfiguration.getDecimals()),
+        || ((totalSupplies.supplyShares + uint256(reserve.accruedToTreasuryShares)).rayMul(cache.nextLiquidityIndex) + params.amount)
+          <= supplyCap * (10 ** cache.reserveConfiguration.getDecimals()),
       PoolErrorsLib.SUPPLY_CAP_EXCEEDED
     );
   }

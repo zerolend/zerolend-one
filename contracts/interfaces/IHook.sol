@@ -34,6 +34,26 @@ interface IHook {
 
   function afterBorrow(address sender, bytes32 position, address asset, address pool, uint256 amount, bytes calldata hookData) external;
 
+  function beforeFlashloan(
+    address sender,
+    address receiver,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    address pool,
+    bytes calldata hookData
+  ) external;
+
+  function afterFlashloan(
+    address sender,
+    address receiver,
+    address asset,
+    uint256 amount,
+    bytes calldata params,
+    address pool,
+    bytes calldata hookData
+  ) external;
+
   function beforeLiquidate(
     address liquidator,
     bytes32 position,

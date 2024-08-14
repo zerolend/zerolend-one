@@ -1,5 +1,9 @@
 import { MaxUint256, parseEther as eth, parseUnits } from 'ethers';
-import { DefaultReserveInterestRateStrategy, MintableERC20, MockAggregator } from '../../../types';
+import {
+  DefaultReserveInterestRateStrategy,
+  MintableERC20,
+  MockV3Aggregator,
+} from '../../../types';
 import { Pool } from '../../../types/contracts/core/pool';
 import { deployPool } from '../fixtures/pool';
 import { expect } from 'chai';
@@ -9,8 +13,8 @@ import { getPositionId } from '../utils/helpers';
 describe('Pool', () => {
   let pool: Pool;
   let irStrategy: DefaultReserveInterestRateStrategy;
-  let oracleB: MockAggregator;
-  let oracleA: MockAggregator;
+  let oracleB: MockV3Aggregator;
+  let oracleA: MockV3Aggregator;
 
   let tokenA: MintableERC20;
   let tokenB: MintableERC20;
@@ -125,7 +129,7 @@ describe('Pool', () => {
 
       const balanceOfAntBeforeTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntBeforeTokenB = await tokenB.balanceOf(ant.address);
-      await oracleA.setAnswer(5e3);
+      await oracleA.updateAnswer(50);
       await pool.connect(ant).liquidateSimple(tokenA.target, tokenB.target, position, eth('1'));
       const balanceOfAntAfterTokenA = await tokenA.balanceOf(ant.address);
       const balanceOfAntAfterTokenB = await tokenB.balanceOf(ant.address);

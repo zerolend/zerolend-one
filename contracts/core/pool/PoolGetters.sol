@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 // Twitter: https://twitter.com/zerolendxyz
 // Telegram: https://t.me/zerolendxyz
 
-import {IAggregatorInterface} from '../../interfaces/IAggregatorInterface.sol';
+import {IAggregatorV3Interface} from 'contracts/interfaces/IAggregatorV3Interface.sol';
 
 import {IPoolFactory} from '../../interfaces/IPoolFactory.sol';
 import {IPool, IPoolGetters} from '../../interfaces/pool/IPool.sol';
@@ -156,7 +156,10 @@ abstract contract PoolGetters is PoolStorage, IPool {
 
   /// @inheritdoc IPoolGetters
   function getAssetPrice(address reserve) public view override returns (uint256) {
-    return uint256(IAggregatorInterface(_reserves[reserve].oracle).latestAnswer());
+    (, int256 price,, uint256 updatedAt,) = IAggregatorV3Interface(_reserves[reserve].oracle).latestRoundData();
+    require(price > 0, 'Invalid price');
+    require(block.timestamp <= updatedAt + 1800, 'Stale Price');
+    return uint256(price);
   }
 
   /// @inheritdoc IPoolGetters

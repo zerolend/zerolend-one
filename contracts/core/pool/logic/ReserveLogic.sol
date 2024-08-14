@@ -15,7 +15,6 @@ pragma solidity 0.8.19;
 
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 
-import {PoolErrorsLib} from '../../../interfaces/errors/PoolErrorsLib.sol';
 import {DataTypes} from '../configuration/DataTypes.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {ReserveSuppliesConfiguration} from '../configuration/ReserveSuppliesConfiguration.sol';

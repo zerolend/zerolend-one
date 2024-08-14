@@ -1,5 +1,17 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
+
+// ███████╗███████╗██████╗  ██████╗
+// ╚══███╔╝██╔════╝██╔══██╗██╔═══██╗
+//   ███╔╝ █████╗  ██████╔╝██║   ██║
+//  ███╔╝  ██╔══╝  ██╔══██╗██║   ██║
+// ███████╗███████╗██║  ██║╚██████╔╝
+// ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝
+
+// Website: https://zerolend.xyz
+// Discord: https://discord.gg/zerolend
+// Twitter: https://twitter.com/zerolendxyz
+// Telegram: https://t.me/zerolendxyz
 
 import {IFlashLoanSimpleReceiver} from '../../../interfaces/IFlashLoanSimpleReceiver.sol';
 import {IPool} from '../../../interfaces/pool/IPool.sol';
@@ -103,25 +115,9 @@ library FlashLoanLogic {
 
     _reserve.accruedToTreasuryShares += _params.totalPremium.rayDiv(cache.nextLiquidityIndex).toUint128();
 
-    _reserve.updateInterestRates(
-      _totalSupplies,
-      cache,
-      _params.asset,
-      IPool(_params.pool).getReserveFactor(),
-      amountPlusPremium,
-      0,
-      '',
-      ''
-    );
+    _reserve.updateInterestRates(_totalSupplies, cache, _params.asset, IPool(_params.pool).getReserveFactor(), amountPlusPremium, 0, '', '');
 
     IERC20(_params.asset).safeTransferFrom(_params.receiverAddress, address(_params.pool), amountPlusPremium);
-
-    // todo
-    // IAToken(cache.aTokenAddress).handleRepayment(
-    //   params.receiverAddress,
-    //   params.receiverAddress,
-    //   amountPlusPremium
-    // );
 
     emit PoolEventsLib.FlashLoan(_params.receiverAddress, msg.sender, _params.asset, _params.amount, _params.totalPremium);
   }

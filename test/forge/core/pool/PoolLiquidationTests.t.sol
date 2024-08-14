@@ -80,6 +80,6 @@ contract PoolLiquidationTest is PoolSetup {
 
     assertEq(tokenB.balanceOf(alice), borrowAmountB);
 
-    oracleA.setAnswer(5e3);
+    oracleA.updateAnswer(5e3);
   }
 }

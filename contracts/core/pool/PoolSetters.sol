@@ -81,7 +81,7 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     if (address(_hook) != address(0)) _hook.beforeWithdraw(params);
 
     res = SupplyLogic.executeWithdraw(_reserves, _reservesList, _usersConfig[pos], _balances, _totalSupplies[asset], params);
-    PoolLogic.executeMintToTreasury(_reserves, asset);
+    PoolLogic.executeMintToTreasury(_totalSupplies[asset], _reserves, _factory.treasury(), asset);
 
     if (address(_hook) != address(0)) _hook.afterWithdraw(params);
   }
@@ -182,6 +182,9 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
     bytes calldata params,
     DataTypes.ExtraData memory data
   ) public virtual nonReentrant(RentrancyKind.FLASHLOAN) {
+    if (address(_hook) != address(0)) {
+      _hook.beforeFlashloan(msg.sender, receiverAddress, asset, amount, params, address(this), data.hookData);
+    }
     require(receiverAddress != address(0), PoolErrorsLib.ZERO_ADDRESS_NOT_VALID);
     DataTypes.FlashloanSimpleParams memory flashParams = DataTypes.FlashloanSimpleParams({
       receiverAddress: receiverAddress,
@@ -193,6 +196,9 @@ abstract contract PoolSetters is PoolRentrancyGuard, PoolGetters {
       flashLoanPremiumTotal: _factory.flashLoanPremiumToProtocol()
     });
     FlashLoanLogic.executeFlashLoanSimple(address(this), _reserves[asset], _totalSupplies[asset], flashParams);
+    if (address(_hook) != address(0)) {
+      _hook.afterFlashloan(msg.sender, receiverAddress, asset, amount, params, address(this), data.hookData);
+    }
   }
 
   function _setUserUseReserveAsCollateral(address asset, uint256 index, bool useAsCollateral) internal {
