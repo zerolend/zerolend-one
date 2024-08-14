@@ -5,8 +5,8 @@ import {DataTypes} from './../../../../contracts/core/pool/configuration/DataTyp
 import {ReserveConfiguration} from './../../../../contracts/core/pool/configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from './../../../../contracts/core/pool/configuration/UserConfiguration.sol';
 
-import {IPool} from './../../../../contracts/interfaces/pool/IPool.sol';
 import {PoolSetup} from '../../core/pool/PoolSetup.sol';
+import {IPool} from './../../../../contracts/interfaces/pool/IPool.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 contract Hal001Test is PoolSetup {
@@ -51,6 +51,7 @@ contract Hal001Test is PoolSetup {
 
     //Attacker uses a flashloan to manipulate the supply cap check
     bytes memory emptyParams;
+    vm.expectRevert(bytes('SUPPLY_CAP_EXCEEDED')); // comment this out to test thet attack
     pool.flashLoanSimple(address(address(flashLoanReceiver)), address(tokenA), 200 ether, emptyParams);
     vm.stopPrank();
   }
@@ -65,7 +66,7 @@ contract FlashLoanReceiver {
     owner = _owner;
   }
 
-  function executeOperation(address asset, uint256 amount, uint256 premium, address, bytes memory) public returns (bool) {
+  function executeOperation(address asset, uint256 amount, uint256, address, bytes memory) public returns (bool) {
     //Approve the pool to pull the flashloaned amount
     IERC20(asset).approve(address(pool), type(uint256).max);
 
