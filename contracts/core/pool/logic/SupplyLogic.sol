@@ -65,7 +65,7 @@ library SupplyLogic {
     DataTypes.ReserveCache memory cache = reserve.cache(totalSupplies);
     reserve.updateState(params.reserveFactor, cache);
 
-    ValidationLogic.validateSupply(cache, reserve, params, params.pool);
+    ValidationLogic.validateSupply(cache, reserve, params, totalSupplies);
     reserve.updateInterestRates(
       totalSupplies,
       cache,
