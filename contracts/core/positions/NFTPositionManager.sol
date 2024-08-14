@@ -40,6 +40,8 @@ contract NFTPositionManager is NFTPositionManagerSetters {
     __ERC721_init('ZeroLend One Position', 'ZL-POS-ONE');
     __AccessControlEnumerable_init();
     __NFTRewardsDistributor_init(50_000_000, _staking, 14 days, _zero);
+    __ReentrancyGuard_init();
+    __Multicall_init();
 
     _grantRole(DEFAULT_ADMIN_ROLE, _owner);
 
@@ -89,7 +91,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
     params.target = address(this);
     _borrow(params);
     weth.withdraw(params.amount);
-    (bool ok,) = payable(dest).call{value: params.amount}('');
+    (bool ok, ) = payable(dest).call{value: params.amount}('');
     if (!ok) revert NFTErrorsLib.SendETHFailed(params.amount);
   }
 
@@ -106,7 +108,7 @@ contract NFTPositionManager is NFTPositionManagerSetters {
     params.target = address(this);
     _withdraw(params);
     weth.withdraw(params.amount);
-    (bool ok,) = payable(dest).call{value: params.amount}('');
+    (bool ok, ) = payable(dest).call{value: params.amount}('');
     if (!ok) revert NFTErrorsLib.SendETHFailed(params.amount);
   }
 
