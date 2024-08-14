@@ -373,30 +373,16 @@ contract CuratedVault is CuratedVaultSetters {
 
   /// @inheritdoc ICuratedVaultBase
   function depositWithSlippage(uint256 assets, address receiver, uint256 minSharesOut, uint256 deadline) public returns (uint256 sharesOut) {
-    require(block.timestamp <= deadline, 'CuratedVault: Deposit expired');
-
-    uint256 newTotalAssets = _accrueFee();
-    lastTotalAssets = newTotalAssets;
-
-    sharesOut = _convertToSharesWithTotals(assets, totalSupply(), newTotalAssets, MathUpgradeable.Rounding.Down);
+    sharesOut = deposit(assets, receiver);
+    require(block.timestamp <= deadline, 'CuratedVault: expired');
     require(sharesOut >= minSharesOut, 'CuratedVault: Slippage too high');
-
-    _deposit(_msgSender(), receiver, assets, sharesOut);
-    return sharesOut;
   }
 
   /// @inheritdoc ICuratedVaultBase
   function mintWithSlippage(uint256 shares, address receiver, uint256 maxAssetsIn, uint256 deadline) public returns (uint256 assetsIn) {
-    require(block.timestamp <= deadline, 'CuratedVault: Mint expired');
-
-    uint256 newTotalAssets = _accrueFee();
-    lastTotalAssets = newTotalAssets;
-
-    assetsIn = _convertToAssetsWithTotals(shares, totalSupply(), newTotalAssets, MathUpgradeable.Rounding.Up);
+    assetsIn = mint(shares, receiver);
+    require(block.timestamp <= deadline, 'CuratedVault: expired');
     require(assetsIn <= maxAssetsIn, 'CuratedVault: Slippage too high');
-
-    _deposit(_msgSender(), receiver, assetsIn, shares);
-    return assetsIn;
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -407,15 +393,9 @@ contract CuratedVault is CuratedVaultSetters {
     uint256 maxSharesBurned,
     uint256 deadline
   ) public returns (uint256 sharesBurned) {
-    require(block.timestamp <= deadline, 'CuratedVault: Withdraw expired');
-
-    uint256 newTotalAssets = _accrueFee();
-    sharesBurned = _convertToSharesWithTotals(assets, totalSupply(), newTotalAssets, MathUpgradeable.Rounding.Up);
+    sharesBurned = withdraw(assets, receiver, owner);
+    require(block.timestamp <= deadline, 'CuratedVault: expired');
     require(sharesBurned <= maxSharesBurned, 'CuratedVault: Slippage too high');
-
-    _updateLastTotalAssets(newTotalAssets.zeroFloorSub(assets));
-    _withdraw(_msgSender(), receiver, owner, assets, sharesBurned);
-    return sharesBurned;
   }
 
   /// @inheritdoc ICuratedVaultBase
@@ -426,14 +406,8 @@ contract CuratedVault is CuratedVaultSetters {
     uint256 minAssetsOut,
     uint256 deadline
   ) public returns (uint256 assetsOut) {
-    require(block.timestamp <= deadline, 'CuratedVault: Redeem expired');
-
-    uint256 newTotalAssets = _accrueFee();
-    assetsOut = _convertToAssetsWithTotals(shares, totalSupply(), newTotalAssets, MathUpgradeable.Rounding.Down);
+    assetsOut = redeem(shares, receiver, owner);
+    require(block.timestamp <= deadline, 'CuratedVault: expired');
     require(assetsOut >= minAssetsOut, 'CuratedVault: Slippage too high');
-
-    _updateLastTotalAssets(newTotalAssets.zeroFloorSub(assetsOut));
-    _withdraw(_msgSender(), receiver, owner, assetsOut, shares);
-    return assetsOut;
   }
 }
