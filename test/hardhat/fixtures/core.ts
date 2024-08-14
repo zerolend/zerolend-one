@@ -61,9 +61,9 @@ export async function deployCore() {
   const tokenC = await MintableERC20.deploy('TOKEN C', 'TOKENC');
 
   // create dummy oracles
-  const oracleA = await MockV3Aggregator.deploy(18, 5000);
+  const oracleA = await MockV3Aggregator.deploy(8, 5000);
   const oracleB = await MockV3Aggregator.deploy(8, 2000);
-  const oracleC = await MockV3Aggregator.deploy(16, 1500);
+  const oracleC = await MockV3Aggregator.deploy(8, 1500);
 
   const irStrategy = await DefaultReserveInterestRateStrategy.deploy(
     parseUnits('0.45', 27).toString(),
