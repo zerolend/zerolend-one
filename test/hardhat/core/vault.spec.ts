@@ -4,7 +4,7 @@ import {
   DefaultReserveInterestRateStrategy,
   ICuratedVaultFactory,
   MintableERC20,
-  MockAggregator,
+  MockV3Aggregator,
   PoolFactory,
 } from '../../../types';
 import { MaxUint256, ZeroAddress, keccak256 } from 'ethers';
@@ -62,9 +62,9 @@ describe('Curated Vault', () => {
   let loan: MintableERC20;
   let collateral: MintableERC20;
 
-  let oracleA: MockAggregator;
-  let oracleB: MockAggregator;
-  let oracleC: MockAggregator;
+  let oracleA: MockV3Aggregator;
+  let oracleB: MockV3Aggregator;
+  let oracleC: MockV3Aggregator;
 
   let irStrategy: DefaultReserveInterestRateStrategy;
 
