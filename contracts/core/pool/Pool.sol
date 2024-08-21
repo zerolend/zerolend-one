@@ -161,7 +161,7 @@ contract Pool is PoolSetters {
   function forceUpdateReserve(address asset) public {
     DataTypes.ReserveData storage reserve = _reserves[asset];
     DataTypes.ReserveCache memory cache = reserve.cache(_totalSupplies[asset]);
-    reserve.updateState(0, cache);
+    reserve.updateState(this.getReserveFactor(), cache);
   }
 
   /// @inheritdoc IPoolSetters
