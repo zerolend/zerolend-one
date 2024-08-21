@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.10.0](https://github.com/zerolend/zerolend-one/compare/v0.9.1...v0.10.0) (2024-08-21)
+
+
+### Features
+
+* added transaparent proxy admin ([0cd861a](https://github.com/zerolend/zerolend-one/commit/0cd861a220975449a4c9bd16c795510927fba407))
+* added WETH config pool setup ([761acca](https://github.com/zerolend/zerolend-one/commit/761accab0c7ef7f563a661b6689b9eaca72f16fc))
+
+
+### Bug Fixes
+
+* added-call method for transfer eth ([76f79b7](https://github.com/zerolend/zerolend-one/commit/76f79b790a2bbf423e3e5af440c43891f8acc951))
+* fixed pool getters tests ([565999c](https://github.com/zerolend/zerolend-one/commit/565999cf3c38246e0384d6e7f676ec9ad908a5e5))
+* vulnerabilities found in Halborn Audit ([#33](https://github.com/zerolend/zerolend-one/issues/33)) ([2352764](https://github.com/zerolend/zerolend-one/commit/2352764af0f31ca01c789726dbfb3c562d1222c1))
+
 ## [0.9.1](https://github.com/zerolend/zerolend-one/compare/v0.9.0...v0.9.1) (2024-07-21)
 
 
